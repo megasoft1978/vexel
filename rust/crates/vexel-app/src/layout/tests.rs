@@ -213,6 +213,24 @@ fn targets(l: &Layout) -> Vec<(Target, Rect)> {
 }
 
 #[test]
+fn inspector_recolor_and_width_presets_are_hit_testable() {
+    let layout = Layout::new(1280, 820, Mode::Draw).unwrap();
+    for target in [
+        Target::SectionHeader(7),
+        Target::SectionHeader(16),
+        Target::SectionHeader(20),
+    ] {
+        let r = layout
+            .target_rect(target)
+            .expect("visible inspector control");
+        assert_eq!(
+            layout.hit_test((r.x + r.width / 2, r.y + r.height / 2)),
+            Some(target)
+        );
+    }
+}
+
+#[test]
 fn every_target_hit_tests_to_itself_and_targets_are_big_enough() {
     for (w, h) in [
         (720, 480),

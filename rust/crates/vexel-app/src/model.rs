@@ -4,6 +4,10 @@ use crate::layout::{Button, Focus, INSPECTOR_MIN_WINDOW, SECTIONS, Splitter, UiS
 use crate::session::AppDocument;
 use crate::timeline::Timeline;
 
+pub const INSPECTOR_SWATCHES: [&str; 6] = [
+    "#1f2937", "#ffffff", "#e53935", "#f9a825", "#43a047", "#1e88e5",
+];
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
     Draw,
@@ -432,6 +436,7 @@ impl Model {
         let mut action = None;
         let mut changed = self.focus_button.take().is_some() | self.menu_focus.take().is_some();
         changed |= match target {
+            Some(Target::SectionHeader(i)) if i >= SECTIONS => false,
             Some(Target::DrawMode) => self.select_mode(Mode::Draw),
             Some(Target::AnimateMode) => self.select_mode(Mode::Animate),
             Some(Target::SectionHeader(i)) => {

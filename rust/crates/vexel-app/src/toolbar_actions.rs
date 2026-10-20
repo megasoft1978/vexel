@@ -20,6 +20,7 @@ use crate::layout::Layout;
 use crate::model::{ButtonAction, ExportFormat, Model};
 use crate::preview::Operation;
 use crate::session::{AppDocument, EditAction, McpGrants, McpHost};
+use crate::tools::ToolController;
 use std::ffi::OsString;
 use std::fs;
 use std::io::Write;
@@ -95,6 +96,74 @@ pub fn press<B: PanelBackend>(
         run(action, model, files, exports);
     }
     changed || under || action.is_some()
+}
+
+/// Applies one of the inspector's preset fill, stroke, or width edits.
+pub fn inspector_edit<B: PanelBackend>(
+    target_index: usize,
+    model: &mut Model,
+    files: &mut FileUi<B>,
+    tools: &mut ToolController,
+) -> bool {
+    let width_index = target_index.checked_sub(17).filter(|i| *i < 4);
+    let width = width_index.map(|i| [1.0, 2.0, 4.0, 8.0][i]);
+    let stroke = if (11..17).contains(&target_index) || width_index.is_some() {
+        true
+    } else if (5..11).contains(&target_index) {
+        false
+    } else {
+        return false;
+    };
+    let colour = if (5..17).contains(&target_index) {
+        crate::model::INSPECTOR_SWATCHES
+            .get(if target_index < 11 {
+                target_index - 5
+            } else {
+                target_index - 11
+            })
+            .copied()
+    } else {
+        None
+    };
+    if (5..17).contains(&target_index) && colour.is_none() {
+        return false;
+    }
+    let selected_stroke = match &model.chrome.inspector {
+        crate::chrome::Inspector::Shape(props) => {
+            let value = props.stroke_text();
+            (value != "none").then_some(value)
+        }
+        crate::chrome::Inspector::NoSelection => None,
+    };
+    let current_width = match &model.chrome.inspector {
+        crate::chrome::Inspector::Shape(props) if props.stroke_width > 0.0 => props.stroke_width,
+        _ => tools.stroke().1,
+    };
+    let paint = colour
+        .or_else(|| selected_stroke.as_deref())
+        .unwrap_or_else(|| tools.stroke().0)
+        .to_owned();
+    let chosen_width = width.unwrap_or(current_width);
+    let edited = files.document_mut().edit(|document| {
+        if stroke {
+            tools.set_stroke(document, &paint, chosen_width).map(|_| ())
+        } else {
+            tools.set_fill(document, &paint).map(|_| ())
+        }
+    });
+    model.status = if edited.is_ok() {
+        if width.is_some() {
+            "Updated stroke width"
+        } else {
+            "Updated shape color"
+        }
+    } else if width.is_some() {
+        "Could not update stroke width"
+    } else {
+        "Could not update shape color"
+    };
+    model.dirty = true;
+    true
 }
 
 /// Keyboard navigation of the toolbar: Tab stops, Space/Return on a focused

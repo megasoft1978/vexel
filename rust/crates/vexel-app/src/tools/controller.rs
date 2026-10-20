@@ -87,6 +87,12 @@ enum Gesture {
         start: Point,
         current: Point,
     },
+    Resize {
+        id: String,
+        bounds: (f64, f64, f64, f64),
+        handle: usize,
+        current: Point,
+    },
     Pen {
         pos: Point,
         handle: Option<Point>,
@@ -313,6 +319,19 @@ impl ToolController {
         match self.tool {
             Tool::Select => {
                 self.validate_selection(doc);
+                if let Some(id) = self.selection.clone() {
+                    if let Ok(bounds) = doc.geometry_bounds(&id) {
+                        if let Some(handle) = handle_at(bounds, p) {
+                            self.gesture = Gesture::Resize {
+                                id,
+                                bounds,
+                                handle,
+                                current: p,
+                            };
+                            return Ok(Outcome::Updated);
+                        }
+                    }
+                }
                 match doc.hit_test(p.0, p.1) {
                     Some(id) => {
                         self.selection = Some(id.clone());
@@ -350,7 +369,9 @@ impl ToolController {
     fn move_to(&mut self, p: Point) -> Outcome {
         match &mut self.gesture {
             Gesture::None => Outcome::Ignored,
-            Gesture::Drag { current, .. } | Gesture::Move { current, .. } => {
+            Gesture::Drag { current, .. }
+            | Gesture::Move { current, .. }
+            | Gesture::Resize { current, .. } => {
                 *current = p;
                 Outcome::Updated
             }
@@ -372,6 +393,24 @@ impl ToolController {
                     return Ok(Outcome::Updated);
                 }
                 doc.translate(&id, dx, dy)?;
+                Ok(Outcome::Committed)
+            }
+            Gesture::Resize {
+                id,
+                bounds,
+                handle,
+                current,
+            } => {
+                let end = p.unwrap_or(current);
+                let next = resize_bounds(bounds, handle, end);
+                if (next.0 - bounds.0).abs() < 0.01
+                    && (next.1 - bounds.1).abs() < 0.01
+                    && (next.2 - bounds.2).abs() < 0.01
+                    && (next.3 - bounds.3).abs() < 0.01
+                {
+                    return Ok(Outcome::Updated);
+                }
+                doc.resize_to_bounds(&id, next)?;
                 Ok(Outcome::Committed)
             }
             Gesture::Pen { pos, handle } => {
@@ -465,6 +504,46 @@ impl ToolController {
 
 fn far(a: Point, b: Point) -> bool {
     (b.0 - a.0).hypot(b.1 - a.1) >= MIN_DRAG
+}
+
+fn handle_points(b: (f64, f64, f64, f64)) -> [Point; 8] {
+    let mx = (b.0 + b.2) / 2.0;
+    let my = (b.1 + b.3) / 2.0;
+    [
+        (b.0, b.1),
+        (b.2, b.1),
+        (b.2, b.3),
+        (b.0, b.3),
+        (mx, b.1),
+        (b.2, my),
+        (mx, b.3),
+        (b.0, my),
+    ]
+}
+fn handle_at(b: (f64, f64, f64, f64), p: Point) -> Option<usize> {
+    handle_points(b).iter().position(|h| {
+        let dx = (h.0 - p.0).abs();
+        let dy = (h.1 - p.1).abs();
+        dx <= 2.0 && dy <= 2.0
+    })
+}
+fn resize_bounds(b: (f64, f64, f64, f64), h: usize, p: Point) -> (f64, f64, f64, f64) {
+    let (mut l, mut t, mut r, mut bot) = b;
+    if matches!(h, 0 | 3 | 7) {
+        l = p.0;
+    }
+    if matches!(h, 1 | 2 | 5) {
+        r = p.0;
+    }
+    if matches!(h, 0 | 1 | 4) {
+        t = p.1;
+    }
+    if matches!(h, 2 | 3 | 6) {
+        bot = p.1;
+    }
+    let (l, r) = if l <= r { (l, r) } else { (r, l) };
+    let (t, bot) = if t <= bot { (t, bot) } else { (bot, t) };
+    (l, t, r, bot)
 }
 
 fn check_color(value: &str) -> Result<(), V1DocumentError> {

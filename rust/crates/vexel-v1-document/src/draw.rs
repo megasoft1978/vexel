@@ -126,6 +126,146 @@ fn distance_to_segment(px: f64, py: f64, (ax, ay, bx, by): (f64, f64, f64, f64))
 }
 
 impl V1Document {
+    /// Returns the editable geometry bounds of a simple shape or path in document space.
+    pub fn geometry_bounds(&self, id: &str) -> Result<(f64, f64, f64, f64), V1DocumentError> {
+        let node = self.shape(id)?;
+        let number = |name: &[u8], default: f64| match self.raw_attr(node, name) {
+            None => Ok(default),
+            Some(raw) => parse_number(raw).ok_or(V1DocumentError::InvalidGeometry),
+        };
+        let mut bounds = match self.kind_of(node) {
+            ElementKind::Rect => {
+                let (x, y, w, h) = (
+                    number(b"x", 0.0)?,
+                    number(b"y", 0.0)?,
+                    number(b"width", 0.0)?,
+                    number(b"height", 0.0)?,
+                );
+                (x, y, x + w, y + h)
+            }
+            ElementKind::Ellipse => {
+                let (cx, cy) = (number(b"cx", 0.0)?, number(b"cy", 0.0)?);
+                let (rx, ry) = (number(b"rx", 0.0)?, number(b"ry", 0.0)?);
+                (cx - rx, cy - ry, cx + rx, cy + ry)
+            }
+            ElementKind::Circle => return Err(V1DocumentError::Unsupported),
+            ElementKind::Line => {
+                let (x1, y1, x2, y2) = (
+                    number(b"x1", 0.0)?,
+                    number(b"y1", 0.0)?,
+                    number(b"x2", 0.0)?,
+                    number(b"y2", 0.0)?,
+                );
+                (x1.min(x2), y1.min(y2), x1.max(x2), y1.max(y2))
+            }
+            ElementKind::Path => {
+                let segments = path_data::parse(
+                    self.raw_attr(node, b"d")
+                        .ok_or(V1DocumentError::InvalidPathData)?,
+                )?;
+                path_data::bounds(&segments).ok_or(V1DocumentError::InvalidPathData)?
+            }
+            ElementKind::Other => return Err(V1DocumentError::Unsupported),
+        };
+        if let Some(raw) = self.raw_attr(node, b"transform") {
+            let (tx, ty) = parse_translate(raw).ok_or(V1DocumentError::UnsupportedTransform)?;
+            bounds.0 += tx;
+            bounds.1 += ty;
+            bounds.2 += tx;
+            bounds.3 += ty;
+        }
+        Ok(bounds)
+    }
+
+    /// Resizes a shape to the requested document-space bounds in one undoable edit.
+    pub fn resize_to_bounds(
+        &mut self,
+        id: &str,
+        bounds: (f64, f64, f64, f64),
+    ) -> Result<(), V1DocumentError> {
+        if ![bounds.0, bounds.1, bounds.2, bounds.3]
+            .into_iter()
+            .all(f64::is_finite)
+        {
+            return Err(V1DocumentError::InvalidGeometry);
+        }
+        let node = self.shape(id)?;
+        let kind = self.kind_of(node);
+        if bounds.2 - bounds.0 < 0.1 || bounds.3 - bounds.1 < 0.1 {
+            if kind != ElementKind::Line {
+                return Err(V1DocumentError::InvalidGeometry);
+            }
+        }
+        for value in [bounds.0, bounds.1, bounds.2, bounds.3] {
+            check_coordinate(value)?;
+        }
+        let old = self.geometry_bounds(id)?;
+        let (tx, ty) = match self.raw_attr(node, b"transform") {
+            Some(raw) => parse_translate(raw).ok_or(V1DocumentError::UnsupportedTransform)?,
+            None => (0.0, 0.0),
+        };
+        let local = (old.0 - tx, old.1 - ty, old.2 - tx, old.3 - ty);
+        if kind != ElementKind::Line && (local.2 <= local.0 || local.3 <= local.1) {
+            return Err(V1DocumentError::InvalidGeometry);
+        }
+        let target = (bounds.0 - tx, bounds.1 - ty, bounds.2 - tx, bounds.3 - ty);
+        let sx = if local.2 == local.0 {
+            1.0
+        } else {
+            (target.2 - target.0) / (local.2 - local.0)
+        };
+        let sy = if local.3 == local.1 {
+            1.0
+        } else {
+            (target.3 - target.1) / (local.3 - local.1)
+        };
+        let attr = |name: &[u8], value: f64| {
+            Ok::<_, V1DocumentError>((name.to_vec(), numeric_text(value)?))
+        };
+        let edits = match kind {
+            ElementKind::Rect => vec![
+                attr(b"x", target.0)?,
+                attr(b"y", target.1)?,
+                attr(b"width", target.2 - target.0)?,
+                attr(b"height", target.3 - target.1)?,
+            ],
+            ElementKind::Ellipse => vec![
+                attr(b"cx", (target.0 + target.2) / 2.0)?,
+                attr(b"cy", (target.1 + target.3) / 2.0)?,
+                attr(b"rx", (target.2 - target.0) / 2.0)?,
+                attr(b"ry", (target.3 - target.1) / 2.0)?,
+            ],
+            ElementKind::Circle => return Err(V1DocumentError::Unsupported),
+            ElementKind::Line => {
+                let n = |name| {
+                    self.raw_attr(node, name)
+                        .and_then(parse_number)
+                        .ok_or(V1DocumentError::InvalidGeometry)
+                };
+                let (x1, y1, x2, y2) = (n(b"x1")?, n(b"y1")?, n(b"x2")?, n(b"y2")?);
+                vec![
+                    attr(b"x1", target.0 + (x1 - local.0) * sx)?,
+                    attr(b"y1", target.1 + (y1 - local.1) * sy)?,
+                    attr(b"x2", target.0 + (x2 - local.0) * sx)?,
+                    attr(b"y2", target.1 + (y2 - local.1) * sy)?,
+                ]
+            }
+            ElementKind::Path => {
+                let raw = self
+                    .raw_attr(node, b"d")
+                    .ok_or(V1DocumentError::InvalidPathData)?;
+                let scaled = path_data::scale(raw, local, target)?;
+                vec![(b"d".to_vec(), scaled)]
+            }
+            ElementKind::Other => return Err(V1DocumentError::Unsupported),
+        };
+        let plans: Vec<(&[u8], Vec<u8>)> = edits
+            .iter()
+            .map(|(name, value)| (name.as_slice(), value.clone()))
+            .collect();
+        self.patch(node, &plans, HistoryAction::EditAttribute)
+    }
+
     /// Inserts a line with an automatic stable id. Endpoints must lie inside the
     /// document and differ; `stroke` is `#rrggbb`; width is finite in 0..=256.
     pub fn add_line(

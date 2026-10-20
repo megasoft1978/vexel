@@ -1,6 +1,6 @@
 //! Validated subset of SVG path data: `M m L l H h V v C c Z z`.
 
-use crate::V1DocumentError;
+use crate::{V1DocumentError, numeric_text};
 
 /// Maximum accepted `d` length in bytes.
 pub const MAX_PATH_DATA_BYTES: usize = 8 * 1024;
@@ -205,4 +205,91 @@ pub(crate) fn bounds(segments: &[Segment]) -> Option<(f64, f64, f64, f64)> {
         }
     }
     bbox
+}
+
+/// Scales the supported path grammar into an absolute, equivalent path.
+pub(crate) fn scale(
+    data: &[u8],
+    from: (f64, f64, f64, f64),
+    to: (f64, f64, f64, f64),
+) -> Result<Vec<u8>, V1DocumentError> {
+    use std::fmt::Write;
+    if from.2 <= from.0 || from.3 <= from.1 {
+        return Err(V1DocumentError::InvalidGeometry);
+    }
+    let segments = parse(data)?;
+    let (sx, sy) = (
+        (to.2 - to.0) / (from.2 - from.0),
+        (to.3 - to.1) / (from.3 - from.1),
+    );
+    let point = |x: f64, y: f64| (to.0 + (x - from.0) * sx, to.1 + (y - from.1) * sy);
+    let mut out = String::new();
+    let (mut x, mut y, mut sx0, mut sy0) = (0.0, 0.0, 0.0, 0.0);
+    for s in segments {
+        let rel = s.command.is_ascii_lowercase();
+        let base = if rel { (x, y) } else { (0.0, 0.0) };
+        match s.command.to_ascii_uppercase() {
+            b'M' | b'L' => {
+                let p = point(base.0 + s.args[0], base.1 + s.args[1]);
+                let cmd = if s.command.to_ascii_uppercase() == b'M' {
+                    "M"
+                } else {
+                    "L"
+                };
+                write!(&mut out, "{cmd} {} {} ", num(p.0)?, num(p.1)?)
+                    .map_err(|_| V1DocumentError::FormattingLimit)?;
+                (x, y) = (base.0 + s.args[0], base.1 + s.args[1]);
+                if cmd == "M" {
+                    (sx0, sy0) = (x, y);
+                }
+            }
+            b'H' => {
+                let nx = base.0 + s.args[0];
+                let p = point(nx, y);
+                write!(&mut out, "L {} {} ", num(p.0)?, num(p.1)?)
+                    .map_err(|_| V1DocumentError::FormattingLimit)?;
+                x = nx;
+            }
+            b'V' => {
+                let ny = base.1 + s.args[0];
+                let p = point(x, ny);
+                write!(&mut out, "L {} {} ", num(p.0)?, num(p.1)?)
+                    .map_err(|_| V1DocumentError::FormattingLimit)?;
+                y = ny;
+            }
+            b'C' => {
+                let a = point(base.0 + s.args[0], base.1 + s.args[1]);
+                let b = point(base.0 + s.args[2], base.1 + s.args[3]);
+                let end = (base.0 + s.args[4], base.1 + s.args[5]);
+                let e = point(end.0, end.1);
+                write!(
+                    &mut out,
+                    "C {} {} {} {} {} {} ",
+                    num(a.0)?,
+                    num(a.1)?,
+                    num(b.0)?,
+                    num(b.1)?,
+                    num(e.0)?,
+                    num(e.1)?
+                )
+                .map_err(|_| V1DocumentError::FormattingLimit)?;
+                (x, y) = end;
+            }
+            _ => {
+                out.push_str("Z ");
+                (x, y) = (sx0, sy0);
+            }
+        }
+    }
+    validate_path_data(&out)?;
+    Ok(out.into_bytes())
+}
+
+fn num(value: f64) -> Result<String, V1DocumentError> {
+    if value.is_finite() && value.abs() <= MAX_COORDINATE {
+        let bytes = numeric_text(value)?;
+        String::from_utf8(bytes).map_err(|_| V1DocumentError::InvalidGeometry)
+    } else {
+        Err(V1DocumentError::InvalidGeometry)
+    }
 }
