@@ -3,7 +3,7 @@
 use crate::animation::native_driver::NativeDriver;
 use crate::animation::native_stage::{NativeStage, OnionSettings, StageUpdate};
 use crate::animation::playback::LoopClock;
-use crate::compose::{Frame, svg_viewport};
+use crate::compose::{svg_viewport, Frame};
 use crate::file_ui::FileUi;
 use crate::native_timeline::interaction::{Key, Phase};
 use crate::native_timeline::layout::{Hit, TimelineLayout};
@@ -308,6 +308,10 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             if self.state_revision.is_some() {
                 self.driver.invalidate();
                 self.stage = NativeStage::new();
+                // MCP edits can change the native timeline without changing
+                // source bytes. Drop selections and the playhead that refer
+                // to the prior state before the next snapshot is built.
+                self.controller.document_replaced();
             }
             self.state_revision = Some(revision);
             self.last_tick = None;
@@ -426,6 +430,8 @@ fn result_tick(expected: Option<NativeFrameTag>, fallback: u32) -> u32 {
 mod tests {
     use super::*;
     use crate::animation::playback::ManualClock;
+    use crate::session::AppDocument;
+    use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
 
     #[test]
     fn replacing_a_document_resets_surface_and_stops_native_playback() {
@@ -436,5 +442,40 @@ mod tests {
         assert!(!host.controller.playing);
         assert!(!host.is_playing());
         assert_eq!(host.state_revision, None);
+    }
+
+    #[test]
+    fn mcp_edit_refreshes_native_state() {
+        let mut document = AppDocument::new(32, 24).unwrap();
+        let mut host = NativeAnimationHost::new(ManualClock::default());
+        let mut view = crate::compose::DocumentView::new();
+        assert!(host.prepare_document(&document, &mut view));
+        host.controller.selected_track = Some("old-track".into());
+        host.controller.selected_item_tick = Some(12);
+        host.controller.current_tick = 12;
+        host.controller.playing = true;
+
+        let settings = EmptyTimelineSettings {
+            ticks_per_second: 24,
+            duration_ticks: 240,
+            fps_numerator: 24,
+            fps_denominator: 1,
+            loop_mode: LoopMode::Once,
+            onion_before: 0,
+            onion_after: 0,
+            onion_opacity: 0.5,
+        };
+        assert!(document
+            .edit_timeline(settings, EditLimits::default(), |candidate| {
+                candidate.set_loop(LoopMode::Repeat)
+            })
+            .unwrap());
+
+        assert!(host.prepare_document(&document, &mut view));
+        assert_eq!(host.controller.selected_track, None);
+        assert_eq!(host.controller.selected_item_tick, None);
+        assert_eq!(host.controller.current_tick, 0);
+        assert!(!host.controller.playing);
+        assert_eq!(host.state_revision, Some(document.state_revision()));
     }
 }
