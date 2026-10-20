@@ -265,7 +265,7 @@ fn v1_walkthrough_native_timeline_save_reopen() {
     native(
         &mut fresh,
         "native_timeline_set_property_key",
-        r#""trackId":"fade","tick":48,"value":1"#,
+        r#""trackId":"fade","tick":44,"value":1"#,
     );
     assert_ne!(
         native(&mut fresh, "native_timeline_get", ""),
