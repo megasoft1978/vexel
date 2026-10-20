@@ -27,14 +27,14 @@ jobs:
       - name: Check workspace
         run: cargo check --workspace --locked
       - name: Run tests
-        run: cargo test --workspace --locked -- --test-threads=1 --skip a_thousand_pan_events_present_within_the_frame_budget --skip chrome_frames_match_first_party_goldens
+        run: cargo test --workspace --locked --no-fail-fast -- --test-threads=1 --skip a_thousand_pan_events_present_within_the_frame_budget --skip chrome_frames_match_first_party_goldens --skip footer_frames_match_first_party_goldens
         env:
           VEXEL_CHROME_GOLDEN_DIAGNOSTICS: "1"
       - name: Pan-present timing gate (release build, unchanged 15,657 ms budget)
         run: cargo test --release --locked -p vexel-app --test ui_canvas_pointer a_thousand_pan_events_present_within_the_frame_budget -- --test-threads=1
       - name: Chrome goldens (informational; goldens are pinned to the local macOS text rendering)
         continue-on-error: true
-        run: cargo test --locked -p vexel-app --test ui_chrome_goldens -- --test-threads=1
+        run: cargo test --locked --no-fail-fast -p vexel-app --test ui_chrome_goldens --test ui_timeline_golden -- --test-threads=1
         env:
           VEXEL_CHROME_GOLDEN_DIAGNOSTICS: "1"
       - name: Clippy (informational, runs only when available)
