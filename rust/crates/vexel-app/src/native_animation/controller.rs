@@ -8,7 +8,7 @@ use super::{NativeActionOutcome, NativeAnimationError, NativeTimelineEffect, Tim
 use crate::project_session::{ProjectTimelineCandidate, ProjectTimelineError};
 
 const DEFAULT_TICKS_PER_SECOND: u32 = 24;
-const DEFAULT_DURATION_TICKS: u32 = 240;
+const DEFAULT_DURATION_TICKS: u32 = 48;
 
 pub struct NativeAnimationController {
     pub(super) candidate_revision: Option<u64>,

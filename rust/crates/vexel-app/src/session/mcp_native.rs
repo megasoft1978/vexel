@@ -123,7 +123,7 @@ pub(crate) fn parse(
 fn settings() -> EmptyTimelineSettings {
     EmptyTimelineSettings {
         ticks_per_second: 24,
-        duration_ticks: 240,
+        duration_ticks: 48,
         fps_numerator: 24,
         fps_denominator: 1,
         loop_mode: LoopMode::Repeat,
