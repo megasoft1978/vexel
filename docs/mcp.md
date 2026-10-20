@@ -167,16 +167,18 @@ The server publishes document and SVG editing tools: `document_open`,
 `export_svg`. SVG animation tools are `animation_list`, `animation_add`,
 `animation_set`, and `animation_remove`.
 
-On the active app-owned native `.vexel` project, `native_timeline_get`,
-`native_timeline_add_track`, `native_timeline_add_drawing_asset`,
-`native_timeline_add_property_track`, `native_timeline_set_property_key`,
-`native_timeline_set_cel`, `native_timeline_remove_cel`,
-`native_timeline_move_item`, `native_timeline_set_loop`,
-`native_timeline_undo`, `native_timeline_redo`, and `export_animation` expose
-undoable timeline authoring and GIF/PNG-sequence export. Native timeline
-authoring tools target only the active app-owned `.vexel` project. For
-`export_animation`, `.vexel` uses its native timeline and a standalone SVG uses
-its SMIL document clock.
+On the active app-owned native `.vexel` project, the live-preview allowlist
+includes `native_timeline_get`, `native_timeline_add_property_track`,
+`native_timeline_set_property_key`, `native_timeline_set_loop`,
+`native_timeline_undo`, and `native_timeline_redo`. The undo and redo tools use
+the shared project history and therefore act on the latest edit, whether or not
+it was a native timeline edit. `native_timeline_add_track`,
+`native_timeline_add_drawing_asset`, `native_timeline_set_cel`,
+`native_timeline_remove_cel`, and `native_timeline_move_item` are not routed.
+`export_animation` is also available: `.vexel` uses its native timeline and a
+standalone SVG uses its SMIL document clock. Native GIF export is synchronous;
+loops over 120 frames are stride-sampled, with frame delay multiplied by the
+stride.
 
 Resources expose the current source, bounded tree data, and most recent PNG
 render. The `inspect-document` prompt directs a client to inspect the open
@@ -206,8 +208,10 @@ the stdio JSON-RPC path with no window. Each call passes `documentId`
    `fps` 10, `duration` 1. The reply's `bytes` equals the file size.
 10. `export_svg`: returns the saved source, including the `<animate>`.
 
-The `native_timeline_*` tools are not in the live-preview tool list, so this
-character uses the SMIL `animation_add` path instead.
+The live-preview list includes six `native_timeline_*` tools, so clients can
+author native timeline property tracks and keys, set the loop, and use shared
+project undo/redo. The SMIL `animation_add` path remains available for SVG
+animation.
 
 ## Limits and known gaps
 
