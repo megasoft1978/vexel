@@ -28,6 +28,14 @@ fn rect(app: &mut AppDocument) {
 }
 
 #[test]
+fn default_timeline_is_a_short_loop() {
+    let mut app = AppDocument::new(64, 64).unwrap();
+    let timeline = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(timeline.contains("\"ticksPerSecond\":24"), "{timeline}");
+    assert!(timeline.contains("\"durationTicks\":48"), "{timeline}");
+}
+
+#[test]
 fn mcp_native_timeline_set_key_roundtrip() {
     let mut app = AppDocument::new(64, 64).unwrap();
     rect(&mut app);
