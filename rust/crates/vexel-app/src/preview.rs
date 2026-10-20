@@ -536,7 +536,17 @@ fn tool_error(message: &str) -> ToolResponse {
         m if m.starts_with("export ") => m,
         _ => "invalid preview tool arguments",
     };
-    let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
+    let mut escaped = String::with_capacity(text.len());
+    for c in text.chars() {
+        match c {
+            '\\' => escaped.push_str("\\\\"),
+            '"' => escaped.push_str("\\\""),
+            c if (c as u32) < 0x20 || matches!(c, '\u{2028}' | '\u{2029}') => {
+                escaped.push_str(&format!("\\u{:04x}", c as u32))
+            }
+            c => escaped.push(c),
+        }
+    }
     let mut s = b"{\"error\":\"".to_vec();
     s.extend_from_slice(escaped.as_bytes());
     s.extend_from_slice(b"\"}");

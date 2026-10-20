@@ -16,15 +16,35 @@ pub(super) fn rejected_element_add_attribute(template: &str, key: &str) -> Strin
                 .join(", ")
         })
         .unwrap_or_default();
-    format!("element_add {template} does not accept attribute \"{key}\"; allowed: {allowed}")
+    format!(
+        "element_add {template} does not accept attribute \"{}\"; allowed: {allowed}",
+        echo(key)
+    )
+}
+
+/// Caller-supplied text echoed into an error: only identifier-like characters,
+/// at most 32 of them, so it can never carry control characters or markup.
+fn echo(value: &str) -> String {
+    value
+        .chars()
+        .take(32)
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.' | ':') {
+                c
+            } else {
+                '?'
+            }
+        })
+        .collect()
 }
 
 pub(super) fn rejected_element_add_parent(parent: Option<&str>) -> String {
     match parent {
         Some(parent) => format!(
-            "element_add parentId \"{parent}\" is invalid; use \"root\" or an existing group id"
+            "element_add parentId \"{}\" is invalid; the live preview only accepts \"root\"",
+            echo(parent)
         ),
-        None => "element_add parentId is required; use \"root\" for the top level or an existing group id".to_owned(),
+        None => "element_add parentId is required; use \"root\"".to_owned(),
     }
 }
 

@@ -203,6 +203,35 @@ fn element_add_rejects_unknown_attribute_with_actionable_error() {
     );
 }
 
+#[test]
+fn rejected_attribute_and_parent_echo_is_sanitized_and_error_json_is_valid() {
+    let json = format!(
+        r##"{{"documentId":"{DOCUMENT_ID}","parentId":"root","template":"rect","attributes":{{"bad\n\"key\u0001":"1"}}}}"##
+    );
+    let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
+    let PreviewArgumentError::Actionable(text) =
+        parse_operation(&doc, doc.root(), "element_add").unwrap_err()
+    else {
+        panic!("expected an actionable error");
+    };
+    assert!(text.contains("bad??key?"), "{text}");
+    assert!(!text.chars().any(|c| c.is_control()), "{text}");
+    let long_parent = "p".repeat(40);
+    let json = format!(
+        r##"{{"documentId":"{DOCUMENT_ID}","parentId":"{long_parent}","template":"rect","attributes":{{}}}}"##
+    );
+    let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
+    let PreviewArgumentError::Actionable(text) =
+        parse_operation(&doc, doc.root(), "element_add").unwrap_err()
+    else {
+        panic!("expected an actionable error");
+    };
+    assert!(
+        text.contains(&"p".repeat(32)) && !text.contains(&"p".repeat(33)),
+        "{text}"
+    );
+}
+
 fn one_rect() -> PreviewState {
     PreviewState::new()
         .unwrap()

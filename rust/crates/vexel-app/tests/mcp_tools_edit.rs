@@ -365,7 +365,13 @@ fn element_add_line_and_path_rejections() {
         ),
     ];
     for attributes in &lines {
-        rejects(&mut rig, "element_add", &line_args(attributes), GENERIC);
+        // An unknown attribute key now gets an actionable error naming the key.
+        let want = if attributes.contains(r#""fill""#) {
+            r#"element_add line does not accept attribute \"fill\"; allowed: x1, y1, x2, y2, stroke, stroke-width"#
+        } else {
+            GENERIC
+        };
+        rejects(&mut rig, "element_add", &line_args(attributes), want);
     }
     rejects(
         &mut rig,
@@ -384,7 +390,10 @@ fn element_add_line_and_path_rejections() {
             BAD_COLOR,
         ),
         (r#""d":"M 0 0 L 5 5","stroke-width":"-3""#.into(), GENERIC),
-        (r#""d":"M 0 0 L 5 5","x":"1""#.into(), GENERIC),
+        (
+            r#""d":"M 0 0 L 5 5","x":"1""#.into(),
+            r#"element_add path does not accept attribute \"x\"; allowed: d, fill, stroke, stroke-width"#,
+        ),
         (r#""fill":"none""#.into(), GENERIC),
     ];
     for (attributes, error) in &paths {
@@ -400,10 +409,15 @@ fn element_add_line_and_path_rejections() {
         assert!(reply.is_error, "{template}");
         assert_eq!(rig.state(), before);
     }
-    // A parent other than root is refused.
+    // A parent other than root is refused with an actionable message.
     let extra =
         format!(r#""parentId":"vexel-object-1","template":"line","attributes":{{{LINE_OK}}}"#);
-    rejects(&mut rig, "element_add", &extra, GENERIC);
+    rejects(
+        &mut rig,
+        "element_add",
+        &extra,
+        r#"element_add parentId \"vexel-object-1\" is invalid; the live preview only accepts \"root\""#,
+    );
     // Wrong documentId.
     let before = rig.state();
     let reply = rig.tool(

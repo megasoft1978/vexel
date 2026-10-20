@@ -25,7 +25,7 @@ fn display_keys(keys: &[&[u8]]) -> String {
 
 fn element_add_description() -> String {
     format!(
-        "Add a rectangle, ellipse, line, or path to the live preview document. parentId must be \"root\" for the top level or an existing group id. Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
+        "Add a rectangle, ellipse, line, or path to the live preview document. parentId must be \"root\". Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
         display_keys(RECT_KEYS),
         display_keys(ELLIPSE_KEYS),
         display_keys(LINE_KEYS),
