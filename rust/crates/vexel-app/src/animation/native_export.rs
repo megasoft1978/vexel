@@ -64,21 +64,23 @@ impl NativeExportSource {
         (this.candidate.view().ok()?.track_count() > 0).then_some(this)
     }
 
-    /// Renders every loop tick (ping-pong included) and encodes the GIF. Each
+    /// Renders the loop ticks (ping-pong included) and encodes the GIF. Each
     /// frame lasts one tick, `round(100 / ticks_per_second)` centiseconds.
+    /// Loops longer than [`MAX_FRAMES`] ticks keep every `stride`-th tick,
+    /// with the smallest `stride` that fits, and scale the delay by `stride`
+    /// so the total duration stays about the same.
     pub fn export_gif(&self) -> Result<NativeGif, NativeExportError> {
         let view = self
             .candidate
             .view()
             .map_err(|_| NativeExportError::Timeline)?;
-        let ticks = loop_ticks(view.duration_ticks(), view.loop_mode());
+        let loop_steps = loop_ticks(view.duration_ticks(), view.loop_mode());
         let tps = view.ticks_per_second();
-        if ticks.is_empty() || tps == 0 {
+        if loop_steps.is_empty() || tps == 0 {
             return Err(NativeExportError::Timeline);
         }
-        if ticks.len() > MAX_FRAMES {
-            return Err(NativeExportError::Encode(GifError::TooManyFrames));
-        }
+        let stride = loop_steps.len().div_ceil(MAX_FRAMES);
+        let ticks: Vec<u32> = loop_steps.into_iter().step_by(stride).collect();
         let viewport = svg_viewport(Arc::clone(&self.source), &|| false)
             .map_err(NativeExportError::Viewport)?;
         let (width, height) = (viewport.output_width, viewport.output_height);
@@ -114,7 +116,9 @@ impl NativeExportSource {
                     .map_err(NativeExportError::Frame)?;
             rendered.push(over_white(&frame.rgba));
         }
-        let delay_cs = ((100 + tps / 2) / tps).clamp(1, u32::from(u16::MAX)) as u16;
+        let tick_cs = ((100 + tps / 2) / tps).clamp(1, u32::from(u16::MAX));
+        let delay_cs = u16::try_from(u64::from(tick_cs) * stride as u64)
+            .map_err(|_| NativeExportError::Encode(GifError::TooManyFrames))?;
         let frames: Vec<Frame<'_>> = rendered
             .iter()
             .map(|rgba| Frame {

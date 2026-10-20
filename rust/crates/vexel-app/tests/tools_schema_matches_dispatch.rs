@@ -46,7 +46,9 @@ fn arguments(doc: &JsonDocument<'_>, tool: usize) -> String {
         let value = if field == "documentId" {
             format!("\"{DOCUMENT_ID}\"")
         } else {
-            let property = doc.object_get(properties, field.as_bytes()).expect("property");
+            let property = doc
+                .object_get(properties, field.as_bytes())
+                .expect("property");
             sample(doc, property)
         };
         fields.push(format!("\"{field}\":{value}"));

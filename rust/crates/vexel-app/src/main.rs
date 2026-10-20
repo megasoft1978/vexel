@@ -2,6 +2,7 @@
 
 mod mcp_pump;
 
+use mcp_pump::McpPump;
 use std::{
     num::NonZeroUsize,
     sync::mpsc,
@@ -19,7 +20,6 @@ use vexel_app::chrome::{self, AppState};
 use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
 use vexel_app::model::{self, DragPhase, Layout, Mode, Model, Target, Tool};
-use mcp_pump::McpPump;
 use vexel_app::motion::MotionAdapter;
 use vexel_app::native_animation::{TimelineSurface, host::NativeAnimationHost};
 use vexel_app::native_timeline::interaction::Phase as NativeTimelinePhase;
