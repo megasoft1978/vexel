@@ -30,6 +30,7 @@ pub struct NativeGif {
 }
 
 /// Immutable inputs of one native export.
+#[derive(Debug, PartialEq)]
 pub struct NativeExportSource {
     source: Arc<Vec<u8>>,
     candidate: ProjectTimelineCandidate,
