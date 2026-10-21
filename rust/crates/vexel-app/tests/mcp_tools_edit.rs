@@ -190,9 +190,10 @@ fn attribute_set_rejections() {
     let cases: Vec<(&str, String, &str)> = vec![
         ("fill", "#12".into(), BAD_COLOR),
         ("fill", "red".into(), BAD_COLOR),
-        ("stroke", "none".into(), BAD_COLOR),
+        ("stroke", "red".into(), BAD_COLOR),
         ("fill", format!("#{long}"), GENERIC),
-        ("opacity", "0.5".into(), "unsupported attribute"),
+        // opacity is accepted now (widened attribute_set); out of range is not.
+        ("opacity", "2".into(), "unsupported attribute"),
         ("id", "other".into(), "unsupported attribute"),
         ("stroke-width", "257".into(), GENERIC),
         ("stroke-width", "-1".into(), GENERIC),

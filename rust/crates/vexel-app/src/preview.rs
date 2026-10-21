@@ -107,6 +107,15 @@ pub enum Operation {
         stroke: String,
         width: f64,
     },
+    /// `element_add` rect/ellipse with `fill="none"` (corner points).
+    AddBox {
+        ellipse: bool,
+        x0: f64,
+        y0: f64,
+        x1: f64,
+        y1: f64,
+        fill: String,
+    },
     ExportSvg,
     Native(native_timeline::NativeOp),
     Doc(doc_ops::DocOp),
@@ -125,6 +134,11 @@ pub enum AttributeChange {
     StrokeWidth(f64),
     /// `transform="translate(dx dy)"`: a document-space move by this delta.
     Translate(f64, f64),
+    /// Any other name accepted by `V1Document::set_attribute`.
+    Generic {
+        name: String,
+        value: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -579,64 +593,7 @@ pub(super) fn parse_operation(
             validate_animation_fragment(&xml)?;
             Ok(Operation::AnimationAdd { target_id, xml })
         }
-        "animation_control" => {
-            let action = string_field(doc, args, b"action")
-                .or_else(|| string_field(doc, args, b"operation"))
-                .ok_or(PreviewArgumentError::Generic(
-                    "invalid preview tool arguments",
-                ))?;
-            let control = match action.as_str() {
-                "play" => Control::Play,
-                "pause" => Control::Pause,
-                "seek" => {
-                    let token =
-                        doc.object_get(args, b"timeMs")
-                            .ok_or(PreviewArgumentError::Generic(
-                                "invalid preview tool arguments",
-                            ))?;
-                    if doc
-                        .token(token)
-                        .is_none_or(|t| !matches!(t.kind, JsonType::Number | JsonType::String))
-                    {
-                        return Err(PreviewArgumentError::Generic(
-                            "invalid preview tool arguments",
-                        ));
-                    }
-                    let raw = if doc.token(token).is_some_and(|t| t.kind == JsonType::String) {
-                        String::from_utf8(doc.decoded_string(token).ok_or(
-                            PreviewArgumentError::Generic("invalid preview tool arguments"),
-                        )?)
-                        .map_err(|_| "invalid preview tool arguments")?
-                    } else {
-                        std::str::from_utf8(doc.raw_token(token).ok_or(
-                            PreviewArgumentError::Generic("invalid preview tool arguments"),
-                        )?)
-                        .map_err(|_| "invalid preview tool arguments")?
-                        .to_owned()
-                    };
-                    if raw.len() > 32 {
-                        return Err(PreviewArgumentError::Generic(
-                            "invalid preview tool arguments",
-                        ));
-                    }
-                    let milliseconds = raw.parse::<f64>().ok().filter(|n| n.is_finite()).ok_or(
-                        PreviewArgumentError::Generic("invalid preview tool arguments"),
-                    )?;
-                    if !(0.0..=10_000.0).contains(&milliseconds) {
-                        return Err(PreviewArgumentError::Generic(
-                            "invalid preview tool arguments",
-                        ));
-                    }
-                    Control::Seek(milliseconds / 1000.0)
-                }
-                _ => {
-                    return Err(PreviewArgumentError::Generic(
-                        "invalid preview tool arguments",
-                    ));
-                }
-            };
-            Ok(Operation::Control(control))
-        }
+        "animation_control" => parse_animation_control(doc, args),
         "export_animation" => {
             let path = doc
                 .object_get(args, b"path")
@@ -702,6 +659,51 @@ pub(super) fn parse_operation(
             }
         }
     }
+}
+const CONTROL_ACTION: &str =
+    "animation_control: action is required and must be \"play\", \"pause\" or \"seek\"";
+const CONTROL_TIME: &str =
+    "animation_control: seek requires timeMs, a number of milliseconds from 0 to 10000";
+
+fn parse_animation_control(
+    doc: &JsonDocument<'_>,
+    args: usize,
+) -> Result<Operation, PreviewArgumentError> {
+    let actionable = |m: &str| PreviewArgumentError::Actionable(m.to_owned());
+    let action = string_field(doc, args, b"action")
+        .or_else(|| string_field(doc, args, b"operation"))
+        .ok_or_else(|| actionable(CONTROL_ACTION))?;
+    let control = match action.trim().to_ascii_lowercase().as_str() {
+        "play" => Control::Play,
+        "pause" => Control::Pause,
+        "seek" => {
+            let token = doc
+                .object_get(args, b"timeMs")
+                .ok_or_else(|| actionable(CONTROL_TIME))?;
+            let kind = doc.token(token).map(|t| t.kind);
+            let raw = match kind {
+                Some(JsonType::String) => doc
+                    .decoded_string(token)
+                    .and_then(|b| String::from_utf8(b).ok()),
+                Some(JsonType::Number) => doc
+                    .raw_token(token)
+                    .and_then(|b| std::str::from_utf8(b).ok())
+                    .map(str::to_owned),
+                _ => None,
+            }
+            .filter(|raw| raw.len() <= 32)
+            .ok_or_else(|| actionable(CONTROL_TIME))?;
+            let milliseconds = raw
+                .trim()
+                .parse::<f64>()
+                .ok()
+                .filter(|n| n.is_finite() && (0.0..=10_000.0).contains(n))
+                .ok_or_else(|| actionable(CONTROL_TIME))?;
+            Control::Seek(milliseconds / 1000.0)
+        }
+        _ => return Err(actionable(CONTROL_ACTION)),
+    };
+    Ok(Operation::Control(control))
 }
 fn string_field(doc: &JsonDocument<'_>, obj: usize, key: &[u8]) -> Option<String> {
     let token = doc.object_get(obj, key)?;
