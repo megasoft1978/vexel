@@ -103,6 +103,25 @@ fn reorder_is_one_entry_and_edge_moves_are_noops() {
 }
 
 #[test]
+fn relative_reorder_moves_before_and_after_with_roundtrips() {
+    let mut d = doc("<rect id='a'/><rect id='b'/><rect id='c'/>");
+    roundtrip(&mut d, |d| d.reorder_relative("c", "a", true).unwrap());
+    assert!(source(&d).find("id='c'").unwrap() < source(&d).find("id='a'").unwrap());
+    roundtrip(&mut d, |d| d.reorder_relative("c", "b", false).unwrap());
+    assert!(source(&d).find("id='c'").unwrap() > source(&d).find("id='b'").unwrap());
+    let count = d.history_count();
+    assert_eq!(
+        d.reorder_relative("a", "missing", true),
+        Err(V1DocumentError::MissingStableId)
+    );
+    assert_eq!(
+        d.reorder_relative("a", "a", true),
+        Err(V1DocumentError::Unsupported)
+    );
+    assert_eq!(d.history_count(), count);
+}
+
+#[test]
 fn group_bounds_and_translate_cover_children_and_hit_returns_child() {
     let mut d = doc(
         "<g id='g'><rect id='a' x='10' y='20' width='5' height='6'/><rect id='b' x='30' y='40' width='2' height='3'/></g>",
