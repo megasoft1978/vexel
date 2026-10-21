@@ -1,0 +1,22 @@
+@font-face{font-family:"Geist";src:url("../fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url("../fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
+:root{
+  color-scheme:dark light;
+  --bg:#0d0a1f;--bg2:#120e29;--surface:#18132f;--line:#2f2758;
+  --text:#efebfa;--muted:#aca5c9;--link:#a98cff;
+  --violet:#5b2bd9;--magenta:#d6389f;--orange:#ff7a1a;--gold:#f4c46a;
+  --grad:linear-gradient(100deg,#7a4dff 0%,#d6389f 55%,#ff7a1a 100%);
+  --code-bg:#0a0818;--ok:#7bdba0;--warn:#f4c46a;--plan:#aca5c9;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ease:cubic-bezier(.22,.8,.3,1);
+  --wrap:1200px;
+}
+@media (prefers-color-scheme:light){
+  :root{
+    --bg:#faf7f2;--bg2:#f3eee5;--surface:#fff;--line:#ddd3c3;
+    --text:#1a1530;--muted:#5a5275;--link:#5b2bd9;--gold:#946200;
+    --grad:linear-gradient(100deg,#5b2bd9 0%,#c42d8f 55%,#e0640a 100%);
+    --code-bg:#1a1530;--ok:#1d7a45;--warn:#8a5a00;--plan:#5a5275;
+  }
+}
