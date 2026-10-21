@@ -193,6 +193,7 @@ impl McpHost {
                     doc.add_rectangle_with_id(x0, y0, x1, y1, &fill, id)
                 }
             }),
+            Operation::Batch(batch) => self.batch(app, batch, driver),
             Operation::Native(op) => crate::preview::native_timeline::apply(app, op),
             Operation::Doc(op) => crate::preview::apply_doc(app, op),
             Operation::ExportSvg => export_svg(app),

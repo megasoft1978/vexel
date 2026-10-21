@@ -14,6 +14,7 @@
 mod grants;
 mod hooks;
 mod mcp;
+mod mcp_batch;
 mod mcp_extras;
 pub(crate) mod mcp_png;
 mod mcp_tools;
@@ -32,7 +33,7 @@ pub use grants::{GrantError, McpGrants};
 pub use hooks::{DocumentEditor, EditAction, EditOutcome, PlaybackHost, edit_shortcut};
 pub use mcp::{McpHost, McpOutcome};
 
-use crate::project_session::{ProjectSession, SessionError};
+use crate::project_session::{EditGroup, ProjectSession, SessionError};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use vexel_v1_document::V1Document;
@@ -222,5 +223,35 @@ impl AppDocument {
             self.state_revision += 1;
         }
         Ok(changed)
+    }
+
+    /// Opens a journal group: edits until `end_group` are one undo step.
+    pub(crate) fn begin_group(&mut self) -> Result<EditGroup, SessionError> {
+        self.session.begin_group()
+    }
+
+    pub(crate) fn end_group(&mut self, group: EditGroup) -> Result<(), SessionError> {
+        let before = self.session.history_state_id();
+        self.session.end_group(group)?;
+        if before != self.session.history_state_id() {
+            self.state_revision += 1;
+        }
+        Ok(())
+    }
+
+    /// Restores the document and payload to the group start.
+    pub(crate) fn rollback_group(&mut self, group: EditGroup) -> Result<(), SessionError> {
+        let before_state_id = self.session.history_state_id();
+        let before_scene_id = self.session.document().history_state_id();
+        let result = self.session.rollback_group(group);
+        if before_scene_id != self.session.document().history_state_id() {
+            self.revision += 1;
+        }
+        if before_state_id != self.session.history_state_id()
+            || before_scene_id != self.session.document().history_state_id()
+        {
+            self.state_revision += 1;
+        }
+        result
     }
 }
