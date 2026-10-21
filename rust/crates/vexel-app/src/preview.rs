@@ -170,14 +170,18 @@ struct AnimationFragment {
 
 #[derive(Clone, Debug, PartialEq)]
 struct Snapshot {
-    shapes: Vec<Shape>,
-    element_ids: Vec<String>,
-    animations: Vec<AnimationFragment>,
+    // Shared, so cloning the undo/redo history copies pointers, not scenes.
+    shapes: std::sync::Arc<Vec<Shape>>,
+    element_ids: std::sync::Arc<Vec<String>>,
+    animations: std::sync::Arc<Vec<AnimationFragment>>,
 }
 
 #[derive(Debug)]
 pub struct PreviewState {
-    document: V1Document,
+    /// Built on first read: a scene of shapes only is not replayed per edit.
+    document: std::cell::OnceCell<V1Document>,
+    /// Byte length of the document source (kept in step without building it).
+    source_len: usize,
     shapes: Vec<Shape>,
     element_ids: Vec<String>,
     next_element_id: u64,
@@ -192,8 +196,11 @@ pub struct PreviewState {
 
 impl PreviewState {
     pub fn new() -> Result<Self, &'static str> {
+        let blank = V1Document::new(512, 512).map_err(document_error)?;
+        let source_len = blank.source().map_err(document_error)?.len();
         Ok(Self {
-            document: V1Document::new(512, 512).map_err(document_error)?,
+            document: std::cell::OnceCell::from(blank),
+            source_len,
             shapes: Vec::new(),
             element_ids: Vec::new(),
             next_element_id: 1,
@@ -216,7 +223,7 @@ impl PreviewState {
         self.dirty
     }
     pub fn source(&self) -> Result<Vec<u8>, &'static str> {
-        self.document.source().map_err(document_error)
+        self.document()?.source().map_err(document_error)
     }
     pub fn playback(&self) -> (bool, f64, f64) {
         (self.playing, self.time_seconds, self.duration_seconds)
@@ -233,11 +240,8 @@ impl PreviewState {
     pub fn stage(&self, operation: &Operation) -> Result<(Self, String), &'static str> {
         if let Operation::Control(control) = operation {
             let mut next = PreviewState {
-                document: animation::rebuild_document(
-                    &self.shapes,
-                    &self.element_ids,
-                    &self.animations,
-                )?,
+                document: animation::copy_cell(&self.document)?,
+                source_len: self.source_len,
                 shapes: clone_shapes(&self.shapes)?,
                 element_ids: clone_ids(&self.element_ids)?,
                 next_element_id: self.next_element_id,
@@ -370,9 +374,17 @@ impl PreviewState {
             }
             _ => return Err("read-only operation cannot be staged"),
         };
-        let document = animation::rebuild_document(&shapes, &element_ids, &animations)?;
+        let (document, source_len) = self.next_document(
+            matches!(operation, Operation::Add(_)),
+            &shapes,
+            &element_ids,
+            &animations,
+        )?;
         let dirty = !shapes.is_empty();
-        let duration_seconds = document_duration(&document)?;
+        let duration_seconds = match document.get() {
+            Some(document) if !animations.is_empty() => document_duration(document)?,
+            _ => 0.0,
+        };
         let next_element_id = if matches!(operation, Operation::Add(_)) {
             self.next_element_id
                 .checked_add(1)
@@ -383,6 +395,7 @@ impl PreviewState {
         Ok((
             Self {
                 document,
+                source_len,
                 shapes,
                 element_ids,
                 next_element_id,
@@ -410,10 +423,10 @@ impl PreviewState {
             Operation::Info => Ok(format!(
                 "{{\"documentId\":\"{DOCUMENT_ID}\",\"width\":512,\"height\":512,\"elementCount\":{},\"sourceBytes\":{},\"dirty\":{}}}",
                 self.shapes.len(),
-                self.document.source().map_err(document_error)?.len(),
+                self.source_len,
                 self.dirty
             )),
-            Operation::AnimationList => animation_list_json(&self.document, &self.element_ids),
+            Operation::AnimationList => animation_list_json(self.document()?, &self.element_ids),
             Operation::Control(control) => {
                 let (playing, time) = match *control {
                     Control::Play => (self.duration_seconds > 0.0, self.time_seconds),
@@ -435,9 +448,9 @@ impl PreviewState {
 
     fn snapshot(&self) -> Result<Snapshot, &'static str> {
         Ok(Snapshot {
-            shapes: clone_shapes(&self.shapes)?,
-            element_ids: clone_ids(&self.element_ids)?,
-            animations: clone_animations(&self.animations)?,
+            shapes: std::sync::Arc::new(clone_shapes(&self.shapes)?),
+            element_ids: std::sync::Arc::new(clone_ids(&self.element_ids)?),
+            animations: std::sync::Arc::new(clone_animations(&self.animations)?),
         })
     }
 }
@@ -471,13 +484,7 @@ fn clone_history(input: &[Snapshot]) -> Result<Vec<Snapshot>, &'static str> {
     let mut v = Vec::new();
     v.try_reserve_exact(input.len())
         .map_err(|_| "preview allocation failed")?;
-    for s in input {
-        v.push(Snapshot {
-            shapes: clone_shapes(&s.shapes)?,
-            element_ids: clone_ids(&s.element_ids)?,
-            animations: clone_animations(&s.animations)?,
-        });
-    }
+    v.extend(input.iter().cloned());
     Ok(v)
 }
 fn clone_ids(input: &[String]) -> Result<Vec<String>, &'static str> {

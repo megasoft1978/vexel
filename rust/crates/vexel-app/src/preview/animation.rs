@@ -18,6 +18,97 @@ pub(super) fn rebuild_document(
         return Err("preview stable ID history is invalid");
     }
     for (shape, id) in shapes.iter().zip(element_ids) {
+        add_shape(&mut doc, *shape, id)?;
+    }
+    validated(doc, shapes, element_ids, animations)
+}
+
+impl PreviewState {
+    /// The document, replaying the scene on first use.
+    pub(super) fn document(&self) -> Result<&V1Document, &'static str> {
+        if self.document.get().is_none() {
+            let built = rebuild_document(&self.shapes, &self.element_ids, &self.animations)?;
+            let _ = self.document.set(built);
+        }
+        self.document.get().ok_or("preview allocation failed")
+    }
+
+    /// The document cell and source length after an edit that produced
+    /// `shapes`. A plain add to a shape-only scene is O(1): the length grows
+    /// by the new element's own bytes and the document is built when read.
+    pub(super) fn next_document(
+        &self,
+        add: bool,
+        shapes: &[Shape],
+        element_ids: &[String],
+        animations: &[AnimationFragment],
+    ) -> Result<(std::cell::OnceCell<V1Document>, usize), &'static str> {
+        let cell = std::cell::OnceCell::new();
+        if add && animations.is_empty() {
+            let (Some(shape), Some(id)) = (shapes.last(), element_ids.last()) else {
+                return Err("preview stable ID history is invalid");
+            };
+            let mut blank = V1Document::new(512, 512).map_err(document_error)?;
+            if shapes.len() > 1 {
+                // Later siblings carry separator bytes the first one lacks.
+                add_shape(&mut blank, *shape, "vexel-dummy")?;
+            }
+            let base = blank.source().map_err(document_error)?.len();
+            add_shape(&mut blank, *shape, id)?;
+            let grown = blank.source().map_err(document_error)?.len() - base;
+            let len = self.source_len + grown;
+            if len > SOURCE_LIMIT {
+                return Err("preview source limit reached");
+            }
+            return Ok((cell, len));
+        }
+        let document = if add {
+            extend_document(self.document()?, shapes, element_ids, animations)?
+        } else {
+            rebuild_document(shapes, element_ids, animations)?
+        };
+        let len = document.source().map_err(document_error)?.len();
+        let _ = cell.set(document);
+        Ok((cell, len))
+    }
+}
+
+/// An independent copy of the built document, if there is one.
+pub(super) fn copy_cell(
+    cell: &std::cell::OnceCell<V1Document>,
+) -> Result<std::cell::OnceCell<V1Document>, &'static str> {
+    let copy = std::cell::OnceCell::new();
+    if let Some(document) = cell.get() {
+        let _ = copy.set(copy_document(document)?);
+    }
+    Ok(copy)
+}
+
+/// `previous` plus one more shape (the last of `shapes`), without replaying
+/// the whole scene: O(source) instead of O(source x shapes).
+pub(super) fn extend_document(
+    previous: &V1Document,
+    shapes: &[Shape],
+    element_ids: &[String],
+    animations: &[AnimationFragment],
+) -> Result<V1Document, &'static str> {
+    let (Some(shape), Some(id)) = (shapes.last(), element_ids.last()) else {
+        return Err("preview stable ID history is invalid");
+    };
+    let mut doc = V1Document::from_source(&previous.source().map_err(document_error)?)
+        .map_err(document_error)?;
+    add_shape(&mut doc, *shape, id)?;
+    validated(doc, shapes, element_ids, animations)
+}
+
+/// An independent copy of `document` (same source, fresh edit history).
+pub(super) fn copy_document(document: &V1Document) -> Result<V1Document, &'static str> {
+    V1Document::from_source(&document.source().map_err(document_error)?).map_err(document_error)
+}
+
+fn add_shape(doc: &mut V1Document, shape: Shape, id: &str) -> Result<(), &'static str> {
+    {
+        let shape = &shape;
         let mut color = [0u8; 7];
         color[0] = b'#';
         const HEX: &[u8; 16] = b"0123456789ABCDEF";
@@ -40,12 +131,25 @@ pub(super) fn rebuild_document(
         }
         .map_err(document_error)?;
     }
+    Ok(())
+}
+
+fn validated(
+    mut doc: V1Document,
+    shapes: &[Shape],
+    element_ids: &[String],
+    animations: &[AnimationFragment],
+) -> Result<V1Document, &'static str> {
     for animation in animations {
         doc.add_animation_fragment(&animation.target_id, &animation.xml)
             .map_err(document_error)?;
     }
     if doc.source().map_err(document_error)?.len() > SOURCE_LIMIT {
         return Err("preview source limit reached");
+    }
+    if animations.is_empty() {
+        // Only shapes this module wrote: no animation tracks to parse or check.
+        return Ok(doc);
     }
     let parsed = parse_animation_document(&doc)?;
     let source = doc.source().map_err(document_error)?;
@@ -321,7 +425,7 @@ pub(crate) fn rasterize_at(
     if !time_seconds.is_finite() || !(0.0..=10.0).contains(&time_seconds) {
         return Err("invalid preview animation time");
     }
-    let parsed = parse_animation_document(&state.document)?;
+    let parsed = parse_animation_document(state.document()?)?;
     validate_tracks(&parsed, parsed.source())?;
     let overlay =
         evaluate_view(parsed.view(), time_seconds).ok_or("preview animation evaluation failed")?;

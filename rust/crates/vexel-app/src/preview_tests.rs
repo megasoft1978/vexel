@@ -436,3 +436,31 @@ fn export_animation_mapping_is_gif_only_with_bounded_fps_and_duration() {
         );
     }
 }
+
+#[test]
+fn incremental_source_length_matches_the_built_document() {
+    let mut state = PreviewState::new().unwrap();
+    for n in 0..40u32 {
+        let operation = if n % 3 == 0 {
+            Operation::Add(Shape::Ellipse {
+                cx: 100.5 + f64::from(n),
+                cy: 50.25,
+                rx: 7.0,
+                ry: 3.125,
+                rgb: 0x00_ff_00 + n,
+            })
+        } else {
+            Operation::Add(Shape::Rect {
+                x: f64::from(n) * 10.0,
+                y: 1.0 / 3.0,
+                width: 12.0,
+                height: 9.0,
+                rgb: 0xab_cd_ef,
+            })
+        };
+        state = state.stage(&operation).unwrap().0;
+        assert_eq!(state.source_len, state.source().unwrap().len(), "after {n}");
+    }
+    let state = state.stage(&Operation::Undo).unwrap().0;
+    assert_eq!(state.source_len, state.source().unwrap().len());
+}
