@@ -55,7 +55,8 @@ fn make_item<'a>(source:&'a[u8],meta:TrackMeta,span:Span)->Option<ItemView<'a>> 
         let value=field(&fields,b"value")?.value;
         (None,Some(source.get(value.start..value.end)?))
     };
-    Some(ItemView{tick,asset,value_json,source:span})
+    let ease=match field(&fields,b"ease") {Some(f)=>Some(crate::easing::parse(source,f.value).ok()?),None=>None};
+    Some(ItemView{tick,asset,value_json,source:span,ease})
 }
 fn raw_string(source:&[u8],span:Span)->Option<&[u8]>{
     let raw=source.get(span.start..span.end)?;

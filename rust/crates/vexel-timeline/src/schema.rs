@@ -39,7 +39,7 @@ pub struct TrackView<'a> {
     pub property: Option<&'a [u8]>, pub value_type: Option<&'a [u8]>, pub interpolation: Option<&'a [u8]>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ItemView<'a> { pub tick: u32, pub asset: Option<&'a [u8]>, pub value_json: Option<&'a [u8]>, pub source: Span }
+pub struct ItemView<'a> { pub tick: u32, pub asset: Option<&'a [u8]>, pub value_json: Option<&'a [u8]>, pub source: Span, pub ease: Option<crate::easing::Ease> }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct TimelineIterator { pub track_index: usize, pub next_index: usize, pub source_cursor: usize, pub initialized: bool }
 #[derive(Debug, Clone, Copy)]
@@ -139,7 +139,12 @@ where F: FnMut() -> bool {
             if drawing {
                 validate_item_fields(&item_fields,&[b"tick",b"asset",b"label"],&[b"tick",b"asset"],*item_span)?;
             } else {
-                require_fields(&item_fields,&[b"tick",b"value"],item_span.start)?;
+                let allowed:&[&[u8]]=if field(&item_fields,b"ease").is_some(){&[b"tick",b"value",b"ease"]}else{&[b"tick",b"value"]};
+                require_fields(&item_fields,allowed,item_span.start)?;
+                if let Some(ease_field)=field(&item_fields,b"ease") {
+                    let ease=crate::easing::parse(source,ease_field.value)?;
+                    if type_val==b"boolean"&&!ease.is_step() { return Err(at(Error::InvalidValue,ease_field.value.start)); }
+                }
             }
             let tick_field=required(&item_fields,b"tick").ok_or_else(||at(Error::InvalidSchema,item_span.start))?;
             let tick=uint(source,tick_field.value)?;
@@ -205,11 +210,11 @@ fn validate_property(source:&[u8],fields:&[Field],span:Span)->Result<()> {
     let kind=string(source,type_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     let interpolation=string(source,interp_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     if prop.is_empty() || ![b"step".as_slice(),b"linear",b"cubic"].contains(&interpolation.as_slice()) ||
-       ![b"scalar".as_slice(),b"transform2d",b"rgba",b"boolean"].contains(&kind.as_slice()) {
+       ![b"scalar".as_slice(),b"transform2d",b"rgba",b"boolean",b"trs"].contains(&kind.as_slice()) {
         return Err(at(Error::InvalidValue,span.start));
     }
-    let scalar=[b"x".as_slice(),b"y",b"width",b"height",b"cx",b"cy",b"r",b"rx",b"ry",b"opacity",b"fill-opacity",b"stroke-opacity",b"stroke-width",b"stroke-dashoffset"].contains(&prop.as_slice())&&kind==b"scalar";
-    let match_ok=scalar||([b"fill".as_slice(),b"stroke"].contains(&prop.as_slice())&&kind==b"rgba")||(prop==b"transform"&&kind==b"transform2d")||(prop==b"visibility"&&kind==b"boolean");
+    let scalar=[b"x".as_slice(),b"y",b"width",b"height",b"cx",b"cy",b"r",b"rx",b"ry",b"opacity",b"fill-opacity",b"stroke-opacity",b"stroke-width",b"stroke-dashoffset",b"stop-opacity",b"offset"].contains(&prop.as_slice())&&kind==b"scalar";
+    let match_ok=scalar||([b"fill".as_slice(),b"stroke",b"stop-color"].contains(&prop.as_slice())&&kind==b"rgba")||(prop==b"transform"&&(kind==b"transform2d"||kind==b"trs"))||(prop==b"visibility"&&kind==b"boolean");
     if !match_ok {return Err(at(Error::InvalidValue,prop_f.value.start));}
     if kind==b"boolean"&&interpolation!=b"step" {return Err(at(Error::InvalidValue,interp_f.value.start));}
     Ok(())
@@ -217,6 +222,17 @@ fn validate_property(source:&[u8],fields:&[Field],span:Span)->Result<()> {
 fn validate_typed_value(source:&[u8],span:Span,kind:&[u8],cancel:&mut dyn FnMut()->bool)->Result<()> {
     if kind==b"boolean" {boolean(source,span).map(|_|())?;return Ok(())}
     if kind==b"scalar" {number(source,span).map(|_|())?;return Ok(())}
+    if kind==b"trs" {
+        let fields=object_fields(source,span,Some(cancel)).map_err(|error|if error.canceled{error}else{at(Error::InvalidValue,span.start)})?;
+        const REQUIRED:[&[u8];7]=[b"tx",b"ty",b"rotation_deg",b"sx",b"sy",b"pivot_x",b"pivot_y"];
+        let skew=field(&fields,b"skew_x_deg");
+        if fields.len()!=REQUIRED.len()+usize::from(skew.is_some())||REQUIRED.iter().any(|k|field(&fields,k).is_none()) { return Err(at(Error::InvalidValue,span.start)); }
+        for f in &fields {
+            let n=number(source,f.value).map_err(|_|at(Error::InvalidValue,f.value.start))?;
+            if n.abs()>1e9 { return Err(at(Error::InvalidValue,f.value.start)); }
+        }
+        return Ok(())
+    }
     if kind==b"transform2d"||kind==b"rgba" {
         let spans=array_spans(source,span,6,Some(cancel)).map_err(|error|if error.canceled{error}else{at(Error::InvalidValue,span.start)})?;
         let expected=if kind==b"rgba"{4}else{6}; if spans.len()!=expected{return Err(at(Error::InvalidValue,span.start));}

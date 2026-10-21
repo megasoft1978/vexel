@@ -1,10 +1,42 @@
 use crate::DecodeFailure;
-use crate::json::array_spans;
+use crate::json::{array_spans, object_fields};
 use crate::schema::{Error, ItemView, TimelineView, TrackView};
 use vexel_base::Span;
 
+pub use crate::easing::{ease_value, Ease};
+
+/// Translate/rotate/scale/skew transform with a pivot; components interpolate independently.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Trs {
+    pub tx: f64,
+    pub ty: f64,
+    pub rotation_deg: f64,
+    pub sx: f64,
+    pub sy: f64,
+    pub pivot_x: f64,
+    pub pivot_y: f64,
+    pub skew_x_deg: f64,
+}
+
+impl Trs {
+    /// SVG style matrix `[a, b, c, d, e, f]` for
+    /// `M = T(tx,ty) * T(pivot) * R * SkewX * S * T(-pivot)`.
+    pub fn to_matrix(&self) -> [f64; 6] {
+        let (sin, cos) = self.rotation_deg.to_radians().sin_cos();
+        let tan = self.skew_x_deg.to_radians().tan();
+        let a = cos * self.sx;
+        let b = sin * self.sx;
+        let c = (cos * tan - sin) * self.sy;
+        let d = (sin * tan + cos) * self.sy;
+        let e = self.tx + self.pivot_x - (a * self.pivot_x + c * self.pivot_y);
+        let f = self.ty + self.pivot_y - (b * self.pivot_x + d * self.pivot_y);
+        [a, b, c, d, e, f]
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PropertyValue {
+    Trs(Trs),
     Scalar(f64),
     Transform2d([f64; 6]),
     Rgba([f64; 4]),
@@ -91,19 +123,19 @@ fn sample_track<'a>(
                 .ok_or_else(|| failure(Error::InvalidSchema, upper.source.start))?,
         )?;
         let t = f64::from(tick - lower.tick) / f64::from(upper.tick - lower.tick);
-        let t = match track.interpolation {
-            Some(mode) if mode == b"step" => 0.0,
-            Some(mode) if mode == b"linear" => t,
-            Some(mode) if mode == b"cubic" => 3.0 * t * t - 2.0 * t * t * t,
-            _ => return Err(failure(Error::InvalidValue, lower.source.start)),
+        let (t, step) = match lower.ease {
+            Some(ease) => (ease.apply(t), ease.is_step()),
+            None => {
+                let t = match track.interpolation {
+                    Some(mode) if mode == b"step" => 0.0,
+                    Some(mode) if mode == b"linear" => t,
+                    Some(mode) if mode == b"cubic" => 3.0 * t * t - 2.0 * t * t * t,
+                    _ => return Err(failure(Error::InvalidValue, lower.source.start)),
+                };
+                (t, track.interpolation.is_some_and(|mode| mode == b"step"))
+            }
         };
-        interpolate(
-            start,
-            end,
-            t,
-            track.interpolation.is_some_and(|mode| mode == b"step"),
-            lower.source.start,
-        )?
+        interpolate(start, end, t, step, lower.source.start)?
     };
     Ok(PropertySample {
         track_index,
@@ -136,8 +168,34 @@ fn parse_value(
         }
         b"transform2d" => Ok(PropertyValue::Transform2d(numbers::<6>(view, item)?)),
         b"rgba" => Ok(PropertyValue::Rgba(numbers::<4>(view, item)?)),
+        b"trs" => parse_trs(view, item),
         _ => Err(failure(Error::InvalidValue, span.start)),
     }
+}
+
+fn parse_trs(view: &TimelineView<'_>, item: ItemView<'_>) -> Result<PropertyValue, DecodeFailure> {
+    let value = item
+        .value_json
+        .ok_or_else(|| failure(Error::InvalidSchema, item.source.start))?;
+    let span = value_span(view, value)?;
+    let fields = object_fields(view.source(), span, None)?;
+    let get = |key: &[u8]| -> Result<Option<f64>, DecodeFailure> {
+        match fields.iter().find(|f| f.key == key) {
+            Some(f) => number(view.source(), f.value).map(Some),
+            None => Ok(None),
+        }
+    };
+    let need = |key: &[u8]| get(key)?.ok_or_else(|| failure(Error::InvalidValue, span.start));
+    Ok(PropertyValue::Trs(Trs {
+        tx: need(b"tx")?,
+        ty: need(b"ty")?,
+        rotation_deg: need(b"rotation_deg")?,
+        sx: need(b"sx")?,
+        sy: need(b"sy")?,
+        pivot_x: need(b"pivot_x")?,
+        pivot_y: need(b"pivot_y")?,
+        skew_x_deg: get(b"skew_x_deg")?.unwrap_or(0.0),
+    }))
 }
 
 fn numbers<const N: usize>(
@@ -220,6 +278,16 @@ fn interpolate(
                 mix(a[i], b[i])
             })))
         }
+        (PropertyValue::Trs(a), PropertyValue::Trs(b)) => Ok(PropertyValue::Trs(Trs {
+            tx: mix(a.tx, b.tx),
+            ty: mix(a.ty, b.ty),
+            rotation_deg: mix(a.rotation_deg, b.rotation_deg),
+            sx: mix(a.sx, b.sx),
+            sy: mix(a.sy, b.sy),
+            pivot_x: mix(a.pivot_x, b.pivot_x),
+            pivot_y: mix(a.pivot_y, b.pivot_y),
+            skew_x_deg: mix(a.skew_x_deg, b.skew_x_deg),
+        })),
         (PropertyValue::Boolean(_), PropertyValue::Boolean(_)) => {
             Err(failure(Error::InvalidValue, offset))
         }
