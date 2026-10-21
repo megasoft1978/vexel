@@ -5,8 +5,8 @@
 //! separate.
 
 use std::ops::Range;
-use vexel_timeline::{sample_properties, PropertyValue, TimelineView};
-use vexel_xml::{decode_attribute_value, tokenize_large, TokenKind, XmlSpan};
+use vexel_timeline::{PropertyValue, TimelineView, sample_properties};
+use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
 
 const MAX_ID_BYTES: usize = 256;
 

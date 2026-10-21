@@ -1,5 +1,5 @@
-use super::native_properties::{apply_native_properties, NativePropertyError};
-use vexel_timeline::{decode, TimelineContext, TimelineView};
+use super::native_properties::{NativePropertyError, apply_native_properties};
+use vexel_timeline::{TimelineContext, TimelineView, decode};
 
 fn timeline(tracks: &str, scene_ids: &[&[u8]]) -> TimelineView<'static> {
     let bytes = format!(
@@ -28,15 +28,21 @@ fn applies_ordered_rgba_and_scalar_writes_to_an_owned_snapshot() {
     let snapshot = apply_native_properties(source, &timeline, 0).unwrap();
 
     assert_eq!(source.as_slice(), original.as_slice());
-    assert!(snapshot
-        .windows(b"fill=\"#ff8000\"".len())
-        .any(|window| window == b"fill=\"#ff8000\""));
-    assert!(snapshot
-        .windows(b"fill-opacity=\"0.75\"".len())
-        .any(|window| window == b"fill-opacity=\"0.75\""));
-    assert!(snapshot
-        .windows(b".paint{fill:blue}".len())
-        .any(|w| w == b".paint{fill:blue}"));
+    assert!(
+        snapshot
+            .windows(b"fill=\"#ff8000\"".len())
+            .any(|window| window == b"fill=\"#ff8000\"")
+    );
+    assert!(
+        snapshot
+            .windows(b"fill-opacity=\"0.75\"".len())
+            .any(|window| window == b"fill-opacity=\"0.75\"")
+    );
+    assert!(
+        snapshot
+            .windows(b".paint{fill:blue}".len())
+            .any(|w| w == b".paint{fill:blue}")
+    );
 }
 
 #[test]
@@ -51,15 +57,21 @@ fn samples_smoothstep_and_writes_transform_and_visibility() {
 
     let snapshot = apply_native_properties(source, &timeline, 5).unwrap();
 
-    assert!(snapshot
-        .windows(b"x=\"5\"".len())
-        .any(|window| window == b"x=\"5\""));
-    assert!(snapshot
-        .windows(b"transform=\"matrix(1 0 0 1 4 5)\"".len())
-        .any(|window| window == b"transform=\"matrix(1 0 0 1 4 5)\""));
-    assert!(snapshot
-        .windows(b"visibility=\"hidden\"".len())
-        .any(|window| window == b"visibility=\"hidden\""));
+    assert!(
+        snapshot
+            .windows(b"x=\"5\"".len())
+            .any(|window| window == b"x=\"5\"")
+    );
+    assert!(
+        snapshot
+            .windows(b"transform=\"matrix(1 0 0 1 4 5)\"".len())
+            .any(|window| window == b"transform=\"matrix(1 0 0 1 4 5)\"")
+    );
+    assert!(
+        snapshot
+            .windows(b"visibility=\"hidden\"".len())
+            .any(|window| window == b"visibility=\"hidden\"")
+    );
 }
 
 #[test]
@@ -114,15 +126,21 @@ fn writes_gradient_stop_rgba_and_scalar_properties() {
         &[b"stop"],
     );
     let result = apply_native_properties(br#"<svg><stop id="stop"/></svg>"#, &timeline, 0).unwrap();
-    assert!(result
-        .windows(b"stop-color=\"#ff0000\"".len())
-        .any(|w| w == b"stop-color=\"#ff0000\""));
-    assert!(result
-        .windows(b"stop-opacity=\"0.25\"".len())
-        .any(|w| w == b"stop-opacity=\"0.25\""));
-    assert!(result
-        .windows(b"offset=\"0.4\"".len())
-        .any(|w| w == b"offset=\"0.4\""));
+    assert!(
+        result
+            .windows(b"stop-color=\"#ff0000\"".len())
+            .any(|w| w == b"stop-color=\"#ff0000\"")
+    );
+    assert!(
+        result
+            .windows(b"stop-opacity=\"0.25\"".len())
+            .any(|w| w == b"stop-opacity=\"0.25\"")
+    );
+    assert!(
+        result
+            .windows(b"offset=\"0.4\"".len())
+            .any(|w| w == b"offset=\"0.4\"")
+    );
 }
 
 #[test]

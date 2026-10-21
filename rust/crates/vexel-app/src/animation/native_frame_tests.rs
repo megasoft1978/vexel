@@ -1,6 +1,6 @@
 use super::*;
 use crate::animation::native_drawing::SVG_MEDIA_TYPE;
-use vexel_timeline::{decode, TimelineContext};
+use vexel_timeline::{TimelineContext, decode};
 use vexel_v1_document::{GradientStop, GradientUnits, Spread, TransformSpec, V1Document};
 
 const GEOMETRY: SvgGeometry = SvgGeometry {
