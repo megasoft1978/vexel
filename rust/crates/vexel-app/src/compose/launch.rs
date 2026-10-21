@@ -1,7 +1,8 @@
 //! Command-line interpretation: `--mcp-preview` keeps its meaning, a single
-//! positional path opens that SVG in the shell, and `--grant-dir <path>`
-//! (repeatable) grants the MCP file tools access to a directory. Unknown `-`
-//! arguments are ignored exactly as before this module existed.
+//! positional path opens that file (also in the MCP preview, under its
+//! grants), and `--grant-dir <path>` (repeatable) grants the MCP file tools
+//! access to a directory. Unknown `-` arguments are ignored exactly as before
+//! this module existed.
 
 use crate::session::McpGrants;
 use std::ffi::OsString;
@@ -10,10 +11,13 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Launch {
-    /// MCP preview with no explicit grants (environment and config only).
-    McpPreview,
-    /// MCP preview with at least one `--grant-dir`.
-    McpPreviewGranted(McpGrants),
+    /// MCP preview. `open` is the startup file, opened through the
+    /// `document_open` rules (it needs a grant); `grants` are the explicit
+    /// `--grant-dir` directories and may be empty.
+    McpPreview {
+        open: Option<PathBuf>,
+        grants: McpGrants,
+    },
     Shell {
         open: Option<PathBuf>,
     },
@@ -59,11 +63,7 @@ pub fn parse_launch_with_home(
         }
     }
     if mcp {
-        if grants.dirs().is_empty() {
-            Launch::McpPreview
-        } else {
-            Launch::McpPreviewGranted(grants)
-        }
+        Launch::McpPreview { open, grants }
     } else if extra {
         Launch::Usage("usage: vexel [file.svg]")
     } else {

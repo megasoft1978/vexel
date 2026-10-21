@@ -1,7 +1,7 @@
 //! Open path, launch parsing, worker supersession and the shell view state.
 use super::tests::{fixture, fixture_path};
 use super::*;
-use crate::session::AppDocument;
+use crate::session::{AppDocument, McpGrants};
 use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
@@ -109,9 +109,27 @@ fn launch(args: &[&str]) -> Launch {
 #[test]
 fn launch_keeps_mcp_preview_and_adds_a_file_argument() {
     assert_eq!(launch(&[]), Launch::Shell { open: None });
-    assert_eq!(launch(&["--mcp-preview"]), Launch::McpPreview);
-    assert_eq!(launch(&["a.svg", "--mcp-preview"]), Launch::McpPreview);
-    assert_eq!(launch(&["--mcp-preview", "a.svg"]), Launch::McpPreview);
+    assert_eq!(
+        launch(&["--mcp-preview"]),
+        Launch::McpPreview {
+            open: None,
+            grants: McpGrants::none()
+        }
+    );
+    assert_eq!(
+        launch(&["a.svg", "--mcp-preview"]),
+        Launch::McpPreview {
+            open: Some("a.svg".into()),
+            grants: McpGrants::none()
+        }
+    );
+    assert_eq!(
+        launch(&["--mcp-preview", "a.svg"]),
+        Launch::McpPreview {
+            open: Some("a.svg".into()),
+            grants: McpGrants::none()
+        }
+    );
     assert_eq!(
         launch(&["a.svg"]),
         Launch::Shell {

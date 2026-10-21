@@ -22,6 +22,23 @@ directories, the environment value, and the config file form the process's
 fixed access policy. Directories must exist; `/` and the home directory cannot
 be granted directly.
 
+To start on an existing document, pass its path after the flags:
+
+```sh
+"$PWD/build/rust/aarch64-apple-darwin/release/vexel" \
+  --mcp-preview \
+  --grant-dir /Users/me/Artwork \
+  /Users/me/Artwork/logo.svg
+```
+
+The file opens through the same rules as the `document_open` tool: it must be
+a `.vexel` or `.svg` file inside a granted directory. The path itself grants
+nothing. A path outside every grant is refused: the app prints
+`Vexel: cannot open <path>: path not granted` on stderr and starts with the
+blank document. An opened `.svg` is untitled, so writing it back needs
+`save_as` to a `.vexel` path inside a grant; `save` on an opened `.vexel`
+writes in place and needs that file's directory to be granted.
+
 For example:
 
 ```sh

@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::time::Duration;
 use vexel_app::animation::{driver::Driver, job::ExportJob, playback::MonotonicClock};
-use vexel_app::preview::{LiveBackend, UiRequest};
+use vexel_app::preview::{LiveBackend, Operation, UiRequest};
 use vexel_app::session::{AppDocument, McpGrants, McpHost, McpOutcome};
 use vexel_json::JsonDocument;
 use vexel_mcp_access::AccessPolicy;
@@ -114,6 +114,20 @@ pub struct Rig {
 impl Rig {
     pub fn new(policy: AccessPolicy) -> Self {
         Self::with_document(AppDocument::new(512, 512).unwrap(), policy)
+    }
+
+    /// A rig whose startup file is opened through `Operation::Open`, as
+    /// `--mcp-preview <file>` does; a refusal is returned, not hidden.
+    pub fn with_open(policy: AccessPolicy, path: &Path) -> Result<Self, &'static str> {
+        let mut rig = Self::new(policy);
+        let operation = Operation::Open {
+            path: path.to_str().unwrap().to_owned(),
+        };
+        let Self {
+            app, host, driver, ..
+        } = &mut rig;
+        host.handle_with(app, operation, driver)?;
+        Ok(rig)
     }
 
     pub fn with_document(app: AppDocument, policy: AccessPolicy) -> Self {

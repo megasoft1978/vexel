@@ -347,7 +347,7 @@ fn grant_dir_flag_parsing() {
     let canonical = |p: &Path| fs::canonicalize(p).unwrap();
 
     match launch(&["--mcp-preview", "--grant-dir", d], Some(&home.0)) {
-        Launch::McpPreviewGranted(grants) => {
+        Launch::McpPreview { open: None, grants } => {
             assert_eq!(grants.dirs(), [canonical(&dir.0)]);
         }
         other => panic!("{other:?}"),
@@ -357,7 +357,7 @@ fn grant_dir_flag_parsing() {
         &["--grant-dir", d, "--mcp-preview", "--grant-dir", d2],
         Some(&home.0),
     ) {
-        Launch::McpPreviewGranted(grants) => {
+        Launch::McpPreview { open: None, grants } => {
             assert_eq!(grants.dirs(), [canonical(&dir.0), canonical(&second.0)]);
         }
         other => panic!("{other:?}"),
@@ -365,7 +365,10 @@ fn grant_dir_flag_parsing() {
     // Without grants the launch is unchanged; the flag value is not a file.
     assert_eq!(
         launch(&["--mcp-preview"], Some(&home.0)),
-        Launch::McpPreview
+        Launch::McpPreview {
+            open: None,
+            grants: McpGrants::none()
+        }
     );
     assert_eq!(
         launch(&["--grant-dir", d, "a.svg"], Some(&home.0)),
@@ -403,7 +406,7 @@ fn grant_dir_flag_parsing() {
             &["--mcp-preview", "--grant-dir", child.to_str().unwrap()],
             Some(&home.0)
         ),
-        Launch::McpPreviewGranted(_)
+        Launch::McpPreview { .. }
     ));
     assert_eq!(
         launch(&["--mcp-preview", "--grant-dir"], Some(&home.0)),
@@ -523,4 +526,58 @@ fn export_svg_decodes_and_equals_the_source() {
         vexel_app::compose::compose_svg(&rig.app.source_bytes().unwrap(), 512, 512).unwrap();
     assert_eq!(from_export.rgba, from_source.rgba);
     assert!(from_export.rgba.iter().any(|b| *b != 255));
+}
+
+#[test]
+fn startup_file_opens_through_document_open_under_its_grant() {
+    let dir = Dir::new();
+    fs::copy(fixture("open.svg"), dir.file("open.svg")).unwrap();
+    let mut rig = Rig::with_open(policy_for(&[&dir.0]), &dir.file("open.svg")).unwrap();
+    let opened = rig.state();
+    assert_eq!(opened.source, fs::read(fixture("open.svg")).unwrap());
+    assert_eq!(opened.history, 0);
+    assert!(!opened.dirty);
+    assert_eq!(rig.app.size(), (200, 120));
+    let listed = rig.tool("document_list", "{}");
+    assert!(
+        listed.ok().contains(r#""width":200,"height":120"#),
+        "{}",
+        listed.body
+    );
+    let found = rig.doc_tool("element_query", r#""tag":"ellipse""#);
+    assert!(found.ok().contains("vexel-object-2"), "{}", found.body);
+    // An opened SVG is untitled: `save` has nowhere to write, `save_as`
+    // into a granted directory does.
+    rig.add_rect(100, 80, "#445566");
+    assert_eq!(rig.doc_tool("save", "").error(), "document has no path");
+    let target = dir.text("copy.vexel");
+    let saved = rig.doc_tool("save_as", &path_args(&target));
+    assert!(
+        saved.ok().contains(r#""operation":"save_as""#),
+        "{}",
+        saved.body
+    );
+    assert!(!rig.state().dirty);
+    let bytes = fs::read(dir.file("copy.vexel")).unwrap();
+    assert!(bytes.windows(7).any(|w| w == b"#445566"));
+}
+
+#[test]
+fn startup_file_outside_every_grant_is_refused() {
+    let dir = Dir::new();
+    let other = Dir::new();
+    fs::copy(fixture("open.svg"), dir.file("open.svg")).unwrap();
+    let path = dir.file("open.svg");
+    assert_eq!(
+        Rig::with_open(policy_for(&[&other.0]), &path).err(),
+        Some("path not granted")
+    );
+    assert_eq!(
+        Rig::with_open(no_grants(), &path).err(),
+        Some("path not granted")
+    );
+    assert_eq!(
+        fs::read(&path).unwrap(),
+        fs::read(fixture("open.svg")).unwrap()
+    );
 }

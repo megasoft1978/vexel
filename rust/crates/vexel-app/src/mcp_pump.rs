@@ -1,6 +1,7 @@
 //! Serves MCP requests from the shell loop: a bounded batch per pass, never
 //! while a GIF export is running. An arriving request wakes the idle loop. Also keeps the MCP link state and last outcome.
 
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
 
@@ -26,10 +27,16 @@ pub struct McpPump {
     host: McpHost,
     export: Option<ExportJob>,
     granted: bool,
+    /// Startup file, opened by the first `poll` through `document_open`.
+    startup: Option<PathBuf>,
 }
 
 impl McpPump {
-    pub fn new(rx: Option<Receiver<UiRequest>>, grants: McpGrants) -> Self {
+    pub fn new(
+        rx: Option<Receiver<UiRequest>>,
+        grants: McpGrants,
+        startup: Option<PathBuf>,
+    ) -> Self {
         let granted = !grants.dirs().is_empty();
         Self {
             rx,
@@ -37,6 +44,28 @@ impl McpPump {
             host: McpHost::with_policy(grants.policy()),
             export: None,
             granted,
+            startup,
+        }
+    }
+
+    /// Opens the startup file through the `document_open` tool path, so the
+    /// grant policy and the file lifecycle apply. A refusal is reported on
+    /// stderr and the blank document stays.
+    fn open_startup<B: PanelBackend>(
+        &mut self,
+        files: &mut FileUi<B>,
+        driver: &mut Driver<MonotonicClock>,
+        path: &Path,
+    ) {
+        let Some(text) = path.to_str() else {
+            eprintln!("Vexel: cannot open {}: invalid path", path.display());
+            return;
+        };
+        let operation = Operation::Open {
+            path: text.to_owned(),
+        };
+        if let Err(message) = files.handle_mcp(&mut self.host, operation, driver) {
+            eprintln!("Vexel: cannot open {}: {message}", path.display());
         }
     }
 
@@ -70,6 +99,10 @@ impl McpPump {
         model: &mut Model,
     ) -> bool {
         let mut dirty = false;
+        if let Some(path) = self.startup.take() {
+            self.open_startup(files, driver, &path);
+            dirty = true;
+        }
         if let Some(done) = self.export.as_mut().and_then(ExportJob::poll) {
             self.export = None;
             model.mcp = self.idle_state();

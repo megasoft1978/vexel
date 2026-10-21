@@ -41,8 +41,7 @@ fn main() {
     let result = match compose::parse_launch(std::env::args_os().skip(1)) {
         // One process, one window: the shell also serves the MCP preview
         // requests through the shared document session.
-        compose::Launch::McpPreview => run(None, Some(McpGrants::none())),
-        compose::Launch::McpPreviewGranted(grants) => run(None, Some(grants)),
+        compose::Launch::McpPreview { open, grants } => run(open, Some(grants)),
         compose::Launch::Shell { open } => run(open, None),
         compose::Launch::Usage(message) => Err(message),
     };
@@ -118,7 +117,8 @@ fn run(
     } else {
         None
     };
-    let mut mcp_pump = McpPump::new(mcp_rx, grants.unwrap_or_default());
+    let startup = if mcp { pending_open.take() } else { None };
+    let mut mcp_pump = McpPump::new(mcp_rx, grants.unwrap_or_default(), startup);
     model.mcp = mcp_pump.idle_state();
     let mut exports = Exports::default();
     let mut driver = Driver::new(MonotonicClock::new());
