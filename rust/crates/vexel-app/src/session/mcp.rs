@@ -12,8 +12,8 @@ use crate::animation::driver::Driver;
 use crate::animation::native_export::NativeExportSource;
 use crate::animation::playback::LoopClock;
 use crate::preview::{
-    Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
-    object_id, validate_animation_fragment, validate_shape,
+    animation_list_json, document_duration, object_id, validate_animation_fragment, validate_shape,
+    Control, Operation, Shape, DOCUMENT_ID, SCENE_LIMIT,
 };
 use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;
@@ -144,6 +144,20 @@ impl McpHost {
                 width,
             } => self.add_element(app, |doc, id| {
                 doc.add_path_with_id(&d, &fill, &stroke, width, id)
+            }),
+            Operation::AddBox {
+                ellipse,
+                x0,
+                y0,
+                x1,
+                y1,
+                fill,
+            } => self.add_element(app, |doc, id| {
+                if ellipse {
+                    doc.add_ellipse_with_id(x0, y0, x1, y1, &fill, id)
+                } else {
+                    doc.add_rectangle_with_id(x0, y0, x1, y1, &fill, id)
+                }
             }),
             Operation::Native(op) => crate::preview::native_timeline::apply(app, op),
             Operation::Doc(op) => crate::preview::apply_doc(app, op),

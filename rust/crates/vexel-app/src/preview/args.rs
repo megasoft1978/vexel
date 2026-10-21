@@ -3,8 +3,8 @@
 //! operations that already passed these bounds.
 
 use super::{
-    AttributeChange, JsonDocument, JsonType, Operation, PreviewArgumentError, Shape, number_field,
-    parse_color, string_field, validate_shape,
+    number_field, parse_color, string_field, validate_shape, AttributeChange, JsonDocument,
+    JsonType, Operation, PreviewArgumentError, Shape,
 };
 
 pub(super) fn rejected_element_add_attribute(template: &str, key: &str) -> String {
@@ -48,6 +48,21 @@ pub(super) fn rejected_element_add_parent(parent: Option<&str>) -> String {
     }
 }
 
+/// Names `V1Document::set_attribute` accepts beyond the dedicated variants.
+const ATTRIBUTE_NAMES: &[&str] = &[
+    "opacity",
+    "fill-opacity",
+    "stroke-opacity",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "fill-rule",
+    "visibility",
+    "display",
+    "fill",
+    "stroke",
+];
 const BAD_ARGS: &str = "invalid preview tool arguments";
 /// Longest accepted `path` argument in bytes (matches the access policy cap).
 const PATH_LIMIT: usize = 1023;
@@ -105,20 +120,17 @@ pub(super) fn attribute_set(
     let element_id = element_id(doc, args)?;
     let name = bounded_string(doc, args, b"name", 64).ok_or(BAD_ARGS)?;
     let value = bounded_string(doc, args, b"value", 64).ok_or(BAD_ARGS)?;
+    let is_hex = |v: &str| parse_color(v).is_ok();
     let change = match name.as_str() {
-        "fill" => {
-            parse_color(&value)?;
-            AttributeChange::Fill(value)
-        }
-        "stroke" => {
-            parse_color(&value)?;
-            AttributeChange::Stroke(value)
-        }
+        "fill" if is_hex(&value) => AttributeChange::Fill(value),
+        "stroke" if is_hex(&value) => AttributeChange::Stroke(value),
         "stroke-width" => AttributeChange::StrokeWidth(width(&value)?),
         "transform" => {
             let (dx, dy) = translate(&value).ok_or("unsupported attribute")?;
             AttributeChange::Translate(dx, dy)
         }
+        // The document layer owns the whitelist and per-name value checks.
+        _ if ATTRIBUTE_NAMES.contains(&name.as_str()) => AttributeChange::Generic { name, value },
         _ => return Err("unsupported attribute"),
     };
     Ok(Operation::AttributeSet { element_id, change })
@@ -270,6 +282,43 @@ pub(super) fn element_add(
         _ => {}
     }
     let num = |k: &[u8]| number_field(doc, attrs, k);
+    if string_field(doc, attrs, b"fill").as_deref() == Some("none") {
+        let ellipse = template == "ellipse";
+        let (x0, y0, x1, y1) = if ellipse {
+            let (cx, cy, rx, ry) = (num(b"cx")?, num(b"cy")?, num(b"rx")?, num(b"ry")?);
+            (cx - rx, cy - ry, cx + rx, cy + ry)
+        } else {
+            let (x, y) = (num(b"x")?, num(b"y")?);
+            (x, y, x + num(b"width")?, y + num(b"height")?)
+        };
+        // Same geometry bounds as a coloured shape.
+        validate_shape(if ellipse {
+            Shape::Ellipse {
+                cx: (x0 + x1) / 2.0,
+                cy: (y0 + y1) / 2.0,
+                rx: (x1 - x0) / 2.0,
+                ry: (y1 - y0) / 2.0,
+                rgb: 0,
+            }
+        } else {
+            Shape::Rect {
+                x: x0,
+                y: y0,
+                width: x1 - x0,
+                height: y1 - y0,
+                rgb: 0,
+            }
+        })
+        .map_err(PreviewArgumentError::Generic)?;
+        return Ok(Operation::AddBox {
+            ellipse,
+            x0,
+            y0,
+            x1,
+            y1,
+            fill: "none".to_owned(),
+        });
+    }
     let fill = parse_color(
         string_field(doc, attrs, b"fill")
             .ok_or(PreviewArgumentError::Generic(

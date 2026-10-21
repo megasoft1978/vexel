@@ -248,7 +248,9 @@ impl V1Document {
             return Err(V1DocumentError::InvalidGeometry);
         }
         let fill = fill.as_bytes();
-        if fill.len() != 7 || fill[0] != b'#' || !fill[1..].iter().all(u8::is_ascii_hexdigit) {
+        if fill != b"none"
+            && (fill.len() != 7 || fill[0] != b'#' || !fill[1..].iter().all(u8::is_ascii_hexdigit))
+        {
             return Err(V1DocumentError::InvalidColor);
         }
         let x = start_x.min(end_x);
@@ -356,7 +358,9 @@ impl V1Document {
             return Err(V1DocumentError::InvalidGeometry);
         }
         let fill = fill.as_bytes();
-        if fill.len() != 7 || fill[0] != b'#' || !fill[1..].iter().all(u8::is_ascii_hexdigit) {
+        if fill != b"none"
+            && (fill.len() != 7 || fill[0] != b'#' || !fill[1..].iter().all(u8::is_ascii_hexdigit))
+        {
             return Err(V1DocumentError::InvalidColor);
         }
         let left = start_x.min(end_x);
