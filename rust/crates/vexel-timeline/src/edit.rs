@@ -232,14 +232,11 @@ impl TimelineEdit {
             track_name,
         )
     }
-    pub fn set_property_key(
-        &mut self,
-        context: &TimelineContext,
-        track_id: &[u8],
-        tick: u32,
-        value_json: &[u8],
-    ) -> EditResult {
-        ops::set_property_key(self, context, track_id, tick, value_json)
+    pub fn set_property_key(&mut self, context: &TimelineContext, track_id: &[u8], tick: u32, value_json: &[u8]) -> EditResult {
+        self.set_property_key_with_ease(context, track_id, tick, value_json, None)
+    }
+    pub fn set_property_key_with_ease(&mut self, context: &TimelineContext, track_id: &[u8], tick: u32, value_json: &[u8], ease_json: Option<&[u8]>) -> EditResult {
+        ops::set_property_key(self, context, track_id, tick, value_json, ease_json)
     }
     pub fn set_cel(
         &mut self,

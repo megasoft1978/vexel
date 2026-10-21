@@ -135,3 +135,19 @@ fn track_operations_reject_invalid_ids_kinds_indexes_and_limits() {
     );
     assert_eq!(limited.source(), SOURCE);
 }
+
+#[test]
+fn property_key_value_replacement_keeps_existing_ease_unless_replaced() {
+    let source = br#"{"schema":"vexel.animation","version":1,"ticks_per_second":24,"duration_ticks":5,"fps":{"numerator":24,"denominator":1},"loop":"once","onion":{"before":0,"after":0,"opacity":0},"tracks":[{"id":"p","kind":"property","target":"node","visible":true,"property":"opacity","value_type":"scalar","interpolation":"linear","keys":[{"tick":0,"value":0.5},{"tick":2,"value":0.8,"ease":"ease_in"}],"name":"prop"}]}"#;
+    let ctx = context();
+    let mut e = TimelineEdit::new(source, &ctx, EditLimits::default()).unwrap();
+    e.set_property_key(&ctx, b"p", 2, b"0.9").unwrap();
+    assert!(e.source().windows(b"\"ease\":\"ease_in\"".len()).any(|w| w == b"\"ease\":\"ease_in\""));
+    let changed = e.source().to_vec();
+    e.undo(&ctx).unwrap();
+    assert_eq!(e.source(), source);
+    e.redo(&ctx).unwrap();
+    assert_eq!(e.source(), changed);
+    e.set_property_key_with_ease(&ctx, b"p", 2, b"1.0", Some(br#""ease_out""#)).unwrap();
+    assert!(e.source().windows(b"\"ease\":\"ease_out\"".len()).any(|w| w == b"\"ease\":\"ease_out\""));
+}

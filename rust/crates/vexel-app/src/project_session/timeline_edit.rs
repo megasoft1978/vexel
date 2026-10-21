@@ -5,8 +5,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use super::svg_asset::{OwnedProjectAsset, SvgAssetError};
 use crate::animation::native_drawing::SvgGeometry;
 use vexel_timeline::{
-    AssetRef, EditFailure, EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode,
-    MAX_SOURCE_BYTES, TimelineContext, TimelineEdit, classify, initialize_empty_timeline,
+    classify, initialize_empty_timeline, AssetRef, EditFailure, EditLimits, EmptyTimelineSettings,
+    Error as TimelineError, LoopMode, TimelineContext, TimelineEdit, MAX_SOURCE_BYTES,
 };
 
 static NEXT_CANDIDATE_LINEAGE: AtomicU64 = AtomicU64::new(1);
@@ -215,9 +215,71 @@ impl ProjectTimelineCandidate {
         tick: u32,
         value_json: &[u8],
     ) -> Result<Self, ProjectTimelineError> {
+        self.set_property_key_with_ease(track_id, tick, value_json, None)
+    }
+    pub fn set_property_key_with_ease(
+        &self,
+        track_id: &[u8],
+        tick: u32,
+        value_json: &[u8],
+        ease: Option<&[u8]>,
+    ) -> Result<Self, ProjectTimelineError> {
         self.transact(|editor, context| {
-            editor.set_property_key(context, track_id, tick, value_json)
+            editor.set_property_key_with_ease(context, track_id, tick, value_json, ease)
         })
+    }
+
+    pub fn remove_property_key(
+        &self,
+        track_id: &[u8],
+        tick: u32,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.remove_property_key(context, track_id, tick))
+    }
+
+    pub fn move_property_key(
+        &self,
+        track_id: &[u8],
+        from_tick: u32,
+        to_tick: u32,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| {
+            editor.move_property_key(context, track_id, from_tick, to_tick)
+        })
+    }
+
+    pub fn remove_track(&self, track_id: &[u8]) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.remove_track(context, track_id))
+    }
+
+    pub fn rename_track(&self, track_id: &[u8], name: &[u8]) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.rename_track(context, track_id, name))
+    }
+
+    pub fn duplicate_track(
+        &self,
+        track_id: &[u8],
+        new_track_id: &[u8],
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.duplicate_track(context, track_id, new_track_id))
+    }
+
+    pub fn set_track_interpolation(
+        &self,
+        track_id: &[u8],
+        interpolation: &[u8],
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| {
+            editor.set_track_interpolation(context, track_id, interpolation)
+        })
+    }
+
+    pub fn reorder_track(
+        &self,
+        track_id: &[u8],
+        index: usize,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.reorder_track(context, track_id, index))
     }
 
     pub fn set_cel(
