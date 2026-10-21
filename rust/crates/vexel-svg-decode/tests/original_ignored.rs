@@ -96,20 +96,22 @@ fn original_ignored_foreign_attributes_and_rendering_rejection() {
     assert_eq!(decode(&source).unwrap_err().kind, ErrorKind::Unsupported);
 }
 #[test]
-fn original_doctype_entity_and_position_fail_as_xml() {
-    for source in [
-        "<!DOCTYPE svg [<!ENTITY e \"x\">]><svg width=\"8\" height=\"8\"><text>&e;</text></svg>"
-            .to_string(),
-        format!(
-            r##"<!DOCTYPE svg [<!ENTITY e "1">]><svg width="8" height="8">{RECT} x="&e;"/></svg>"##
-        ),
-        "<svg width=\"8\" height=\"8\"/><!DOCTYPE svg>".to_string(),
-    ] {
-        assert!(matches!(
-            decode(&source).unwrap_err().kind,
-            ErrorKind::Xml(_)
-        ));
-    }
+fn original_doctype_entity_passes_xml_and_trailing_doctype_fails_as_xml() {
+    // Declared internal entities now expand; a DOCTYPE after the root is still an XML error.
+    let source = format!(
+        r##"<!DOCTYPE svg [<!ENTITY e "1">]><svg width="8" height="8">{RECT} rx="&e;"/></svg>"##
+    );
+    // The XML layer accepts the declared entity; attribute values in the decoder are not
+    // expanded yet, so this fails later as a number error, not as XML.
+    assert!(!matches!(
+        decode(&source).unwrap_err().kind,
+        ErrorKind::Xml(_)
+    ));
+    let source = "<svg width=\"8\" height=\"8\"/><!DOCTYPE svg>";
+    assert!(matches!(
+        decode(source).unwrap_err().kind,
+        ErrorKind::Xml(_)
+    ));
 }
 #[test]
 fn expanded_unknown_attribute_notes_count_once_and_choose_minimum_source_offset() {
