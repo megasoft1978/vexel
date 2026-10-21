@@ -3,6 +3,7 @@
 use super::svg_asset::OwnedProjectAsset;
 use super::timeline_edit::{ProjectTimelineCandidate, ProjectTimelineError};
 use super::{ProjectSession, SessionError};
+use crate::profile::phase;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings};
 use vexel_xml::{TokenKind, decode_attribute_value, tokenize_large};
 
@@ -54,9 +55,11 @@ impl ProjectSession {
         let state = self.document.history_state_id();
         if let Some((cached, ids)) = self.scene_ids.borrow().as_ref() {
             if *cached == state {
+                let _phase = phase("scene_copy");
                 return copy_scene_ids(ids).map_err(NativeCommandError::Timeline);
             }
         }
+        let _phase = phase("scene_scan");
         let source = self
             .document
             .source()
@@ -76,17 +79,25 @@ impl ProjectSession {
         limits: EditLimits,
         edit: impl FnOnce(&ProjectTimelineCandidate) -> Result<ProjectTimelineCandidate, E>,
     ) -> Result<bool, NativeCommandError<E>> {
-        let candidate = self
-            .timeline_candidate(settings, limits)
-            .map_err(map_candidate_error)?;
-        let scene_ids =
-            copy_scene_ids(candidate.scene_ids()).map_err(NativeCommandError::Timeline)?;
+        let candidate = {
+            let _phase = phase("candidate_open");
+            self.timeline_candidate(settings, limits)
+        }
+        .map_err(map_candidate_error)?;
+        let scene_ids = {
+            let _phase = phase("scene_copy");
+            copy_scene_ids(candidate.scene_ids()).map_err(NativeCommandError::Timeline)?
+        };
         if !candidate.is_editable() {
             return Err(NativeCommandError::Timeline(
                 ProjectTimelineError::UnsupportedTimeline,
             ));
         }
-        let edited = edit(&candidate).map_err(NativeCommandError::Operation)?;
+        let edited = {
+            let _phase = phase("edit_apply");
+            edit(&candidate)
+        }
+        .map_err(NativeCommandError::Operation)?;
         // Timeline commands can append imported drawing assets, but cannot
         // remove, reorder or rewrite opaque assets retained by the project.
         if !edited.assets().starts_with(candidate.assets()) {
@@ -100,13 +111,20 @@ impl ProjectSession {
 
         // The caller can return a candidate built with another context. Admit
         // only supported data validated against this scene and these limits.
-        let edited = ProjectTimelineCandidate::open(
-            edited.timeline_bytes(),
-            scene_ids,
-            copy_assets(edited.assets()).map_err(NativeCommandError::Timeline)?,
-            settings,
-            limits,
-        )
+        let assets = {
+            let _phase = phase("copy_assets");
+            copy_assets(edited.assets()).map_err(NativeCommandError::Timeline)?
+        };
+        let edited = {
+            let _phase = phase("candidate_reopen");
+            ProjectTimelineCandidate::open(
+                edited.timeline_bytes(),
+                scene_ids,
+                assets,
+                settings,
+                limits,
+            )
+        }
         .map_err(NativeCommandError::Timeline)?;
         if !edited.is_editable() {
             return Err(NativeCommandError::Timeline(
@@ -121,14 +139,16 @@ impl ProjectSession {
             return Ok(false);
         }
 
-        let replacement = self
-            .payload
-            .with_timeline_candidate(&edited)
-            .map_err(NativeCommandError::Session)?;
-        let admission = self
-            .journal
-            .prepare_payload(replacement.clone())
-            .map_err(|_| NativeCommandError::Session(SessionError::HistoryUnavailable))?;
+        let replacement = {
+            let _phase = phase("payload_encode");
+            self.payload.with_timeline_candidate(&edited)
+        }
+        .map_err(NativeCommandError::Session)?;
+        let admission = {
+            let _phase = phase("journal_admit");
+            self.journal.prepare_payload(replacement.clone())
+        }
+        .map_err(|_| NativeCommandError::Session(SessionError::HistoryUnavailable))?;
 
         // Admission has completed every recoverable allocation/validation.
         self.document.history_boundary();

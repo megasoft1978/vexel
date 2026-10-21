@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::svg_asset::{OwnedProjectAsset, SvgAssetError};
 use crate::animation::native_drawing::SvgGeometry;
+use crate::profile::phase;
 use vexel_timeline::{
     AssetRef, EditFailure, EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode,
     MAX_SOURCE_BYTES, TimelineContext, TimelineEdit, classify, initialize_empty_timeline,
@@ -341,10 +342,20 @@ impl ProjectTimelineCandidate {
         operation: impl FnOnce(&mut TimelineEdit, &TimelineContext) -> Result<(), EditFailure>,
     ) -> Result<Self, ProjectTimelineError> {
         self.require_editable()?;
-        let context = make_context(&self.scene_ids, &self.assets)?;
-        let mut editor = TimelineEdit::new(&self.timeline, &context, self.limits)
-            .map_err(ProjectTimelineError::Edit)?;
-        operation(&mut editor, &context).map_err(ProjectTimelineError::Edit)?;
+        let context = {
+            let _phase = phase("edit_context");
+            make_context(&self.scene_ids, &self.assets)?
+        };
+        let mut editor = {
+            let _phase = phase("edit_validate");
+            TimelineEdit::new(&self.timeline, &context, self.limits)
+                .map_err(ProjectTimelineError::Edit)?
+        };
+        {
+            let _phase = phase("edit_ops");
+            operation(&mut editor, &context).map_err(ProjectTimelineError::Edit)?;
+        }
+        let _phase = phase("edit_copy");
         self.with_timeline(editor.source(), copy_assets(&self.assets)?)
     }
 

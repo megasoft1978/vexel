@@ -233,9 +233,13 @@ rendering can also return an MCP image content block.
 ## Performance
 
 `cargo test -p vexel-app --release --test mcp_bench -- --ignored --nocapture`
-builds 120 elements (the live preview scene cap is 128) and 50 opacity tracks x
-8 keys through the headless rig and prints per-tool latency. The rig measures
-handler cost only; it excludes the shell loop's wake/sleep latency.
+builds 120 and 1024 elements (the scene cap) and 50 opacity tracks x 8 keys
+through the headless rig, and prints per-tool and per-phase p50 / p95 ms. The
+rig measures handler cost only; it excludes the shell loop's wake/sleep latency.
+Phase timers (`vexel_app::profile`) are always on in the bench; `VEXEL_PROFILE=1`
+enables them for any run. When off, each phase costs one cached flag check.
+Phases nest: `edit_apply` contains `edit_validate` and `edit_ops`; `candidate_open`
+contains `scene_scan` and `scene_copy`.
 
 Baseline (before optimization), p50 / p95 ms:
 
@@ -260,6 +264,59 @@ Main-loop latency: an incoming request now wakes the idle shell loop at once
 (it used to wait out a 16 ms sleep), the loop serves up to 16 queued requests
 (8 ms budget) per pass, and the window redraws only when the document, playback
 or MCP status changed.
+
+### Phase attribution (release, one run, p50 / p95 ms)
+
+Build: one `element_add` per element, then a read-only probe (`scene_scan`,
+`recompose`) after each add, as the UI does after a source change.
+
+| phase | 120 | 1024 |
+| --- | --- | --- |
+| element_add (tool) | 0.38 / 0.47 | 1.31 / 2.55 |
+| edit_apply (`mcp.rs` add closure) | 0.14 / 0.21 | 0.85 / 1.66 |
+| element_id_scan (`mcp_extras.rs` reserve_add) | 0.01 / 0.02 | 0.04 / 0.08 |
+| journal_scene (`journal_integration.rs`) | 0.00 / 0.01 | 0.15 / 0.52 |
+| scene_scan (`native_commands.rs` cache miss) | 0.03 / 0.06 | 0.22 / 0.42 |
+| recompose (`compose/mod.rs` compose_document) | 0.93 / 1.34 | 4.96 / 9.95 |
+
+Native tracks: 50 `add_property_track` + 400 `set_property_key`, per op.
+
+| phase | 120 tracks | 1024 tracks |
+| --- | --- | --- |
+| add_property_track (tool) | 1.41 / 2.33 | 2.28 / 3.12 |
+| set_property_key (tool) | 1.90 / 3.30 | 2.44 / 3.91 |
+| edit_apply | 1.05 / 2.09 | 1.11 / 2.31 |
+| edit_validate (`timeline_edit.rs` transact) | 0.18 / 0.33 | 0.19 / 0.35 |
+| edit_ops (`vexel-timeline` edit.rs) | 0.88 / 1.78 | 0.90 / 1.92 |
+| candidate_open (`native_commands.rs:83`) | 0.26 / 0.46 | 0.30 / 0.52 |
+| candidate_reopen (`native_commands.rs:119`) | 0.24 / 0.44 | 0.27 / 0.48 |
+| journal_admit (`native_commands.rs:148`) | 0.02 / 0.05 | 0.29 / 0.43 |
+| copy_assets, scene_copy, payload_encode | < 0.01 | < 0.02 |
+
+Bulk: one `add_property_track` with 8 keys in one call, 50 tracks, 1024-element
+scene: 11.07 / 19.53 ms (120-element scene: 9.95 / 18.61 ms). Its `edit_ops`
+runs once per key (about 0.9 ms each), so cost is linear in keys per call.
+
+Hot spots on the request path, ranked by p50 cost per native op at 1024:
+
+1. Full-timeline re-decode on every edit. `vexel-timeline/src/edit.rs:75`
+   (`TimelineEdit::new` decodes the source) and `edit.rs:144` (`commit` decodes
+   the candidate), reached through `project_session/timeline_edit.rs` `transact`.
+   About 1.1 ms per op; grows with timeline keys, not scene size.
+2. Candidate re-open and re-validate, twice per op: `native_commands.rs:83`
+   (initial open) and `:119` (re-open of the result), both
+   `timeline_edit.rs` `ProjectTimelineCandidate::open` (classify + decode).
+   About 0.57 ms per op. `copy_assets` is 0.00 ms, so it is not a hot spot.
+3. Journal admission scales with retained states: `project_session/history.rs:395`
+   `payload_bytes` runs a pairwise identity loop, called from `history.rs:223`
+   `prepare_payload`. 0.29 ms with about 1024 retained states at 1024 elements,
+   0.003 ms with about 100 states in the bulk run. History cap: `history.rs:9`.
+
+Largest per-add cost, off the request path: `recompose` at 4.96 ms p50 for 1024
+elements (`compose/mod.rs:117`, full re-render per source change on the compose
+worker). `edit_apply` for element_add also grows with scene size (0.14 to 0.85 ms).
+Tool totals exceed the phase sum by roughly 0.3 to 0.5 ms (rig JSON-RPC and
+per-request thread overhead).
 
 ## Historical/unsupported transport notes
 

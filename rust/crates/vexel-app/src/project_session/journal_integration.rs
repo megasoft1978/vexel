@@ -23,9 +23,12 @@ pub(super) fn edit<R, E>(
         .map_err(|error| SessionEditError::History(map_journal_error(error)))?;
     let result = edit(&mut session.document);
     let final_scene_id = session.document.history_state_id();
-    admission.finish(final_scene_id, |scene_id| {
-        is_scene_reachable(&session.document, scene_id)
-    });
+    {
+        let _phase = crate::profile::phase("journal_scene");
+        admission.finish(final_scene_id, |scene_id| {
+            is_scene_reachable(&session.document, scene_id)
+        });
+    }
     result.map_err(SessionEditError::Operation)
 }
 
