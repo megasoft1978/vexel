@@ -137,7 +137,10 @@ Create motion with `native_timeline_add_property_track`, passing the target's
 element ID, property, `valueType`, interpolation, and initial `value`. Use
 `transform` with `valueType: "trs"` for pivot rotations/translations, and
 `opacity` with `valueType: "scalar"` for blinking. Add later values with
-`native_timeline_set_property_key` (optional `ease`). A `trs` value is either
+`native_timeline_set_property_key` (optional `ease`), or pass an optional
+`keys: [{tick, value, interp?}]` (at most 256, same value forms; `interp` takes
+the `ease` names) to `native_timeline_add_property_track` to create the track and
+all its keys in one undoable edit. A `trs` value is either
 an array `[tx,ty,rotationDeg,sx,sy,pivotX,pivotY(,skewXDeg)]` or an object with
 optional `translate` (`[x,y]` or `{x,y}`; or `tx`/`ty`), `rotate` (degrees; also
 `rotation`), `scale` (number, `[x,y]` or `{x,y}`; or `sx`/`sy`), `pivot`

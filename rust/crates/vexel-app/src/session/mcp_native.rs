@@ -13,6 +13,14 @@ use crate::session::{AppDocument, McpOutcome};
 use vexel_json::JsonDocument;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
 
+/// One key of a bulk `native_timeline_add_property_track` request.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PropertyKey {
+    pub tick: u32,
+    pub value: Vec<u8>,
+    pub ease: Option<Vec<u8>>,
+}
+
 /// One validated native timeline request.
 #[derive(Clone, Debug, PartialEq)]
 pub enum NativeOp {
@@ -35,6 +43,8 @@ pub enum NativeOp {
         interpolation: Vec<u8>,
         value: Vec<u8>,
         name: Vec<u8>,
+        /// Extra keys applied in the same edit as the track.
+        keys: Vec<PropertyKey>,
     },
     SetPropertyKey {
         track_id: Vec<u8>,
@@ -208,12 +218,14 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             interpolation,
             value,
             name,
+            keys,
         } => {
             if let Some(message) = property_target_mismatch(app, &target_id, &property) {
                 return Err(message);
             }
+            let in_keys = std::cell::Cell::new(false);
             app.edit_timeline(settings(), limits, |c| {
-                c.add_property_track(
+                let mut edited = c.add_property_track(
                     &track_id,
                     &target_id,
                     &property,
@@ -221,9 +233,22 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
                     &interpolation,
                     &value,
                     &name,
-                )
+                )?;
+                in_keys.set(true);
+                for key in &keys {
+                    edited = edited.set_property_key_with_ease(
+                        &track_id,
+                        key.tick,
+                        &key.value,
+                        key.ease.as_deref(),
+                    )?;
+                }
+                Ok(edited)
             })
             .map_err(|error| {
+                if in_keys.get() {
+                    return operation_error(error, "set_property_key", Refs::default());
+                }
                 let refs = Refs {
                     asset: true,
                     target: known_target(app, &target_id),

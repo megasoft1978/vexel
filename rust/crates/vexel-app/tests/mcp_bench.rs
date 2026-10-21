@@ -69,6 +69,34 @@ fn build_scripted_scene() {
             );
         }
     }
+    // The same 50 tracks x 8 keys again, each track created with its keys in
+    // one call, in a fresh session (the per-session request budget is 600/min).
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let ids: Vec<String> = (0..50).map(|n| rig.add_rect(n * 8, 0, "#336699")).collect();
+    let keys: Vec<String> = (0..8u32)
+        .map(|k| {
+            format!(
+                r#"{{"tick":{},"value":{}}}"#,
+                (k + 1) * 5,
+                if k % 2 == 0 { "0.25" } else { "1" }
+            )
+        })
+        .collect();
+    for (n, id) in ids.iter().enumerate() {
+        let start = Instant::now();
+        rig.doc_tool(
+            "native_timeline_add_property_track",
+            &format!(
+                r#""trackId":"bulk-{n}","targetId":"{id}","property":"opacity","valueType":"scalar","interpolation":"linear","value":1,"keys":[{}]"#,
+                keys.join(",")
+            ),
+        )
+        .ok();
+        samples
+            .entry("add_property_track (8 keys, bulk)".to_owned())
+            .or_default()
+            .push(start.elapsed().as_secs_f64() * 1000.0);
+    }
     let wall = total.elapsed().as_secs_f64();
     println!("tool                                   n    p50 ms    p95 ms");
     for (name, values) in &mut samples {

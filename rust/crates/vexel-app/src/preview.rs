@@ -12,6 +12,7 @@ mod ext_paint;
 mod ext_query;
 mod ext_structure;
 mod native_args;
+mod native_keys;
 mod native_svg;
 #[path = "session/mcp_native.rs"]
 pub(crate) mod native_timeline;

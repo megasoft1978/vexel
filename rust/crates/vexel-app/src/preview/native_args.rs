@@ -60,7 +60,7 @@ fn string(
     ))
 }
 
-fn tick(
+pub(super) fn tick(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -238,6 +238,7 @@ fn parse_one(
             } else {
                 Vec::new()
             },
+            keys: super::native_keys::parse(doc, args, tool)?,
         },
         "set_property_key" => NativeOp::SetPropertyKey {
             track_id: id("trackId")?,
@@ -352,13 +353,23 @@ fn optional_ease(
     args: usize,
     tool: &str,
 ) -> Result<Option<Vec<u8>>, PreviewArgumentError> {
-    let Some(token) = doc.object_get(args, b"ease") else {
+    ease_at(doc, args, tool, "ease")
+}
+
+/// The easing named by member `key` (same forms as `ease`), if present.
+pub(super) fn ease_at(
+    doc: &JsonDocument<'_>,
+    args: usize,
+    tool: &str,
+    key: &'static str,
+) -> Result<Option<Vec<u8>>, PreviewArgumentError> {
+    let Some(token) = doc.object_get(args, key.as_bytes()) else {
         return Ok(None);
     };
     let Some(raw) = doc.decoded_string(token) else {
         return Err(invalid(
             tool,
-            "ease",
+            key,
             "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
             None,
         ));
@@ -408,13 +419,13 @@ fn optional_ease(
     }
     Err(invalid(
         tool,
-        "ease",
+        key,
         "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
         Some(&raw),
     ))
 }
 
-fn timeline_value(
+pub(super) fn timeline_value(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
