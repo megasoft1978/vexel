@@ -447,7 +447,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         let description = if preview && tool.name == "element_add" {
             element_add_description()
         } else if preview && tool.name == "export_animation" {
-            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency, alpha true keeps transparency (mov with hevc only; background is ignored).".to_owned()
+            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency, alpha true keeps transparency (mov with hevc only; background is ignored). apng writes an animated PNG (path ends .png or .apng) of one loop, keeping alpha unless background is given; loops is the play count (default forever). frames writes one PNG per sampled tick into the path's directory: path is name_####.png (4+ #) or a name prefix without extension (name_0000.png...); it refuses to overwrite and caps at 1440 frames. apng and frames take fps, width and height (together) and background, and need a native timeline.".to_owned()
         } else if preview && tool.name == "render_png" {
             "Render the open document to a PNG file inside a granted directory. Optional time is in SECONDS (tick / ticksPerSecond; 0 to the timeline length, default 0), not ticks; a time past the end of the timeline is rejected.".to_owned()
         } else {
@@ -464,7 +464,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             } else if preview && tool.name == "animation_control" {
                 r#"{"documentId":{"type":"string"},"action":{"type":"string","enum":["play","pause","seek"]},"timeMs":{"type":"number","minimum":0,"maximum":10000}}"#
             } else if preview && tool.name == "export_animation" {
-                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif","mp4","mov"]},"fps":{"type":"integer","minimum":1,"maximum":120},"duration":{"type":"number","minimum":0.01,"maximum":10},"codec":{"type":"string","enum":["h264","hevc"]},"quality":{"type":"number","minimum":0,"maximum":1},"bitrate":{"type":"integer","minimum":50,"maximum":200000},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"loops":{"type":"integer","minimum":1,"maximum":100},"background":{"type":"string","pattern":"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"},"alpha":{"type":"boolean"}}"#
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif","mp4","mov","apng","frames"]},"fps":{"type":"integer","minimum":1,"maximum":120},"duration":{"type":"number","minimum":0.01,"maximum":10},"codec":{"type":"string","enum":["h264","hevc"]},"quality":{"type":"number","minimum":0,"maximum":1},"bitrate":{"type":"integer","minimum":50,"maximum":200000},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"loops":{"type":"integer","minimum":1,"maximum":100},"background":{"type":"string","pattern":"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"},"alpha":{"type":"boolean"}}"#
             } else if preview && tool.name == "render_png" {
                 r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"time":{"type":"number","minimum":0,"maximum":3600}}"#
             } else {
@@ -581,10 +581,12 @@ pub fn validate_tool_arguments(
         }
         key = doc.token(value).and_then(|t| t.next_sibling);
     }
-    // mp4 and mov take fps optionally and no duration.
+    // mp4, mov, apng and frames take fps optionally and no duration.
     let video_export = tool.name == "export_animation"
         && doc.object_get(arguments, b"format").is_some_and(|v| {
-            doc.string_equals(v, b"mp4") || doc.string_equals(v, b"mov")
+            [&b"mp4"[..], b"mov", b"apng", b"frames"]
+                .iter()
+                .any(|f| doc.string_equals(v, f))
         });
     for required in tool.required.split(',').filter(|s| !s.is_empty()) {
         if video_export && matches!(required, "fps" | "duration") {

@@ -16,6 +16,7 @@ mod hooks;
 mod mcp;
 mod mcp_batch;
 mod mcp_extras;
+mod mcp_frames;
 pub(crate) mod mcp_png;
 mod mcp_tools;
 mod mcp_video;

@@ -8,7 +8,12 @@ const SCENE: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="2" heig
 
 /// A square fill timeline of `duration` ticks at `tps`, with a key flip at
 /// `flip` ticks.
-fn timeline_source(tps: u32, duration: u32, loop_mode: &str, flip: u32) -> NativeExportSource {
+pub(super) fn timeline_source(
+    tps: u32,
+    duration: u32,
+    loop_mode: &str,
+    flip: u32,
+) -> NativeExportSource {
     let timeline = format!(
         r#"{{"schema":"vexel.animation","version":1,"ticks_per_second":{tps},"duration_ticks":{duration},"fps":{{"numerator":{tps},"denominator":1}},"loop":"{loop_mode}","onion":{{"before":0,"after":0,"opacity":0}},"tracks":[{{"id":"paint","kind":"property","target":"shape","visible":true,"property":"fill","value_type":"rgba","interpolation":"step","keys":[{{"tick":0,"value":[1,0,0,1]}},{{"tick":{flip},"value":[0,1,0,1]}}]}}]}}"#
     );

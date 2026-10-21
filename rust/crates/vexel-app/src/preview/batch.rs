@@ -33,6 +33,7 @@ fn allowed(operation: &Operation) -> bool {
             | Operation::Export { .. }
             | Operation::ExportSvg
             | Operation::ExportVideo(_)
+            | Operation::ExportFrames(_)
             | Operation::RenderPng { .. }
     )
 }

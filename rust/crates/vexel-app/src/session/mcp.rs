@@ -206,6 +206,9 @@ impl McpHost {
             Operation::ExportVideo(request) => {
                 super::mcp_video::export_video(app, &self.policy, &request)
             }
+            Operation::ExportFrames(request) => {
+                super::mcp_frames::export_frames(app, &self.policy, &request)
+            }
             Operation::Export {
                 path,
                 fps,

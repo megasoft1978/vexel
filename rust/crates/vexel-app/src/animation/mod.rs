@@ -13,6 +13,7 @@ pub mod keys;
 pub mod native_drawing;
 pub mod native_driver;
 pub mod native_export;
+pub mod native_export_frames;
 pub mod native_export_message;
 pub mod native_export_video;
 pub mod native_frame;
@@ -27,6 +28,8 @@ pub mod strip;
 mod native_drawing_tests;
 #[cfg(test)]
 mod native_driver_tests;
+#[cfg(test)]
+mod native_export_frames_tests;
 #[cfg(test)]
 mod native_export_tests;
 #[cfg(test)]
