@@ -5,8 +5,8 @@
 //! separate.
 
 use std::ops::Range;
-use vexel_timeline::{PropertyValue, TimelineView, sample_properties};
-use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
+use vexel_timeline::{sample_properties, PropertyValue, TimelineView};
+use vexel_xml::{decode_attribute_value, tokenize_large, TokenKind, XmlSpan};
 
 const MAX_ID_BYTES: usize = 256;
 
@@ -171,6 +171,13 @@ fn append_writes(
             push_write(writes, &target, opacity_name, opacity)?;
             return Ok(());
         }
+        (b"stop-color", b"rgba") => {
+            let color = rgba_color(values)?;
+            let opacity = number_text(*values.get(3).ok_or(NativePropertyError::InvalidValue)?);
+            push_write(writes, &target, b"stop-color", color)?;
+            push_write(writes, &target, b"stop-opacity", opacity)?;
+            return Ok(());
+        }
         (b"transform", b"transform2d") => {
             let mut value = b"matrix(".to_vec();
             for (index, component) in values.iter().enumerate() {
@@ -209,6 +216,9 @@ fn push_write(
         b"stroke-opacity" => b"stroke-opacity",
         b"stroke-width" => b"stroke-width",
         b"stroke-dashoffset" => b"stroke-dashoffset",
+        b"offset" => b"offset",
+        b"stop-color" => b"stop-color",
+        b"stop-opacity" => b"stop-opacity",
         b"fill" => b"fill",
         b"stroke" => b"stroke",
         b"visibility" => b"visibility",
@@ -254,6 +264,8 @@ fn scalar_property(name: &[u8]) -> bool {
             | b"stroke-opacity"
             | b"stroke-width"
             | b"stroke-dashoffset"
+            | b"offset"
+            | b"stop-opacity"
     )
 }
 

@@ -1,6 +1,7 @@
 use super::*;
 use crate::animation::native_drawing::SVG_MEDIA_TYPE;
-use vexel_timeline::{TimelineContext, decode};
+use vexel_timeline::{decode, TimelineContext};
+use vexel_v1_document::{GradientStop, GradientUnits, Spread, TransformSpec, V1Document};
 
 const GEOMETRY: SvgGeometry = SvgGeometry {
     width: 1.0,
@@ -180,4 +181,103 @@ fn maps_drawing_and_base_render_failures_without_returning_a_frame() {
         render_native_frame(SCENE, &empty, &[], 0, 0, 1, GEOMETRY),
         Err(NativeFrameError::Compose(ComposeError::InvalidSize))
     );
+}
+
+#[test]
+fn trs_rotate_about_pivot_is_rendered_and_matches_v1_transform_matrix() {
+    let source = br##"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><rect id="shape" x="1" y="1" width="2" height="4" fill="#ff0000"/></svg>"##;
+    let view = timeline(
+        r##"{"id":"rotate","kind":"property","target":"shape","visible":true,"property":"transform","value_type":"trs","interpolation":"step","keys":[{"tick":0,"value":{"tx":0,"ty":0,"rotation_deg":90,"sx":1,"sy":1,"pivot_x":2,"pivot_y":3}}]}"##,
+        &[b"shape"],
+        &[],
+    );
+    let snapshot =
+        crate::animation::native_properties::apply_native_properties(source, &view, 0).unwrap();
+    let parsed = vexel_v1_document::V1Document::from_source(&snapshot).unwrap();
+    let expected = TransformSpec {
+        rotate_deg: 90.0,
+        pivot: (2.0, 3.0),
+        ..TransformSpec::default()
+    }
+    .to_matrix();
+    let actual = parsed.get_transform_matrix("shape").unwrap();
+    for (a, b) in actual.iter().zip(expected) {
+        assert!((a - b).abs() < 1e-12, "{actual:?} != {expected:?}");
+    }
+    let frame = render_native_frame(source, &view, &[], 0, 8, 8, GEOMETRY_8).unwrap();
+    assert_ne!(frame.rgba, compose_svg(source, 8, 8).unwrap().rgba);
+}
+
+const GEOMETRY_8: SvgGeometry = SvgGeometry {
+    width: 8.0,
+    height: 8.0,
+    view_box: [0.0, 0.0, 8.0, 8.0],
+};
+
+#[test]
+fn gradient_stop_color_track_changes_rendered_pixels_across_ticks() {
+    let mut doc = V1Document::new(8, 1).unwrap();
+    doc.add_rectangle_with_id(0.0, 0.0, 8.0, 1.0, "#000000", "shape")
+        .unwrap();
+    let gradient = doc
+        .add_linear_gradient(
+            0.0,
+            0.0,
+            8.0,
+            0.0,
+            GradientUnits::UserSpace,
+            Spread::Pad,
+            &[
+                GradientStop {
+                    offset: 0.0,
+                    color: "#000000".into(),
+                    opacity: 1.0,
+                },
+                GradientStop {
+                    offset: 1.0,
+                    color: "#ffffff".into(),
+                    opacity: 1.0,
+                },
+            ],
+        )
+        .unwrap();
+    doc.set_fill_ref("shape", &gradient).unwrap();
+    let source = doc.source().unwrap();
+    let stop_id = format!("{gradient}-stop-0");
+    let view = timeline(
+        &format!(
+            r##"{{"id":"stop-paint","kind":"property","target":"{stop_id}","visible":true,"property":"stop-color","value_type":"rgba","interpolation":"linear","keys":[{{"tick":0,"value":[1,0,0,1]}},{{"tick":23,"value":[0,0,1,1]}}]}}"##
+        ),
+        &[stop_id.as_bytes()],
+        &[],
+    );
+    let first = render_native_frame(
+        &source,
+        &view,
+        &[],
+        0,
+        8,
+        1,
+        SvgGeometry {
+            width: 8.0,
+            height: 1.0,
+            view_box: [0.0, 0.0, 8.0, 1.0],
+        },
+    )
+    .unwrap();
+    let last = render_native_frame(
+        &source,
+        &view,
+        &[],
+        23,
+        8,
+        1,
+        SvgGeometry {
+            width: 8.0,
+            height: 1.0,
+            view_box: [0.0, 0.0, 8.0, 1.0],
+        },
+    )
+    .unwrap();
+    assert_ne!(first.rgba, last.rgba);
 }
