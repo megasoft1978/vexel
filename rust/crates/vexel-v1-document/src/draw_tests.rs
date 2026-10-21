@@ -184,6 +184,8 @@ fn add_path_writes_exact_source_and_validates_the_grammar() {
         "M0 0C1 2 3 4 5 6 7 8 9 10 11 12Z",
         "M-1.5e1-2.5.5.5 H 3 V4",
         "M0,0 10,10 20,0",
+        "M0 330 Q90 250 180 325 Q260 235 355 315 L512 512 L0 512Z",
+        "M0 0 q1 2 3 4 t5 6 s1 2 3 4 T1 1 Q1 2 3 4 5 6 7 8",
     ] {
         assert_eq!(validate_path_data(ok), Ok(()), "{ok}");
     }
@@ -193,8 +195,9 @@ fn add_path_writes_exact_source_and_validates_the_grammar() {
         "M 1",
         "M 1 2 3",
         "M 1 2 A 1 1 0 0 0 3 4",
-        "M 1 2 Q 1 2 3 4",
-        "M 1 2 S 1 2 3 4",
+        "M 1 2 Q 1 2 3",
+        "M 1 2 S 1 2 3",
+        "M 1 2 T 1",
         "M 1 2 Z 3 4",
         "M 1 2 L nan 4",
         "M 1 2 L 1e999 4",

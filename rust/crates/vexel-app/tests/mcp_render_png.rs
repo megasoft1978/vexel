@@ -186,3 +186,31 @@ fn read_only_directory_keeps_the_existing_file_and_leaves_no_temp() {
     assert_eq!(fs::read(dir.file("keep.png")).unwrap(), original);
     assert_eq!(entries(&dir), ["keep.png"]);
 }
+
+#[test]
+fn quadratic_path_added_via_element_add_renders_pixels() {
+    let dir = Dir::new();
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let d = "M0 330 Q90 250 180 325 Q260 235 355 315 L512 512 L0 512Z";
+    let added = rig.doc_tool(
+        "element_add",
+        &format!(
+            r##""parentId":"root","template":"path","attributes":{{"d":"{d}","fill":"#FF0000"}}"##
+        ),
+    );
+    added.ok();
+    let target = dir.text("q.png");
+    rig.doc_tool("render_png", &args(&target, "")).ok();
+    let decoded = png_decode::decode(&fs::read(dir.file("q.png")).unwrap());
+    let red = decoded
+        .rgba
+        .chunks_exact(4)
+        .filter(|p| p[0] > 200 && p[1] < 60 && p[2] < 60 && p[3] == 255)
+        .count();
+    assert!(red > 100, "quadratic path drew {red} red pixels");
+    assert_ne!(
+        &decoded.rgba[..4],
+        &[255, 0, 0, 255],
+        "top-left stays background"
+    );
+}

@@ -526,6 +526,8 @@ mod history_bridge_tests;
 #[cfg(test)]
 mod paint_defs_tests;
 #[cfg(test)]
+mod path_data_tests;
+#[cfg(test)]
 mod query_tests;
 #[cfg(test)]
 mod snapshot_tests;

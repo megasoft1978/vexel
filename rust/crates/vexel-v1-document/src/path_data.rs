@@ -1,4 +1,6 @@
-//! Validated subset of SVG path data: `M m L l H h V v C c Z z`.
+//! Validated subset of SVG path data: `M m L l H h V v C c S s Q q T t Z z`.
+//! Arcs (`A a`) are intentionally unsupported: scaling them to an equivalent
+//! absolute path under non-uniform scale is not implemented.
 
 use crate::{V1DocumentError, numeric_text};
 
@@ -20,6 +22,8 @@ fn arity(command: u8) -> Option<usize> {
         b'M' | b'm' | b'L' | b'l' => Some(2),
         b'H' | b'h' | b'V' | b'v' => Some(1),
         b'C' | b'c' => Some(6),
+        b'S' | b's' | b'Q' | b'q' => Some(4),
+        b'T' | b't' => Some(2),
         b'Z' | b'z' => Some(0),
         _ => None,
     }
@@ -164,10 +168,21 @@ pub fn validate_path_data(data: &str) -> Result<(), V1DocumentError> {
     parse(data.as_bytes()).map(|_| ())
 }
 
+/// Reflected control point for `S`/`T`: the previous control point of the
+/// same curve kind mirrored about the current point, else the current point.
+fn reflect(prev: Option<(u8, f64, f64)>, kind: u8, cur: (f64, f64)) -> (f64, f64) {
+    match prev {
+        Some((k, px, py)) if k == kind => (2.0 * cur.0 - px, 2.0 * cur.1 - py),
+        _ => cur,
+    }
+}
+
 /// Conservative bounding box (endpoints and control points) in path space.
 pub(crate) fn bounds(segments: &[Segment]) -> Option<(f64, f64, f64, f64)> {
     let (mut cx, mut cy, mut sx, mut sy) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
     let mut bbox: Option<(f64, f64, f64, f64)> = None;
+    // Previous curve control point and its kind (b'C' cubic, b'Q' quadratic).
+    let mut prev: Option<(u8, f64, f64)> = None;
     let mut include = |x: f64, y: f64| {
         bbox = Some(match bbox {
             None => (x, y, x, y),
@@ -177,6 +192,7 @@ pub(crate) fn bounds(segments: &[Segment]) -> Option<(f64, f64, f64, f64)> {
     for s in segments {
         let relative = s.command.is_ascii_lowercase();
         let (ox, oy) = if relative { (cx, cy) } else { (0.0, 0.0) };
+        let before = prev.take();
         match s.command.to_ascii_uppercase() {
             b'M' => {
                 (cx, cy) = (ox + s.args[0], oy + s.args[1]);
@@ -199,6 +215,28 @@ pub(crate) fn bounds(segments: &[Segment]) -> Option<(f64, f64, f64, f64)> {
                 include(ox + s.args[0], oy + s.args[1]);
                 include(ox + s.args[2], oy + s.args[3]);
                 (cx, cy) = (ox + s.args[4], oy + s.args[5]);
+                include(cx, cy);
+                prev = Some((b'C', ox + s.args[2], oy + s.args[3]));
+            }
+            b'S' => {
+                let (c1x, c1y) = reflect(before, b'C', (cx, cy));
+                include(c1x, c1y);
+                include(ox + s.args[0], oy + s.args[1]);
+                prev = Some((b'C', ox + s.args[0], oy + s.args[1]));
+                (cx, cy) = (ox + s.args[2], oy + s.args[3]);
+                include(cx, cy);
+            }
+            b'Q' => {
+                include(ox + s.args[0], oy + s.args[1]);
+                prev = Some((b'Q', ox + s.args[0], oy + s.args[1]));
+                (cx, cy) = (ox + s.args[2], oy + s.args[3]);
+                include(cx, cy);
+            }
+            b'T' => {
+                let (qx, qy) = reflect(before, b'Q', (cx, cy));
+                include(qx, qy);
+                prev = Some((b'Q', qx, qy));
+                (cx, cy) = (ox + s.args[0], oy + s.args[1]);
                 include(cx, cy);
             }
             _ => (cx, cy) = (sx, sy),
@@ -225,9 +263,11 @@ pub(crate) fn scale(
     let point = |x: f64, y: f64| (to.0 + (x - from.0) * sx, to.1 + (y - from.1) * sy);
     let mut out = String::new();
     let (mut x, mut y, mut sx0, mut sy0) = (0.0, 0.0, 0.0, 0.0);
+    let mut prev: Option<(u8, f64, f64)> = None;
     for s in segments {
         let rel = s.command.is_ascii_lowercase();
         let base = if rel { (x, y) } else { (0.0, 0.0) };
+        let before = prev.take();
         match s.command.to_ascii_uppercase() {
             b'M' | b'L' => {
                 let p = point(base.0 + s.args[0], base.1 + s.args[1]);
@@ -273,6 +313,36 @@ pub(crate) fn scale(
                     num(e.1)?
                 )
                 .map_err(|_| V1DocumentError::FormattingLimit)?;
+                (x, y) = end;
+                prev = Some((b'C', base.0 + s.args[2], base.1 + s.args[3]));
+            }
+            b'S' | b'Q' | b'T' => {
+                let upper = s.command.to_ascii_uppercase();
+                // Normalise to explicit absolute C (from S) or Q (from Q/T).
+                let (cmd, ctrl, end_at) = match upper {
+                    b'S' => ('C', Some(reflect(before, b'C', (x, y))), 2),
+                    b'Q' => ('Q', None, 2),
+                    _ => ('Q', Some(reflect(before, b'Q', (x, y))), 0),
+                };
+                let own = match upper {
+                    b'T' => None,
+                    _ => Some((base.0 + s.args[0], base.1 + s.args[1])),
+                };
+                let end = (base.0 + s.args[end_at], base.1 + s.args[end_at + 1]);
+                let mut pts: Vec<(f64, f64)> = Vec::new();
+                pts.extend(ctrl);
+                pts.extend(own);
+                pts.push(end);
+                write!(&mut out, "{cmd} ").map_err(|_| V1DocumentError::FormattingLimit)?;
+                for (px, py) in pts.iter().map(|p| point(p.0, p.1)) {
+                    write!(&mut out, "{} {} ", num(px)?, num(py)?)
+                        .map_err(|_| V1DocumentError::FormattingLimit)?;
+                }
+                prev = Some(match upper {
+                    b'S' => (b'C', own.map_or(x, |p| p.0), own.map_or(y, |p| p.1)),
+                    b'Q' => (b'Q', own.map_or(x, |p| p.0), own.map_or(y, |p| p.1)),
+                    _ => (b'Q', ctrl.map_or(x, |p| p.0), ctrl.map_or(y, |p| p.1)),
+                });
                 (x, y) = end;
             }
             _ => {

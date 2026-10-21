@@ -384,7 +384,7 @@ fn element_add_line_and_path_rejections() {
     let paths: Vec<(String, &str)> = vec![
         (format!(r#""d":"{big_d}""#), GENERIC),
         (r#""d":"""#.into(), GENERIC),
-        (r#""d":"M 0 0 Q 1 1 2 2""#.into(), GENERIC),
+        (r#""d":"M 0 0 A 1 1 0 0 0 2 2""#.into(), GENERIC),
         (r#""d":"M 0 0 L""#.into(), GENERIC),
         (r#""d":"M 0 0 L 5 5","fill":"red""#.into(), BAD_COLOR),
         (
