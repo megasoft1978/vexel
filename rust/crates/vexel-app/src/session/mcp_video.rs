@@ -19,8 +19,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use vexel_mcp_access::{AccessError, AccessPolicy};
 use vexel_platform_apple::{VideoCodec, VideoError};
 
-const NO_TIMELINE: &str =
-    "export mp4 and mov need a native timeline; add a track with native_timeline_add_track first";
+const NO_TIMELINE: &str = "export mp4 and mov need a native timeline; add a track with native_timeline_add_property_track first";
 const BAD_EXTENSION: &str = "export path extension must match the format (.mp4 or .mov)";
 const BAD_SIZE: &str = "export video size must be 1 to 4096 pixels per side";
 const FAILED: &str = "file operation failed";
