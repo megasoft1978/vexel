@@ -80,6 +80,7 @@ pub(super) fn export_video(
         codec: request.codec,
         size: request.size,
         background: request.background,
+        alpha: request.alpha,
         bit_rate: request.bit_rate,
         quality: request.quality,
         fps: request.fps,

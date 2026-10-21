@@ -126,6 +126,7 @@ mod tests {
             codec,
             timescale: TS,
             background: [255, 255, 255],
+            alpha: false,
             bit_rate: Some(20_000_000),
         })
         .expect("create");
@@ -181,6 +182,7 @@ mod tests {
             codec: VideoCodec::H264,
             timescale: TS,
             background: [200, 40, 40],
+            alpha: false,
             bit_rate: Some(2_000_000),
         })
         .unwrap();
@@ -196,6 +198,61 @@ mod tests {
         let _ = std::fs::remove_file(path);
     }
 
+    fn alpha_spec(name: &str, codec: VideoCodec) -> VideoSpec {
+        VideoSpec {
+            path: scratch(name),
+            width: 32,
+            height: 32,
+            codec,
+            timescale: TS,
+            background: [255, 255, 255],
+            alpha: true,
+            bit_rate: Some(4_000_000),
+        }
+    }
+
+    #[test]
+    fn alpha_requires_hevc_in_mov() {
+        for (name, codec) in [("a.mov", VideoCodec::H264), ("a.mp4", VideoCodec::Hevc)] {
+            let e = VideoWriter::create(alpha_spec(name, codec))
+                .err()
+                .expect("rejected");
+            assert!(e.to_string().contains("alpha needs HEVC"), "{e}");
+        }
+    }
+
+    #[test]
+    fn hevc_alpha_mov_keeps_transparency() {
+        let mut w = match VideoWriter::create(alpha_spec("alpha.mov", VideoCodec::Hevc)) {
+            Ok(w) => w,
+            Err(e) => panic!("HEVC-with-alpha encoder unavailable: {e}"),
+        };
+        let path = w.path().to_owned();
+        // Left half opaque red, right half 50% blue, bottom rows fully clear.
+        let mut frame = Vec::new();
+        for y in 0..32 {
+            for x in 0..32 {
+                frame.extend_from_slice(match (y >= 24, x < 16) {
+                    (true, _) => &[0, 0, 0, 0],
+                    (false, true) => &[255, 0, 0, 255],
+                    (false, false) => &[0, 0, 255, 128],
+                });
+            }
+        }
+        for i in 0..4 {
+            w.append(&frame, i * STEP).expect("append");
+        }
+        w.finish().expect("finish");
+        let d = decode(&path).expect("decode");
+        assert_eq!(d.frames.len(), 4);
+        let rgba = &d.frames[0].rgba;
+        let alpha = |x: usize, y: usize| rgba[(y * 32 + x) * 4 + 3];
+        assert!(alpha(4, 4) > 200, "opaque side {}", alpha(4, 4));
+        assert!(alpha(28, 4) < 255, "half-transparent side {}", alpha(28, 4));
+        assert!(alpha(16, 30) < 40, "clear rows {}", alpha(16, 30));
+        let _ = std::fs::remove_file(path);
+    }
+
     #[test]
     fn rejects_bad_requests() {
         let spec = |w, h| VideoSpec {
@@ -205,6 +262,7 @@ mod tests {
             codec: VideoCodec::H264,
             timescale: TS,
             background: [0; 3],
+            alpha: false,
             bit_rate: None,
         };
         assert!(VideoWriter::create(spec(63, 64)).is_err());

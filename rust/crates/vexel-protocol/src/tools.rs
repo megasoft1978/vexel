@@ -312,7 +312,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
         description: "Export a bounded animation as a GIF or PNG frame sequence inside a granted directory.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"path\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"gif\",\"frames\"]},\"fps\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":30},\"duration\":{\"type\":\"number\",\"minimum\":0.01,\"maximum\":3600}}",
         required: "documentId,path,format,fps,duration",
-        fields: "documentId:string;path:string;format:string;fps:integer;duration:number;codec:string;quality:number;bitrate:integer;width:integer;height:integer;loops:integer;background:string",
+        fields: "documentId:string;path:string;format:string;fps:integer;duration:number;codec:string;quality:number;bitrate:integer;width:integer;height:integer;loops:integer;background:string;alpha:boolean",
     },
     ToolSchema {
         name: "selection_get",
@@ -446,7 +446,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         let description = if preview && tool.name == "element_add" {
             element_add_description()
         } else if preview && tool.name == "export_animation" {
-            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency.".to_owned()
+            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency, alpha true keeps transparency (mov with hevc only; background is ignored).".to_owned()
         } else if preview && tool.name == "render_png" {
             "Render the open document to a PNG file inside a granted directory. Optional time is in SECONDS (tick / ticksPerSecond; 0 to the timeline length, default 0), not ticks; a time past the end of the timeline is rejected.".to_owned()
         } else {
@@ -463,7 +463,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             } else if preview && tool.name == "animation_control" {
                 r#"{"documentId":{"type":"string"},"action":{"type":"string","enum":["play","pause","seek"]},"timeMs":{"type":"number","minimum":0,"maximum":10000}}"#
             } else if preview && tool.name == "export_animation" {
-                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif","mp4","mov"]},"fps":{"type":"integer","minimum":1,"maximum":120},"duration":{"type":"number","minimum":0.01,"maximum":10},"codec":{"type":"string","enum":["h264","hevc"]},"quality":{"type":"number","minimum":0,"maximum":1},"bitrate":{"type":"integer","minimum":50,"maximum":200000},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"loops":{"type":"integer","minimum":1,"maximum":100},"background":{"type":"string","pattern":"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"}}"#
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif","mp4","mov"]},"fps":{"type":"integer","minimum":1,"maximum":120},"duration":{"type":"number","minimum":0.01,"maximum":10},"codec":{"type":"string","enum":["h264","hevc"]},"quality":{"type":"number","minimum":0,"maximum":1},"bitrate":{"type":"integer","minimum":50,"maximum":200000},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"loops":{"type":"integer","minimum":1,"maximum":100},"background":{"type":"string","pattern":"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"},"alpha":{"type":"boolean"}}"#
             } else if preview && tool.name == "render_png" {
                 r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"time":{"type":"number","minimum":0,"maximum":3600}}"#
             } else {

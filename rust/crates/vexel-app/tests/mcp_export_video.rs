@@ -210,6 +210,68 @@ fn video_needs_a_native_timeline_and_gif_still_works() {
 }
 
 #[test]
+fn hevc_alpha_mov_keeps_the_transparent_first_frame() {
+    let dir = Dir::new();
+    let mut rig = animated(&dir);
+    let reply = export(
+        &mut rig,
+        &dir.text("alpha.mov"),
+        r##","format":"mov","codec":"hevc","alpha":true,"width":64,"height":64,"background":"#102030""##,
+    );
+    let body = reply.ok().to_owned();
+    assert!(body.contains(r#""codec":"hevc""#), "{body}");
+    let video = decode(&dir.file("alpha.mov")).unwrap();
+    assert_eq!(video.frames.len(), 48);
+    // Frame 0 has the rect at opacity 0: corners stay transparent, not background.
+    let px = &video.frames[0].rgba[..4];
+    assert!(px[3] < 255, "{px:?}");
+    // Last frame: rect fully visible, so some pixel is opaque.
+    let last = video.frames.last().unwrap();
+    assert!(last.rgba.chunks_exact(4).any(|p| p[3] > 200));
+}
+
+#[test]
+fn alpha_is_rejected_without_mov_hevc() {
+    let dir = Dir::new();
+    let mut rig = animated(&dir);
+    let cases = [
+        (
+            r#","format":"mp4","codec":"hevc","alpha":true"#,
+            "a.mp4",
+            "export alpha needs format mov (mp4 cannot carry alpha)",
+        ),
+        (
+            r#","format":"mov","alpha":true"#,
+            "a.mov",
+            "export alpha needs codec hevc (h264 cannot carry alpha)",
+        ),
+        (
+            r#","format":"mov","codec":"h264","alpha":true"#,
+            "a.mov",
+            "export alpha needs codec hevc (h264 cannot carry alpha)",
+        ),
+    ];
+    for (extra, file, want) in cases {
+        assert_eq!(export(&mut rig, &dir.text(file), extra).error(), want);
+    }
+    let typed = export(
+        &mut rig,
+        &dir.text("a.mov"),
+        r#","format":"mov","codec":"hevc","alpha":"yes""#,
+    )
+    .body;
+    assert!(typed.contains("`alpha` has the wrong type"), "{typed}");
+    assert!(entries(&dir).is_empty(), "{:?}", entries(&dir));
+    // alpha:false behaves like omitting it.
+    export(
+        &mut rig,
+        &dir.text("ok.mp4"),
+        r#","format":"mp4","alpha":false,"width":32,"height":32"#,
+    )
+    .ok();
+}
+
+#[test]
 fn schema_lists_video_formats_and_options() {
     let dir = Dir::new();
     let mut rig = animated(&dir);
@@ -219,6 +281,7 @@ fn schema_lists_video_formats_and_options() {
         r#""codec":{"type":"string","enum":["h264","hevc"]}"#,
         r#""loops":{"type":"integer","minimum":1,"maximum":100}"#,
         r#""width":{"type":"integer","minimum":1,"maximum":4096}"#,
+        r#""alpha":{"type":"boolean"}"#,
     ] {
         assert!(listing.contains(part), "{part}");
     }

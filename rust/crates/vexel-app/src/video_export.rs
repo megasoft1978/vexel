@@ -23,6 +23,7 @@ pub fn write_video(doc: &AppDocument, target: PathBuf) -> Result<&'static str, &
         codec: VideoCodec::H264,
         size: None,
         background: [255, 255, 255],
+        alpha: false,
         bit_rate: None,
         quality: None,
         fps: None,
