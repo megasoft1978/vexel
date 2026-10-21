@@ -19,7 +19,8 @@ pub enum TokenKind { Declaration = 1, ProcessingInstruction, Comment, StartEleme
 pub enum XmlError { None, InvalidArgument, InputLimit, InvalidUtf8, InvalidCharacter,
     UnsupportedEncoding, InvalidName, MalformedSyntax, DuplicateAttribute, MismatchedTag,
     DepthLimit, NodeLimit, AttributeLimit, TextLimit, OutputExhausted, UnsupportedDtd,
-    MultipleRoots, IncompleteDocument }
+    MultipleRoots, IncompleteDocument, EntityCountLimit, EntityValueLimit, EntityDepthLimit,
+    EntityExpansionLimit, EntityCycle, ExternalEntity }
 
 impl XmlError {
     pub const fn as_str(self) -> &'static str {
@@ -31,6 +32,9 @@ impl XmlError {
             Self::MismatchedTag => "mismatched_tag", Self::DepthLimit => "depth_limit", Self::NodeLimit => "node_limit",
             Self::AttributeLimit => "attribute_limit", Self::TextLimit => "text_limit", Self::OutputExhausted => "output_exhausted",
             Self::UnsupportedDtd => "unsupported_dtd", Self::MultipleRoots => "multiple_roots", Self::IncompleteDocument => "incomplete_document",
+            Self::EntityCountLimit => "entity_count_limit", Self::EntityValueLimit => "entity_value_limit",
+            Self::EntityDepthLimit => "entity_depth_limit", Self::EntityExpansionLimit => "entity_expansion_limit",
+            Self::EntityCycle => "entity_cycle", Self::ExternalEntity => "external_entity",
         }
     }
 }
@@ -65,7 +69,7 @@ pub struct XmlResult { pub token_count: usize, pub element_count: usize, pub att
 pub(crate) struct Fault(pub(crate) XmlError, pub(crate) usize);
 
 struct Parser<'a> { src: &'a [u8], pos: usize, depth: usize, roots: usize, attrs: usize,
-    limits: XmlLimits, tokens: Vec<XmlToken>, result: XmlResult, open_names: Vec<XmlSpan>, token_capacity: usize }
+    limits: XmlLimits, tokens: Vec<XmlToken>, result: XmlResult, open_names: Vec<XmlSpan>, token_capacity: usize, entities: crate::EntityTable }
 impl<'a> Parser<'a> {
     fn fault<T>(&self, e: XmlError, at: usize) -> Result<T, Fault> { Err(Fault(e, at.min(self.src.len()))) }
     fn emit(&mut self, token: XmlToken, at: usize) -> Result<(), Fault> {
@@ -104,7 +108,7 @@ impl<'a> Parser<'a> {
         }
         *p = q; Ok((name, prefix, local))
     }
-    fn reference(&self, p: &mut usize) -> Result<(), Fault> {
+    fn reference(&mut self, p: &mut usize) -> Result<(), Fault> {
         let at = *p; let mut q = at + 1;
         if q >= self.src.len() { return self.fault(XmlError::MalformedSyntax, at); }
         if self.src[q] == b'#' {
@@ -120,7 +124,10 @@ impl<'a> Parser<'a> {
             if !is_xml_char(n) { return self.fault(XmlError::InvalidCharacter, at); }
         } else {
             let begin = q; let (_, _, _) = self.name(&mut q, false).map_err(|_| Fault(XmlError::MalformedSyntax, at))?;
-            if self.src.get(q) != Some(&b';') || !matches!(&self.src[begin..q], b"lt"|b"gt"|b"amp"|b"apos"|b"quot") { return self.fault(XmlError::MalformedSyntax, at); }
+            if self.src.get(q) != Some(&b';') { return self.fault(XmlError::MalformedSyntax, at); }
+            if !matches!(&self.src[begin..q], b"lt"|b"gt"|b"amp"|b"apos"|b"quot") {
+                match self.entities.charge_reference(self.src, &self.src[begin..q]) { Ok(true) => {}, Ok(false) => return self.fault(XmlError::MalformedSyntax, at), Err(e) => return self.fault(e, at) }
+            }
         }
         *p = q + 1; Ok(())
     }
@@ -195,7 +202,7 @@ impl<'a> Parser<'a> {
             }
             if self.starts(start,b"<!--") { let mut p=start+4; while p+2<self.src.len() && !self.starts(p,b"-->") { if self.starts(p,b"--") { return self.fault(XmlError::MalformedSyntax,p) } p+=1; } if p+2>=self.src.len(){return self.fault(XmlError::MalformedSyntax,start)} self.node(start)?; self.emit(XmlToken{kind:TokenKind::Comment,source:XmlSpan{offset:start,length:p+3-start},value:XmlSpan{offset:start+4,length:p-start-4},depth:self.depth,..XmlToken::default()},start)?;self.pos=p+3;continue; }
             if self.starts(start,b"<![CDATA[") { let mut p=start+9;while p+2<self.src.len()&&!self.starts(p,b"]]>"){p+=1} if p+2>=self.src.len()||self.depth==0{return self.fault(XmlError::MalformedSyntax,start)} if p-(start+9)>self.limits.text_run_bytes{return self.fault(XmlError::TextLimit,start+9)} self.node(start)?;self.emit(XmlToken{kind:TokenKind::Cdata,source:XmlSpan{offset:start,length:p+3-start},value:XmlSpan{offset:start+9,length:p-start-9},depth:self.depth,..XmlToken::default()},start)?;self.pos=p+3;continue; }
-            if self.starts(start,b"<!DOCTYPE") { if doctype||self.depth!=0||self.roots!=0{return self.fault(XmlError::MalformedSyntax,start)} let end=self.doctype_end(start)?; self.node(start)?; self.emit(XmlToken{kind:TokenKind::Doctype,source:XmlSpan{offset:start,length:end-start},..XmlToken::default()},start)?;doctype=true;self.pos=end;continue; }
+            if self.starts(start,b"<!DOCTYPE") { if doctype||self.depth!=0||self.roots!=0{return self.fault(XmlError::MalformedSyntax,start)} let end=self.doctype_end(start)?; self.entities=match crate::EntityTable::parse(self.src,start){Ok(t)=>t,Err((e,at))=>return self.fault(e,at)}; self.node(start)?; self.emit(XmlToken{kind:TokenKind::Doctype,source:XmlSpan{offset:start,length:end-start},..XmlToken::default()},start)?;doctype=true;self.pos=end;continue; }
             if self.starts(start,b"<!ENTITY") {return self.fault(XmlError::UnsupportedDtd,start)}
             if self.starts(start,b"<?") { let mut p=start+2; let (name,_,_)=self.name(&mut p,false)?;let declaration=name.slice(self.src)==Some(b"xml");let folded=name.slice(self.src).unwrap_or_default();if !declaration&&folded.eq_ignore_ascii_case(b"xml"){return self.fault(XmlError::MalformedSyntax,start)}if declaration&&start!=0&&!(start==3&&self.starts(0,b"\xef\xbb\xbf")){return self.fault(XmlError::MalformedSyntax,start)} if p>=self.src.len()||(!is_xml_whitespace(self.src[p])&&!self.starts(p,b"?>")){return self.fault(XmlError::MalformedSyntax,p)} if declaration&&self.starts(p,b"?>"){return self.fault(XmlError::MalformedSyntax,p)} while p<self.src.len()&&is_xml_whitespace(self.src[p]){p+=1}let data=p;while p+1<self.src.len()&&!self.starts(p,b"?>"){p+=1}if p+1>=self.src.len(){return self.fault(XmlError::MalformedSyntax,start)} let kind=if declaration{TokenKind::Declaration}else{self.node(start)?;TokenKind::ProcessingInstruction};if declaration{validate_declaration(self.src,XmlSpan{offset:data,length:p-data})?;}self.emit(XmlToken{kind,source:XmlSpan{offset:start,length:p+2-start},name,value:XmlSpan{offset:data,length:p-data},depth:self.depth,..XmlToken::default()},start)?;self.pos=p+2;continue; }
             if self.starts(start,b"</") {self.tag(true)?;continue}
@@ -258,7 +265,7 @@ fn tokenize_cancelable_impl<F: FnMut() -> bool>(source: &[u8], limits: XmlLimits
 fn tokenize_impl(source:&[u8],limits:&mut XmlLimits,hard:usize,token_capacity:usize)->(Vec<XmlToken>,XmlResult){
     *limits=normalize_limits(*limits,hard);
     if source.len()>limits.input_bytes { return (Vec::new(),XmlResult{diagnostic:XmlDiagnostic{category:XmlError::InputLimit,offset:limits.input_bytes},..XmlResult::default()}); }
-    let parser=Parser{src:source,pos:0,depth:0,roots:0,attrs:0,limits:*limits,tokens:Vec::new(),result:XmlResult::default(),open_names:Vec::new(),token_capacity};
+    let parser=Parser{src:source,pos:0,depth:0,roots:0,attrs:0,limits:*limits,tokens:Vec::new(),result:XmlResult::default(),open_names:Vec::new(),token_capacity,entities:crate::EntityTable::empty()};
     match parser.run(){Ok((tokens,result))=>(tokens,result),Err(Fault(category,offset))=>(Vec::new(),XmlResult{diagnostic:XmlDiagnostic{category,offset},..XmlResult::default()})}
 }
 
@@ -271,8 +278,15 @@ pub fn visit_tokens<F:FnMut(&XmlToken)->bool>(source:&[u8],limits:XmlLimits,visi
 }
 
 pub fn decode_attribute_value(source:&[u8],raw:XmlSpan,output:&mut [u8])->Result<usize,usize>{
+    decode_attribute_value_with(source,raw,crate::EntityTable::none(),output)
+}
+
+/// Like `decode_attribute_value`, additionally expanding references to the
+/// internal entities in `entities` (see `EntityTable::from_document`). Works
+/// for attribute values and text runs alike.
+pub fn decode_attribute_value_with(source:&[u8],raw:XmlSpan,entities:&crate::EntityTable,output:&mut [u8])->Result<usize,usize>{
     let bytes=raw.slice(source).ok_or(0usize)?;let mut p=0;let mut out=0;
     while p<bytes.len(){let at=p;if bytes[p]!=b'&'{let Some((cp,end))=utf8_next(bytes,p)else{return Err(at)};if !is_xml_char(cp)||end-p>output.len().saturating_sub(out){return Err(at)}output[out..out+end-p].copy_from_slice(&bytes[p..end]);out+=end-p;p=end;continue}
-        let semi=bytes[p+1..].iter().take(16).position(|b|*b==b';').map(|v|p+1+v).ok_or(at)?;let body=&bytes[p+1..semi];let cp=match body{b"amp"=>38,b"lt"=>60,b"gt"=>62,b"quot"=>34,b"apos"=>39,_ if body.starts_with(b"#")=>{let (digits,radix)=if body.get(1)==Some(&b'x'){(&body[2..],16)}else{(&body[1..],10)};if digits.is_empty(){return Err(at)}let mut n=0u32;for c in digits{let d=match c{b'0'..=b'9'=>(c-b'0')as u32,b'a'..=b'f'=>(c-b'a'+10)as u32,b'A'..=b'F'=>(c-b'A'+10)as u32,_=>return Err(at)};n=n.checked_mul(radix).and_then(|v|v.checked_add(d)).ok_or(at)?}n},_=>return Err(at)};if !is_xml_char(cp){return Err(at)}let ch=char::from_u32(cp).ok_or(at)?;let mut tmp=[0;4];let enc=ch.encode_utf8(&mut tmp).as_bytes();if enc.len()>output.len().saturating_sub(out){return Err(at)}output[out..out+enc.len()].copy_from_slice(enc);out+=enc.len();p=semi+1;
+        let semi=bytes[p+1..].iter().take(MAX_TOKEN_NAME_BYTES+1).position(|b|*b==b';').map(|v|p+1+v).ok_or(at)?;let body=&bytes[p+1..semi];if !body.starts_with(b"#")&&!matches!(body,b"amp"|b"lt"|b"gt"|b"quot"|b"apos"){entities.expand(source,body,output,&mut out).map_err(|_|at)?;p=semi+1;continue}let cp=match body{b"amp"=>38,b"lt"=>60,b"gt"=>62,b"quot"=>34,b"apos"=>39,_ if body.starts_with(b"#")=>{let (digits,radix)=if body.get(1)==Some(&b'x'){(&body[2..],16)}else{(&body[1..],10)};if digits.is_empty(){return Err(at)}let mut n=0u32;for c in digits{let d=match c{b'0'..=b'9'=>(c-b'0')as u32,b'a'..=b'f'=>(c-b'a'+10)as u32,b'A'..=b'F'=>(c-b'A'+10)as u32,_=>return Err(at)};n=n.checked_mul(radix).and_then(|v|v.checked_add(d)).ok_or(at)?}n},_=>return Err(at)};if !is_xml_char(cp){return Err(at)}let ch=char::from_u32(cp).ok_or(at)?;let mut tmp=[0;4];let enc=ch.encode_utf8(&mut tmp).as_bytes();if enc.len()>output.len().saturating_sub(out){return Err(at)}output[out..out+enc.len()].copy_from_slice(enc);out+=enc.len();p=semi+1;
     }Ok(out)
 }

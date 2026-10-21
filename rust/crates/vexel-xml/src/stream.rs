@@ -4,6 +4,7 @@ use crate::tokenizer::{validate_declaration, MAX_ATTRIBUTES_PER_ELEMENT, MAX_DEP
 use crate::{StreamStatus, TokenKind, XmlDiagnostic, XmlError, XmlLimits, XmlResult, XmlSpan, XmlToken};
 use core::mem::size_of;
 use crate::utf8_scan::Utf8Scan;
+use crate::EntityTable;
 
 const STEP_CAP: usize = 64 * 1024;
 
@@ -137,7 +138,7 @@ pub struct XmlTokenStream<'a> {
     tag_scratch:Vec<XmlToken>, token_capacity:usize, visitor_mode:bool,
     cursor:usize, parse_limit:usize, char_cursor:usize, utf8:Utf8Scan, name_work:NameWork,
     chars_complete:bool, depth:usize, roots:usize, total_attrs:usize, open_names:Vec<XmlSpan>,
-    pending:Pending, tag:Option<TagState>, doctype_seen:bool, doctype_span:XmlSpan, complete:bool, canceled:bool, failed:bool, taken:bool,
+    pending:Pending, tag:Option<TagState>, doctype_seen:bool, doctype_span:XmlSpan, entities:EntityTable, complete:bool, canceled:bool, failed:bool, taken:bool,
 }
 
 impl<'a> XmlTokenStream<'a> {
@@ -168,7 +169,7 @@ impl<'a> XmlTokenStream<'a> {
         let cursor=if source.starts_with(b"\xef\xbb\xbf"){3}else{0};
         Ok(Self{source,limits,result:XmlResult::default(),tokens:Vec::new(),tag_scratch,token_capacity:max_storage_bytes/size_of::<XmlToken>(),visitor_mode,
             cursor,parse_limit:cursor,char_cursor:0,utf8:Utf8Scan::default(),name_work:NameWork::default(),chars_complete:false,depth:0,roots:0,total_attrs:0,open_names,
-            pending:Pending::None,tag:None,doctype_seen:false,doctype_span:XmlSpan::default(),complete:false,canceled:false,failed:false,taken:false})
+            pending:Pending::None,tag:None,doctype_seen:false,doctype_span:XmlSpan::default(),entities:EntityTable::empty(),complete:false,canceled:false,failed:false,taken:false})
     }
 
     pub(crate) fn with_limits(source:&'a [u8],limits:XmlLimits,token_capacity:usize)->Result<Self,StreamStatus>{
@@ -268,7 +269,7 @@ impl<'a> XmlTokenStream<'a> {
                 while pos<limit&&pos<self.source.len(){if cancel(){self.pending=Pending::Text{start,pos,nonspace,first_nonspace,reference};self.canceled=true;return false}
                     if self.source[pos]==b'<'{break}
                     if self.source.get(pos..pos+3)==Some(b"]]>"){self.fail(XmlError::MalformedSyntax,pos);return false}
-                    if self.source[pos]==b'&'{if !nonspace{nonspace=true;first_nonspace=pos}let scan=reference.get_or_insert_with(||RefScan::new(pos));match reference_step(self.source,self.doctype_span.slice(self.source).unwrap_or(&[]),scan,limit,&mut self.name_work){Ok(Some(end))=>{pos=end;reference=None},Ok(None)=>break,Err((e,at))=>{self.fail(e,at);return false}}}
+                    if self.source[pos]==b'&'{if !nonspace{nonspace=true;first_nonspace=pos}let scan=reference.get_or_insert_with(||RefScan::new(pos));match reference_step(self.source,&mut self.entities,scan,limit,&mut self.name_work){Ok(Some(end))=>{pos=end;reference=None},Ok(None)=>break,Err((e,at))=>{self.fail(e,at);return false}}}
                     else{if !is_xml_whitespace(self.source[pos])&&!nonspace{nonspace=true;first_nonspace=pos}pos+=1}
                 }
                 if pos<self.source.len()&&self.source[pos]==b'<'{return self.finish_text(start,pos,nonspace,first_nonspace,visitor)}
@@ -291,7 +292,7 @@ impl<'a> XmlTokenStream<'a> {
             }
             Pending::Doctype{start,mut pos,mut state}=>{
                 while pos<limit&&pos<self.source.len(){if cancel(){self.pending=Pending::Doctype{start,pos,state};self.canceled=true;return false}
-                    match state.step(self.source[pos]){Ok(done)=>{pos+=1;if done{let t=XmlToken{kind:TokenKind::Doctype,source:span(start,pos),depth:self.depth,..XmlToken::default()};if !self.count_node(start){return false}self.doctype_seen=true;self.doctype_span=span(start,pos);if !self.emit(t,start,visitor){return false}self.cursor=pos;return true}},Err(())=>{self.fail(XmlError::MalformedSyntax,pos);return false}}
+                    match state.step(self.source[pos]){Ok(done)=>{pos+=1;if done{let t=XmlToken{kind:TokenKind::Doctype,source:span(start,pos),depth:self.depth,..XmlToken::default()};if !self.count_node(start){return false}self.doctype_seen=true;self.doctype_span=span(start,pos);match EntityTable::parse(self.source,start){Ok(t)=>self.entities=t,Err((e,at))=>{self.fail(e,at);return false}}if !self.emit(t,start,visitor){return false}self.cursor=pos;return true}},Err(())=>{self.fail(XmlError::MalformedSyntax,pos);return false}}
                 }
                 if pos==self.source.len(){self.fail(XmlError::MalformedSyntax,start);return false}self.pending=Pending::Doctype{start,pos,state};true
             }
@@ -363,7 +364,7 @@ impl<'a> XmlTokenStream<'a> {
                 },
                 TagPhase::AttrEq=>{while t.pos<limit&&t.pos<self.source.len()&&is_xml_whitespace(self.source[t.pos]){t.pos+=1}if t.pos>=limit&&t.pos<self.source.len(){self.tag=Some(t);return true}if t.pos>=self.source.len()||self.source[t.pos]!=b'='{self.fail(XmlError::MalformedSyntax,t.pos);return false}t.pos+=1;t.phase=TagPhase::AttrQuote;},
                 TagPhase::AttrQuote=>{while t.pos<limit&&t.pos<self.source.len()&&is_xml_whitespace(self.source[t.pos]){t.pos+=1}if t.pos>=limit&&t.pos<self.source.len(){self.tag=Some(t);return true}if t.pos>=self.source.len()||!matches!(self.source[t.pos],b'\''|b'"'){self.fail(XmlError::MalformedSyntax,t.pos);return false}t.quote=self.source[t.pos];t.pos+=1;t.value_start=t.pos;t.phase=TagPhase::AttrValue;},
-                TagPhase::AttrValue=>{let mut paused=false;while t.pos<limit&&t.pos<self.source.len()&&self.source[t.pos]!=t.quote{if cancel(){self.tag=Some(t);self.canceled=true;return false}if self.source[t.pos]==b'<'{self.fail(XmlError::MalformedSyntax,t.pos);return false}if self.source[t.pos]==b'&'{let scan=t.reference.get_or_insert_with(||RefScan::new(t.pos));match reference_step(self.source,self.doctype_span.slice(self.source).unwrap_or(&[]),scan,limit,&mut self.name_work){Ok(Some(end))=>{t.pos=end;t.reference=None},Ok(None)=>{paused=true;break},Err((e,at))=>{self.fail(e,at);return false}}}else{t.pos+=1}}
+                TagPhase::AttrValue=>{let mut paused=false;while t.pos<limit&&t.pos<self.source.len()&&self.source[t.pos]!=t.quote{if cancel(){self.tag=Some(t);self.canceled=true;return false}if self.source[t.pos]==b'<'{self.fail(XmlError::MalformedSyntax,t.pos);return false}if self.source[t.pos]==b'&'{let scan=t.reference.get_or_insert_with(||RefScan::new(t.pos));match reference_step(self.source,&mut self.entities,scan,limit,&mut self.name_work){Ok(Some(end))=>{t.pos=end;t.reference=None},Ok(None)=>{paused=true;break},Err((e,at))=>{self.fail(e,at);return false}}}else{t.pos+=1}}
                     if paused||(t.pos==limit&&t.pos<self.source.len()){self.tag=Some(t);return true}if t.pos>=self.source.len(){self.fail(XmlError::MalformedSyntax,t.value_start-1);return false}
                     let Some(attr)=t.attr else{self.fail(XmlError::InvalidName,t.attr_start);return false};let tok=XmlToken{kind:TokenKind::Attribute,name:attr.name,prefix:attr.prefix,local_name:attr.local,source:span(t.attr_start,t.pos+1),value:span(t.value_start,t.pos),depth:self.depth,..XmlToken::default()};
                     if !self.stage_tag(tok,t.attr_start){return false}t.local_attrs+=1;self.total_attrs+=1;self.result.attribute_count+=1;t.pos+=1;t.attr=None;t.attr_scan=None;t.reference=None;t.phase=TagPhase::Between;t.separated=false;},
@@ -495,26 +496,10 @@ fn scan_name(source:&[u8],scan:&mut NameScan,limit:usize,qname:bool,work:&mut Na
 
 impl RefScan { fn new(start:usize)->Self{Self{start,pos:start+1,mode:RefMode::Start}} }
 fn ref_frontier(scan:RefScan)->usize{match scan.mode{RefMode::Start|RefMode::Numeric{..}=>scan.pos,RefMode::Named(name)=>name.pos}}
-/// True when the DOCTYPE text declares `<!ENTITY name` followed by whitespace.
-/// Used only to classify an unexpanded reference as unsupported; declarations
-/// are never interpreted or expanded. A match inside a comment or literal can
-/// change the diagnostic category, never accept the document.
-fn declares_entity(doctype:&[u8],name:&[u8])->bool{
-    const KEY:&[u8]=b"<!ENTITY";
-    let mut at=0;
-    while let Some(found)=doctype.get(at..).and_then(|rest|rest.windows(KEY.len()).position(|w|w==KEY)){
-        let mut p=at+found+KEY.len();
-        let gap=p;
-        while p<doctype.len()&&is_xml_whitespace(doctype[p]){p+=1}
-        if p>gap&&doctype[p..].starts_with(name)&&doctype.get(p+name.len()).is_some_and(|&b|is_xml_whitespace(b)){return true}
-        at=p;
-    }
-    false
-}
 /// Diagnostics for a reference point at its `&`; an unsupported reference's
-/// entity name is `src[offset+1..]` up to the `;`. `doctype` is the DOCTYPE
-/// token bytes (empty when none), used only to classify declared entities.
-fn reference_step(src:&[u8],doctype:&[u8],scan:&mut RefScan,limit:usize,work:&mut NameWork)->Result<Option<usize>,(XmlError,usize)>{
+/// entity name is `src[offset+1..]` up to the `;`. `ents` holds the DOCTYPE's
+/// internal entities; each reference to one is charged against its limits.
+fn reference_step(src:&[u8],ents:&mut EntityTable,scan:&mut RefScan,limit:usize,work:&mut NameWork)->Result<Option<usize>,(XmlError,usize)>{
     if matches!(scan.mode,RefMode::Start){if scan.pos>=limit{return if scan.pos==src.len(){Err((XmlError::MalformedSyntax,scan.start))}else{Ok(None)}}
         if src[scan.pos]==b'#'{scan.pos+=1;scan.mode=RefMode::Numeric{hex:false,digits:0,value:0}}
         else{scan.mode=RefMode::Named(NameScan::new(scan.pos))}}
@@ -525,6 +510,6 @@ fn reference_step(src:&[u8],doctype:&[u8],scan:&mut RefScan,limit:usize,work:&mu
             while scan.pos<limit{let c=src[scan.pos];let d=match c{b'0'..=b'9'=>Some((c-b'0')as u32),b'a'..=b'f' if *hex=>Some((c-b'a'+10)as u32),b'A'..=b'F' if *hex=>Some((c-b'A'+10)as u32),_=>None};let Some(d)=d else{break};*value=value.checked_mul(if *hex{16}else{10}).and_then(|v|v.checked_add(d)).filter(|v|*v<=0x10ffff).ok_or((XmlError::MalformedSyntax,scan.start))?;*digits+=1;scan.pos+=1}
             if scan.pos==limit&&limit<src.len(){return Ok(None)}if *digits==0||src.get(scan.pos)!=Some(&b';'){return Err((XmlError::MalformedSyntax,scan.start))}if !is_xml_char(*value){return Err((XmlError::InvalidCharacter,scan.start))}Ok(Some(scan.pos+1))
         },
-        RefMode::Named(name)=>{let Some(parts)=scan_name(src,name,limit,false,work).map_err(|_|(XmlError::MalformedSyntax,scan.start))?else{return Ok(None)};scan.pos=name.pos;if scan.pos==limit&&limit<src.len(){return Ok(None)}if src.get(scan.pos)!=Some(&b';'){return Err((XmlError::MalformedSyntax,scan.start))}if !parts.entity_known{let declared=declares_entity(doctype,parts.name.slice(src).unwrap_or(&[]));return Err((if declared{XmlError::UnsupportedDtd}else{XmlError::MalformedSyntax},scan.start))}Ok(Some(scan.pos+1))}
+        RefMode::Named(name)=>{let Some(parts)=scan_name(src,name,limit,false,work).map_err(|_|(XmlError::MalformedSyntax,scan.start))?else{return Ok(None)};scan.pos=name.pos;if scan.pos==limit&&limit<src.len(){return Ok(None)}if src.get(scan.pos)!=Some(&b';'){return Err((XmlError::MalformedSyntax,scan.start))}if !parts.entity_known{match ents.charge_reference(src,parts.name.slice(src).unwrap_or(&[])){Ok(true)=>{},Ok(false)=>return Err((XmlError::MalformedSyntax,scan.start)),Err(e)=>return Err((e,scan.start))}}Ok(Some(scan.pos+1))}
     }
 }

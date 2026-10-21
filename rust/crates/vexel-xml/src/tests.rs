@@ -239,7 +239,6 @@ fn tokenizer_preserves_doctype_lexically_without_entity_expansion() {
         assert!(tokens.iter().any(|t| t.kind == TokenKind::EmptyElement));
     }
     for source in [
-        &b"<!DOCTYPE a [<!ENTITY e \"x\">]><a>&e;</a>"[..],
         &b"<!DOCTYPE a><a/><!DOCTYPE b>"[..], &b"<a/><!DOCTYPE a>"[..],
         &b"<!DOCTYPEa><a/>"[..], &b"<!DOCTYPE a"[..], &b"<!ENTITY e 'x'><a/>"[..],
     ] { assert_ne!(tokenize(source, XmlLimits::default()).1.diagnostic.category, XmlError::None, "{source:?}"); }
