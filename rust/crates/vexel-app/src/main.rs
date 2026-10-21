@@ -12,6 +12,7 @@ use std::{
 use vexel_app::animation::{
     driver::Driver,
     keys::{self, playback_key},
+    native_export::NativeExportSource,
     playback::MonotonicClock,
     stage,
     strip::{self, Strip, StripPointer},
@@ -125,6 +126,7 @@ fn run(
     let mut native = NativeAnimationHost::new(MonotonicClock::new());
     let mut strip = Strip::default();
     let mut was_playing = false;
+    let mut native_loop: (u64, Option<f64>) = (u64::MAX, None);
     let mut dedup = ShortcutDedup::new();
     let started = Instant::now();
     let mut menu_revision = files.document().state_revision();
@@ -226,6 +228,18 @@ fn run(
         let mut app_state = AppState::from_session(files.document(), &doc);
         if driver.knows(files.document().revision()) {
             app_state.loop_seconds = driver.loop_seconds();
+        }
+        // Native timelines have no SMIL loop; they still export as GIF.
+        let state_revision = files.document().state_revision();
+        if native_loop.0 != state_revision {
+            native_loop = (
+                state_revision,
+                NativeExportSource::from_document(files.document())
+                    .and_then(|source| source.loop_seconds()),
+            );
+        }
+        if let Some(seconds) = native_loop.1 {
+            app_state.loop_seconds = seconds;
         }
         let chrome_text = chrome::chrome_text(&app_state);
         if chrome_text != model.chrome {

@@ -44,6 +44,11 @@ fn delays(gif: &[u8]) -> Vec<u16> {
 }
 
 #[test]
+fn native_export_reports_loop_seconds() {
+    assert_eq!(source("loop").loop_seconds(), Some(0.4));
+}
+
+#[test]
 fn native_export_gif_frames_and_delay() {
     let gif = source("loop").export_gif().unwrap();
     assert_eq!(&gif.bytes[..6], b"GIF89a");

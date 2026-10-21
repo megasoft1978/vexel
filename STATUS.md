@@ -46,3 +46,6 @@ Signing/identity/distribution decisions; showcase publication.
 - Gradient stop inherited `color` is now resolved lazily (only for `currentColor` stops), removing a per-gradient quadratic token rescan that exhausted `PaintVisits`.
 - `ideogram-human-chromosome-20` now decodes past gradients and stops at the clip planner's aggregate cap (`MAX_CLIP_JOB_REFERENCE_BYTES`, 512 KiB, `vexel-svg-definitions/src/planner.rs`). Raising it needs a design decision (lazy/streamed clip expansion), not a cap bump.
 - Open: Dukes (`<path>`), Naples (`<use>`), image/text default value limits.
+
+## Live click check (2026-10-21, automated via synthetic input)
+Verified in the real window: open char.vexel/ball.vexel, selection + 8 handles, resize + undo/redo, fill swatch, stroke width, timeline scrub/play, cel switching, GIF export from the toolbar (512x512, 48 frames, looping). Fixed: GIF row was disabled for native timelines; a press on a resize handle cleared the selection. Open nits: export save panel suggests `name.gif.vexel` (project panel reused); unwritable export folder reports a generic write error.

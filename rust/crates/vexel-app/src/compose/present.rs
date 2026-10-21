@@ -317,11 +317,32 @@ impl DocumentView {
             Some(index) => format!("{name}: shape {index} at ({dx:.1}, {dy:.1})"),
             None => format!("{name}: no shape at ({dx:.1}, {dy:.1})"),
         };
-        if select {
+        if select && !self.on_selected_handle((cx, cy)) {
             self.selected = hit;
         }
         self.status = Some((text, false));
         true
+    }
+
+    /// True when the view point `p` grabs a resize handle of the selected
+    /// shape. Handles sit on the bounding box, often outside the shape, so such
+    /// a press must keep the selection instead of clearing it as an empty click.
+    fn on_selected_handle(&self, p: (f64, f64)) -> bool {
+        let (Some(shown), Some(selected)) = (self.shown(), self.selected) else {
+            return false;
+        };
+        let bounds = shown
+            .shapes
+            .iter()
+            .find(|s| s.scene_index == selected)
+            .and_then(|shape| self.map_for(shown)?.shape_bounds(shape));
+        let Some(b) = bounds else {
+            return false;
+        };
+        let reach = crate::canvas::HANDLE as f64 / 2.0 + 2.0;
+        crate::canvas::handle_points(b)
+            .iter()
+            .any(|h| (h.0 - p.0).abs() <= reach && (h.1 - p.1).abs() <= reach)
     }
 
     /// Natural (100%) size of the artboard once the shell has adopted it.

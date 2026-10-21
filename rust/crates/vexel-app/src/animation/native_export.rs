@@ -65,6 +65,13 @@ impl NativeExportSource {
         (this.candidate.view().ok()?.track_count() > 0).then_some(this)
     }
 
+    /// Length of one loop in seconds, `None` when the timeline is unreadable.
+    pub fn loop_seconds(&self) -> Option<f64> {
+        let view = self.candidate.view().ok()?;
+        let tps = view.ticks_per_second();
+        (tps != 0).then(|| f64::from(view.duration_ticks()) / f64::from(tps))
+    }
+
     /// Renders the loop ticks (ping-pong included) and encodes the GIF. Each
     /// frame lasts one tick, `round(100 / ticks_per_second)` centiseconds.
     /// Loops longer than [`MAX_FRAMES`] ticks keep every `stride`-th tick,

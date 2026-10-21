@@ -139,6 +139,16 @@ fn select_pick_feeds_the_inspector_from_the_document_shape_and_deselect_clears_i
     assert_eq!(view.selected_shape().map(|s| s.scene_index), Some(6));
     assert!(view.pointer_with(STAGE, at(45.0, 55.0), true));
     assert!(view.selected_shape().is_none());
+    // A press on a resize handle (usually outside the shape) keeps the selection.
+    assert!(view.pointer_with(STAGE, at(18.0, 51.0), true));
+    let selected = view.selected_shape().map(|s| s.scene_index);
+    assert!(selected.is_some());
+    let b = view.stage_paint().unwrap().selection.unwrap();
+    let corner = (STAGE.x + b.0.round() as u32, STAGE.y + b.1.round() as u32);
+    assert!(view.pointer_with(STAGE, corner, true));
+    assert_eq!(view.selected_shape().map(|s| s.scene_index), selected);
+    assert!(view.pointer_with(STAGE, at(45.0, 55.0), true));
+    assert!(view.selected_shape().is_none());
     let state = AppState {
         open: true,
         ..AppState::from_session(&app, &view)
