@@ -2,7 +2,7 @@
 //! canvas. The active playhead is the single strong accent in the panel.
 
 use super::interaction::{DragPreview, InteractionState};
-use super::layout::{Hit, TimelineLayout, TRACK_HEIGHT};
+use super::layout::{Hit, TRACK_HEIGHT, TimelineLayout};
 use super::model::TimelineModel;
 use crate::layout::paint::{centred, mono, text};
 use vexel_ui::{FontWeight, IconKind, Rect, WidgetCanvas};

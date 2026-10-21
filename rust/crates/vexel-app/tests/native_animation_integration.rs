@@ -1,17 +1,17 @@
 use std::fs;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
 use vexel_app::animation::native_driver::NativeDriver;
 use vexel_app::animation::native_stage::{NativeStage, OnionSettings, StageUpdate};
 use vexel_app::animation::playback::ManualClock;
-use vexel_app::compose::{svg_viewport, Frame};
+use vexel_app::compose::{Frame, svg_viewport};
 use vexel_app::native_animation::{
-    import, NativeAnimationController, NativeAnimationHost, NativeFrameResult, NativeFrameTag,
-    NativeRenderRequest, NativeTimelineEffect, TimelineSurface,
+    NativeAnimationController, NativeAnimationHost, NativeFrameResult, NativeFrameTag,
+    NativeRenderRequest, NativeTimelineEffect, TimelineSurface, import,
 };
 use vexel_app::native_timeline::interaction::Key;
 use vexel_app::native_timeline::{NativeTimelineAction, NativeTrackKind};
@@ -119,11 +119,12 @@ fn atomic_native_action_changes_payload_revision_once_and_noop_does_not() {
         .unwrap();
     assert_eq!(candidate.view().unwrap().loop_mode(), LoopMode::Once);
     let changed = doc.state_revision();
-    assert!(!doc
-        .edit_timeline(settings(), EditLimits::default(), |candidate| {
+    assert!(
+        !doc.edit_timeline(settings(), EditLimits::default(), |candidate| {
             candidate.set_loop(LoopMode::Once)
         })
-        .unwrap());
+        .unwrap()
+    );
     assert_eq!(doc.state_revision(), changed);
 }
 
@@ -273,9 +274,11 @@ fn unsupported_timeline_payload_stays_byte_exact_and_authoring_is_disabled() {
     let original_revision = doc.state_revision();
     let mut controller = NativeAnimationController::default();
     assert!(controller.snapshot(&doc).unwrap().tracks.is_empty());
-    assert!(controller
-        .handle_action(&mut doc, NativeTimelineAction::SetLoop { enabled: false },)
-        .is_err());
+    assert!(
+        controller
+            .handle_action(&mut doc, NativeTimelineAction::SetLoop { enabled: false },)
+            .is_err()
+    );
     assert_eq!(doc.state_revision(), original_revision);
     doc.save_as(output.as_os_str().as_bytes()).unwrap();
 
@@ -471,18 +474,22 @@ fn stale_timeline_target_disables_snapshot_but_keeps_mode_switch_available() {
         .unwrap();
     assert!(snapshot.tracks.is_empty());
     assert!(!snapshot.can_edit_selected_item);
-    assert!(snapshot
-        .status
-        .as_deref()
-        .is_some_and(|status| status.contains("authoring is disabled")));
+    assert!(
+        snapshot
+            .status
+            .as_deref()
+            .is_some_and(|status| status.contains("authoring is disabled"))
+    );
     assert_eq!(files.document().state_revision(), revision);
 
-    assert!(host
-        .key(Key::Tab, &mut files, Some("shape".into()))
-        .unwrap());
-    assert!(host
-        .key(Key::Right, &mut files, Some("shape".into()))
-        .unwrap());
+    assert!(
+        host.key(Key::Tab, &mut files, Some("shape".into()))
+            .unwrap()
+    );
+    assert!(
+        host.key(Key::Right, &mut files, Some("shape".into()))
+            .unwrap()
+    );
     assert_eq!(host.surface(), TimelineSurface::Smil);
     assert_eq!(files.document().state_revision(), revision);
 }

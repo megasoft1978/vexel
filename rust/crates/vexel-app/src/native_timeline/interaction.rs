@@ -1,9 +1,9 @@
 //! Transient input state for the native timeline. Every returned value is an
 //! application intent; this module never mutates a project or playback engine.
 
+use super::NativeTimelineAction;
 use super::layout::{Hit, TimelineLayout, Viewport};
 use super::model::TimelineModel;
-use super::NativeTimelineAction;
 
 const DRAG_SLOP: i32 = 3;
 
@@ -710,19 +710,23 @@ mod tests {
         let x = layout.lane_x(20).round() as i32;
         let mut state = InteractionState::default();
         let selected = state.pointer(Phase::Down, (x, y), &layout, &model);
-        assert!(selected
-            .iter()
-            .any(|action| matches!(action, NativeTimelineAction::SelectItem { tick: 20, .. })));
+        assert!(
+            selected
+                .iter()
+                .any(|action| matches!(action, NativeTimelineAction::SelectItem { tick: 20, .. }))
+        );
         let zero_x = layout.lane_x(0).round() as i32;
         state.pointer(Phase::Move, (zero_x, y), &layout, &model);
         assert_eq!(state.drag_preview.map(|preview| preview.to_tick), Some(1));
-        assert!(state
-            .pointer(Phase::Up, (zero_x, y), &layout, &model)
-            .iter()
-            .any(|action| matches!(
-                action,
-                NativeTimelineAction::MovePropertyKey { to_tick: 1, .. }
-            )));
+        assert!(
+            state
+                .pointer(Phase::Up, (zero_x, y), &layout, &model)
+                .iter()
+                .any(|action| matches!(
+                    action,
+                    NativeTimelineAction::MovePropertyKey { to_tick: 1, .. }
+                ))
+        );
         let mut zero_selected = model.clone();
         zero_selected.tracks[0].items = vec![super::super::model::Item {
             tick: 0,
