@@ -1,5 +1,10 @@
-//! Scripted-scene benchmark: 120 elements (scene cap 128) and 50 tracks x 8 keys through the
-//! headless MCP rig. Prints p50/p95 milliseconds per tool.
+//! Scripted-scene benchmark through the headless MCP rig, at 120 and 1024
+//! elements (the scene cap). Each size adds N rects, then 50 opacity tracks x 8
+//! keys, then a 50-track bulk pass on a fresh scene. Elements sit on a 32-column
+//! grid of 15 px cells so all 1024 stay inside the 512 px canvas. Prints p50/p95 ms per tool
+//! and per phase (`vexel_app::profile`; phases are inclusive of nested phases).
+//! Phases `scene_scan` and `recompose` in the build table come from a read-only
+//! probe after each add: `native_timeline_candidate` and `compose_document`.
 //! Run: `cargo test -p vexel-app --release --test mcp_bench -- --ignored --nocapture`
 
 mod common;
@@ -7,9 +12,34 @@ mod common;
 use common::{Dir, Rig, element_id, policy_for};
 use std::collections::BTreeMap;
 use std::time::Instant;
+use vexel_app::compose::compose_document;
+use vexel_app::profile;
+use vexel_app::session::AppDocument;
+use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
 
-/// The live preview scene cap is 128 elements, so the benchmark stays below it.
-const ELEMENTS: u32 = 120;
+/// Requests per session. The session budget is 600 requests per minute.
+const SESSION_REQUESTS: u32 = 500;
+const TRACKS: usize = 50;
+const KEYS: u32 = 8;
+/// Phases print in pipeline order; any other phase prints last.
+const PHASE_ORDER: &[&str] = &[
+    "decode",
+    "edit_apply",
+    "element_id_scan",
+    "journal_scene",
+    "candidate_open",
+    "scene_scan",
+    "scene_copy",
+    "copy_assets",
+    "edit_context",
+    "edit_validate",
+    "edit_ops",
+    "edit_copy",
+    "candidate_reopen",
+    "payload_encode",
+    "journal_admit",
+    "recompose",
+];
 
 type Samples = BTreeMap<String, Vec<f64>>;
 
@@ -29,24 +59,93 @@ fn percentile(sorted: &[f64], p: f64) -> f64 {
     sorted[at]
 }
 
-#[test]
-#[ignore]
-fn build_scripted_scene() {
+fn row(name: &str, values: &mut [f64]) {
+    values.sort_by(|a, b| a.total_cmp(b));
+    println!(
+        "{name:<36} {:>5} {:>9.3} {:>9.3}",
+        values.len(),
+        percentile(values, 0.5),
+        percentile(values, 0.95)
+    );
+}
+
+fn report(section: &str, samples: &mut Samples, mut phases: BTreeMap<&'static str, Vec<f64>>) {
+    println!("\n[{section}]");
+    println!("tool                                   n     p50 ms    p95 ms");
+    for (name, values) in samples.iter_mut() {
+        row(name, values);
+    }
+    println!("phase                                  n     p50 ms    p95 ms");
+    let mut names: Vec<&'static str> = phases.keys().copied().collect();
+    names.sort_by_key(|name| {
+        PHASE_ORDER
+            .iter()
+            .position(|p| p == name)
+            .unwrap_or(usize::MAX)
+    });
+    for name in names {
+        if let Some(values) = phases.get_mut(name) {
+            row(&format!("  {name}"), values);
+        }
+    }
+    samples.clear();
+}
+
+fn settings() -> EmptyTimelineSettings {
+    EmptyTimelineSettings {
+        ticks_per_second: 24,
+        duration_ticks: 48,
+        fps_numerator: 24,
+        fps_denominator: 1,
+        loop_mode: LoopMode::Repeat,
+        onion_before: 0,
+        onion_after: 0,
+        onion_opacity: 0.25,
+    }
+}
+
+/// Read-only work the UI does after a source change: the scene-id scan (the
+/// cache misses on the new source) and the recompose on the compose worker.
+fn probe_after_add(app: &AppDocument) {
+    let _ = app.native_timeline_candidate(settings(), EditLimits::default());
+    let source = app.source_bytes().expect("source");
+    let (width, height) = app.size();
+    let _phase = profile::phase("recompose");
+    compose_document(&source, width, height, &|| false).expect("compose");
+}
+
+/// The same document in a fresh session, so the request budget restarts.
+fn renew(mut rig: Rig, dir: &Dir) -> Rig {
+    let app = std::mem::replace(&mut rig.app, AppDocument::new(512, 512).unwrap());
+    Rig::with_document(app, policy_for(&[&dir.0]))
+}
+
+fn run(elements: u32) {
+    println!("\n== {elements} elements, {TRACKS} tracks x {KEYS} keys ==");
+    profile::enable();
     let dir = Dir::new();
-    let mut rig = Rig::new(policy_for(&[&dir.0]));
     let mut samples = Samples::new();
     let total = Instant::now();
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    profile::take();
     let mut ids = Vec::new();
-    for i in 0..ELEMENTS {
+    for i in 0..elements {
+        if i > 0 && i % SESSION_REQUESTS == 0 {
+            rig = renew(rig, &dir);
+        }
         let attrs = format!(
             r##""parentId":"root","template":"rect","attributes":{{"x":"{}","y":"{}","width":"20","height":"20","fill":"#3366cc"}}"##,
-            (i % 12) * 40,
-            (i / 12) * 40
+            (i % 32) * 15,
+            (i / 32) * 15
         );
         let reply = timed(&mut rig, &mut samples, "element_add", &attrs);
         ids.push(element_id(reply.ok()));
+        probe_after_add(&rig.app);
     }
-    for (n, id) in ids.iter().take(50).enumerate() {
+    report("build", &mut samples, profile::take());
+
+    rig = renew(rig, &dir);
+    for (n, id) in ids.iter().take(TRACKS).enumerate() {
         let track = format!("bench-{n}");
         timed(
             &mut rig,
@@ -56,7 +155,7 @@ fn build_scripted_scene() {
                 r#""trackId":"{track}","targetId":"{id}","property":"opacity","valueType":"scalar","interpolation":"linear","value":1"#
             ),
         );
-        for k in 0..8u32 {
+        for k in 0..KEYS {
             timed(
                 &mut rig,
                 &mut samples,
@@ -69,11 +168,15 @@ fn build_scripted_scene() {
             );
         }
     }
-    // The same 50 tracks x 8 keys again, each track created with its keys in
-    // one call, in a fresh session (the per-session request budget is 600/min).
+    report("native tracks", &mut samples, profile::take());
+
+    // Bulk tracks on a fresh 50-rect scene, so the scene cap still holds.
     let mut rig = Rig::new(policy_for(&[&dir.0]));
-    let ids: Vec<String> = (0..50).map(|n| rig.add_rect(n * 8, 0, "#336699")).collect();
-    let keys: Vec<String> = (0..8u32)
+    let ids: Vec<String> = (0..TRACKS as u32)
+        .map(|n| rig.add_rect(n * 8, 0, "#336699"))
+        .collect();
+    profile::take();
+    let keys: Vec<String> = (0..KEYS)
         .map(|k| {
             format!(
                 r#"{{"tick":{},"value":{}}}"#,
@@ -97,16 +200,14 @@ fn build_scripted_scene() {
             .or_default()
             .push(start.elapsed().as_secs_f64() * 1000.0);
     }
-    let wall = total.elapsed().as_secs_f64();
-    println!("tool                                   n    p50 ms    p95 ms");
-    for (name, values) in &mut samples {
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        println!(
-            "{name:<36} {:>4} {:>9.2} {:>9.2}",
-            values.len(),
-            percentile(values, 0.5),
-            percentile(values, 0.95)
-        );
+    report("bulk tracks", &mut samples, profile::take());
+    println!("total wall {:.2} s", total.elapsed().as_secs_f64());
+}
+
+#[test]
+#[ignore]
+fn build_scripted_scene() {
+    for elements in [120, 1024] {
+        run(elements);
     }
-    println!("total wall {wall:.2} s");
 }

@@ -242,6 +242,7 @@ impl McpHost {
         let (id, count, extras) = self.reserve_add(app)?;
         let parent = self.parent.clone();
         app.edit(|doc| {
+            let _phase = crate::profile::phase("edit_apply");
             doc.set_insert_parent(parent.as_deref())?;
             let added = add_shape(doc, shape, &id);
             doc.set_insert_parent(None)?;

@@ -19,6 +19,7 @@ pub mod native_timeline;
 pub mod overlay;
 pub mod preview;
 pub mod preview_app;
+pub mod profile;
 pub mod project_session;
 pub mod recovery_job;
 pub mod recovery_policy;

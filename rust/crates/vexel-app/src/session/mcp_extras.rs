@@ -15,6 +15,7 @@ impl McpHost {
         &mut self,
         app: &AppDocument,
     ) -> Result<(String, usize, Option<AddExtras>), &'static str> {
+        let _phase = crate::profile::phase("element_id_scan");
         let extras = self.extras.take();
         let source = source(app)?;
         let ids = stable_ids(&source);

@@ -535,7 +535,11 @@ impl ProtocolBackend for LiveBackend {
         args: usize,
         name: &str,
     ) -> Option<ToolResponse> {
-        let op = match parse_operation(doc, args, name) {
+        let parsed = {
+            let _phase = crate::profile::phase("decode");
+            parse_operation(doc, args, name)
+        };
+        let op = match parsed {
             Ok(v) => v,
             Err(PreviewArgumentError::Generic(e)) => return Some(tool_error(e)),
             Err(PreviewArgumentError::Actionable(e)) => return Some(tool_error(&e)),
