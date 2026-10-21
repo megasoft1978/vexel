@@ -1,6 +1,18 @@
 # Vexel status (live source of truth; supersedes HANDOFF.md / BLOCKERS.md / STATE.md for planning)
 
-Updated 2026-10-20. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice-cutline.md`, then post-V1 items.
+Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice-cutline.md`, then post-V1 items.
+
+## Current state 2026-10-21 (docs)
+
+- Changes since `v1.0.0-alpha`: see [CHANGELOG.md](CHANGELOG.md).
+- Live-preview MCP: 53 tools (`batch`, native timeline, `export_animation`
+  gif/mp4/mov/apng/frames, `render_png`). Tool reference: [docs/mcp.md](docs/mcp.md).
+- Export: GIF, APNG, PNG frame sequence, MP4/MOV (H.264 or HEVC), HEVC with alpha (mov).
+- SVG: Q/T/S path commands and internal DOCTYPE general entities (hard limits) landed.
+  Arc commands unsupported. Corpus: deferred gaps include columbiarivermap,
+  corsica, ideogram clip cap, france-osm. Corpus not re-counted since these changes.
+- UI: rotate live preview, bezier easing editor, new app icon. Real-window e2e
+  script [docs/e2e-ui.md](docs/e2e-ui.md) written, not yet run live.
 
 ## Status 2026-10-20
 
