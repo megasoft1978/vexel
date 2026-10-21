@@ -6,6 +6,10 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+# Exposes `video_reader` (AVAssetReader decode) to other crates' tests.
+test-support = []
+
 [dependencies]
 objc2 = { version = "=0.6.5", default-features = false, features = ["catch-all", "std"] }
 objc2-encode = { version = "=4.1.0", default-features = false, features = ["std"] }

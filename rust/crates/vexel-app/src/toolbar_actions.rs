@@ -278,7 +278,7 @@ impl Stage {
     }
 
     /// Moves the staged file over `target` and removes the directory.
-    fn publish(self, target: &Path) -> Result<(), &'static str> {
+    pub(crate) fn publish(self, target: &Path) -> Result<(), &'static str> {
         let moved = fs::rename(&self.file, target);
         self.discard();
         moved.map_err(|_| WRITE_FAILED)
@@ -350,6 +350,7 @@ impl Exports {
             ExportFormat::Svg => write_svg(files.document(), &target).map(|()| "Exported SVG"),
             ExportFormat::Png => write_png(files.document_mut(), &target).map(|()| "Exported PNG"),
             ExportFormat::Gif => self.spawn_gif(files.document(), target),
+            ExportFormat::Video => crate::video_export::write_video(files.document(), target),
         };
         model.status = match result {
             Ok(done) => done,

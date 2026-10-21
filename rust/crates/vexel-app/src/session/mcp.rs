@@ -202,6 +202,9 @@ impl McpHost {
                 height,
                 time,
             } => super::mcp_png::render_png(app, &self.policy, &path, width, height, time),
+            Operation::ExportVideo(request) => {
+                super::mcp_video::export_video(app, &self.policy, &request)
+            }
             Operation::Export {
                 path,
                 fps,

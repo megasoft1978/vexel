@@ -1,4 +1,5 @@
 //! Test-only `AVAssetReader` decode used to verify `VideoWriter` output.
+//! Built for this crate's tests and for other crates' tests via `test-support`.
 
 use std::path::Path;
 
@@ -11,7 +12,7 @@ use objc2_core_video::{
 };
 use objc2_foundation::{NSDictionary, NSNumber, NSString, NSURL};
 
-pub(crate) struct DecodedFrame {
+pub struct DecodedFrame {
     pub pts_seconds: f64,
     pub width: usize,
     pub height: usize,
@@ -19,14 +20,14 @@ pub(crate) struct DecodedFrame {
     pub rgba: Vec<u8>,
 }
 
-pub(crate) struct Decoded {
+pub struct Decoded {
     pub duration_seconds: f64,
     pub natural_size: (f64, f64),
     pub frames: Vec<DecodedFrame>,
 }
 
 #[allow(deprecated)] // sync track load is fine for a test-only reader
-pub(crate) fn decode(path: &Path) -> Result<Decoded, String> {
+pub fn decode(path: &Path) -> Result<Decoded, String> {
     // SAFETY: all objects are retained locals used on this thread; pixel
     // buffers are locked while read.
     unsafe {

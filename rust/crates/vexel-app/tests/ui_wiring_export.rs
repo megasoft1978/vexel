@@ -205,3 +205,17 @@ fn popover_dismissal_hit_testing_and_exclusion() {
     shell.press_button(EXPORT);
     assert!(shell.model.export_open && !shell.model.ui.mcp_open);
 }
+
+#[test]
+fn video_row_needs_a_native_timeline() {
+    let mut shell = Shell::new();
+    shell.edit("a", 10.0);
+    let l = shell.layout();
+    let video = Target::MenuItem(ExportFormat::Video);
+    assert!(!shell.model.target_enabled(&l, video));
+    shell.model.set_native_timeline(true);
+    assert!(shell.model.target_enabled(&l, video));
+    assert_eq!(ExportFormat::Video.extension(), "mp4");
+    assert_eq!(ExportFormat::Video.label(), "Export Video\u{2026}");
+    assert_eq!(ExportFormat::ALL.last(), Some(&ExportFormat::Video));
+}

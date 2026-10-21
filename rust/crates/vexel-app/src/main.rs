@@ -237,6 +237,7 @@ fn run(
                     .and_then(|source| source.loop_seconds()),
             );
         }
+        model.set_native_timeline(native_loop.1.is_some());
         if let Some(seconds) = native_loop.1 {
             app_state.loop_seconds = seconds;
         }

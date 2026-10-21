@@ -163,6 +163,23 @@ for GIF output. `render_png` `time` is in seconds (`tick / ticksPerSecond`), not
 ticks, and a time past the end of the timeline is rejected; the reply reports
 the rendered `tick`. Save a copy with `save_as` before sharing it.
 
+`export_animation` also writes video. `format` `mp4` or `mov` encodes the whole
+native timeline loop (one frame per tick; ping-pong included) as H.264 (default)
+or HEVC (`codec`: `h264` | `hevc`), BT.709. It needs a native timeline, writes
+synchronously like `render_png`, and the path must be inside a granted
+directory with an extension matching the format. Optional arguments: `fps`
+(1-120, default the timeline tick rate; every `round(ticksPerSecond / fps)`-th
+tick, never above the tick rate), `quality` (0-1) or `bitrate` (kbps, 50-200000;
+not both), `width` and `height` (1-4096, given together, default the document
+size; odd sizes round up to even), `loops` (1-100 repeats of the loop) and
+`background` (`#rgb` or `#rrggbb`, default white) behind transparency. `fps` and
+`duration` are not required for video, and `duration` is rejected. Loops longer
+than 1440 frames keep every n-th tick so the video stays at or under 1440
+frames. The reply carries `path`, `format`, `codec`, `width`, `height`,
+`frames`, `fps`, `durationSeconds` and `bytes`. The app's Export popover has the
+same export as "Export Video..." (H.264 MP4 at the document size, enabled when
+the document has a native timeline).
+
 Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.

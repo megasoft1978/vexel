@@ -37,3 +37,6 @@ vexel-timeline = { path = "../vexel-timeline" }
 vexel-gif = { path = "../vexel-gif" }
 vexel-png = { path = "../vexel-png" }
 vexel-mcp-access = { path = "../vexel-mcp-access" }
+
+[dev-dependencies]
+vexel-platform-apple = { path = "../vexel-platform-apple", features = ["test-support"] }

@@ -26,6 +26,25 @@ pub struct NativeVideoRequest {
     /// Opaque sRGB colour transparent areas are composited onto.
     pub background: [u8; 3],
     pub bit_rate: Option<u32>,
+    /// Quality 0..1 used to derive the bit rate when `bit_rate` is `None`;
+    /// both `None` picks the encoder's size-based default.
+    pub quality: Option<f64>,
+    /// Target frames per second; `None` (or above the tick rate) shows one
+    /// frame per tick. Frames are every `round(ticks_per_second / fps)`-th tick.
+    pub fps: Option<u32>,
+    /// How many times the loop plays back to back (at least 1).
+    pub loops: u32,
+}
+
+/// Bits per pixel per frame at quality 0 and 1.
+const BPP_LOW: f64 = 0.02;
+const BPP_HIGH: f64 = 0.3;
+
+/// Bit rate for `quality` (clamped to 0..1) at the output size and frame rate.
+fn quality_bit_rate(quality: f64, width: u32, height: u32, frames_per_second: f64) -> u32 {
+    let bpp = BPP_LOW + (BPP_HIGH - BPP_LOW) * quality.clamp(0.0, 1.0);
+    let rate = f64::from(width) * f64::from(height) * frames_per_second * bpp;
+    rate.clamp(250_000.0, 200_000_000.0) as u32
 }
 
 /// A finished video and what it contains.
@@ -49,6 +68,8 @@ pub enum NativeVideoError {
         height: u32,
     },
     Video(VideoError),
+    /// `loops` is zero.
+    BadLoops,
 }
 
 impl From<NativeExportError> for NativeVideoError {
@@ -80,8 +101,20 @@ impl NativeExportSource {
         if loop_steps.is_empty() || tps == 0 || i32::try_from(tps).is_err() {
             return Err(NativeExportError::Timeline.into());
         }
-        let stride = loop_steps.len().div_ceil(MAX_VIDEO_FRAMES);
-        let ticks: Vec<u32> = loop_steps.into_iter().step_by(stride).collect();
+        if req.loops == 0 {
+            return Err(NativeVideoError::BadLoops);
+        }
+        // Frame `i` shows tick `loop_steps[(i * stride) % len]`; the loops are
+        // never materialised.
+        let total = loop_steps.len() as u64 * u64::from(req.loops);
+        let fps_stride = req.fps.map_or(1, |fps| {
+            ((f64::from(tps) / f64::from(fps.max(1))).round() as u64).max(1)
+        });
+        let stride = fps_stride.max(total.div_ceil(MAX_VIDEO_FRAMES as u64));
+        let frame_count = total.div_ceil(stride) as usize;
+        let ticks: Vec<u32> = (0..frame_count as u64)
+            .map(|i| loop_steps[((i * stride) % loop_steps.len() as u64) as usize])
+            .collect();
         let viewport = svg_viewport(Arc::clone(self.svg_source()), &|| false)
             .map_err(NativeExportError::Viewport)?;
         let (w, h) = req
@@ -96,6 +129,10 @@ impl NativeExportSource {
         }
         let geometry = svg_geometry(&viewport, width, height);
         let assets = self.drawing_assets();
+        let bit_rate = req.bit_rate.or_else(|| {
+            req.quality
+                .map(|q| quality_bit_rate(q, width, height, f64::from(tps) / stride as f64))
+        });
         let mut writer = VideoWriter::create(VideoSpec {
             path: req.path.clone(),
             width,
@@ -103,9 +140,9 @@ impl NativeExportSource {
             codec: req.codec,
             timescale: tps as i32,
             background: req.background,
-            bit_rate: req.bit_rate,
+            bit_rate,
         })?;
-        let ticks_per_frame = stride as u32;
+        let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
         for (i, &tick) in ticks.iter().enumerate() {
             let frame = render_native_frame(
                 self.svg_source(),

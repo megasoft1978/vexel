@@ -17,6 +17,7 @@ mod mcp;
 mod mcp_extras;
 pub(crate) mod mcp_png;
 mod mcp_tools;
+mod mcp_video;
 mod native_animation;
 #[cfg(test)]
 mod tests;

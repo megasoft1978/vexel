@@ -129,7 +129,7 @@ fn target_size(
     Ok((w as u32, h as u32))
 }
 
-fn quoted(bytes: &[u8]) -> Result<Vec<u8>, &'static str> {
+pub(super) fn quoted(bytes: &[u8]) -> Result<Vec<u8>, &'static str> {
     let failed = |_| "preview allocation failed";
     let mut out = JsonBuffer::new(bytes.len() + 16, 64 * 1024).map_err(failed)?;
     out.quoted(bytes).map_err(failed)?;

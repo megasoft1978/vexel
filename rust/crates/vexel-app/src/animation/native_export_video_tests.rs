@@ -42,6 +42,9 @@ fn request(name: &str, size: Option<(u32, u32)>) -> NativeVideoRequest {
         size,
         background: [255, 255, 255],
         bit_rate: Some(2_000_000),
+        quality: None,
+        fps: None,
+        loops: 1,
     }
 }
 
@@ -102,4 +105,42 @@ fn video_export_rounds_odd_sizes_up_and_rejects_oversize() {
             .unwrap_err();
         assert!(matches!(err, NativeVideoError::BadSize { .. }), "{err:?}");
     }
+}
+
+#[test]
+fn video_export_fps_loops_and_cap_choose_the_stride() {
+    let src = timeline_source(10, 4, "loop", 2);
+    let mut req = request("fps.mp4", Some((16, 16)));
+    req.fps = Some(5);
+    let video = src.export_video(&req).unwrap();
+    assert_eq!((video.frames, video.ticks_per_frame), (2, 2));
+    // An fps above the tick rate still shows one frame per tick.
+    req.fps = Some(60);
+    req.loops = 3;
+    let video = src.export_video(&req).unwrap();
+    assert_eq!((video.frames, video.ticks_per_frame), (12, 1));
+    // Loops count towards the frame cap: 3000 frames become every 3rd.
+    let long = timeline_source(30, 1000, "loop", 2);
+    req.fps = None;
+    let video = long.export_video(&req).unwrap();
+    assert_eq!((video.frames, video.ticks_per_frame), (1000, 3));
+    req.loops = 0;
+    assert_eq!(
+        src.export_video(&req).unwrap_err(),
+        NativeVideoError::BadLoops
+    );
+    let _ = std::fs::remove_file(&req.path);
+}
+
+#[test]
+fn video_export_accepts_quality_in_place_of_a_bit_rate() {
+    let src = timeline_source(10, 4, "loop", 2);
+    let mut req = request("quality.mp4", Some((64, 64)));
+    req.bit_rate = None;
+    for quality in [0.0, 1.0] {
+        req.quality = Some(quality);
+        assert_eq!(src.export_video(&req).unwrap().frames, 4);
+        assert!(is_mp4(&req.path));
+    }
+    let _ = std::fs::remove_file(&req.path);
 }

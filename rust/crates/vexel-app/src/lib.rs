@@ -27,3 +27,4 @@ pub mod session;
 pub mod timeline;
 pub mod toolbar_actions;
 pub mod tools;
+pub mod video_export;

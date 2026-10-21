@@ -40,14 +40,16 @@ pub enum ExportFormat {
     Gif,
     Svg,
     Png,
+    Video,
 }
 impl ExportFormat {
-    pub const ALL: [Self; 3] = [Self::Gif, Self::Svg, Self::Png];
+    pub const ALL: [Self; 4] = [Self::Gif, Self::Svg, Self::Png, Self::Video];
     pub fn label(self) -> &'static str {
         match self {
             Self::Gif => "Export as GIF\u{2026}",
             Self::Svg => "Export as SVG\u{2026}",
             Self::Png => "Export as PNG\u{2026}",
+            Self::Video => "Export Video\u{2026}",
         }
     }
     pub fn extension(self) -> &'static str {
@@ -55,6 +57,7 @@ impl ExportFormat {
             Self::Gif => "gif",
             Self::Svg => "svg",
             Self::Png => "png",
+            Self::Video => "mp4",
         }
     }
 }
@@ -158,6 +161,8 @@ pub struct Model {
     pub export_open: bool,
     /// Toolbar button holding keyboard focus.
     pub focus_button: Option<Button>,
+    /// The open document has a native timeline (enables video export).
+    pub native_timeline: bool,
     /// Export popover row holding keyboard focus (index into `ExportFormat::ALL`).
     pub menu_focus: Option<usize>,
 }
@@ -176,6 +181,7 @@ impl Model {
             timeline: Timeline::default(),
             history: Availability::default(),
             export_open: false,
+            native_timeline: false,
             focus_button: None,
             menu_focus: None,
         }
@@ -199,9 +205,17 @@ impl Model {
             Target::Button(Button::Export) => state.open,
             Target::Button(Button::ToggleInspector) => layout.width >= INSPECTOR_MIN_WINDOW,
             Target::Button(Button::Connect) => false,
+            Target::MenuItem(ExportFormat::Video) => state.open && self.native_timeline,
             Target::MenuItem(ExportFormat::Gif) => state.open && state.loop_seconds > 0.0,
             Target::MenuItem(_) => state.open,
             _ => true,
+        }
+    }
+    /// Records whether the document has a native timeline.
+    pub fn set_native_timeline(&mut self, native: bool) {
+        if self.native_timeline != native {
+            self.native_timeline = native;
+            self.dirty = true;
         }
     }
     pub fn select_mode(&mut self, mode: Mode) -> bool {

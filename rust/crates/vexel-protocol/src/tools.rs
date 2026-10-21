@@ -312,7 +312,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
         description: "Export a bounded animation as a GIF or PNG frame sequence inside a granted directory.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"path\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"gif\",\"frames\"]},\"fps\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":30},\"duration\":{\"type\":\"number\",\"minimum\":0.01,\"maximum\":3600}}",
         required: "documentId,path,format,fps,duration",
-        fields: "documentId:string;path:string;format:string;fps:integer;duration:number",
+        fields: "documentId:string;path:string;format:string;fps:integer;duration:number;codec:string;quality:number;bitrate:integer;width:integer;height:integer;loops:integer;background:string",
     },
     ToolSchema {
         name: "selection_get",
@@ -441,7 +441,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         let description = if preview && tool.name == "element_add" {
             element_add_description()
         } else if preview && tool.name == "export_animation" {
-            "Export the live preview loop as a GIF inside a granted directory.".to_owned()
+            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency.".to_owned()
         } else if preview && tool.name == "render_png" {
             "Render the open document to a PNG file inside a granted directory. Optional time is in SECONDS (tick / ticksPerSecond; 0 to the timeline length, default 0), not ticks; a time past the end of the timeline is rejected.".to_owned()
         } else {
@@ -458,7 +458,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             } else if preview && tool.name == "animation_control" {
                 r#"{"documentId":{"type":"string"},"action":{"type":"string","enum":["play","pause","seek"]},"timeMs":{"type":"number","minimum":0,"maximum":10000}}"#
             } else if preview && tool.name == "export_animation" {
-                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif"]},"fps":{"type":"integer","minimum":1,"maximum":30},"duration":{"type":"number","minimum":0.01,"maximum":10}}"#
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif","mp4","mov"]},"fps":{"type":"integer","minimum":1,"maximum":120},"duration":{"type":"number","minimum":0.01,"maximum":10},"codec":{"type":"string","enum":["h264","hevc"]},"quality":{"type":"number","minimum":0,"maximum":1},"bitrate":{"type":"integer","minimum":50,"maximum":200000},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"loops":{"type":"integer","minimum":1,"maximum":100},"background":{"type":"string","pattern":"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"}}"#
             } else if preview && tool.name == "render_png" {
                 r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"time":{"type":"number","minimum":0,"maximum":3600}}"#
             } else {
@@ -471,6 +471,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal("[").map_err(ProtocolError::Buffer)?;
         let required = if preview && tool.name == "element_add" {
             "documentId,parentId,template,attributes"
+        } else if preview && tool.name == "export_animation" {
+            "documentId,path,format"
         } else if preview && tool.name == "render_png" {
             "documentId,path"
         } else if preview && tool.name == "animation_control" {
@@ -570,7 +572,15 @@ pub fn validate_tool_arguments(
         }
         key = doc.token(value).and_then(|t| t.next_sibling);
     }
+    // mp4 and mov take fps optionally and no duration.
+    let video_export = tool.name == "export_animation"
+        && doc.object_get(arguments, b"format").is_some_and(|v| {
+            doc.string_equals(v, b"mp4") || doc.string_equals(v, b"mov")
+        });
     for required in tool.required.split(',').filter(|s| !s.is_empty()) {
+        if video_export && matches!(required, "fps" | "duration") {
+            continue;
+        }
         if doc.object_get(arguments, required.as_bytes()).is_none() {
             return Err(ToolValidationError::MissingRequired);
         }

@@ -203,6 +203,40 @@ fn preview_export_animation_validates_gif_fps_duration_and_path() {
 }
 
 #[test]
+fn preview_export_animation_accepts_video_without_fps_or_duration() {
+    let mut session = ProtocolSession::live_preview();
+    let mut backend = Backend::default();
+    initialize(&mut session, &mut backend);
+    let request = |id: u32, args: &str| {
+        format!(
+            r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"export_animation","arguments":{{"documentId":"d",{args}}}}}}}"#
+        )
+    };
+    for (id, args, ok) in [
+        (2, r#""path":"/tmp/a.mp4","format":"mp4""#, true),
+        (
+            3,
+            r##""path":"/tmp/a.mov","format":"mov","codec":"hevc","quality":0.5,"width":64,"height":32,"loops":2,"fps":60,"background":"#fff""##,
+            true,
+        ),
+        (
+            4,
+            r#""path":"/tmp/a.mp4","format":"mp4","bitrate":2500"#,
+            true,
+        ),
+        (5, r#""format":"mp4""#, false),
+        (6, r#""path":"/tmp/a.mp4","format":"avi""#, false),
+        (7, r#""path":"/tmp/a.gif","format":"gif""#, false),
+        (8, r#""path":"/tmp/a.mp4","format":"mp4","codec":7"#, false),
+    ] {
+        let out = call(&mut session, &mut backend, &request(id, args));
+        let text = String::from_utf8_lossy(&out);
+        assert_eq!(text.contains("\"isError\":false"), ok, "{args}: {text}");
+    }
+    assert_eq!(backend.calls.len(), 3);
+}
+
+#[test]
 fn preview_animation_tools_validate_bounded_fragments_and_controls() {
     let mut session = ProtocolSession::live_preview();
     let mut backend = Backend::default();

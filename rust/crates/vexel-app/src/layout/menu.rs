@@ -32,7 +32,7 @@ impl Layout {
     }
 
     /// Rows in [`ExportFormat::ALL`] order.
-    pub fn export_items(&self) -> [Rect; 3] {
+    pub fn export_items(&self) -> [Rect; 4] {
         let p = self.export_popover();
         std::array::from_fn(|i| {
             r(

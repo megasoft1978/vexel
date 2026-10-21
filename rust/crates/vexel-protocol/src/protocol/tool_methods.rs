@@ -156,18 +156,24 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             .object_get(args, b"path")
             .and_then(|v| doc.decoded_string(v))
             .is_some_and(|path| !path.is_empty() && path.len() < 1024 && !path.contains(&0));
-        let valid_format = doc
-            .object_get(args, b"format")
-            .is_some_and(|v| doc.string_equals(v, b"gif"));
-        let valid_fps = number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
-        let valid_duration = number(b"duration").is_some_and(|v| (0.01..=10.0).contains(&v));
+        let format_is = |name: &[u8]| {
+            doc.object_get(args, b"format")
+                .is_some_and(|v| doc.string_equals(v, name))
+        };
+        let video = format_is(b"mp4") || format_is(b"mov");
+        let valid_format = format_is(b"gif") || video;
+        // Video takes fps as an optional number and no duration; the preview
+        // dispatcher validates both with specific messages.
+        let valid_fps = video
+            || number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
+        let valid_duration = video || number(b"duration").is_some_and(|v| (0.01..=10.0).contains(&v));
         if !(valid_path && valid_format && valid_fps && valid_duration) {
             return append_tool_error(
                 out,
                 doc,
                 id,
                 session.modern,
-                "export requires a path, gif format, fps 1-30 and duration 0.01-10 seconds",
+                "export requires a path and a gif, mp4 or mov format; gif also needs fps 1-30 and duration 0.01-10 seconds",
                 "invalid_arguments",
             );
         }
