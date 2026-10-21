@@ -1,13 +1,48 @@
-# Vexel
+<p align="center">
+  <img src="docs/media/icon-128.png" width="128" height="128" alt="Vexel app icon">
+</p>
 
-Vexel is a macOS-first vector drawing and animation editor written in Rust. It
-has an owned XML/SVG parser and rasterizer, a custom-drawn interface, a native
-animation timeline, and a local MCP server so that agents (Codex, Claude Code)
-can edit the same open document as the app. Current status and open work are in
-[STATUS.md](STATUS.md) and [HANDOFF.md](HANDOFF.md); the product goal is in
-[ADR-0018](docs/adr/0018-product-goal-and-completion-gates.md) and the
-[delivery plan](docs/product/vexel-goal-and-delivery-plan.md). Changes since
-`v1.0.0-alpha` are in [CHANGELOG.md](CHANGELOG.md).
+<h1 align="center">Vexel</h1>
+
+<p align="center"><strong>Vector animation for macOS your agent can edit live.</strong></p>
+
+<p align="center">
+  <a href="https://github.com/megasoft1978/vexel/actions/workflows/ci.yml"><img src="https://github.com/megasoft1978/vexel/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/megasoft1978/vexel/tags"><img src="https://img.shields.io/github/v/tag/megasoft1978/vexel?include_prereleases&label=alpha" alt="alpha tag"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MPL--2.0-blue" alt="License MPL-2.0"></a>
+  <img src="https://img.shields.io/badge/macOS_13%2B_%C2%B7_Apple_Silicon-lightgrey" alt="macOS 13+, Apple Silicon">
+  <img src="https://img.shields.io/badge/Rust-1.99-orange" alt="Rust 1.99">
+</p>
+
+<p align="center">
+  <a href="https://megasoft1978.github.io/vexel/">Website</a> ·
+  <a href="docs/mcp.md">MCP docs</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <a href="docs/demo/live-session.mp4"><img src="docs/media/hero.gif" width="720" alt="Vexel animating while an agent edits the open document (click for the recorded Codex session)"></a>
+</p>
+
+Vexel is a native macOS vector drawing and animation editor written in Rust: an
+owned XML/SVG parser and rasterizer, a custom-drawn interface, a native
+animation timeline, and a local MCP server so an agent (Codex, Claude Code) edits
+the same document you have open. Alpha software.
+
+## Why Vexel
+
+- **Agent and human share one document.** The app is the MCP server; edits from
+  an agent appear in the open window and land in the same undo history.
+- **Animation is first-class.** Native timeline with property keys, cubic-bezier
+  easing, loop and duration, exported to GIF, APNG, PNG frames, MP4/MOV.
+- **Native and self-contained.** Rust, owned SVG decoder and renderer, AppKit
+  window. No Electron, no web view.
+
+## See it
+
+| Walk home | Night boat | Show |
+|---|---|---|
+| <img src="docs/media/gallery-walk-home.gif" width="240" alt="Walk-home animation"> | <img src="docs/media/gallery-night-boat.gif" width="240" alt="Night boat animation"> | <img src="docs/media/gallery-show.gif" width="240" alt="Show animation"> |
 
 ## Features
 
@@ -32,71 +67,93 @@ separately in [docs/ui/live-check.md](docs/ui/live-check.md) and
 | PNG render | Done | `vexel-png`; `render_png` over MCP. |
 | Text (CoreText) | Done | ([HANDOFF.md](HANDOFF.md)). |
 | Masks, opacity groups, patterns, filters, markers, stroke dashes | Done | Dashes are deferred in animation frames ([HANDOFF.md](HANDOFF.md)). |
-| Local MCP server | Partial | 53 live-preview tools, including `batch`. Tool reference in [docs/mcp.md](docs/mcp.md). No verified live session with Codex or Claude Code yet. |
+| Local MCP server | Partial | 53 live-preview tools, including `batch`. Tool reference in [docs/mcp.md](docs/mcp.md). A real Codex session driving Vexel over MCP is recorded in [docs/demo/](docs/demo/live-session.mp4); Claude Code setup is documented but not verified. |
 | Blend modes, gradients, JPEG, interlaced PNG | Planned | Typed disclosures, not rendered ([HANDOFF.md](HANDOFF.md)). |
 | Documents over 32 MiB | Planned | Refused by design; needs streaming decode ([BLOCKERS.md](BLOCKERS.md)). |
 | Signing, notarization | Planned | Owner-gated ([HANDOFF.md](HANDOFF.md)). App icon is new (generated artwork); bundle id is still a placeholder. |
 
-## Build and run
+## Quick start
 
-Requirements: Apple Silicon Mac, macOS 13 or later, and the pinned Rust
-toolchain (`rust-toolchain.toml`, installed by rustup).
+Requirements: Apple Silicon Mac, macOS 13 or later, rustup (the toolchain is
+pinned in `rust-toolchain.toml`). There is no signed release; build from source.
 
 ```sh
 cargo build --release -p vexel-app
 ./build/rust/aarch64-apple-darwin/release/vexel rust/fixtures/v1/anim/loop.svg   # open an SVG
-./build/rust/aarch64-apple-darwin/release/vexel --mcp-preview                   # serve MCP on stdio
-./build/rust/aarch64-apple-darwin/release/vexel --mcp-preview --grant-dir /Users/me/Artwork
+./build/rust/aarch64-apple-darwin/release/vexel --mcp-preview --grant-dir /Users/me/Artwork   # serve MCP on stdio
 ```
 
-The open-SVG command is the one used for the live checks in
-[docs/ui/live-check.md](docs/ui/live-check.md). `--mcp-preview` and
-`--grant-dir <dir>` (repeatable) are parsed in
-[`launch.rs`](rust/crates/vexel-app/src/compose/launch.rs) and handled by
-[`preview_app.rs`](rust/crates/vexel-app/src/preview_app.rs). Run tests with
-`cargo test --workspace --locked`. The real-window UI script is
-`scripts/e2e_ui.sh` (requires `VEXEL_E2E_OK=1`; see [docs/e2e-ui.md](docs/e2e-ui.md)).
+Register the app as an MCP stdio server. Use absolute paths.
 
-## MCP quickstart
+**Codex**, in `~/.codex/config.toml`:
 
-`--mcp-preview` serves MCP over stdio from the app binary. `--grant-dir <path>`
-(repeatable) grants the file tools access to a directory. Argument parsing is in
-[`launch.rs`](rust/crates/vexel-app/src/compose/launch.rs) and the stdio worker
-is in [`preview_app.rs`](rust/crates/vexel-app/src/preview_app.rs).
+```toml
+[mcp_servers.vexel]
+command = "/absolute/path/to/vexel/build/rust/aarch64-apple-darwin/release/vexel"
+args = ["--mcp-preview", "--grant-dir", "/Users/me/Artwork"]
+startup_timeout_sec = 10
+tool_timeout_sec = 60
+```
 
-The live preview advertises 53 tools: document open/close/list/info, tree and
-element inspection and editing, grouping, undo/redo, `batch`, native timeline
-tools, `animation_control`, `export_animation` (gif, mp4, mov, apng, frames), and
-`render_png`. Client setup, the tool reference and benchmarks are in
+**Claude Code** (documented, not yet verified in a recorded session):
+
+```sh
+claude mcp add vexel --scope user -- \
+  /absolute/path/to/vexel/build/rust/aarch64-apple-darwin/release/vexel \
+  --mcp-preview --grant-dir /Users/me/Artwork
+```
+
+Non-interactive `codex exec` and a project `.mcp.json` variant are in
 [docs/mcp.md](docs/mcp.md).
 
-## Limits and known gaps
+## How MCP works
 
-Full list: [BLOCKERS.md](BLOCKERS.md), [HANDOFF.md](HANDOFF.md) and
-[STATUS.md](STATUS.md).
+- `vexel --mcp-preview` runs the GUI app and serves JSON-RPC over stdio.
+- The client launches that command; the window stays live while it is connected.
+- 53 tools: document, tree and element editing, grouping, undo/redo, `batch`,
+  native timeline, `animation_control`, `export_animation`, `render_png`.
+- `--grant-dir <dir>` (repeatable) is the only file access the tools get.
+- Per-session budget is 600 requests per minute. Details: [docs/mcp.md](docs/mcp.md).
+
+## Status and limitations
+
+Alpha, macOS only (Apple Silicon, macOS 13+).
 
 - Arc path commands (`A`/`a`) are unsupported.
-- Files over 32 MiB are refused by design ([BLOCKERS.md](BLOCKERS.md)).
-- Corpus fidelity is partial. Known failing or deferred files include
-  columbiarivermap, corsica (`<tspan>` text), ideogram (clip aggregate cap) and
-  france-osm (render limit) ([STATUS.md](STATUS.md)).
-- MCP: no verified live session with Codex or Claude Code yet, and long-running
-  progress and cancellation are not implemented ([docs/mcp.md](docs/mcp.md)).
+- Corpus: 21/39 files rendered in the last recorded run, not re-counted since
+  later fixes. Known failing or deferred: columbiarivermap, corsica (`<tspan>`
+  text), ideogram (clip aggregate cap), france-osm (render limit)
+  ([STATUS.md](STATUS.md)).
+- Not signed with a Developer ID and not notarized; build from source.
+- No GUI end-to-end run on hosted CI; the real-window script is
+  [docs/e2e-ui.md](docs/e2e-ui.md), run by hand.
+- Documents over 32 MiB are refused by design ([BLOCKERS.md](BLOCKERS.md)).
+- MCP long-running progress and cancellation are not implemented.
+- Benchmarks: results pending. No benchmark numbers are published as results;
+  per-phase MCP timings in [docs/mcp.md](docs/mcp.md) are from a headless rig.
 
-## Benchmarks
+## Roadmap
 
-Results: pending. No benchmark numbers are published as results. Per-phase MCP
-timings in [docs/mcp.md](docs/mcp.md) are from a headless rig run.
+From [STATUS.md](STATUS.md), in order:
 
-## Status
+1. Async export.
+2. SVG corpus fidelity (21/39) and large-document design.
+3. Recovery and compatibility, performance, accessibility.
+4. Python tooling ported to Rust.
+5. Final UI/E2E, packaging (owner-gated: signing, bundle id), showcase video.
 
-- macOS only. Apple Silicon, macOS 13 or later.
-- Not signed with a Developer ID and not notarized. Release bundles are
-  ad-hoc signed ([HANDOFF.md](HANDOFF.md)).
-- The app icon is new; bundle id (`app.vexel.Vexel`) is still a placeholder
-  ([HANDOFF.md](HANDOFF.md)).
-- Full UI and end-to-end acceptance is at the end of feature work. The showcase
-  recording has not been made ([HANDOFF.md](HANDOFF.md)).
+## Contributing
+
+- Keep source files under 800 lines.
+- One writer per module; shared manifests, locks, interfaces and ledgers change
+  only through the coordinator ([AGENTS.md](AGENTS.md)).
+- Verify before sending changes:
+
+```sh
+cargo check --workspace --locked
+cargo test --workspace --locked
+python3 -m unittest tests.test_ledger tests.test_wo_runner
+```
 
 ## Documentation
 
@@ -105,11 +162,13 @@ timings in [docs/mcp.md](docs/mcp.md) are from a headless rig run.
 - [HANDOFF.md](HANDOFF.md): earlier status snapshot
 - [BLOCKERS.md](BLOCKERS.md): known blockers and gaps
 - [docs/mcp.md](docs/mcp.md): MCP server and tool reference
+- [docs/demo/](docs/demo/storyboard.md): recorded Codex live session and storyboard
 - [docs/ui/live-check.md](docs/ui/live-check.md): live-window verification
 - [docs/e2e-ui.md](docs/e2e-ui.md): real-window UI e2e script and manual checklist
 - [docs/product/vexel-goal-and-delivery-plan.md](docs/product/vexel-goal-and-delivery-plan.md): plan
+- [ADR-0018](docs/adr/0018-product-goal-and-completion-gates.md): product goal and completion gates
 
 ## License
 
-vexel is distributed under the Mozilla Public License 2.0 (MPL-2.0). See
-[`LICENSE`](LICENSE) for the license text.
+Vexel is distributed under the Mozilla Public License 2.0 (MPL-2.0). See
+[`LICENSE`](LICENSE).
