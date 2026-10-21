@@ -150,11 +150,12 @@ pub fn handle_async<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?Sized>(
     if !has_id && !method.starts_with("notifications/") {
         return Ok(Vec::new());
     }
-    rate_check(session, has_id, id.and_then(|i| doc.raw_token(i)), &mut out)?;
+    let params = doc.object_get(root, b"params");
+    let weight = crate::tools_batch::request_weight(&doc, method, params);
+    rate_check(session, has_id, weight, id.and_then(|i| doc.raw_token(i)), &mut out)?;
     if !out.is_empty() {
         return bytes(out);
     }
-    let params = doc.object_get(root, b"params");
     let modern_probe = method == "server/discover";
     let modern_request = request_is_modern(&doc, params);
     if modern_probe {
@@ -353,10 +354,12 @@ fn lit(out: &mut JsonBuffer, s: &str) -> Result<(), ProtocolError> {
     out.literal(s).map_err(ProtocolError::Buffer)
 }
 /// Per-session request budget per 60 s window (owner raised from 120 for scripted scene building).
+/// Requests are weighted: a batch costs 1 + ops/8, every other request 1.
 const MAX_REQUESTS_PER_MINUTE: u32 = 600;
 fn rate_check(
     session: &mut ProtocolSession,
     has_id: bool,
+    weight: u32,
     id: Option<&[u8]>,
     out: &mut JsonBuffer,
 ) -> Result<(), ProtocolError> {
@@ -368,7 +371,7 @@ fn rate_check(
         session.window_started = Some(now);
         session.requests_in_window = 0;
     }
-    session.requests_in_window = session.requests_in_window.saturating_add(1);
+    session.requests_in_window = session.requests_in_window.saturating_add(weight);
     if session.requests_in_window > MAX_REQUESTS_PER_MINUTE && has_id {
         append_error(out, id, -32000, "rate limit exceeded", None)?;
     }

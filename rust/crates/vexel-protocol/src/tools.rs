@@ -404,6 +404,10 @@ pub enum ToolValidationError {
     InvalidLoopMode,
     InvalidTemplateAttributes,
     InvalidTransactionLength,
+    /// A batch holds fewer than 1 or more than 256 operations.
+    InvalidBatchLength,
+    /// A batch operation names a tool that cannot run inside a batch.
+    BatchToolNotAllowed,
     InvalidArguments,
 }
 
@@ -413,6 +417,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
         .iter()
         .chain(super::tools_native_edit::NATIVE_EDIT_TOOLS)
         .chain(super::tools_structure::STRUCTURE_TOOLS)
+        .chain(super::tools_batch::BATCH_TOOLS)
 }
 
 pub fn tool_schemas() -> Result<Vec<u8>, ProtocolError> {
@@ -563,6 +568,9 @@ pub fn validate_tool_arguments(
                 }
                 child = doc.token(v).and_then(|t| t.next_sibling);
             }
+        }
+        if tool.name == "batch" && field == "ops" {
+            super::tools_batch::validate_ops(doc, value)?;
         }
         if tool.name == "transaction" && field == "edits" {
             let count = doc.token(value).map_or(0, |t| t.child_count);

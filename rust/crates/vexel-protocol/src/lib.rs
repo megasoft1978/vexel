@@ -4,6 +4,7 @@
 mod async_protocol;
 mod protocol;
 mod tools;
+mod tools_batch;
 mod tools_native_edit;
 mod tools_paint;
 mod tools_structure;

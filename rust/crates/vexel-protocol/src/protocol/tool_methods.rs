@@ -42,7 +42,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
     if session.live_preview && !crate::tools::PREVIEW_TOOLS.contains(&name.as_str()) {
         return append_tool_error(out, doc, id, session.modern, "unknown tool", "unknown_tool");
     }
-    if !session.live_preview && name == "animation_control" {
+    if !session.live_preview && matches!(name.as_str(), "animation_control" | "batch") {
         return append_tool_error(out, doc, id, session.modern, "unknown tool", "unknown_tool");
     }
     if session.live_preview && name == "element_add" {
@@ -202,6 +202,14 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             ),
             crate::ToolValidationError::InvalidTransactionLength => (
                 "transaction must contain between 1 and 64 edits",
+                "invalid_arguments",
+            ),
+            crate::ToolValidationError::InvalidBatchLength => (
+                "batch needs between 1 and 256 operations",
+                "invalid_arguments",
+            ),
+            crate::ToolValidationError::BatchToolNotAllowed => (
+                "tool is not allowed in a batch",
                 "invalid_arguments",
             ),
             crate::ToolValidationError::InvalidArguments => {
