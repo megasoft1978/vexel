@@ -5,7 +5,7 @@ use super::{
     pen::{PenPath, Vertex},
 };
 use crate::model::Tool;
-use vexel_v1_document::{V1Document, V1DocumentError};
+use vexel_v1_document::{Reorder, TransformSpec, V1Document, V1DocumentError};
 
 /// Drags shorter than this many document units on both axes are clicks.
 pub const MIN_DRAG: f64 = 1.0;
@@ -93,6 +93,14 @@ enum Gesture {
         handle: usize,
         current: Point,
     },
+    Rotate {
+        id: String,
+        start: Point,
+        last: Point,
+        centre: Point,
+        initial: f64,
+        current: f64,
+    },
     Pen {
         pos: Point,
         handle: Option<Point>,
@@ -109,6 +117,8 @@ pub struct ToolController {
     stroke: String,
     width: f64,
     counters: [u64; 4],
+    rotate_preview: Option<(String, f64)>,
+    shift: bool,
 }
 
 impl Default for ToolController {
@@ -128,6 +138,8 @@ impl ToolController {
             stroke: DEFAULT_STROKE.to_owned(),
             width: DEFAULT_WIDTH,
             counters: [0; 4],
+            rotate_preview: None,
+            shift: false,
         }
     }
 
@@ -151,6 +163,75 @@ impl ToolController {
 
     pub fn selection(&self) -> Option<&str> {
         self.selection.as_deref()
+    }
+
+    /// Rotation preview in degrees while the pointer is held.
+    pub fn rotate_preview(&self) -> Option<(&str, f64)> {
+        self.rotate_preview
+            .as_ref()
+            .map(|(id, angle)| (id.as_str(), *angle))
+    }
+
+    pub fn rotate_preview_bounds(&self) -> Option<(String, (f64, f64, f64, f64), f64)> {
+        let Gesture::Rotate {
+            id,
+            centre,
+            current,
+            ..
+        } = &self.gesture
+        else {
+            return None;
+        };
+        Some((
+            id.clone(),
+            (
+                centre.0 - 10.0,
+                centre.1 - 10.0,
+                centre.0 + 10.0,
+                centre.1 + 10.0,
+            ),
+            *current,
+        ))
+    }
+
+    pub fn set_shift(&mut self, down: bool) {
+        self.shift = down;
+    }
+
+    /// Applies the native editing shortcuts to the current selection.
+    pub fn edit_key(&mut self, key: EditKey, doc: &mut V1Document) -> Result<Outcome, ToolError> {
+        self.validate_selection(doc);
+        let Some(id) = self.selection.clone() else {
+            return Ok(Outcome::Ignored);
+        };
+        match key {
+            EditKey::Group => {
+                let info = doc.element_get(&id)?;
+                if info.kind != vexel_v1_document::ElementKind::Group {
+                    return Ok(Outcome::Ignored);
+                }
+                let sibling_ids = info.children;
+                if sibling_ids.len() < 2 {
+                    return Ok(Outcome::Ignored);
+                }
+                let grouped = doc.group(&sibling_ids)?;
+                self.selection = Some(grouped);
+            }
+            EditKey::Ungroup => {
+                let children = doc.ungroup(&id)?;
+                self.selection = children.first().cloned();
+            }
+            EditKey::Duplicate => {
+                let duplicate = doc.duplicate(&id)?;
+                doc.translate(&duplicate, 12.0, 12.0)?;
+                self.selection = Some(duplicate);
+            }
+            EditKey::Forward => doc.reorder(&id, Reorder::Forward)?,
+            EditKey::Backward => doc.reorder(&id, Reorder::Backward)?,
+            EditKey::Front => doc.reorder(&id, Reorder::Front)?,
+            EditKey::Back => doc.reorder(&id, Reorder::Back)?,
+        }
+        Ok(Outcome::Committed)
     }
 
     /// Selects any element that has a stable id (including kinds the tools cannot move).
@@ -305,6 +386,7 @@ impl ToolController {
     fn abandon(&mut self) {
         self.gesture = Gesture::None;
         self.pen.clear();
+        self.rotate_preview = None;
     }
 
     fn validate_selection(&mut self, doc: &V1Document) {
@@ -316,11 +398,25 @@ impl ToolController {
     }
 
     fn down(&mut self, p: Point, doc: &mut V1Document) -> Result<Outcome, ToolError> {
+        self.rotate_preview = None;
         match self.tool {
             Tool::Select => {
                 self.validate_selection(doc);
                 if let Some(id) = self.selection.clone() {
                     if let Ok(bounds) = doc.geometry_bounds(&id) {
+                        if let Some(start) = rotate_start(bounds, p) {
+                            let centre = ((bounds.0 + bounds.2) / 2.0, (bounds.1 + bounds.3) / 2.0);
+                            let initial = (p.1 - centre.1).atan2(p.0 - centre.0).to_degrees();
+                            self.gesture = Gesture::Rotate {
+                                id,
+                                start,
+                                last: start,
+                                centre,
+                                initial,
+                                current: initial,
+                            };
+                            return Ok(Outcome::Updated);
+                        }
                         if let Some(handle) = handle_at(bounds, p) {
                             self.gesture = Gesture::Resize {
                                 id,
@@ -333,7 +429,13 @@ impl ToolController {
                     }
                 }
                 match doc.hit_test(p.0, p.1) {
-                    Some(id) => {
+                    Some(hit) => {
+                        let ancestor = group_ancestor(doc, &hit);
+                        let id = if ancestor.as_deref() == self.selection.as_deref() {
+                            hit
+                        } else {
+                            ancestor.unwrap_or(hit)
+                        };
                         self.selection = Some(id.clone());
                         self.gesture = Gesture::Move {
                             id,
@@ -375,6 +477,23 @@ impl ToolController {
                 *current = p;
                 Outcome::Updated
             }
+            Gesture::Rotate {
+                id,
+                initial,
+                centre,
+                current,
+                last,
+                ..
+            } => {
+                let angle = crate::canvas::snapped_rotation(
+                    (p.1 - centre.1).atan2(p.0 - centre.0).to_degrees() - *initial,
+                    self.shift,
+                );
+                *current = angle;
+                *last = p;
+                self.rotate_preview = Some((id.clone(), angle));
+                Outcome::Updated
+            }
             Gesture::Pen { pos, handle } => {
                 *handle = (far(*pos, p)).then_some(p);
                 Outcome::Updated
@@ -411,6 +530,38 @@ impl ToolController {
                     return Ok(Outcome::Updated);
                 }
                 doc.resize_to_bounds(&id, next)?;
+                Ok(Outcome::Committed)
+            }
+            Gesture::Rotate {
+                id,
+                start,
+                centre,
+                initial,
+                current: _,
+                ..
+            } => {
+                let end = p.unwrap_or(start);
+                let angle = crate::canvas::snapped_rotation(
+                    (end.1 - centre.1).atan2(end.0 - centre.0).to_degrees() - initial,
+                    self.shift,
+                );
+                if angle.abs() < 0.01 {
+                    self.rotate_preview = None;
+                    return Ok(Outcome::Updated);
+                }
+                self.rotate_preview = None;
+                let old = doc.get_transform_matrix(&id)?;
+                if old[0] != 1.0 || old[1] != 0.0 || old[2] != 0.0 || old[3] != 1.0 {
+                    return Err(V1DocumentError::UnsupportedTransform.into());
+                }
+                let spec = TransformSpec {
+                    translate: (old[4], old[5]),
+                    rotate_deg: angle,
+                    pivot: centre,
+                    scale: (1.0, 1.0),
+                    skew_x_deg: 0.0,
+                };
+                doc.set_transform(&id, &spec)?;
                 Ok(Outcome::Committed)
             }
             Gesture::Pen { pos, handle } => {
@@ -500,6 +651,56 @@ impl ToolController {
         }
         Err(ToolError::IdSpaceExhausted)
     }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum EditKey {
+    Group,
+    Ungroup,
+    Duplicate,
+    Forward,
+    Backward,
+    Front,
+    Back,
+}
+
+fn rotate_start(bounds: (f64, f64, f64, f64), p: Point) -> Option<Point> {
+    let corners = [
+        (bounds.0, bounds.1),
+        (bounds.2, bounds.1),
+        (bounds.2, bounds.3),
+        (bounds.0, bounds.3),
+    ];
+    corners.into_iter().find(|corner| {
+        let dx = (p.0 - corner.0).abs();
+        let dy = (p.1 - corner.1).abs();
+        let outside = (p.0 < bounds.0 || p.0 > bounds.2) && (p.1 < bounds.1 || p.1 > bounds.3);
+        outside && dx <= 16.0 && dy <= 16.0 && (dx > 2.0 || dy > 2.0)
+    })
+}
+
+fn group_ancestor(doc: &V1Document, id: &str) -> Option<String> {
+    let (tree, _) = doc.tree_get(16, 1000).ok()?;
+    fn find(
+        nodes: &[vexel_v1_document::TreeNode],
+        target: &str,
+        parent_group: Option<&str>,
+    ) -> Option<String> {
+        for node in nodes {
+            if node.id.as_deref() == Some(target) {
+                return parent_group.map(str::to_owned);
+            }
+            let group = (node.tag == "g")
+                .then_some(node.id.as_deref())
+                .flatten()
+                .or(parent_group);
+            if let Some(found) = find(&node.children, target, group) {
+                return Some(found);
+            }
+        }
+        None
+    }
+    find(std::slice::from_ref(&tree), id, None)
 }
 
 fn far(a: Point, b: Point) -> bool {
