@@ -12,6 +12,8 @@ pub mod paint;
 mod state;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_glyphs;
 mod tooltip;
 
 pub use inspector_ext::{

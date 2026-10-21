@@ -113,11 +113,11 @@ fn paint_transport(
         .is_some_and(|(_, _, track, _)| matches!(track.kind, super::NativeTrackKind::Property))
     {
         let labels = [
-            ("linear", "—"),
-            ("ease_in", "↘"),
-            ("ease_out", "↗"),
-            ("ease_in_out", "⌁"),
-            ("step", "⊓"),
+            ("linear", "Lin"),
+            ("ease_in", "In"),
+            ("ease_out", "Out"),
+            ("ease_in_out", "I/O"),
+            ("step", "Stp"),
         ];
         let start = l.transport.x.saturating_add(super::layout::EASE_START);
         if l.transport.width >= super::layout::CUSTOM_MIN_WIDTH {
@@ -130,7 +130,7 @@ fn paint_transport(
             if s.hover == Some(Hit::EaseCustom) || s.bezier.open {
                 c.paint_round(cell, 4, t.pressed_fill, t.accent, 1);
             }
-            centred(c, "∿", cell, t.text_secondary, 13, FontWeight::Semibold);
+            centred(c, "Bez", cell, t.text_secondary, 13, FontWeight::Semibold);
             if custom {
                 c.paint_rect(rect(cell.x + 4, cell.y + 21, 18, 1), t.accent);
             }
@@ -347,7 +347,7 @@ fn paint_tracks(
         } else {
             "Property"
         };
-        let label = format!("{}  ·  {}", track.name, kind);
+        let label = format!("{}  -  {}", track.name, kind);
         let label_x = row
             .x
             .saturating_add(10)
@@ -620,7 +620,7 @@ fn paint_bezier_editor(
             c.paint_round(cell, 4, fill, t.separator, 1);
             centred(
                 c,
-                if up { "+" } else { "−" },
+                if up { "+" } else { "-" },
                 cell,
                 t.text_secondary,
                 13,

@@ -75,7 +75,7 @@ fn stepper(
     caption(c, row, label);
     value(c, row, shown.unwrap_or("\u{2014}"), shown.is_some());
     let (down, up) = stepper_buttons(row);
-    glyph_button(c, down, "\u{2212}", can_down);
+    glyph_button(c, down, "-", can_down);
     glyph_button(c, up, "+", can_up);
 }
 
@@ -109,7 +109,7 @@ fn half_stepper(c: &mut WidgetCanvas<'_>, row: Rect, label: &str, shown: Option<
         colour,
         12,
     );
-    glyph_button(c, down, "\u{2212}", on);
+    glyph_button(c, down, "-", on);
     glyph_button(c, up, "+", on);
 }
 

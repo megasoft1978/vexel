@@ -201,7 +201,7 @@ fn plural(count: usize) -> String {
 
 pub fn chrome_text(state: &AppState) -> ChromeText {
     let label = state.name.as_deref().unwrap_or("Untitled");
-    let marker = if state.dirty { " \u{2022}" } else { "" };
+    let marker = if state.dirty { " *" } else { "" };
     let mut parts = vec![format!("{}x{}", state.size.0, state.size.1)];
     parts.extend(state.shapes.map(plural));
     let (title, top, summary) = if state.open {
@@ -214,14 +214,14 @@ pub fn chrome_text(state: &AppState) -> ChromeText {
         }
         (
             window_title(Some(label), state.dirty),
-            format!("{label}{marker}  \u{b7}  {size_and_shapes}"),
-            Some(status.join(" \u{b7} ")),
+            format!("{label}{marker}  -  {size_and_shapes}"),
+            Some(status.join(" - ")),
         )
     } else {
         ("Vexel".to_owned(), NO_DOCUMENT.to_owned(), None)
     };
     let status = match (&state.error, summary) {
-        (Some(error), Some(kept)) => format!("{error} \u{b7} kept {kept}"),
+        (Some(error), Some(kept)) => format!("{error} - kept {kept}"),
         (Some(error), None) => error.clone(),
         (None, Some(summary)) => summary,
         (None, None) => NO_DOCUMENT.to_owned(),
@@ -321,7 +321,7 @@ mod tests {
             ..open_state()
         });
         assert!(dirty.title.ends_with('\u{2022}') && !clean.title.contains('\u{2022}'));
-        assert!(dirty.top.contains('\u{2022}') && !clean.top.contains('\u{2022}'));
+        assert!(dirty.top.contains(" *") && !clean.top.contains(" *"));
         assert!(dirty.status.contains("modified") && !clean.status.contains("modified"));
     }
 

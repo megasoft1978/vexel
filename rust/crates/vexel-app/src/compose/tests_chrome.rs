@@ -66,7 +66,7 @@ fn chrome_shows_the_dirty_marker_after_an_edit() {
         .unwrap();
     assert!(app.is_dirty());
     let text = chrome_text(&AppState::from_session(&app, &view));
-    assert!(text.title.contains('\u{2022}') && text.top.contains('\u{2022}'));
+    assert!(text.title.contains('\u{2022}') && text.top.contains(" *"));
     assert!(text.status.contains("modified"));
 }
 

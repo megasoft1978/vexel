@@ -340,7 +340,7 @@ fn colour_field(c: &mut WidgetCanvas<'_>, r: Rect, label: Option<String>, colour
     }
     let (s, color) = match &label {
         Some(s) => (s.as_str(), t.text_primary),
-        None => ("\u{2014}", t.text_secondary),
+        None => ("-", t.text_secondary),
     };
     mono(
         c,
@@ -399,7 +399,7 @@ fn number_field(c: &mut WidgetCanvas<'_>, r: Rect, caption: &str, value: Option<
                 );
             }
         }
-        None => mono(c, "\u{2014}", vrect, t.text_secondary, 12),
+        None => mono(c, "-", vrect, t.text_secondary, 12),
     }
 }
 
