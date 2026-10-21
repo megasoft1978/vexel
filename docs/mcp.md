@@ -121,6 +121,16 @@ published by MCP tool schemas. Timeline edits use shared project history.
 Native GIF export is synchronous; loops over 120 frames are stride-sampled,
 with frame delay multiplied by the stride.
 
+`animation_control` (`action`: `play`, `pause` or `seek`; `timeMs` 0-10000 for
+seek) drives the SVG animation clock for SVG SMIL documents. On a document with
+a native timeline (at least one native track) it drives the native timeline
+instead, the same clock the app window's Animate panel samples. Play needs the
+Animate mode with the Native timeline selected and otherwise fails with
+`native timeline plays in Animate mode on the Native timeline`. Pause holds the
+current tick; seek sets the tick, clamped to the loop length. The reply is
+`{"ok":true,"playing":<bool>,"tick":<integer>,"timeSeconds":<seconds>}` with the
+state after the call. Seek is limited to 10 seconds by the tool.
+
 ### Building an animated scene
 
 Use `element_add` to create the scene's rects, ellipses, paths, and text.

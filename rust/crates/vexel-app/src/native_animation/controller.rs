@@ -74,6 +74,18 @@ impl NativeAnimationController {
         }
     }
 
+    /// True when the document has a native timeline with at least one track,
+    /// the same test native export uses to pick the native path.
+    pub fn has_native_timeline(&self, document: &AppDocument) -> bool {
+        let Ok(candidate) = document.native_timeline_candidate(self.settings, self.limits) else {
+            return false;
+        };
+        let Ok(view) = candidate.view() else {
+            return false;
+        };
+        view.track_count() > 0
+    }
+
     pub fn set_selected_target(&mut self, target: Option<String>) {
         self.selected_target = target;
     }

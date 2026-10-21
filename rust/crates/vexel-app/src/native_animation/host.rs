@@ -12,6 +12,7 @@ use crate::native_timeline::presentation::{
     PresentationAction, TimelineMode, TimelinePresentation,
 };
 use crate::native_timeline::{NativeTimelineAction, NativeTimelineSnapshot};
+use crate::preview::Control;
 use crate::session::AppDocument;
 use std::sync::Arc;
 use vexel_platform_apple::{PanelBackend, RgbaFrame};
@@ -91,6 +92,78 @@ impl<C: LoopClock> NativeAnimationHost<C> {
 
     pub fn surface(&self) -> TimelineSurface {
         self.controller.surface()
+    }
+
+    /// True when the document has a native timeline with at least one track.
+    pub fn has_native_timeline(&self, document: &AppDocument) -> bool {
+        self.controller.has_native_timeline(document)
+    }
+
+    /// Applies an MCP play, pause or seek to the native timeline and returns
+    /// the reply with the state the clock now reports. Play needs the Animate
+    /// panel (`animating`) on the Native surface, because frames are sampled
+    /// only there; otherwise the window would not show the playback.
+    pub fn mcp_control(
+        &mut self,
+        document: &AppDocument,
+        control: Control,
+        animating: bool,
+    ) -> Result<String, &'static str> {
+        self.observe_revision(document.state_revision());
+        self.controller
+            .ensure_candidate(document)
+            .map_err(|_| "unsupported native timeline")?;
+        let (duration, ticks_per_second, loop_mode) = {
+            let candidate = self
+                .controller
+                .candidate
+                .as_ref()
+                .ok_or("unsupported native timeline")?;
+            let view = candidate
+                .view()
+                .map_err(|_| "unsupported native timeline")?;
+            (
+                view.duration_ticks(),
+                view.ticks_per_second(),
+                view.loop_mode(),
+            )
+        };
+        if duration == 0 || ticks_per_second == 0 {
+            return Err("unsupported native timeline");
+        }
+        self.driver.sync_timing(
+            document.state_revision(),
+            duration,
+            ticks_per_second,
+            loop_mode,
+        );
+        match control {
+            Control::Play => {
+                if !animating || self.surface() != TimelineSurface::Native {
+                    return Err("native timeline plays in Animate mode on the Native timeline");
+                }
+                if !self.driver.play() {
+                    return Err("no preview animation to play");
+                }
+            }
+            Control::Pause => self.driver.pause(),
+            Control::Seek(seconds) => {
+                if !seconds.is_finite() || !(0.0..=10.0).contains(&seconds) {
+                    return Err("invalid preview animation time");
+                }
+                self.driver.seek(seconds);
+                self.driver.invalidate();
+            }
+        }
+        self.controller.playing = self.driver.is_playing();
+        let seconds = self.driver.time();
+        let tick = self.driver.sample_tick(seconds);
+        self.controller.current_tick = tick;
+        self.last_tick = (!self.controller.playing).then_some(tick);
+        Ok(format!(
+            "{{\"ok\":true,\"playing\":{},\"tick\":{tick},\"timeSeconds\":{seconds:.3}}}",
+            self.controller.playing
+        ))
     }
 
     pub fn hovered_tooltip(&self) -> Option<Hit> {
