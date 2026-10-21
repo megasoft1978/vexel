@@ -20,6 +20,7 @@ pub struct NativeTimelineItem {
     pub tick: u32,
     pub label: String,
     pub selected: bool,
+    pub ease: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -96,6 +97,27 @@ pub enum NativeTimelineAction {
         track_id: String,
         from_tick: u32,
         to_tick: u32,
+    },
+    MovePropertyKey {
+        track_id: String,
+        from_tick: u32,
+        to_tick: u32,
+    },
+    RemovePropertyKey {
+        track_id: String,
+        tick: u32,
+    },
+    SetPropertyKeyEase {
+        track_id: String,
+        tick: u32,
+        value: String,
+        ease: String,
+    },
+    DuplicateTrack {
+        track_id: String,
+    },
+    RemoveTrack {
+        track_id: String,
     },
     AddOpacityKey {
         target_id: String,
