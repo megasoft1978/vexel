@@ -30,6 +30,7 @@ pub fn tooltip(target: Target) -> Option<(&'static str, &'static str)> {
             crate::native_timeline::layout::Hit::OnionBefore => ("Onion skin", ""),
             crate::native_timeline::layout::Hit::AddDrawingTrack => ("Add drawing track", ""),
             crate::native_timeline::layout::Hit::ImportDrawing => ("Import SVG as drawing", ""),
+            crate::native_timeline::layout::Hit::EaseCustom => ("Custom bezier easing", ""),
             _ => return None,
         },
         _ => return None,

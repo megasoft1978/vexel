@@ -3,6 +3,7 @@
 //! This panel is separate from `timeline`, which displays source-based SVG
 //! SMIL animation. The coordinator maps emitted intents to app commands.
 
+pub mod bezier;
 pub mod interaction;
 pub mod layout;
 pub mod model;

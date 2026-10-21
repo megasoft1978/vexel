@@ -403,6 +403,9 @@ fn available_opacity_track_id(
 }
 
 fn ease_json(ease: &str) -> String {
+    if let Some(p) = crate::native_timeline::bezier::parse(ease) {
+        return crate::native_timeline::bezier::json(p);
+    }
     match ease {
         "step" => "\"step\"".into(),
         "ease_in" => "\"ease_in\"".into(),

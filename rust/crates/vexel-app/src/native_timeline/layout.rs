@@ -11,6 +11,11 @@ pub const MAX_NAME_WIDTH: u32 = 184;
 pub const MODE_SELECTOR_WIDTH: u32 = 148;
 pub const CONTROL_SIZE: u32 = 28;
 const CONTROL_GAP: u32 = 4;
+/// Transport width needed to show the custom-bezier button after the presets.
+pub const CUSTOM_MIN_WIDTH: u32 = 392;
+pub const EASE_START: u32 = 220;
+pub const BEZIER_EDITOR_W: u32 = 204;
+pub const BEZIER_EDITOR_H: u32 = 112;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Viewport {
@@ -53,8 +58,21 @@ pub enum Hit {
     Ruler,
     Track(usize),
     Visibility(usize),
-    Item { track: usize, item: usize },
+    Item {
+        track: usize,
+        item: usize,
+    },
     Ease(&'static str),
+    /// Opens or closes the custom cubic-bezier editor.
+    EaseCustom,
+    /// One stepper button of the bezier editor: field 0..4 = x1,y1,x2,y2.
+    BezierStep {
+        field: u8,
+        up: bool,
+    },
+    BezierApply,
+    /// Inert area of the open editor; swallows pointer input.
+    BezierPanel,
     DuplicateTrack(usize),
     DeleteTrack(usize),
     Lane(usize),
@@ -237,6 +255,77 @@ impl TimelineLayout {
                 / f64::from(span)
     }
 
+    /// The bezier editor popover, anchored under the easing buttons.
+    pub fn bezier_editor(&self) -> Option<Rect> {
+        if self.transport.width < CUSTOM_MIN_WIDTH
+            || self.rows.height < BEZIER_EDITOR_H
+            || self.panel.width < BEZIER_EDITOR_W
+        {
+            return None;
+        }
+        let max_x = self.panel.x + self.panel.width - BEZIER_EDITOR_W;
+        Some(rect(
+            self.transport.x.saturating_add(EASE_START).min(max_x),
+            self.rows.y,
+            BEZIER_EDITOR_W,
+            BEZIER_EDITOR_H,
+        ))
+    }
+
+    pub fn bezier_preview(&self) -> Option<Rect> {
+        let e = self.bezier_editor()?;
+        Some(rect(e.x + 8, e.y + 8, 72, 72))
+    }
+
+    /// Stepper row `field` (0..4): value text and minus / plus buttons.
+    pub fn bezier_step_rect(&self, field: u8, up: bool) -> Option<Rect> {
+        let e = self.bezier_editor()?;
+        let y = e.y + 8 + u32::from(field.min(3)) * 20;
+        let x = if up {
+            e.x + 92 + 20 + 44
+        } else {
+            e.x + 92 + 20
+        };
+        Some(rect(x, y, 20, 18))
+    }
+
+    pub fn bezier_value_rect(&self, field: u8) -> Option<Rect> {
+        let e = self.bezier_editor()?;
+        Some(rect(
+            e.x + 132,
+            e.y + 8 + u32::from(field.min(3)) * 20,
+            44,
+            18,
+        ))
+    }
+
+    pub fn bezier_apply_rect(&self) -> Option<Rect> {
+        let e = self.bezier_editor()?;
+        Some(rect(e.x + 92, e.y + 8 + 4 * 20 + 2, 84, 20))
+    }
+
+    /// Hit inside the open editor; `None` outside it.
+    pub fn bezier_hit(&self, x: i32, y: i32) -> Option<Hit> {
+        let e = self.bezier_editor()?;
+        if !inside(e, x, y) {
+            return None;
+        }
+        for field in 0..4u8 {
+            for up in [false, true] {
+                if self
+                    .bezier_step_rect(field, up)
+                    .is_some_and(|r| inside(r, x, y))
+                {
+                    return Some(Hit::BezierStep { field, up });
+                }
+            }
+        }
+        if self.bezier_apply_rect().is_some_and(|r| inside(r, x, y)) {
+            return Some(Hit::BezierApply);
+        }
+        Some(Hit::BezierPanel)
+    }
+
     pub fn mode_selector(&self) -> Rect {
         rect(
             self.transport.x.saturating_add(8),
@@ -319,6 +408,11 @@ impl TimelineLayout {
                     let eases = ["linear", "ease_in", "ease_out", "ease_in_out", "step"];
                     if self.transport.width >= 380 && local < 5 * 28 {
                         return Hit::Ease(eases[(local / 28) as usize]);
+                    }
+                    if self.transport.width >= CUSTOM_MIN_WIDTH
+                        && (5 * 28..5 * 28 + 26).contains(&local)
+                    {
+                        return Hit::EaseCustom;
                     }
                 }
             }

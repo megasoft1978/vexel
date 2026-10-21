@@ -36,6 +36,7 @@ pub fn paint(
     paint_ruler(canvas, &layout, model);
     paint_tracks(canvas, &layout, model, state);
     paint_playhead(canvas, &layout, model.current_tick);
+    paint_bezier_editor(canvas, &layout, model, state);
     if state.focus && panel.width >= 3 && panel.height >= 2 {
         let x = panel.x.saturating_add(1);
         let y = panel.y.saturating_add(panel.height.saturating_sub(2));
@@ -118,7 +119,22 @@ fn paint_transport(
             ("ease_in_out", "⌁"),
             ("step", "⊓"),
         ];
-        let start = l.transport.x.saturating_add(220);
+        let start = l.transport.x.saturating_add(super::layout::EASE_START);
+        if l.transport.width >= super::layout::CUSTOM_MIN_WIDTH {
+            let cell = rect(start + 5 * 28, y, 26, 24);
+            let custom = m
+                .selected_item()
+                .and_then(|(_, _, _, item)| item.ease.as_deref())
+                .is_some_and(|e| super::bezier::parse(e).is_some());
+            c.paint_round(cell, 4, t.panel_hover, t.separator, 1);
+            if s.hover == Some(Hit::EaseCustom) || s.bezier.open {
+                c.paint_round(cell, 4, t.pressed_fill, t.accent, 1);
+            }
+            centred(c, "∿", cell, t.text_secondary, 13, FontWeight::Semibold);
+            if custom {
+                c.paint_rect(rect(cell.x + 4, cell.y + 21, 18, 1), t.accent);
+            }
+        }
         if l.transport.width >= 380 {
             for (i, (ease, glyph)) in labels.iter().enumerate() {
                 let cell = rect(start + i as u32 * 28, y, 26, 24);
@@ -132,6 +148,24 @@ fn paint_transport(
                         c.paint_rect(rect(cell.x + 4, cell.y + 21, 18, 1), t.accent);
                     }
                 }
+            }
+        }
+    }
+    if let Some((_, _, _, item)) = m.selected_item() {
+        if let Some(ease) = item.ease.as_deref() {
+            let x = l
+                .transport
+                .x
+                .saturating_add(super::layout::EASE_START + 6 * 28 + 2);
+            let w = 76;
+            if x + w <= l.transport.x + l.transport.width.saturating_sub(116 + PAD) {
+                mono(
+                    c,
+                    super::bezier::label(ease),
+                    rect(x, y, w, 24.min(l.transport.height)),
+                    t.text_secondary,
+                    11,
+                );
             }
         }
     }
@@ -521,4 +555,88 @@ fn has_target(model: &TimelineModel, state: &InteractionState) -> bool {
             .selected_target
             .as_ref()
             .is_some_and(|target| !target.is_empty())
+}
+
+/// Popover with a live curve preview, four steppers and Apply.
+fn paint_bezier_editor(
+    c: &mut WidgetCanvas<'_>,
+    l: &TimelineLayout,
+    m: &TimelineModel,
+    s: &InteractionState,
+) {
+    if !s.bezier.open || m.selected_item().is_none() {
+        return;
+    }
+    let (Some(editor), Some(preview)) = (l.bezier_editor(), l.bezier_preview()) else {
+        return;
+    };
+    let t = c.tokens;
+    c.paint_round(editor, 6, t.panel_raised, t.separator, 1);
+    c.paint_rect(preview, t.panel);
+    // Unit square guides: baseline and top edge of 0..1.
+    let unit_h = preview.height.saturating_sub(24);
+    let base_y = preview.y + preview.height - 12;
+    c.paint_rect(rect(preview.x, base_y, preview.width, 1), t.separator);
+    c.paint_rect(
+        rect(preview.x, base_y.saturating_sub(unit_h), preview.width, 1),
+        t.separator,
+    );
+    let curve = super::bezier::sample(s.bezier.values, 40);
+    for (x, y) in curve {
+        let px = preview.x + (x * f64::from(preview.width - 2)).round() as u32;
+        let py = (f64::from(base_y) - y * f64::from(unit_h)).round();
+        let py = py.clamp(
+            f64::from(preview.y),
+            f64::from(preview.y + preview.height - 2),
+        ) as u32;
+        c.paint_rect(rect(px, py, 2, 2), t.accent);
+    }
+    let names = ["x1", "y1", "x2", "y2"];
+    for field in 0..4u8 {
+        let (Some(minus), Some(plus), Some(value)) = (
+            l.bezier_step_rect(field, false),
+            l.bezier_step_rect(field, true),
+            l.bezier_value_rect(field),
+        ) else {
+            continue;
+        };
+        text(
+            c,
+            names[usize::from(field)],
+            rect(minus.x - 20, minus.y, 20, minus.height),
+            t.text_tertiary,
+            11,
+            FontWeight::Regular,
+        );
+        for (cell, up) in [(minus, false), (plus, true)] {
+            let hit = Hit::BezierStep { field, up };
+            let fill = if s.pressed() == Some(hit) && s.hover == Some(hit) {
+                t.pressed_fill
+            } else if s.hover == Some(hit) {
+                t.panel_hover
+            } else {
+                t.panel
+            };
+            c.paint_round(cell, 4, fill, t.separator, 1);
+            centred(
+                c,
+                if up { "+" } else { "−" },
+                cell,
+                t.text_secondary,
+                13,
+                FontWeight::Semibold,
+            );
+        }
+        let v = s.bezier.values[usize::from(field)];
+        mono(c, &format!("{v:.2}"), value, t.text_primary, 11);
+    }
+    if let Some(apply) = l.bezier_apply_rect() {
+        let fill = if s.hover == Some(Hit::BezierApply) {
+            t.pressed_fill
+        } else {
+            t.panel_hover
+        };
+        c.paint_round(apply, 4, fill, t.accent, 1);
+        centred(c, "Apply", apply, t.text_primary, 12, FontWeight::Semibold);
+    }
 }

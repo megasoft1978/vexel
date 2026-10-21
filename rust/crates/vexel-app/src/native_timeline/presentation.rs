@@ -148,7 +148,8 @@ impl TimelinePresentation {
                 | Hit::ImportDrawing
                 | Hit::DuplicateTrack(_)
                 | Hit::DeleteTrack(_)
-                | Hit::Ease(_)),
+                | Hit::Ease(_)
+                | Hit::EaseCustom),
             ) => Some(hit),
             _ => None,
         }
