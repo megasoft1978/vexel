@@ -8,9 +8,11 @@
 //! exceeds the stored size. Input is validated before any large allocation
 //! and every allocation uses `try_reserve`.
 
+mod apng;
 mod checksum;
 mod deflate;
 
+pub use apng::{ApngFrame, MAX_FRAMES, encode_apng};
 pub use checksum::{adler32, crc32};
 
 /// Each axis is at most this many pixels.
@@ -40,9 +42,13 @@ pub enum PngError {
     /// `rgba.len()` is not `width * height * 4`.
     InvalidLength,
     OutOfMemory,
+    /// APNG with no frames.
+    ZeroFrames,
+    /// APNG with more than [`MAX_FRAMES`] frames.
+    TooManyFrames,
 }
 
-fn chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
+pub(crate) fn chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
     out.extend_from_slice(&(data.len() as u32).to_be_bytes());
     let start = out.len();
     out.extend_from_slice(kind);
