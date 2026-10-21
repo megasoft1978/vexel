@@ -100,6 +100,7 @@ fn snapshot(ease: &str) -> NativeTimelineSnapshot {
             id: "opacity".into(),
             name: "Opacity".into(),
             target: "shape".into(),
+            property: "opacity".into(),
             kind: NativeTrackKind::Property,
             visible: true,
             selected: true,
@@ -151,10 +152,7 @@ fn click(
 }
 
 fn custom_button(l: &TimelineLayout) -> (i32, i32) {
-    (
-        l.transport.x as i32 + 220 + 5 * 28 + 13,
-        l.transport.y as i32 + 16,
-    )
+    centre(l.ease_cells()[5].1)
 }
 
 #[test]
@@ -218,10 +216,7 @@ fn escape_closes_editor_without_an_edit_and_presets_stay_one_click() {
     assert_eq!(state.bezier.values, bezier::DEFAULT);
     assert!(state.key(Key::Escape, &model).is_empty());
     assert!(!state.bezier.open);
-    let ease_in = (
-        l.transport.x as i32 + 220 + 28 + 13,
-        l.transport.y as i32 + 16,
-    );
+    let ease_in = centre(l.ease_cells()[1].1);
     let actions = click(&mut state, &l, &model, ease_in);
     assert_eq!(actions.len(), 1);
 }

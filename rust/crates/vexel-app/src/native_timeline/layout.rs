@@ -1,21 +1,30 @@
 //! Pure geometry and hit testing for the native animation panel.
+//!
+//! Bands from top to bottom: transport (mode, buttons, readouts), ruler, track
+//! rows and, only while a property key is selected, the key bar (easing of
+//! that key). The key bar sits at the bottom edge so rows never move when a
+//! key is picked. The control sizes and
+//! gaps follow the inspector (28 px fields and buttons, 6 px segment gaps).
 
 use super::model::TimelineModel;
 use vexel_ui::Rect;
 
-pub const TRANSPORT_HEIGHT: u32 = 32;
-pub const RULER_HEIGHT: u32 = 24;
+pub const TRANSPORT_HEIGHT: u32 = 36;
+pub const KEYBAR_HEIGHT: u32 = 36;
+pub const RULER_HEIGHT: u32 = 28;
 pub const TRACK_HEIGHT: u32 = 28;
-pub const MIN_NAME_WIDTH: u32 = 112;
-pub const MAX_NAME_WIDTH: u32 = 184;
-pub const MODE_SELECTOR_WIDTH: u32 = 148;
+pub const MIN_NAME_WIDTH: u32 = 168;
+pub const MAX_NAME_WIDTH: u32 = 248;
+pub const MODE_SELECTOR_WIDTH: u32 = 176;
 pub const CONTROL_SIZE: u32 = 28;
 const CONTROL_GAP: u32 = 4;
-/// Transport width needed to show the custom-bezier button after the presets.
-pub const CUSTOM_MIN_WIDTH: u32 = 392;
-pub const EASE_START: u32 = 220;
-pub const BEZIER_EDITOR_W: u32 = 204;
-pub const BEZIER_EDITOR_H: u32 = 112;
+/// Room kept at the right end of each row for the duplicate and delete icons.
+pub const ROW_GUTTER: u32 = 56;
+/// The key bar needs this much panel width and height to be shown.
+pub const KEYBAR_MIN_WIDTH: u32 = 460;
+pub const KEYBAR_MIN_HEIGHT: u32 = 150;
+pub const BEZIER_EDITOR_W: u32 = 366;
+pub const BEZIER_EDITOR_H: u32 = 124;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Viewport {
@@ -71,6 +80,8 @@ pub enum Hit {
         up: bool,
     },
     BezierApply,
+    /// Closes the editor without an edit.
+    BezierCancel,
     /// Inert area of the open editor; swallows pointer input.
     BezierPanel,
     DuplicateTrack(usize),
@@ -79,12 +90,115 @@ pub enum Hit {
     Empty,
 }
 
+/// The easing presets in key bar order, then the custom editor toggle.
+pub const EASES: [(&str, &str); 5] = [
+    ("linear", "Linear"),
+    ("ease_in", "In"),
+    ("ease_out", "Out"),
+    ("ease_in_out", "In-Out"),
+    ("step", "Step"),
+];
+const EASE_WIDTHS: [u32; 6] = [52, 40, 40, 54, 46, 58];
+/// Left edge of the first easing cell, after the "Easing" caption.
+const EASE_X: u32 = 68;
+pub const EASE_GAP: u32 = 6;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Readout {
+    Tick,
+    Rate,
+    Zoom,
+}
+
+/// The four bands of a panel; each rect is inside the panel and zero height
+/// when it does not fit.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Bands {
+    pub transport: Rect,
+    pub ruler: Rect,
+    pub rows: Rect,
+    pub keybar: Rect,
+}
+
+/// `with_keybar` reserves the bottom strip when the panel is big enough.
+pub fn bands(panel: Rect, with_keybar: bool) -> Bands {
+    let transport_h = panel.height.min(TRANSPORT_HEIGHT);
+    let left = panel.height.saturating_sub(transport_h);
+    let keybar_h =
+        if with_keybar && panel.width >= KEYBAR_MIN_WIDTH && panel.height >= KEYBAR_MIN_HEIGHT {
+            left.min(KEYBAR_HEIGHT)
+        } else {
+            0
+        };
+    let ruler_h = left.saturating_sub(keybar_h).min(RULER_HEIGHT);
+    let ruler_y = panel.y.saturating_add(transport_h);
+    let rows_y = ruler_y.saturating_add(ruler_h);
+    let rows_h = left.saturating_sub(keybar_h + ruler_h);
+    Bands {
+        transport: rect(panel.x, panel.y, panel.width, transport_h),
+        ruler: rect(panel.x, ruler_y, panel.width, ruler_h),
+        rows: rect(panel.x, rows_y, panel.width, rows_h),
+        keybar: rect(
+            panel.x,
+            panel
+                .y
+                .saturating_add(panel.height.saturating_sub(keybar_h)),
+            panel.width,
+            keybar_h,
+        ),
+    }
+}
+
+/// Transport button `hit` (0..5 in transport order) inside `panel`.
+pub fn control_rect_in(panel: Rect, hit: Hit) -> Option<Rect> {
+    let transport = bands(panel, false).transport;
+    let index = match hit {
+        Hit::Play => 0,
+        Hit::Loop => 1,
+        Hit::OnionBefore => 2,
+        Hit::AddDrawingTrack => 3,
+        Hit::ImportDrawing => 4,
+        _ => return None,
+    };
+    let first = transport.x.saturating_add(8 + MODE_SELECTOR_WIDTH + 12);
+    // A wider gap separates playback (play, loop) from the edit buttons.
+    let group = if index >= 2 { 8 } else { 0 };
+    Some(rect(
+        first.saturating_add(index * (CONTROL_SIZE + CONTROL_GAP) + group),
+        transport
+            .y
+            .saturating_add(transport.height.saturating_sub(CONTROL_SIZE) / 2),
+        CONTROL_SIZE.min(transport.width),
+        CONTROL_SIZE.min(transport.height),
+    ))
+}
+
+/// Easing cell `index` (0..5, 5 = custom) of the key bar of `panel`.
+pub fn ease_cell_in(panel: Rect, index: usize) -> Option<Rect> {
+    let bar = bands(panel, true).keybar;
+    if bar.height == 0 || index > 5 {
+        return None;
+    }
+    let mut x = bar.x.saturating_add(EASE_X);
+    for w in EASE_WIDTHS.iter().take(index) {
+        x = x.saturating_add(w + EASE_GAP);
+    }
+    Some(rect(
+        x,
+        bar.y.saturating_add(bar.height.saturating_sub(28) / 2),
+        EASE_WIDTHS[index],
+        28.min(bar.height),
+    ))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TimelineLayout {
     pub panel: Rect,
     pub transport: Rect,
     pub ruler: Rect,
     pub rows: Rect,
+    /// Zero height unless a property key is selected.
+    pub keybar: Rect,
     pub name_width: u32,
     pub lane_left: f64,
     pub lane_right: f64,
@@ -94,15 +208,6 @@ pub struct TimelineLayout {
 impl TimelineLayout {
     /// Compact, non-overlapping icon targets in transport order.
     pub fn control_rects(&self) -> [(Hit, Rect); 5] {
-        let y = self
-            .transport
-            .y
-            .saturating_add(self.transport.height.saturating_sub(CONTROL_SIZE) / 2);
-        let first = self
-            .transport
-            .x
-            .saturating_add(MODE_SELECTOR_WIDTH)
-            .saturating_add(8);
         [
             Hit::Play,
             Hit::Loop,
@@ -111,23 +216,257 @@ impl TimelineLayout {
             Hit::ImportDrawing,
         ]
         .map(|hit| {
-            let index = match hit {
-                Hit::Play => 0,
-                Hit::Loop => 1,
-                Hit::OnionBefore => 2,
-                Hit::AddDrawingTrack => 3,
-                _ => 4,
-            };
             (
                 hit,
-                rect(
-                    first.saturating_add(index * (CONTROL_SIZE + CONTROL_GAP)),
-                    y,
-                    CONTROL_SIZE.min(self.transport.width),
-                    CONTROL_SIZE.min(self.transport.height),
-                ),
+                control_rect_in(self.panel, hit).unwrap_or_else(|| rect(0, 0, 0, 0)),
             )
         })
+    }
+
+    /// Easing cells in key bar order: the five presets, then custom.
+    pub fn ease_cells(&self) -> [(Hit, Rect); 6] {
+        std::array::from_fn(|i| {
+            let hit = EASES
+                .get(i)
+                .map_or(Hit::EaseCustom, |(id, _)| Hit::Ease(id));
+            (
+                hit,
+                ease_cell_in(self.panel, i).unwrap_or_else(|| rect(0, 0, 0, 0)),
+            )
+        })
+    }
+
+    /// Small display fields at the right end of the transport, right to left.
+    pub fn readout(&self, which: Readout) -> Rect {
+        let (w, slot) = match which {
+            Readout::Zoom => (88, 0),
+            Readout::Rate => (88, 1),
+            Readout::Tick => (112, 2),
+        };
+        let right = self.transport.x + self.transport.width;
+        let used: u32 = match slot {
+            0 => 0,
+            1 => 88 + 6,
+            _ => 88 + 6 + 88 + 6,
+        };
+        let x = right.saturating_sub(8 + used + w);
+        rect(
+            x,
+            self.transport
+                .y
+                .saturating_add(self.transport.height.saturating_sub(28) / 2),
+            w.min(self.transport.width),
+            28.min(self.transport.height),
+        )
+    }
+}
+
+pub(super) fn rect(x: u32, y: u32, width: u32, height: u32) -> Rect {
+    Rect {
+        x,
+        y,
+        width,
+        height,
+    }
+}
+
+pub(super) fn inside(r: Rect, x: i32, y: i32) -> bool {
+    x >= r.x as i32
+        && y >= r.y as i32
+        && x < r.x.saturating_add(r.width) as i32
+        && y < r.y.saturating_add(r.height) as i32
+}
+
+impl TimelineLayout {
+    pub fn new(panel: Rect, model: &TimelineModel, viewport: Viewport) -> Self {
+        let property_key = model
+            .selected_item()
+            .is_some_and(|(_, _, tr, _)| matches!(tr.kind, super::NativeTrackKind::Property));
+        let b = bands(panel, property_key);
+        let name_width = (panel.width.saturating_mul(2) / 5).clamp(
+            MIN_NAME_WIDTH.min(panel.width),
+            MAX_NAME_WIDTH.min(panel.width),
+        );
+        let panel_right = panel.x.saturating_add(panel.width);
+        let lane_left = f64::from(
+            panel
+                .x
+                .saturating_add(name_width)
+                .saturating_add(12)
+                .min(panel_right),
+        );
+        let lane_right =
+            f64::from(panel_right.saturating_sub(ROW_GUTTER).max(panel.x)).max(lane_left);
+        let viewport = viewport.bounded(model);
+        Self {
+            panel,
+            transport: b.transport,
+            keybar: b.keybar,
+            ruler: b.ruler,
+            rows: b.rows,
+            name_width,
+            lane_left,
+            lane_right,
+            viewport,
+        }
+    }
+
+    pub fn lane_x(&self, tick: u32) -> f64 {
+        let span = self
+            .viewport
+            .last_tick
+            .saturating_sub(self.viewport.first_tick)
+            .max(1);
+        let tick = tick.clamp(self.viewport.first_tick, self.viewport.last_tick);
+        self.lane_left
+            + (self.lane_right - self.lane_left)
+                * f64::from(tick.saturating_sub(self.viewport.first_tick))
+                / f64::from(span)
+    }
+
+    pub fn mode_selector(&self) -> Rect {
+        rect(
+            self.transport.x.saturating_add(8),
+            self.transport
+                .y
+                .saturating_add(self.transport.height.saturating_sub(CONTROL_SIZE) / 2),
+            MODE_SELECTOR_WIDTH.min(self.transport.width.saturating_sub(16)),
+            CONTROL_SIZE.min(self.transport.height),
+        )
+    }
+
+    pub fn tick_at(&self, x: i32) -> u32 {
+        let span = self
+            .viewport
+            .last_tick
+            .saturating_sub(self.viewport.first_tick);
+        if span == 0 || self.lane_right <= self.lane_left {
+            return self.viewport.first_tick;
+        }
+        let fraction = (f64::from(x) - self.lane_left) / (self.lane_right - self.lane_left);
+        let offset = (fraction.clamp(0.0, 1.0) * f64::from(span)).round() as u32;
+        self.viewport.first_tick.saturating_add(offset)
+    }
+
+    pub fn row_rect(&self, index: usize) -> Rect {
+        let y = self
+            .rows
+            .y
+            .saturating_add((index as u32).saturating_mul(TRACK_HEIGHT));
+        let height = self
+            .rows
+            .y
+            .saturating_add(self.rows.height)
+            .saturating_sub(y)
+            .min(TRACK_HEIGHT);
+        rect(
+            self.rows.x,
+            y.min(self.rows.y.saturating_add(self.rows.height)),
+            self.rows.width,
+            height,
+        )
+    }
+
+    /// Hit box of one item. Property keys are 14 px boxes centred on their
+    /// tick; drawing cels span to the next cel.
+    pub fn item_rect(&self, model: &TimelineModel, track: usize, item: usize) -> Option<Rect> {
+        let row = self.row_rect(track);
+        let tr = model.tracks.get(track)?;
+        let it = tr.items.get(item)?;
+        let x = self.lane_x(it.tick).round().max(0.0) as u32;
+        let left = self.lane_left.round().max(0.0) as u32;
+        let right_bound = self.lane_right.round().max(0.0) as u32;
+        if matches!(tr.kind, super::NativeTrackKind::Property) {
+            return Some(rect(
+                x.saturating_sub(7),
+                row.y.saturating_add(5),
+                14,
+                row.height.saturating_sub(10),
+            ));
+        }
+        let next_tick = tr
+            .items
+            .get(item + 1)
+            .map_or(self.viewport.last_tick, |next| next.tick);
+        let right = self.lane_x(next_tick).round().max(0.0) as u32;
+        let x = x.clamp(left, right_bound);
+        let width = right
+            .clamp(x.saturating_add(8).min(right_bound), right_bound)
+            .saturating_sub(x);
+        Some(rect(
+            x,
+            row.y.saturating_add(5),
+            width,
+            row.height.saturating_sub(10),
+        ))
+    }
+
+    pub fn hit_test(&self, model: &TimelineModel, x: i32, y: i32) -> Hit {
+        if !inside(self.panel, x, y) {
+            return Hit::Empty;
+        }
+        if inside(self.transport, x, y) {
+            let selector = self.mode_selector();
+            if inside(selector, x, y) {
+                let local_x = x.saturating_sub(selector.x as i32).max(0) as u32;
+                if local_x < selector.width / 2 {
+                    return Hit::ModeNative;
+                }
+                return Hit::ModeSmil;
+            }
+            if let Some((hit, _)) = self
+                .control_rects()
+                .into_iter()
+                .find(|(_, r)| inside(*r, x, y))
+            {
+                return hit;
+            }
+            return Hit::Empty;
+        }
+        if inside(self.keybar, x, y) {
+            return self
+                .ease_cells()
+                .into_iter()
+                .find(|(_, r)| inside(*r, x, y))
+                .map_or(Hit::Empty, |(hit, _)| hit);
+        }
+        if inside(self.ruler, x, y) {
+            return Hit::Ruler;
+        }
+        if inside(self.rows, x, y) {
+            let index = ((y as u32).saturating_sub(self.rows.y) / TRACK_HEIGHT) as usize;
+            let Some(track) = model.tracks.get(index) else {
+                return Hit::Empty;
+            };
+            let row = self.row_rect(index);
+            let right = row.x.saturating_add(row.width);
+            if x >= right.saturating_sub(48) as i32 {
+                return if x >= right.saturating_sub(24) as i32 {
+                    Hit::DeleteTrack(index)
+                } else {
+                    Hit::DuplicateTrack(index)
+                };
+            }
+            // A key on the first tick straddles the lane edge: keys win.
+            if x >= (self.lane_left as i32).saturating_sub(7) {
+                for item in 0..track.items.len() {
+                    if self
+                        .item_rect(model, index, item)
+                        .is_some_and(|r| inside(r, x, y))
+                    {
+                        return Hit::Item { track: index, item };
+                    }
+                }
+            }
+            if x < (self.panel.x.saturating_add(34)) as i32 {
+                return Hit::Visibility(index);
+            }
+            if x < self.lane_left as i32 {
+                return Hit::Track(index);
+            }
+            return Hit::Lane(index);
+        }
+        Hit::Empty
     }
 }
 
@@ -188,295 +527,4 @@ mod tests {
             ]
         );
     }
-}
-
-fn rect(x: u32, y: u32, width: u32, height: u32) -> Rect {
-    Rect {
-        x,
-        y,
-        width,
-        height,
-    }
-}
-
-impl TimelineLayout {
-    pub fn new(panel: Rect, model: &TimelineModel, viewport: Viewport) -> Self {
-        let transport_h = panel.height.min(TRANSPORT_HEIGHT);
-        let ruler_h = panel.height.saturating_sub(transport_h).min(RULER_HEIGHT);
-        let name_width = (panel.width.saturating_mul(2) / 5).clamp(
-            MIN_NAME_WIDTH.min(panel.width),
-            MAX_NAME_WIDTH.min(panel.width),
-        );
-        let panel_right = panel.x.saturating_add(panel.width);
-        let lane_left = f64::from(
-            panel
-                .x
-                .saturating_add(name_width)
-                .saturating_add(10)
-                .min(panel_right),
-        );
-        let lane_right = f64::from(panel_right.saturating_sub(12).max(panel.x)).max(lane_left);
-        let viewport = viewport.bounded(model);
-        Self {
-            panel,
-            transport: rect(panel.x, panel.y, panel.width, transport_h),
-            ruler: rect(
-                panel.x,
-                panel.y.saturating_add(transport_h),
-                panel.width,
-                ruler_h,
-            ),
-            rows: rect(
-                panel.x,
-                panel.y.saturating_add(transport_h).saturating_add(ruler_h),
-                panel.width,
-                panel
-                    .height
-                    .saturating_sub(transport_h)
-                    .saturating_sub(ruler_h),
-            ),
-            name_width,
-            lane_left,
-            lane_right,
-            viewport,
-        }
-    }
-
-    pub fn lane_x(&self, tick: u32) -> f64 {
-        let span = self
-            .viewport
-            .last_tick
-            .saturating_sub(self.viewport.first_tick)
-            .max(1);
-        let tick = tick.clamp(self.viewport.first_tick, self.viewport.last_tick);
-        self.lane_left
-            + (self.lane_right - self.lane_left)
-                * f64::from(tick.saturating_sub(self.viewport.first_tick))
-                / f64::from(span)
-    }
-
-    /// The bezier editor popover, anchored under the easing buttons.
-    pub fn bezier_editor(&self) -> Option<Rect> {
-        if self.transport.width < CUSTOM_MIN_WIDTH
-            || self.rows.height < BEZIER_EDITOR_H
-            || self.panel.width < BEZIER_EDITOR_W
-        {
-            return None;
-        }
-        let max_x = self.panel.x + self.panel.width - BEZIER_EDITOR_W;
-        Some(rect(
-            self.transport.x.saturating_add(EASE_START).min(max_x),
-            self.rows.y,
-            BEZIER_EDITOR_W,
-            BEZIER_EDITOR_H,
-        ))
-    }
-
-    pub fn bezier_preview(&self) -> Option<Rect> {
-        let e = self.bezier_editor()?;
-        Some(rect(e.x + 8, e.y + 8, 72, 72))
-    }
-
-    /// Stepper row `field` (0..4): value text and minus / plus buttons.
-    pub fn bezier_step_rect(&self, field: u8, up: bool) -> Option<Rect> {
-        let e = self.bezier_editor()?;
-        let y = e.y + 8 + u32::from(field.min(3)) * 20;
-        let x = if up {
-            e.x + 92 + 20 + 44
-        } else {
-            e.x + 92 + 20
-        };
-        Some(rect(x, y, 20, 18))
-    }
-
-    pub fn bezier_value_rect(&self, field: u8) -> Option<Rect> {
-        let e = self.bezier_editor()?;
-        Some(rect(
-            e.x + 132,
-            e.y + 8 + u32::from(field.min(3)) * 20,
-            44,
-            18,
-        ))
-    }
-
-    pub fn bezier_apply_rect(&self) -> Option<Rect> {
-        let e = self.bezier_editor()?;
-        Some(rect(e.x + 92, e.y + 8 + 4 * 20 + 2, 84, 20))
-    }
-
-    /// Hit inside the open editor; `None` outside it.
-    pub fn bezier_hit(&self, x: i32, y: i32) -> Option<Hit> {
-        let e = self.bezier_editor()?;
-        if !inside(e, x, y) {
-            return None;
-        }
-        for field in 0..4u8 {
-            for up in [false, true] {
-                if self
-                    .bezier_step_rect(field, up)
-                    .is_some_and(|r| inside(r, x, y))
-                {
-                    return Some(Hit::BezierStep { field, up });
-                }
-            }
-        }
-        if self.bezier_apply_rect().is_some_and(|r| inside(r, x, y)) {
-            return Some(Hit::BezierApply);
-        }
-        Some(Hit::BezierPanel)
-    }
-
-    pub fn mode_selector(&self) -> Rect {
-        rect(
-            self.transport.x.saturating_add(8),
-            self.transport
-                .y
-                .saturating_add(self.transport.height.saturating_sub(24) / 2),
-            MODE_SELECTOR_WIDTH.min(self.transport.width.saturating_sub(16)),
-            24.min(self.transport.height),
-        )
-    }
-
-    pub fn tick_at(&self, x: i32) -> u32 {
-        let span = self
-            .viewport
-            .last_tick
-            .saturating_sub(self.viewport.first_tick);
-        if span == 0 || self.lane_right <= self.lane_left {
-            return self.viewport.first_tick;
-        }
-        let fraction = (f64::from(x) - self.lane_left) / (self.lane_right - self.lane_left);
-        let offset = (fraction.clamp(0.0, 1.0) * f64::from(span)).round() as u32;
-        self.viewport.first_tick.saturating_add(offset)
-    }
-
-    pub fn row_rect(&self, index: usize) -> Rect {
-        let y = self
-            .rows
-            .y
-            .saturating_add((index as u32).saturating_mul(TRACK_HEIGHT));
-        let height = self
-            .rows
-            .y
-            .saturating_add(self.rows.height)
-            .saturating_sub(y)
-            .min(TRACK_HEIGHT);
-        rect(
-            self.rows.x,
-            y.min(self.rows.y.saturating_add(self.rows.height)),
-            self.rows.width,
-            height,
-        )
-    }
-
-    pub fn item_rect(&self, model: &TimelineModel, track: usize, item: usize) -> Option<Rect> {
-        let row = self.row_rect(track);
-        let tr = model.tracks.get(track)?;
-        let it = tr.items.get(item)?;
-        let x = self.lane_x(it.tick).round().max(0.0) as u32;
-        let next_tick = tr
-            .items
-            .get(item + 1)
-            .map_or(self.viewport.last_tick, |next| next.tick);
-        let right = self.lane_x(next_tick).round().max(0.0) as u32;
-        let left = self.lane_left.round().max(0.0) as u32;
-        let right_bound = self.lane_right.round().max(0.0) as u32;
-        let x = x.clamp(left, right_bound);
-        let width = match tr.kind {
-            super::NativeTrackKind::Drawing => right
-                .clamp(x.saturating_add(8).min(right_bound), right_bound)
-                .saturating_sub(x),
-            super::NativeTrackKind::Property => 12.min(right_bound.saturating_sub(x)),
-        };
-        Some(rect(
-            x,
-            row.y.saturating_add(5),
-            width,
-            row.height.saturating_sub(10),
-        ))
-    }
-
-    pub fn hit_test(&self, model: &TimelineModel, x: i32, y: i32) -> Hit {
-        if !inside(self.panel, x, y) {
-            return Hit::Empty;
-        }
-        if inside(self.transport, x, y) {
-            if let Some((_, track)) = model.selected_item().map(|(ti, _, tr, _)| (ti, tr)) {
-                if matches!(track.kind, super::NativeTrackKind::Property) {
-                    let start = self.transport.x.saturating_add(220);
-                    let local = (x as u32).saturating_sub(start);
-                    let eases = ["linear", "ease_in", "ease_out", "ease_in_out", "step"];
-                    if self.transport.width >= 380 && local < 5 * 28 {
-                        return Hit::Ease(eases[(local / 28) as usize]);
-                    }
-                    if self.transport.width >= CUSTOM_MIN_WIDTH
-                        && (5 * 28..5 * 28 + 26).contains(&local)
-                    {
-                        return Hit::EaseCustom;
-                    }
-                }
-            }
-            let selector = self.mode_selector();
-            if inside(selector, x, y) {
-                let local_x = x.saturating_sub(selector.x as i32).max(0) as u32;
-                if local_x < selector.width / 2 {
-                    return Hit::ModeNative;
-                }
-                return Hit::ModeSmil;
-            }
-            if let Some((hit, _)) = self
-                .control_rects()
-                .into_iter()
-                .find(|(_, r)| inside(*r, x, y))
-            {
-                return hit;
-            }
-            return Hit::Empty;
-        }
-        if inside(self.ruler, x, y) {
-            return Hit::Ruler;
-        }
-        if inside(self.rows, x, y) {
-            let index = ((y as u32).saturating_sub(self.rows.y) / TRACK_HEIGHT) as usize;
-            let Some(track) = model.tracks.get(index) else {
-                return Hit::Empty;
-            };
-            let row = self.row_rect(index);
-            if x >= row.x.saturating_add(row.width).saturating_sub(48) as i32 {
-                return if x >= row.x.saturating_add(row.width).saturating_sub(24) as i32 {
-                    Hit::DeleteTrack(index)
-                } else {
-                    Hit::DuplicateTrack(index)
-                };
-            }
-            if x < (self
-                .panel
-                .x
-                .saturating_add(self.name_width)
-                .saturating_sub(26)) as i32
-            {
-                return Hit::Track(index);
-            }
-            if x < self.lane_left as i32 {
-                return Hit::Visibility(index);
-            }
-            for item in 0..track.items.len() {
-                if self
-                    .item_rect(model, index, item)
-                    .is_some_and(|r| inside(r, x, y))
-                {
-                    return Hit::Item { track: index, item };
-                }
-            }
-            return Hit::Lane(index);
-        }
-        Hit::Empty
-    }
-}
-
-fn inside(r: Rect, x: i32, y: i32) -> bool {
-    x >= r.x as i32
-        && y >= r.y as i32
-        && x < r.x.saturating_add(r.width) as i32
-        && y < r.y.saturating_add(r.height) as i32
 }

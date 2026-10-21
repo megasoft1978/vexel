@@ -143,9 +143,11 @@ impl InteractionState {
                     | Hit::ImportDrawing => {
                         self.press = Some(Press::Button(hit));
                     }
-                    Hit::Ease(_) | Hit::EaseCustom | Hit::BezierStep { .. } | Hit::BezierApply => {
-                        self.press = Some(Press::Button(hit))
-                    }
+                    Hit::Ease(_)
+                    | Hit::EaseCustom
+                    | Hit::BezierStep { .. }
+                    | Hit::BezierApply
+                    | Hit::BezierCancel => self.press = Some(Press::Button(hit)),
                     Hit::BezierPanel => {}
                     Hit::Ruler | Hit::Lane(_) => {
                         self.press = Some(Press::Seek);
@@ -247,6 +249,7 @@ impl InteractionState {
                             }
                         }
                         Hit::BezierStep { field, up } => self.bezier.step(field, up),
+                        Hit::BezierCancel => self.bezier.open = false,
                         Hit::BezierApply => {
                             if let Some((_, _, track, item)) = model.selected_item() {
                                 actions.push(NativeTimelineAction::SetPropertyKeyEase {
@@ -366,6 +369,7 @@ mod tests {
                 id: "body".into(),
                 name: "Body".into(),
                 target: "character".into(),
+                property: String::new(),
                 kind: NativeTrackKind::Drawing,
                 visible: true,
                 selected: true,

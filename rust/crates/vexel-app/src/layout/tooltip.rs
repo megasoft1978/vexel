@@ -15,15 +15,10 @@ const EDGE: u32 = 4;
 pub fn tooltip_rect(l: &Layout, target: Target) -> Option<Rect> {
     let (name, shortcut) = tooltip(target)?;
     let native_button = if let Target::NativeTimeline(hit) = target {
+        use crate::native_timeline::layout::{Hit, control_rect_in, ease_cell_in};
         let anchor = l.footer?;
-        if hit == crate::native_timeline::layout::Hit::EaseCustom {
-            let transport = crate::native_timeline::layout::TRANSPORT_HEIGHT;
-            let r = Rect {
-                x: anchor.x + crate::native_timeline::layout::EASE_START + 5 * 28,
-                y: anchor.y + (transport.saturating_sub(24) / 2),
-                width: 26.min(anchor.width),
-                height: 24.min(anchor.height),
-            };
+        if hit == Hit::EaseCustom {
+            let r = ease_cell_in(anchor, 5)?;
             let (w, h) = tip_size(name, shortcut);
             let max_x = l.width.saturating_sub(w + EDGE).max(EDGE);
             let max_y = l.height.saturating_sub(h + EDGE).max(EDGE);
@@ -34,27 +29,7 @@ pub fn tooltip_rect(l: &Layout, target: Target) -> Option<Rect> {
                 height: h,
             });
         }
-        let size = crate::native_timeline::layout::CONTROL_SIZE;
-        let gap = 4;
-        let index = match hit {
-            crate::native_timeline::layout::Hit::Play => 0,
-            crate::native_timeline::layout::Hit::Loop => 1,
-            crate::native_timeline::layout::Hit::OnionBefore => 2,
-            crate::native_timeline::layout::Hit::AddDrawingTrack => 3,
-            crate::native_timeline::layout::Hit::ImportDrawing => 4,
-            _ => return None,
-        };
-        let transport = crate::native_timeline::layout::TRANSPORT_HEIGHT;
-        let button = Rect {
-            x: anchor.x
-                + crate::native_timeline::layout::MODE_SELECTOR_WIDTH
-                + 8
-                + index * (size + gap),
-            y: anchor.y + (transport.saturating_sub(size) / 2),
-            width: size.min(anchor.width),
-            height: size.min(anchor.height),
-        };
-        Some(button)
+        Some(control_rect_in(anchor, hit)?)
     } else {
         None
     };

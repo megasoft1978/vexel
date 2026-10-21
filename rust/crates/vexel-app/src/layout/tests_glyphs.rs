@@ -36,6 +36,23 @@ fn painted_label_sources_are_ascii() {
             "native_timeline/paint.rs",
             include_str!("../native_timeline/paint.rs"),
         ),
+        (
+            "native_timeline/paint_transport.rs",
+            include_str!("../native_timeline/paint_transport.rs"),
+        ),
+        (
+            "native_timeline/paint_tracks.rs",
+            include_str!("../native_timeline/paint_tracks.rs"),
+        ),
+        (
+            "native_timeline/paint_bezier.rs",
+            include_str!("../native_timeline/paint_bezier.rs"),
+        ),
+        (
+            "native_timeline/naming.rs",
+            include_str!("../native_timeline/naming.rs"),
+        ),
+        ("ui_kit.rs", include_str!("../ui_kit.rs")),
         ("inspector_ext.rs", include_str!("../inspector_ext.rs")),
         ("inspector.rs", include_str!("../inspector.rs")),
         ("layout/paint.rs", include_str!("paint.rs")),

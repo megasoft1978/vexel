@@ -104,6 +104,10 @@ impl NativeAnimationController {
                     })
                     .unwrap_or_else(|| id.clone()),
                 target,
+                property: track
+                    .property
+                    .and_then(decode_timeline_string)
+                    .unwrap_or_default(),
                 kind,
                 visible: track.visible,
                 selected: self.selected_track.as_deref() == Some(id.as_str()),
