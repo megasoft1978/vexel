@@ -3,10 +3,10 @@
 //! Every mutation is one editor history entry. Attribute edits splice only the
 //! targeted start-tag bytes; nothing else is re-serialized.
 
-use crate::{V1Document, V1DocumentError, numeric_text, path_data, validate_stable_id};
+use crate::{numeric_text, path_data, validate_stable_id, V1Document, V1DocumentError};
 use vexel_document_edit::{
-    DocumentHandle, HistoryAction, SourceSpan, TemplateAttribute, TemplateKind,
-    document_view_first_child, document_view_next_sibling, encode_attribute,
+    document_view_first_child, document_view_next_sibling, encode_attribute, DocumentHandle,
+    HistoryAction, SourceSpan, TemplateAttribute, TemplateKind,
 };
 
 /// Distance, in document units, added around line and path geometry by
@@ -79,7 +79,7 @@ fn check_coordinate(value: f64) -> Result<(), V1DocumentError> {
     }
 }
 
-fn parse_number(raw: &[u8]) -> Option<f64> {
+pub(super) fn parse_number(raw: &[u8]) -> Option<f64> {
     if raw.is_empty()
         || !raw
             .iter()
@@ -95,7 +95,7 @@ fn parse_number(raw: &[u8]) -> Option<f64> {
 }
 
 /// Accepts exactly one `translate(x)` or `translate(x y)` (comma or space separated).
-fn parse_translate(raw: &[u8]) -> Option<(f64, f64)> {
+pub(super) fn parse_translate(raw: &[u8]) -> Option<(f64, f64)> {
     let text = std::str::from_utf8(raw).ok()?.trim();
     let inner = text
         .strip_prefix("translate")?
@@ -132,59 +132,6 @@ fn distance_to_segment(px: f64, py: f64, (ax, ay, bx, by): (f64, f64, f64, f64))
 }
 
 impl V1Document {
-    /// Returns the editable geometry bounds of a simple shape or path in document space.
-    pub fn geometry_bounds(&self, id: &str) -> Result<(f64, f64, f64, f64), V1DocumentError> {
-        let node = self.shape(id)?;
-        let number = |name: &[u8], default: f64| match self.raw_attr(node, name) {
-            None => Ok(default),
-            Some(raw) => parse_number(raw).ok_or(V1DocumentError::InvalidGeometry),
-        };
-        let mut bounds = match self.kind_of(node) {
-            ElementKind::Rect => {
-                let (x, y, w, h) = (
-                    number(b"x", 0.0)?,
-                    number(b"y", 0.0)?,
-                    number(b"width", 0.0)?,
-                    number(b"height", 0.0)?,
-                );
-                (x, y, x + w, y + h)
-            }
-            ElementKind::Ellipse => {
-                let (cx, cy) = (number(b"cx", 0.0)?, number(b"cy", 0.0)?);
-                let (rx, ry) = (number(b"rx", 0.0)?, number(b"ry", 0.0)?);
-                (cx - rx, cy - ry, cx + rx, cy + ry)
-            }
-            ElementKind::Circle => return Err(V1DocumentError::Unsupported),
-            ElementKind::Line => {
-                let (x1, y1, x2, y2) = (
-                    number(b"x1", 0.0)?,
-                    number(b"y1", 0.0)?,
-                    number(b"x2", 0.0)?,
-                    number(b"y2", 0.0)?,
-                );
-                (x1.min(x2), y1.min(y2), x1.max(x2), y1.max(y2))
-            }
-            ElementKind::Path => {
-                let segments = path_data::parse(
-                    self.raw_attr(node, b"d")
-                        .ok_or(V1DocumentError::InvalidPathData)?,
-                )?;
-                path_data::bounds(&segments).ok_or(V1DocumentError::InvalidPathData)?
-            }
-            ElementKind::Group | ElementKind::Text | ElementKind::Other => {
-                return Err(V1DocumentError::Unsupported);
-            }
-        };
-        if let Some(raw) = self.raw_attr(node, b"transform") {
-            let (tx, ty) = parse_translate(raw).ok_or(V1DocumentError::UnsupportedTransform)?;
-            bounds.0 += tx;
-            bounds.1 += ty;
-            bounds.2 += tx;
-            bounds.3 += ty;
-        }
-        Ok(bounds)
-    }
-
     /// Resizes a shape to the requested document-space bounds in one undoable edit.
     pub fn resize_to_bounds(
         &mut self,
@@ -199,6 +146,9 @@ impl V1Document {
         }
         let node = self.shape(id)?;
         let kind = self.kind_of(node);
+        if kind == ElementKind::Group {
+            return Err(V1DocumentError::Unsupported);
+        }
         if bounds.2 - bounds.0 < 0.1 || bounds.3 - bounds.1 < 0.1 {
             if kind != ElementKind::Line {
                 return Err(V1DocumentError::InvalidGeometry);
@@ -449,6 +399,9 @@ impl V1Document {
     pub fn set_fill(&mut self, id: &str, colour: &str) -> Result<(), V1DocumentError> {
         check_color(colour)?;
         let node = self.shape(id)?;
+        if self.kind_of(node) == ElementKind::Group {
+            return Err(V1DocumentError::Unsupported);
+        }
         self.patch(
             node,
             &[(b"fill", colour.as_bytes().to_vec())],
@@ -466,6 +419,9 @@ impl V1Document {
         check_color(colour)?;
         check_width(width)?;
         let node = self.shape(id)?;
+        if self.kind_of(node) == ElementKind::Group {
+            return Err(V1DocumentError::Unsupported);
+        }
         let width = numeric_text(width)?;
         self.patch(
             node,
@@ -492,7 +448,7 @@ impl V1Document {
         check_coordinate(dy)?;
         let node = self.find_node(id)?;
         let kind = self.kind_of(node);
-        if kind == ElementKind::Other {
+        if matches!(kind, ElementKind::Other | ElementKind::Text) {
             return Err(V1DocumentError::Unsupported);
         }
         let (tx, ty) = match self.raw_attr(node, b"transform") {
@@ -507,6 +463,15 @@ impl V1Document {
         };
         let mut edits: Vec<(&[u8], Vec<u8>)> = Vec::new();
         if kind == ElementKind::Path {
+            let (nx, ny) = (tx + dx, ty + dy);
+            check_coordinate(nx)?;
+            check_coordinate(ny)?;
+            edits.push((
+                b"transform",
+                format!("translate({} {})", plain(nx), plain(ny)).into_bytes(),
+            ));
+        }
+        if kind == ElementKind::Group {
             let (nx, ny) = (tx + dx, ty + dy);
             check_coordinate(nx)?;
             check_coordinate(ny)?;
@@ -617,7 +582,19 @@ impl V1Document {
                 let margin = HIT_TOLERANCE + half;
                 px >= x0 - margin && px <= x1 + margin && py >= y0 - margin && py <= y1 + margin
             }
-            ElementKind::Group | ElementKind::Text | ElementKind::Other => false,
+            ElementKind::Group => {
+                let model = self.editor.try_model().ok()?;
+                let mut child = document_view_first_child(model, node);
+                let mut topmost = None;
+                while let Some(item) = child {
+                    if let Some(id) = self.hit_id(item, px, py) {
+                        topmost = Some(id);
+                    }
+                    child = document_view_next_sibling(model, item);
+                }
+                return topmost;
+            }
+            ElementKind::Text | ElementKind::Other => false,
         };
         if !inside {
             return None;
@@ -625,31 +602,28 @@ impl V1Document {
         std::str::from_utf8(id).ok().map(str::to_owned)
     }
 
-    fn find_node(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
+    pub(super) fn find_node(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
         validate_stable_id(id)?;
         self.editor
             .try_find_id(id.as_bytes())?
             .ok_or(V1DocumentError::MissingStableId)
     }
 
-    fn shape(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
+    pub(super) fn shape(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
         let node = self.find_node(id)?;
-        if matches!(
-            self.kind_of(node),
-            ElementKind::Other | ElementKind::Group | ElementKind::Text
-        ) {
+        if matches!(self.kind_of(node), ElementKind::Other | ElementKind::Text) {
             return Err(V1DocumentError::Unsupported);
         }
         Ok(node)
     }
 
-    fn kind_of(&self, node: DocumentHandle) -> ElementKind {
+    pub(super) fn kind_of(&self, node: DocumentHandle) -> ElementKind {
         self.editor
             .tag_name(node)
             .map_or(ElementKind::Other, ElementKind::from_tag)
     }
 
-    fn raw_attr(&self, node: DocumentHandle, name: &[u8]) -> Option<&[u8]> {
+    pub(super) fn raw_attr(&self, node: DocumentHandle, name: &[u8]) -> Option<&[u8]> {
         (0..self.editor.attribute_count(node)).find_map(|index| {
             let attribute = self.editor.attribute_at(node, index)?;
             (self.editor.span_bytes(attribute.name)? == name)
