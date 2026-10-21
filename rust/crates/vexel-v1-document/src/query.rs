@@ -2,7 +2,7 @@
 
 use crate::{ElementKind, V1Document, V1DocumentError};
 use vexel_document_edit::{
-    document_view_first_child, document_view_next_sibling, DocumentHandle, Editor,
+    DocumentHandle, Editor, document_view_first_child, document_view_next_sibling,
 };
 
 const MAX_ATTRIBUTE_COUNT: usize = 64;

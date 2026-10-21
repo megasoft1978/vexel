@@ -1,6 +1,6 @@
 //! attribute_remove and text_set routed onto the live document.
 
-use super::{PreviewArgumentError, DOCUMENT_ID};
+use super::{DOCUMENT_ID, PreviewArgumentError};
 use crate::project_session::SessionEditError;
 use crate::session::{AppDocument, McpOutcome};
 use vexel_json::{JsonDocument, JsonType};

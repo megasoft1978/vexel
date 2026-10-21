@@ -1,10 +1,10 @@
 //! Source-preserving tree edits for V1 documents.
 
-use crate::{path_data, ElementKind, V1Document, V1DocumentError};
+use crate::{ElementKind, V1Document, V1DocumentError, path_data};
 use std::sync::Arc;
 use vexel_document_edit::{
-    document_view_first_child, document_view_next_sibling, encode_attribute, EditLimits, Editor,
-    SourceSpan,
+    EditLimits, Editor, SourceSpan, document_view_first_child, document_view_next_sibling,
+    encode_attribute,
 };
 
 /// Sibling z-order movement.

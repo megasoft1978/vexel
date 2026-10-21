@@ -12,8 +12,8 @@ use crate::animation::driver::Driver;
 use crate::animation::native_export::NativeExportSource;
 use crate::animation::playback::LoopClock;
 use crate::preview::{
-    animation_list_json, document_duration, object_id, validate_animation_fragment, validate_shape,
-    Control, Operation, Shape, DOCUMENT_ID, SCENE_LIMIT,
+    Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
+    object_id, validate_animation_fragment, validate_shape,
 };
 use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;

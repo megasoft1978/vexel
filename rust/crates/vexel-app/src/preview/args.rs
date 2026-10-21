@@ -3,8 +3,8 @@
 //! operations that already passed these bounds.
 
 use super::{
-    number_field, parse_color, string_field, validate_shape, AttributeChange, JsonDocument,
-    JsonType, Operation, PreviewArgumentError, Shape,
+    AttributeChange, JsonDocument, JsonType, Operation, PreviewArgumentError, Shape, number_field,
+    parse_color, string_field, validate_shape,
 };
 
 pub(super) fn rejected_element_add_attribute(template: &str, key: &str) -> String {

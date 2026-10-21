@@ -3,8 +3,8 @@
 //! (one undo entry, dirty, `revision` bumped); every rejection leaves the
 //! source bytes, history and revision untouched.
 
-use super::mcp::{source, McpHost, McpOutcome};
 use super::AppDocument;
+use super::mcp::{McpHost, McpOutcome, source};
 use crate::preview::{AttributeChange, DOCUMENT_ID};
 use crate::project_session::{SessionEditError, SessionError};
 use std::ffi::OsStr;
