@@ -19,6 +19,7 @@ use vexel_v1_document::{
 pub const OPACITY_STEP: f64 = 0.1;
 pub const ANGLE_STEP: f64 = 15.0;
 pub const SCALE_STEP: f64 = 0.1;
+pub const PIVOT_STEP: f64 = 1.0;
 const SCALE_MAX: f64 = 10.0;
 const FALLBACK_STOP: [u8; 3] = [0x1f, 0x29, 0x37];
 const WHITE: [u8; 3] = [0xff, 0xff, 0xff];
@@ -35,6 +36,10 @@ fn label(control: ExtControl) -> &'static str {
         ExtControl::AngleDown | ExtControl::AngleUp => "Changed gradient angle",
         ExtControl::Dash(_) => "Changed stroke style",
         ExtControl::RotateDown | ExtControl::RotateUp => "Rotated shape",
+        ExtControl::PivotXDown
+        | ExtControl::PivotXUp
+        | ExtControl::PivotYDown
+        | ExtControl::PivotYUp => "Moved pivot",
         _ => "Scaled shape",
     }
 }
@@ -78,6 +83,18 @@ pub fn apply(doc: &mut V1Document, id: &str, control: ExtControl) -> Edit {
         ExtControl::ScaleXUp => transform(doc, id, &cur, |p| p.scale.0 = step(p.scale.0, 1.0))?,
         ExtControl::ScaleYDown => transform(doc, id, &cur, |p| p.scale.1 = step(p.scale.1, -1.0))?,
         ExtControl::ScaleYUp => transform(doc, id, &cur, |p| p.scale.1 = step(p.scale.1, 1.0))?,
+        ExtControl::PivotXDown => transform(doc, id, &cur, |p| {
+            p.pivot.0 = round_to(p.pivot.0 - PIVOT_STEP, 3)
+        })?,
+        ExtControl::PivotXUp => transform(doc, id, &cur, |p| {
+            p.pivot.0 = round_to(p.pivot.0 + PIVOT_STEP, 3)
+        })?,
+        ExtControl::PivotYDown => transform(doc, id, &cur, |p| {
+            p.pivot.1 = round_to(p.pivot.1 - PIVOT_STEP, 3)
+        })?,
+        ExtControl::PivotYUp => transform(doc, id, &cur, |p| {
+            p.pivot.1 = round_to(p.pivot.1 + PIVOT_STEP, 3)
+        })?,
     };
     Ok(changed.then_some(done))
 }

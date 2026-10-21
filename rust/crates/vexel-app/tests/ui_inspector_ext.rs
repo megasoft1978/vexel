@@ -266,6 +266,61 @@ fn rotation_and_scale_apply_about_the_bounds_centre_and_repeat() {
 }
 
 #[test]
+fn pivot_edits_move_the_rotation_centre_undoably() {
+    let (mut shell, mut tools) = rig();
+    press(&mut shell, &mut tools, ExtControl::RotateUp);
+    assert_eq!(ExtControl::PivotXUp.tip(), ("Pivot X", "+1"));
+    let src = press_undoable(&mut shell, &mut tools, ExtControl::PivotXUp);
+    assert!(src.contains("transform=\"matrix("), "{src}");
+    assert_eq!(shell.model.status, "Redid change");
+    let TransformView::Parts(p) = ext(&shell).transform else {
+        panic!("pivot decomposes");
+    };
+    assert_eq!((p.rotation, p.scale), (15.0, (1.0, 1.0)));
+    let near = |a: (f64, f64), b: (f64, f64)| (a.0 - b.0).abs() < 1e-6 && (a.1 - b.1).abs() < 1e-6;
+    assert!(
+        near(p.pivot, (21.0, 25.0)),
+        "pivot reads back: {:?}",
+        p.pivot
+    );
+    assert_eq!(p.translate, (0.0, 0.0));
+    // Rotation is about (21, 25) now: that point maps to itself, the old
+    // centre (20, 25) no longer does.
+    let m = shell
+        .files
+        .document()
+        .document()
+        .get_transform_matrix(ID)
+        .unwrap();
+    let (s, c) = 15f64.to_radians().sin_cos();
+    let want = [
+        c,
+        s,
+        -s,
+        c,
+        21.0 - (21.0 * c - 25.0 * s),
+        25.0 - (21.0 * s + 25.0 * c),
+    ];
+    for (got, want) in m.iter().zip(want) {
+        assert!((got - want).abs() < 1e-4, "{m:?} vs {want:?}");
+    }
+    let at = |x: f64, y: f64| (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]);
+    let (fx, fy) = at(21.0, 25.0);
+    assert!(
+        (fx - 21.0).abs() < 1e-6 && (fy - 25.0).abs() < 1e-6,
+        "{m:?}"
+    );
+    assert!(at(20.0, 25.0).0 > 20.0 + 1e-3, "old centre moved");
+    press(&mut shell, &mut tools, ExtControl::PivotYDown);
+    assert_eq!(shell.model.status, "Moved pivot");
+    let TransformView::Parts(p) = ext(&shell).transform else {
+        panic!("decomposes");
+    };
+    assert!(near(p.pivot, (21.0, 24.0)), "{:?}", p.pivot);
+    assert_eq!(p.rotation, 15.0);
+}
+
+#[test]
 fn scale_never_lands_on_zero_and_rotation_wraps() {
     assert_eq!(normalize_degrees(190.0), -170.0);
     assert_eq!(normalize_degrees(-180.0), 180.0);

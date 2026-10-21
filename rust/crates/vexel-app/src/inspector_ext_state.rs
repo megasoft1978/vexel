@@ -201,11 +201,18 @@ fn read_transform(doc: &V1Document, id: &str, info: &ElementInfo) -> TransformVi
     })
 }
 
-/// The pivot the rows start from: centre of the element's own bounds, else
-/// the matrix's fixed point, else the origin. Any choice reproduces the
-/// matrix; the leftover shows up as `translate`.
+/// The pivot the rows show. A rotate/scale that is well conditioned has a
+/// fixed point, which is the pivot it was written with: that way an edited
+/// pivot reads back and `translate` comes out zero. Otherwise (no rotate or
+/// scale) the element's bounds centre, else its local centre, else the
+/// origin, with any leftover shown as `translate`.
 fn pivot_for(info: &ElementInfo, m: [f64; 6]) -> (f64, f64) {
     let [a, b, c, d, e, f] = m;
+    let (p, q, r, s) = (1.0 - a, -c, -b, 1.0 - d);
+    let det = p * s - q * r;
+    if det.abs() > 1e-3 {
+        return ((s * e - q * f) / det, (-r * e + p * f) / det);
+    }
     let identity_linear =
         (a - 1.0).abs() < 1e-12 && b.abs() < 1e-12 && c.abs() < 1e-12 && (d - 1.0).abs() < 1e-12;
     // Bounds are only reported for no transform or a pure `translate(..)`.
@@ -215,8 +222,6 @@ fn pivot_for(info: &ElementInfo, m: [f64; 6]) -> (f64, f64) {
     if let Some(centre) = local_centre(info) {
         return centre;
     }
-    let (p, q, r, s) = (1.0 - a, -c, -b, 1.0 - d);
-    let det = p * s - q * r;
     if det.abs() > 1e-9 {
         return ((s * e - q * f) / det, (-r * e + p * f) / det);
     }
