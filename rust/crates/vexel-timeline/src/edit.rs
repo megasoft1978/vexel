@@ -7,7 +7,7 @@ mod ops_ext;
 #[cfg(test)]
 mod visibility_tests;
 
-use crate::{AssetRef, DecodeFailure, Error, LoopMode, MAX_SOURCE_BYTES, TimelineContext, decode};
+use crate::{decode, AssetRef, DecodeFailure, Error, LoopMode, TimelineContext, MAX_SOURCE_BYTES};
 use std::sync::Arc;
 
 pub const DEFAULT_HISTORY_COMMANDS: usize = 16;
@@ -44,7 +44,7 @@ impl From<DecodeFailure> for EditFailure {
 }
 pub type EditResult<T = ()> = Result<T, EditFailure>;
 
-pub use initialize::{EmptyTimelineSettings, initialize_empty_timeline};
+pub use initialize::{initialize_empty_timeline, EmptyTimelineSettings};
 
 /// Owns source snapshots. Editor methods require exclusive access; cloned leases
 /// are immutable, `Send + Sync`, and remain valid after history eviction/drop.
@@ -287,6 +287,58 @@ impl TimelineEdit {
         visible: bool,
     ) -> EditResult {
         ops::set_track_visibility(self, context, track_id, visible)
+    }
+    pub fn remove_property_key(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        tick: u32,
+    ) -> EditResult {
+        ops_ext::remove_property_key(self, context, track_id, tick)
+    }
+    pub fn move_property_key(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        from_tick: u32,
+        to_tick: u32,
+    ) -> EditResult {
+        ops_ext::move_property_key(self, context, track_id, from_tick, to_tick)
+    }
+    pub fn remove_track(&mut self, context: &TimelineContext, track_id: &[u8]) -> EditResult {
+        ops_ext::remove_track(self, context, track_id)
+    }
+    pub fn rename_track(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        new_name: &[u8],
+    ) -> EditResult {
+        ops_ext::rename_track(self, context, track_id, new_name)
+    }
+    pub fn duplicate_track(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        new_track_id: &[u8],
+    ) -> EditResult {
+        ops_ext::duplicate_track(self, context, track_id, new_track_id)
+    }
+    pub fn set_track_interpolation(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        interpolation: &[u8],
+    ) -> EditResult {
+        ops_ext::set_track_interpolation(self, context, track_id, interpolation)
+    }
+    pub fn reorder_track(
+        &mut self,
+        context: &TimelineContext,
+        track_id: &[u8],
+        new_index: usize,
+    ) -> EditResult {
+        ops_ext::reorder_track(self, context, track_id, new_index)
     }
 }
 
