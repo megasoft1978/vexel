@@ -18,6 +18,9 @@ objc2-core-text = { version = "=0.3.2", default-features = false, features = ["C
 objc2-metal = { version = "=0.3.2", default-features = false, features = ["MTLBlitCommandEncoder", "MTLCommandBuffer", "MTLCommandEncoder", "MTLCommandQueue", "MTLDevice", "MTLDrawable", "MTLLibrary", "MTLPixelFormat", "MTLRenderCommandEncoder", "MTLRenderPass", "MTLRenderPipeline", "MTLResource", "MTLTexture", "MTLTypes", "block2", "std"] }
 objc2-quartz-core = { version = "=0.3.2", default-features = false, features = ["CALayer", "CAMediaTiming", "CAMetalLayer", "objc2-core-foundation", "objc2-core-graphics", "objc2-metal", "std"] }
 objc2-image-io = { version = "=0.3.2", default-features = false, features = ["CGImageDestination", "CGImageProperties", "CGImageSource", "objc2", "objc2-core-graphics", "std"] }
+objc2-core-media = { version = "=0.3.2", default-features = false, features = ["CMTime", "CMSampleBuffer", "CMFormatDescription", "objc2", "objc2-core-video", "std"] }
+objc2-core-video = { version = "=0.3.2", default-features = false, features = ["CVBase", "CVBuffer", "CVImageBuffer", "CVPixelBuffer", "CVReturn", "objc2", "std"] }
+objc2-av-foundation = { version = "=0.3.2", default-features = false, features = ["AVAsset", "AVAssetTrack", "AVAssetReader", "AVAssetReaderOutput", "AVAssetWriter", "AVAssetWriterInput", "AVMediaFormat", "AVVideoSettings", "block2", "objc2-core-foundation", "objc2-core-media", "objc2-core-video", "std"] }
 bitflags = { version = "=2.13.2", default-features = false }
 objc2-exception-helper = { version = "=0.1.1", default-features = false }
 
