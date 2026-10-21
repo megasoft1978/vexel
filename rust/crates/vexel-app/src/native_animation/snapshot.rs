@@ -29,6 +29,7 @@ impl NativeAnimationController {
             )));
         }
         let candidate = self.candidate.as_ref().expect("candidate was just loaded");
+        let decode = crate::profile::phase("native.snapshot.view");
         let view = match candidate.view() {
             Ok(view) => view,
             Err(error) => {
@@ -38,6 +39,8 @@ impl NativeAnimationController {
             }
         };
 
+        drop(decode);
+        let _build = crate::profile::phase("native.snapshot.build");
         let (onion_before, onion_after, onion_opacity) = view.onion();
         let duration_ticks = view.duration_ticks().max(1);
         self.current_tick = self.current_tick.min(duration_ticks - 1);
@@ -60,8 +63,9 @@ impl NativeAnimationController {
                 NativeTrackKind::Property
             };
             let mut items = Vec::with_capacity(track.item_count);
-            for item_index in 0..track.item_count {
-                if let Some(item) = view.item_at(track_index, item_index) {
+            let mut cursor = vexel_timeline::TimelineIterator::default();
+            for _ in 0..track.item_count {
+                if let Some(item) = view.item_next(track_index, &mut cursor) {
                     let label = match item.asset {
                         Some(asset) => {
                             decode_timeline_string(asset).expect("validated timeline asset name")

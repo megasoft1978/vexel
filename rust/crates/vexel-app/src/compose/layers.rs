@@ -62,6 +62,10 @@ pub(crate) fn composite_tile(
             return Err(RenderError::Cancelled);
         }
         for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
+            // A transparent source pixel never changes the destination.
+            if src[3] == 0 {
+                continue;
+            }
             let alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
             if alpha <= 0.0 {
                 continue;
