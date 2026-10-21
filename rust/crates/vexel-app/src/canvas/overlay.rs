@@ -1,7 +1,7 @@
 //! Hover and selection outlines and resize handles, drawn in view space so
 //! lines keep their width at any zoom. Rects are device pixels `(x0, y0, x1, y1)`.
 
-use super::surface::{rgb, Surface};
+use super::surface::{Surface, rgb};
 
 pub type DeviceRect = (f64, f64, f64, f64);
 

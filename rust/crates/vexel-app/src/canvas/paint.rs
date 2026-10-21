@@ -7,7 +7,7 @@
 use super::map::Bounds;
 use super::overlay::{self, DeviceRect};
 use super::size::{artboard_pixels, frame_matches};
-use super::surface::{rgb, Clip, Surface};
+use super::surface::{Clip, Surface, rgb};
 use super::view::View;
 use crate::compose::Frame;
 use vexel_ui::{Rect, Tokens};

@@ -80,21 +80,16 @@ fn original_nine_invalid_paint_values_keep_exact_offsets() {
 }
 #[test]
 fn original_height_and_transform_diagnostics() {
-    for (source, marker, kind) in [
-        (
-            "<svg width=\"16\" height=\"bad\"/>",
-            "bad",
-            ErrorKind::Number,
-        ),
-        (
-            "<svg width=\"16\" height=\"5000\"/>",
-            "5000",
-            ErrorKind::Viewport,
-        ),
-    ] {
+    for (source, marker, kind) in [(
+        "<svg width=\"16\" height=\"bad\"/>",
+        "bad",
+        ErrorKind::Number,
+    )] {
         let e = decode(source).unwrap_err();
         assert_eq!((e.kind, e.offset), (kind, source.find(marker).unwrap()));
     }
+    // Oversized declared height is clamped to the 4096 px output cap, not refused.
+    assert!(decode("<svg width=\"16\" height=\"5000\"/>").is_ok());
     let e = decode(INPUT_3).unwrap_err();
     assert_eq!(
         (e.kind, e.offset),

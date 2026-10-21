@@ -5,7 +5,7 @@
 //! scroll (pan), Space+drag (pan), Cmd+0 (fit), Cmd+1 (100%), Cmd+= / Cmd+-
 //! (zoom step), the zoom cluster, and hover outlines for the select tool.
 
-use super::controls::{controls, ControlKind};
+use super::controls::{ControlKind, controls};
 use crate::compose::DocumentView;
 use vexel_platform_apple::{Modifiers, PointerKind, WindowEvent};
 use vexel_ui::Rect;

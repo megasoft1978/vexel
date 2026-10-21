@@ -105,7 +105,7 @@ fn doc_bounds(shape: &OwnedShape) -> Option<Bounds> {
 
 #[cfg(test)]
 mod tests {
-    use super::{doc_bounds, Bounds};
+    use super::{Bounds, doc_bounds};
     use crate::compose::compose_document;
     use vexel_geometry::affine_identity;
     use vexel_render::GradientRef;

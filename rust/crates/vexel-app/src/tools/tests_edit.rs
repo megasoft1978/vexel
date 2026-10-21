@@ -1,7 +1,7 @@
 //! AC 3, 4, 5, 6, 7, 8 and routing: select/move/delete, recolour, preservation, reopen, bounds.
 
 use super::tests_support::*;
-use super::{stage_local, Key, Outcome, PointerInput, ScaleMap, ToolController, ToolError};
+use super::{Key, Outcome, PointerInput, ScaleMap, ToolController, ToolError, stage_local};
 use crate::model::Tool;
 use vexel_ui::Rect;
 use vexel_v1_document::{ElementKind, V1Document, V1DocumentError};
@@ -459,11 +459,13 @@ fn live_pointer_routing_is_limited_to_the_stage_rectangle() {
         ),
         None
     );
-    assert!(stage_local(
-        layout.stage,
-        (layout.stage.x as i32 + 5, layout.stage.y as i32 + 5)
-    )
-    .is_some());
+    assert!(
+        stage_local(
+            layout.stage,
+            (layout.stage.x as i32 + 5, layout.stage.y as i32 + 5)
+        )
+        .is_some()
+    );
 }
 
 #[test]
@@ -483,7 +485,9 @@ fn scale_map_rejects_invalid_parameters_and_out_of_artboard_points() {
 #[test]
 fn edit_shortcuts_group_duplicate_reorder_and_undo() {
     use super::EditKey;
-    let mut doc = with("<rect id=\"a\" x=\"10\" y=\"10\" width=\"20\" height=\"20\"/><rect id=\"b\" x=\"50\" y=\"10\" width=\"20\" height=\"20\"/>");
+    let mut doc = with(
+        "<rect id=\"a\" x=\"10\" y=\"10\" width=\"20\" height=\"20\"/><rect id=\"b\" x=\"50\" y=\"10\" width=\"20\" height=\"20\"/>",
+    );
     let mut c = ToolController::new();
     c.set_tool(Tool::Select);
     c.select_id(&doc, "a").unwrap();
@@ -546,9 +550,11 @@ fn rotation_affordance_previews_and_commits_one_transform_edit() {
     assert_eq!(doc.history_count(), count + 1);
     let after = doc.source().unwrap();
     doc.undo().unwrap();
-    assert!(!String::from_utf8(doc.source().unwrap())
-        .unwrap()
-        .contains("transform="));
+    assert!(
+        !String::from_utf8(doc.source().unwrap())
+            .unwrap()
+            .contains("transform=")
+    );
     doc.redo().unwrap();
     assert_eq!(doc.source().unwrap(), after);
 }

@@ -11,7 +11,7 @@ mod pen;
 mod shortcuts;
 
 pub use controller::{EditKey, Key, Outcome, PointerInput, ToolController, ToolError};
-pub use map::{stage_local, CanvasMap, ScaleMap};
+pub use map::{CanvasMap, ScaleMap, stage_local};
 pub use pen::MAX_PEN_VERTICES;
 pub use shortcuts::edit_tool_key;
 

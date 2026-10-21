@@ -1,9 +1,9 @@
 //! AC 1, 2 and 5: drawing gestures and the pen tool.
 
 use super::tests_support::*;
-use super::{CanvasMap, Key, Outcome, PointerInput, ScaleMap, ToolController, MAX_PEN_VERTICES};
+use super::{CanvasMap, Key, MAX_PEN_VERTICES, Outcome, PointerInput, ScaleMap, ToolController};
 use crate::model::Tool;
-use vexel_v1_document::{validate_path_data, V1Document, V1DocumentError};
+use vexel_v1_document::{V1Document, V1DocumentError, validate_path_data};
 
 fn controller(tool: Tool) -> ToolController {
     let mut c = ToolController::new();

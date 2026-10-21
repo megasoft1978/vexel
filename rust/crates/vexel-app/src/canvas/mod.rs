@@ -18,17 +18,17 @@ mod state;
 mod surface;
 mod view;
 
-pub use controls::{controls, paint_cluster, Control, ControlKind, Controls};
-pub use events::{handle_event, EventOutcome};
+pub use controls::{Control, ControlKind, Controls, controls, paint_cluster};
+pub use events::{EventOutcome, handle_event};
 pub use map::{Bounds, ViewMap};
 pub use natural::natural_size;
 pub use overlay::{
-    handle_points, handle_rect, HANDLE, HOVER_OPACITY, HOVER_WIDTH, SELECTION_WIDTH,
+    HANDLE, HOVER_OPACITY, HOVER_WIDTH, SELECTION_WIDTH, handle_points, handle_rect,
 };
 pub use paint::{
-    artboard_device_rect, over, paint_stage, well_fill, StagePaint, CHECKER, SHADOW_LAYERS,
+    CHECKER, SHADOW_LAYERS, StagePaint, artboard_device_rect, over, paint_stage, well_fill,
 };
 pub use rotate::{rotation_targets, snapped_rotation};
 pub use size::{artboard_pixels, frame_matches, target_compose_size};
 pub use state::CanvasState;
-pub use view::{percent_label, View, FIT_MARGIN, FIT_MAX_ZOOM, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP};
+pub use view::{FIT_MARGIN, FIT_MAX_ZOOM, MAX_ZOOM, MIN_ZOOM, View, ZOOM_STEP, percent_label};

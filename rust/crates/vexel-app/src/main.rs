@@ -28,7 +28,7 @@ use vexel_app::preview;
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{McpGrants, edit_shortcut};
 use vexel_app::toolbar_actions::{self, Exports};
-use vexel_app::tools::{edit_tool_key, Key, Outcome, PointerInput, ToolController};
+use vexel_app::tools::{Key, Outcome, PointerInput, ToolController, edit_tool_key};
 use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
