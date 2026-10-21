@@ -343,7 +343,7 @@ impl Exports {
             return;
         }
         let suggested = suggested_name(files.document(), format);
-        let chosen = match files.backend().save_panel(&suggested) {
+        let chosen = match files.backend().save_panel(&suggested, format.extension()) {
             PanelResult::Cancelled => return,
             PanelResult::Error => {
                 files.backend().show_error("Could not export", PATH_BAD);

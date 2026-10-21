@@ -38,7 +38,7 @@ impl PanelBackend for Fake {
     fn open_panel(&self, _: &[&str]) -> PanelResult {
         PanelResult::Cancelled
     }
-    fn save_panel(&self, suggested: &str) -> PanelResult {
+    fn save_panel(&self, suggested: &str, _: &str) -> PanelResult {
         let mut log = self.0.borrow_mut();
         log.saves.push(suggested.to_owned());
         log.answer.clone().unwrap_or(PanelResult::Cancelled)

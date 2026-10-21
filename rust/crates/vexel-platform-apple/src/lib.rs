@@ -27,7 +27,7 @@ pub use video_writer::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, V
 pub use panels::{
     MAX_PANEL_PATH, NativePanels, PROJECT_EXTENSION, PanelBackend, PanelResult, RecoveryChoice,
     RecoveryText, UnsavedChoice, UnsavedText, checked_path, confirm_recovery, confirm_unsaved,
-    open_panel, save_panel, show_error, with_project_extension,
+    open_panel, save_panel, show_error, with_extension, with_project_extension,
 };
 
 pub use main_thread::{MainThread, MainThreadError};

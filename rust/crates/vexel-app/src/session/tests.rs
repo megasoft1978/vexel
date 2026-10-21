@@ -98,7 +98,7 @@ impl PanelBackend for Recorder {
     fn open_panel(&self, _: &[&str]) -> PanelResult {
         PanelResult::Cancelled
     }
-    fn save_panel(&self, _: &str) -> PanelResult {
+    fn save_panel(&self, _: &str, _: &str) -> PanelResult {
         self.save_panel_calls.set(self.save_panel_calls.get() + 1);
         PanelResult::Cancelled
     }

@@ -30,7 +30,7 @@ impl PanelBackend for Fake {
             .pop_front()
             .expect("unscripted open panel")
     }
-    fn save_panel(&self, suggested_name: &str) -> PanelResult {
+    fn save_panel(&self, suggested_name: &str, _: &str) -> PanelResult {
         self.calls
             .borrow_mut()
             .push(format!("save:{suggested_name}"));

@@ -16,7 +16,9 @@ pub use dedup::{DEDUP_WINDOW, ShortcutDedup};
 pub use menu::{FILE_MENU, MenuEntry, action_for_tag, menu_enabled, menu_specs};
 
 use crate::project_session::{FileAction, ProjectSession, SessionError, unsaved_changes_prompt};
-use vexel_platform_apple::{PanelBackend, PanelResult, UnsavedChoice, UnsavedText};
+use vexel_platform_apple::{
+    PROJECT_EXTENSION, PanelBackend, PanelResult, UnsavedChoice, UnsavedText,
+};
 
 /// Extensions the Open panel offers: `.svg` opens as an untitled import
 /// (compose path), `.vexel` as a project.
@@ -67,7 +69,7 @@ fn save_as(session: &mut ProjectSession, backend: &dyn PanelBackend) -> FlowOutc
         .path()
         .and_then(file_name)
         .unwrap_or_else(|| "Untitled.vexel".to_owned());
-    match backend.save_panel(&suggested) {
+    match backend.save_panel(&suggested, PROJECT_EXTENSION) {
         PanelResult::Cancelled => FlowOutcome::Cancelled,
         PanelResult::Error => fail(backend, "Could not save", SessionError::InvalidPath),
         PanelResult::Path(path) => match session.save_as(&path) {

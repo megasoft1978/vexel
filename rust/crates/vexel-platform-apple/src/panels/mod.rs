@@ -64,7 +64,8 @@ pub struct RecoveryText<'a> {
 /// Swappable front for the native dialogs; the app tests use a fake.
 pub trait PanelBackend {
     fn open_panel(&self, extensions: &[&str]) -> PanelResult;
-    fn save_panel(&self, suggested_name: &str) -> PanelResult;
+    /// `extension` is the only type the panel allows and appends.
+    fn save_panel(&self, suggested_name: &str, extension: &str) -> PanelResult;
     fn confirm_unsaved(&self, text: &UnsavedText<'_>) -> UnsavedChoice;
     fn confirm_recovery(&self, _text: &RecoveryText<'_>) -> RecoveryChoice {
         RecoveryChoice::Cancel
@@ -83,8 +84,13 @@ pub fn checked_path(path: Vec<u8>) -> PanelResult {
 
 /// Appends `.vexel` unless the path already ends with it (ASCII case-insensitive).
 /// The result is bounded like any other panel path.
-pub fn with_project_extension(mut path: Vec<u8>) -> PanelResult {
-    let suffix = format!(".{PROJECT_EXTENSION}");
+pub fn with_project_extension(path: Vec<u8>) -> PanelResult {
+    with_extension(path, PROJECT_EXTENSION)
+}
+
+/// Appends `.<extension>` unless the path already ends with it (ASCII case-insensitive).
+pub fn with_extension(mut path: Vec<u8>, extension: &str) -> PanelResult {
+    let suffix = format!(".{extension}");
     let has = path.len() > suffix.len()
         && path[path.len() - suffix.len()..].eq_ignore_ascii_case(suffix.as_bytes());
     if !has {

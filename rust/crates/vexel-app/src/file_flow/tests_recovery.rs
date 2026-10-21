@@ -31,7 +31,7 @@ impl PanelBackend for Backend {
     fn open_panel(&self, _: &[&str]) -> PanelResult {
         PanelResult::Cancelled
     }
-    fn save_panel(&self, _: &str) -> PanelResult {
+    fn save_panel(&self, _: &str, _: &str) -> PanelResult {
         PanelResult::Cancelled
     }
     fn confirm_unsaved(&self, _: &UnsavedText<'_>) -> UnsavedChoice {

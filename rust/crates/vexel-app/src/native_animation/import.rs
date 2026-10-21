@@ -269,7 +269,7 @@ mod tests {
             self.result.clone()
         }
 
-        fn save_panel(&self, _: &str) -> PanelResult {
+        fn save_panel(&self, _: &str, _: &str) -> PanelResult {
             PanelResult::Cancelled
         }
 
