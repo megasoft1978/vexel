@@ -29,21 +29,27 @@ fn add_rect(app: &mut AppDocument, id: &str) {
 #[test]
 fn parse_validates_ids_document_and_boolean() {
     assert!(parsed("element_group", "\"elementId\":\"a\"").is_ok());
-    assert!(parsed(
-        "element_reorder",
-        "\"elementId\":\"a\",\"targetId\":\"b\",\"before\":true"
-    )
-    .is_ok());
-    assert!(parsed(
-        "element_reorder",
-        "\"elementId\":\"a\",\"targetId\":\"b\",\"before\":\"yes\""
-    )
-    .is_err());
+    assert!(
+        parsed(
+            "element_reorder",
+            "\"elementId\":\"a\",\"targetId\":\"b\",\"before\":true"
+        )
+        .is_ok()
+    );
+    assert!(
+        parsed(
+            "element_reorder",
+            "\"elementId\":\"a\",\"targetId\":\"b\",\"before\":\"yes\""
+        )
+        .is_err()
+    );
     let json = b"{\"documentId\":\"other\",\"elementId\":\"a\"}";
     let doc = JsonDocument::parse(json).unwrap();
-    assert!(ext_structure::parse(&doc, doc.root(), "element_duplicate")
-        .unwrap()
-        .is_err());
+    assert!(
+        ext_structure::parse(&doc, doc.root(), "element_duplicate")
+            .unwrap()
+            .is_err()
+    );
     assert!(parsed("element_ungroup", "").is_err());
 }
 

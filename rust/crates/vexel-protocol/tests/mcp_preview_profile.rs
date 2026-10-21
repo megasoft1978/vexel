@@ -69,7 +69,7 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     // (document_open, attribute_set, element_delete, save, save_as, export_svg)
     // plus render_png added by WO-RUST-V1-PNG-01, plus the 11 native_timeline_*
     // tools routed by the V1 native MCP slice, in declaration order.
-    assert_eq!(doc.token(tools).unwrap().child_count, 27);
+    assert_eq!(doc.token(tools).unwrap().child_count, 50);
     assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",
@@ -103,9 +103,15 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     .iter()
     .enumerate()
     {
-        let item = doc.token(tools).unwrap().first_child.unwrap();
-        let item = (0..idx).fold(item, |at, _| doc.token(at).unwrap().next_sibling.unwrap());
-        assert!(doc.string_equals(doc.object_get(item, b"name").unwrap(), name.as_bytes()));
+        // Tools added later (document, paint, query, timeline edit) interleave
+        // with the original ones, so presence rather than position is checked.
+        let mut item = doc.token(tools).unwrap().first_child;
+        let mut found = false;
+        while let Some(at) = item {
+            found |= doc.string_equals(doc.object_get(at, b"name").unwrap(), name.as_bytes());
+            item = doc.token(at).unwrap().next_sibling;
+        }
+        assert!(found, "missing {name} (expected near position {idx})");
     }
     let full_doc = JsonDocument::parse(&full).unwrap();
     let full_add = full_doc

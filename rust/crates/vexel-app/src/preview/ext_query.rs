@@ -149,7 +149,7 @@ fn parse_one(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Op, Prev
                 tool,
                 "tool",
                 "element_get, element_query or tree_get",
-            ))
+            ));
         }
     })
 }
@@ -301,3 +301,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'stati
         .map(McpOutcome::Reply)
         .map_err(|_| "preview allocation failed")
 }
+
+#[cfg(test)]
+#[path = "ext_query_tests.rs"]
+mod tests;

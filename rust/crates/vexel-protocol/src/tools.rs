@@ -367,6 +367,29 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "native_timeline_move_item",
     "native_timeline_undo",
     "native_timeline_redo",
+    "element_group",
+    "element_ungroup",
+    "element_duplicate",
+    "element_reorder",
+    "element_get",
+    "element_query",
+    "tree_get",
+    "attribute_remove",
+    "text_set",
+    "gradient_add",
+    "gradient_set_stop",
+    "element_set_paint",
+    "clip_add",
+    "element_set_clip",
+    "element_set_transform",
+    "text_add",
+    "native_timeline_remove_key",
+    "native_timeline_move_key",
+    "native_timeline_remove_track",
+    "native_timeline_rename_track",
+    "native_timeline_duplicate_track",
+    "native_timeline_set_interpolation",
+    "native_timeline_reorder_track",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -381,6 +404,13 @@ pub enum ToolValidationError {
     InvalidArguments,
 }
 
+/// Preview-only tools: paint/transform/text and native timeline editing.
+fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
+    super::tools_paint::PAINT_TOOLS
+        .iter()
+        .chain(super::tools_native_edit::NATIVE_EDIT_TOOLS)
+}
+
 pub fn tool_schemas() -> Result<Vec<u8>, ProtocolError> {
     tool_schemas_for_preview(false)
 }
@@ -390,6 +420,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
     out.literal("[").map_err(ProtocolError::Buffer)?;
     let selected: Vec<_> = TOOLS
         .iter()
+        .chain(preview_extra_tools().filter(|_| preview))
         .filter(|tool| {
             !(tool.name == "animation_control" && !preview)
                 && (!preview || PREVIEW_TOOLS.contains(&tool.name))
@@ -472,7 +503,11 @@ pub fn validate_tool_arguments(
     if args.kind != JsonType::Object {
         return Err(ToolValidationError::InvalidArguments);
     }
-    let Some(tool) = TOOLS.iter().find(|t| t.name == tool_name) else {
+    let Some(tool) = TOOLS
+        .iter()
+        .chain(preview_extra_tools())
+        .find(|t| t.name == tool_name)
+    else {
         return Err(ToolValidationError::UnknownTool);
     };
     let mut key = args.first_child;

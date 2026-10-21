@@ -406,17 +406,39 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
         ("set_property_key", _) => {
             "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline) and value must match the track valueType"
         }
-        ("remove_key", TimelineError::InvalidReference) => "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key",
-        ("remove_key", _) => "native_timeline_remove_key tick zero cannot be removed; tick must identify an existing nonzero key",
-        ("move_key", TimelineError::InvalidReference) => "native_timeline_move_key trackId and fromTick must identify an existing property key",
-        ("move_key", TimelineError::Duplicate) => "native_timeline_move_key toTick is occupied; use an unused tick",
-        ("move_key", _) => "native_timeline_move_key fromTick zero cannot be moved and toTick must be within durationTicks",
-        ("remove_track", _) => "native_timeline_remove_track trackId must identify an existing track",
-        ("rename_track", _) => "native_timeline_rename_track trackId must exist and name must be valid UTF-8 of at most 4096 bytes",
-        ("duplicate_track", TimelineError::Duplicate) => "native_timeline_duplicate_track newTrackId already exists; use a unique track ID",
-        ("duplicate_track", _) => "native_timeline_duplicate_track trackId must exist and newTrackId must be 1-128 ASCII letters, digits, `_` or `-`",
-        ("set_interpolation", _) => "native_timeline_set_interpolation trackId must identify a property track and interpolation must be step, linear or cubic",
-        ("reorder_track", _) => "native_timeline_reorder_track trackId must exist and index must be within the track list",
+        ("remove_key", TimelineError::InvalidReference) => {
+            "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key"
+        }
+        ("remove_key", _) => {
+            "native_timeline_remove_key tick zero cannot be removed; tick must identify an existing nonzero key"
+        }
+        ("move_key", TimelineError::InvalidReference) => {
+            "native_timeline_move_key trackId and fromTick must identify an existing property key"
+        }
+        ("move_key", TimelineError::Duplicate) => {
+            "native_timeline_move_key toTick is occupied; use an unused tick"
+        }
+        ("move_key", _) => {
+            "native_timeline_move_key fromTick zero cannot be moved and toTick must be within durationTicks"
+        }
+        ("remove_track", _) => {
+            "native_timeline_remove_track trackId must identify an existing track"
+        }
+        ("rename_track", _) => {
+            "native_timeline_rename_track trackId must exist and name must be valid UTF-8 of at most 4096 bytes"
+        }
+        ("duplicate_track", TimelineError::Duplicate) => {
+            "native_timeline_duplicate_track newTrackId already exists; use a unique track ID"
+        }
+        ("duplicate_track", _) => {
+            "native_timeline_duplicate_track trackId must exist and newTrackId must be 1-128 ASCII letters, digits, `_` or `-`"
+        }
+        ("set_interpolation", _) => {
+            "native_timeline_set_interpolation trackId must identify a property track and interpolation must be step, linear or cubic"
+        }
+        ("reorder_track", _) => {
+            "native_timeline_reorder_track trackId must exist and index must be within the track list"
+        }
         (_, TimelineError::Limit) => "native timeline limit reached; reduce timeline or asset size",
         (_, _) => "",
     }

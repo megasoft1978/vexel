@@ -74,7 +74,9 @@ fn gradient_add_linear_and_radial_reply_and_undo() {
     let reply = ok(
         &mut app,
         "gradient_add",
-        &format!("\"kind\":\"radial\",\"cx\":0.4,\"cy\":0.4,\"r\":0.6,\"units\":\"userSpace\",\"spread\":\"reflect\",{STOPS}"),
+        &format!(
+            "\"kind\":\"radial\",\"cx\":0.4,\"cy\":0.4,\"r\":0.6,\"units\":\"userSpace\",\"spread\":\"reflect\",{STOPS}"
+        ),
     );
     assert_eq!(field(&reply, "gradientId"), "vexel-gradient-2");
     let s = src(&app);
@@ -196,19 +198,31 @@ fn element_set_paint_fill_stroke_and_errors() {
     let s = src(&app);
     assert!(s.contains("fill=\"url(#vexel-gradient-1)\""), "{s}");
     assert!(s.contains("stroke=\"url(#vexel-gradient-1)\""), "{s}");
-    err(&mut app, "element_set_paint", "\"elementId\":\"vexel-object-1\",\"property\":\"color\",\"gradientId\":\"vexel-gradient-1\"");
+    err(
+        &mut app,
+        "element_set_paint",
+        "\"elementId\":\"vexel-object-1\",\"property\":\"color\",\"gradientId\":\"vexel-gradient-1\"",
+    );
     err(
         &mut app,
         "element_set_paint",
         "\"elementId\":\"nope\",\"property\":\"fill\",\"gradientId\":\"vexel-gradient-1\"",
     );
-    err(&mut app, "element_set_paint", "\"elementId\":\"vexel-object-1\",\"property\":\"fill\",\"gradientId\":\"vexel-gradient-9\"");
+    err(
+        &mut app,
+        "element_set_paint",
+        "\"elementId\":\"vexel-object-1\",\"property\":\"fill\",\"gradientId\":\"vexel-gradient-9\"",
+    );
     err(
         &mut app,
         "element_set_paint",
         "\"elementId\":\"vexel-object-1\",\"property\":\"fill\"",
     );
-    err(&mut app, "element_set_paint", "\"elementId\":\"vexel-gradient-1\",\"property\":\"fill\",\"gradientId\":\"vexel-gradient-1\"");
+    err(
+        &mut app,
+        "element_set_paint",
+        "\"elementId\":\"vexel-gradient-1\",\"property\":\"fill\",\"gradientId\":\"vexel-gradient-1\"",
+    );
 }
 
 #[test]

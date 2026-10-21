@@ -1,6 +1,6 @@
 //! Bounded, actionable argument parsing for native timeline MCP tools.
 
-use super::{native_timeline::NativeOp, JsonDocument, JsonType, Operation, PreviewArgumentError};
+use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, native_timeline::NativeOp};
 use vexel_timeline::LoopMode;
 
 const VALUE_LIMIT: usize = 4096;
@@ -210,7 +210,12 @@ fn parse_one(
                 "a property name, e.g. `opacity`",
             )?,
             value_type: string(
-                doc, args, tool, "valueType", 1, 32,
+                doc,
+                args,
+                tool,
+                "valueType",
+                1,
+                32,
                 "one of `scalar`, `rgba`, `transform2d`, `trs` or `boolean`",
             )?,
             interpolation: string(
@@ -235,17 +240,54 @@ fn parse_one(
             value: timeline_value(doc, args, tool)?,
             ease: optional_ease(doc, args, tool)?,
         },
-        "remove_key" => NativeOp::RemovePropertyKey { track_id: id("trackId")?, tick: tick(doc, args, tool, "tick")? },
-        "move_key" => NativeOp::MovePropertyKey { track_id: id("trackId")?, from_tick: tick(doc, args, tool, "fromTick")?, to_tick: tick(doc, args, tool, "toTick")? },
-        "remove_track" => NativeOp::RemoveTrack { track_id: id("trackId")? },
-        "rename_track" => NativeOp::RenameTrack { track_id: id("trackId")?, name: name("name")? },
-        "duplicate_track" => NativeOp::DuplicateTrack { track_id: id("trackId")?, new_track_id: id("newTrackId")? },
-        "set_interpolation" => {
-            let interpolation = string(doc, args, tool, "interpolation", 1, 16, "one of `step`, `linear` or `cubic`")?;
-            if ![b"step".as_slice(), b"linear", b"cubic"].contains(&interpolation.as_slice()) { return Err(invalid(tool, "interpolation", "one of `step`, `linear` or `cubic`", Some(&interpolation))); }
-            NativeOp::SetTrackInterpolation { track_id: id("trackId")?, interpolation }
+        "remove_key" => NativeOp::RemovePropertyKey {
+            track_id: id("trackId")?,
+            tick: tick(doc, args, tool, "tick")?,
         },
-        "reorder_track" => NativeOp::ReorderTrack { track_id: id("trackId")?, index: usize::try_from(tick(doc, args, tool, "index")?).map_err(|_| invalid(tool, "index", "a nonnegative integer", None))? },
+        "move_key" => NativeOp::MovePropertyKey {
+            track_id: id("trackId")?,
+            from_tick: tick(doc, args, tool, "fromTick")?,
+            to_tick: tick(doc, args, tool, "toTick")?,
+        },
+        "remove_track" => NativeOp::RemoveTrack {
+            track_id: id("trackId")?,
+        },
+        "rename_track" => NativeOp::RenameTrack {
+            track_id: id("trackId")?,
+            name: name("name")?,
+        },
+        "duplicate_track" => NativeOp::DuplicateTrack {
+            track_id: id("trackId")?,
+            new_track_id: id("newTrackId")?,
+        },
+        "set_interpolation" => {
+            let interpolation = string(
+                doc,
+                args,
+                tool,
+                "interpolation",
+                1,
+                16,
+                "one of `step`, `linear` or `cubic`",
+            )?;
+            if ![b"step".as_slice(), b"linear", b"cubic"].contains(&interpolation.as_slice()) {
+                return Err(invalid(
+                    tool,
+                    "interpolation",
+                    "one of `step`, `linear` or `cubic`",
+                    Some(&interpolation),
+                ));
+            }
+            NativeOp::SetTrackInterpolation {
+                track_id: id("trackId")?,
+                interpolation,
+            }
+        }
+        "reorder_track" => NativeOp::ReorderTrack {
+            track_id: id("trackId")?,
+            index: usize::try_from(tick(doc, args, tool, "index")?)
+                .map_err(|_| invalid(tool, "index", "a nonnegative integer", None))?,
+        },
         "remove_cel" => NativeOp::RemoveCel {
             track_id: id("trackId")?,
             tick: tick(doc, args, tool, "tick")?,
@@ -301,7 +343,12 @@ fn optional_ease(
         return Ok(None);
     };
     let Some(raw) = doc.decoded_string(token) else {
-        return Err(invalid(tool, "ease", "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2", None));
+        return Err(invalid(
+            tool,
+            "ease",
+            "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
+            None,
+        ));
     };
     let names: &[&[u8]] = &[
         b"step",
@@ -346,7 +393,12 @@ fn optional_ease(
             ));
         }
     }
-    Err(invalid(tool, "ease", "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2", Some(&raw)))
+    Err(invalid(
+        tool,
+        "ease",
+        "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
+        Some(&raw),
+    ))
 }
 
 fn timeline_value(

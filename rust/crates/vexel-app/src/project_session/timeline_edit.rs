@@ -5,8 +5,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use super::svg_asset::{OwnedProjectAsset, SvgAssetError};
 use crate::animation::native_drawing::SvgGeometry;
 use vexel_timeline::{
-    classify, initialize_empty_timeline, AssetRef, EditFailure, EditLimits, EmptyTimelineSettings,
-    Error as TimelineError, LoopMode, TimelineContext, TimelineEdit, MAX_SOURCE_BYTES,
+    AssetRef, EditFailure, EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode,
+    MAX_SOURCE_BYTES, TimelineContext, TimelineEdit, classify, initialize_empty_timeline,
 };
 
 static NEXT_CANDIDATE_LINEAGE: AtomicU64 = AtomicU64::new(1);

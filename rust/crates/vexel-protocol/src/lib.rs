@@ -4,6 +4,8 @@
 mod async_protocol;
 mod protocol;
 mod tools;
+mod tools_native_edit;
+mod tools_paint;
 
 use vexel_json::{JsonBuffer, JsonDocument};
 
