@@ -2,7 +2,7 @@
 //! canvas. The active playhead is the single strong accent in the panel.
 
 use super::interaction::{DragPreview, InteractionState};
-use super::layout::{Hit, MODE_SELECTOR_WIDTH, TRACK_HEIGHT, TimelineLayout};
+use super::layout::{Hit, TRACK_HEIGHT, TimelineLayout};
 use super::model::TimelineModel;
 use crate::layout::paint::{centred, mono, text};
 use vexel_ui::{FontWeight, IconKind, Rect, WidgetCanvas};
@@ -66,80 +66,47 @@ fn paint_transport(
         .transport
         .y
         .saturating_add((l.transport.height.saturating_sub(24)) / 2);
-    let onion_count = format!("{} / {}", m.onion_before, m.onion_after);
-    let controls = [
-        (
-            Hit::Play,
-            if m.playing { "Pause" } else { "Play" },
-            44,
-            true,
-        ),
-        (
-            Hit::Loop,
-            if m.loop_enabled {
-                "Loop on"
-            } else {
-                "Loop off"
-            },
-            58,
-            true,
-        ),
-        (Hit::Empty, "Onion preview", 86, false),
-        (Hit::Empty, onion_count.as_str(), 42, false),
-        (
-            Hit::AddDrawingTrack,
-            "+ Track",
-            58,
-            m.can_add_drawing_track && has_target(m, s),
-        ),
-        (
-            Hit::ImportDrawing,
-            "Import SVG",
-            58,
-            m.can_import_asset && has_target(m, s),
-        ),
-    ];
-    let mut x = l
-        .transport
-        .x
-        .saturating_add(MODE_SELECTOR_WIDTH)
-        .saturating_add(PAD);
-    for (hit, label, width, enabled) in controls {
-        if x.saturating_add(width) > l.transport.x.saturating_add(l.transport.width) {
-            break;
-        }
-        let cell = rect(x, y, width, 24.min(l.transport.height));
-        let active = match hit {
-            Hit::Loop => m.loop_enabled,
-            Hit::OnionBefore => m.onion_before > 0,
-            Hit::OnionAfter => m.onion_after > 0,
-            _ => false,
+    let controls = l.control_rects();
+    for (hit, cell) in controls {
+        let enabled = match hit {
+            Hit::AddDrawingTrack => m.can_add_drawing_track && has_target(m, s),
+            Hit::ImportDrawing => m.can_import_asset && has_target(m, s),
+            _ => true,
         };
+        let active = matches!(hit, Hit::Loop) && m.loop_enabled
+            || matches!(hit, Hit::OnionBefore) && (m.onion_before > 0 || m.onion_after > 0);
         let hovered = enabled && s.hover == Some(hit);
+        let pressed = hovered && s.pressed() == Some(hit);
         if active {
-            c.paint_round(cell, 5, t.selection_fill, 0, 0);
+            c.paint_round(cell, 6, t.selection_fill, 0, 0);
+        } else if pressed {
+            c.paint_round(cell, 6, t.pressed_fill, 0, 0);
         } else if hovered {
-            c.paint_round(cell, 5, t.panel_hover, 0, 0);
+            c.paint_round(cell, 6, t.panel_hover, 0, 0);
         }
-        centred(
-            c,
-            label,
-            cell,
-            if !enabled {
-                t.disabled_text
-            } else if active {
-                t.accent
-            } else {
-                t.text_secondary
-            },
-            11,
-            if active {
-                FontWeight::Semibold
-            } else {
-                FontWeight::Regular
-            },
-        );
-        x = x.saturating_add(width + 4);
+        let color = if !enabled {
+            t.disabled_text
+        } else if active {
+            t.accent
+        } else if hovered {
+            t.text_primary
+        } else {
+            t.text_secondary
+        };
+        let icon = match hit {
+            Hit::Play => {
+                if m.playing {
+                    IconKind::PAUSE
+                } else {
+                    IconKind::PLAY
+                }
+            }
+            Hit::Loop => IconKind::LOOP,
+            Hit::OnionBefore => IconKind::LAYERS,
+            Hit::AddDrawingTrack => IconKind::PLUS,
+            _ => IconKind::IMAGE,
+        };
+        c.paint_icon_color(icon, rect(cell.x + 6, cell.y + 6, 16, 16), color);
     }
     let tick_label = format!(
         "{} / {}  {}%",
@@ -152,7 +119,10 @@ fn paint_transport(
         .transport
         .x
         .saturating_add(l.transport.width.saturating_sub(readout_w + PAD));
-    if readout_x >= x {
+    let controls_right = controls
+        .last()
+        .map_or(l.transport.x, |(_, r)| r.x.saturating_add(r.width));
+    if readout_x >= controls_right {
         mono(
             c,
             &tick_label,

@@ -9,6 +9,8 @@ pub const TRACK_HEIGHT: u32 = 28;
 pub const MIN_NAME_WIDTH: u32 = 112;
 pub const MAX_NAME_WIDTH: u32 = 184;
 pub const MODE_SELECTOR_WIDTH: u32 = 148;
+pub const CONTROL_SIZE: u32 = 28;
+const CONTROL_GAP: u32 = 4;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Viewport {
@@ -66,6 +68,105 @@ pub struct TimelineLayout {
     pub lane_left: f64,
     pub lane_right: f64,
     pub viewport: Viewport,
+}
+
+impl TimelineLayout {
+    /// Compact, non-overlapping icon targets in transport order.
+    pub fn control_rects(&self) -> [(Hit, Rect); 5] {
+        let y = self
+            .transport
+            .y
+            .saturating_add(self.transport.height.saturating_sub(CONTROL_SIZE) / 2);
+        let first = self
+            .transport
+            .x
+            .saturating_add(MODE_SELECTOR_WIDTH)
+            .saturating_add(8);
+        [
+            Hit::Play,
+            Hit::Loop,
+            Hit::OnionBefore,
+            Hit::AddDrawingTrack,
+            Hit::ImportDrawing,
+        ]
+        .map(|hit| {
+            let index = match hit {
+                Hit::Play => 0,
+                Hit::Loop => 1,
+                Hit::OnionBefore => 2,
+                Hit::AddDrawingTrack => 3,
+                _ => 4,
+            };
+            (
+                hit,
+                rect(
+                    first.saturating_add(index * (CONTROL_SIZE + CONTROL_GAP)),
+                    y,
+                    CONTROL_SIZE.min(self.transport.width),
+                    CONTROL_SIZE.min(self.transport.height),
+                ),
+            )
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native_timeline::NativeTimelineSnapshot;
+
+    fn layout() -> (TimelineModel, TimelineLayout) {
+        let snapshot = NativeTimelineSnapshot {
+            ticks_per_second: 24,
+            duration_ticks: 24,
+            current_tick: 0,
+            tracks: vec![],
+            selected_target: None,
+            playing: false,
+            loop_enabled: false,
+            onion_before: 0,
+            onion_after: 0,
+            onion_opacity: 0.25,
+            can_add_drawing_track: true,
+            can_import_asset: true,
+            can_edit_selected_item: false,
+            status: None,
+        };
+        let model = TimelineModel::from_snapshot(&snapshot);
+        let panel = rect(0, 0, 720, 180);
+        let layout = TimelineLayout::new(panel, &model, Viewport::full(&model));
+        (model, layout)
+    }
+
+    #[test]
+    fn icon_targets_are_at_least_24_square_non_overlapping_and_hit_their_actions() {
+        let (model, layout) = layout();
+        let controls = layout.control_rects();
+        for (i, (hit, r)) in controls.iter().enumerate() {
+            assert!(r.width >= 24 && r.height >= 24);
+            for (_, next) in controls.iter().skip(i + 1) {
+                assert!(r.x + r.width <= next.x || next.x + next.width <= r.x);
+            }
+            assert_eq!(
+                layout.hit_test(
+                    &model,
+                    (r.x + r.width / 2) as i32,
+                    (r.y + r.height / 2) as i32
+                ),
+                *hit
+            );
+        }
+        assert_eq!(
+            controls.map(|(h, _)| h),
+            [
+                Hit::Play,
+                Hit::Loop,
+                Hit::OnionBefore,
+                Hit::AddDrawingTrack,
+                Hit::ImportDrawing
+            ]
+        );
+    }
 }
 
 fn rect(x: u32, y: u32, width: u32, height: u32) -> Rect {
@@ -208,7 +309,6 @@ impl TimelineLayout {
             return Hit::Empty;
         }
         if inside(self.transport, x, y) {
-            let rel = x.saturating_sub(self.transport.x as i32).max(0) as u32;
             let selector = self.mode_selector();
             if inside(selector, x, y) {
                 let local_x = x.saturating_sub(selector.x as i32).max(0) as u32;
@@ -217,27 +317,12 @@ impl TimelineLayout {
                 }
                 return Hit::ModeSmil;
             }
-            if rel < MODE_SELECTOR_WIDTH {
-                return Hit::Empty;
-            }
-            let rel = rel.saturating_sub(MODE_SELECTOR_WIDTH);
-            if rel < 52 {
-                return Hit::Play;
-            }
-            if rel < 114 {
-                return Hit::Loop;
-            }
-            if rel < 180 {
-                return Hit::Empty;
-            }
-            if rel < 246 {
-                return Hit::Empty;
-            }
-            if rel < 308 {
-                return Hit::AddDrawingTrack;
-            }
-            if rel < 370 {
-                return Hit::ImportDrawing;
+            if let Some((hit, _)) = self
+                .control_rects()
+                .into_iter()
+                .find(|(_, r)| inside(*r, x, y))
+            {
+                return hit;
             }
             return Hit::Empty;
         }

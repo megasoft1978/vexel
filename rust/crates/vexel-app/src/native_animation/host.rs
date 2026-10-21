@@ -93,6 +93,14 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         self.controller.surface()
     }
 
+    pub fn hovered_tooltip(&self) -> Option<Hit> {
+        if self.surface() == TimelineSurface::Native {
+            self.presentation.hovered_tooltip()
+        } else {
+            None
+        }
+    }
+
     pub fn is_playing(&self) -> bool {
         self.driver.is_playing()
     }

@@ -41,6 +41,14 @@ pub const TOOLTIP_DELAY_NS: u64 = 500_000_000;
 pub fn control_id(target: Target) -> u32 {
     match target {
         Target::DrawMode => ID_DRAW,
+        Target::NativeTimeline(hit) => match hit {
+            crate::native_timeline::layout::Hit::Play => 100,
+            crate::native_timeline::layout::Hit::Loop => 101,
+            crate::native_timeline::layout::Hit::OnionBefore => 102,
+            crate::native_timeline::layout::Hit::AddDrawingTrack => 103,
+            crate::native_timeline::layout::Hit::ImportDrawing => 104,
+            _ => 105,
+        },
         Target::AnimateMode => ID_ANIMATE,
         Target::Tool(tool) => ID_TOOL0 + tool as u32,
         Target::Button(button) => ID_BUTTON0 + button as u32,
@@ -200,6 +208,27 @@ impl<C: Clock> MotionAdapter<C> {
     ) -> (Option<Target>, bool) {
         let enabled = |t: Target| model.target_enabled(layout, t);
         self.pointer_inner(layout, kind, logical, primary, popovers(model), &enabled)
+    }
+    /// Track hover delay for a timeline icon without routing it through chrome hit testing.
+    pub fn native_timeline_hover(
+        &mut self,
+        hit: Option<crate::native_timeline::layout::Hit>,
+    ) -> bool {
+        let target = hit
+            .map(Target::NativeTimeline)
+            .filter(|t| layout::tooltip(*t).is_some());
+        if self.tip.target != target {
+            self.tip = Tip {
+                target,
+                since: self.clock.now_ns(),
+                dismissed: false,
+                shown: self.tip.shown,
+            };
+        }
+        self.poll_tooltip()
+    }
+    pub fn native_timeline_hovered(&self) -> bool {
+        matches!(self.tip.target, Some(Target::NativeTimeline(_)))
     }
     fn pointer_inner(
         &mut self,

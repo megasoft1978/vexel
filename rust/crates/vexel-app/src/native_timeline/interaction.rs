@@ -84,6 +84,12 @@ impl Default for InteractionState {
 }
 
 impl InteractionState {
+    pub fn pressed(&self) -> Option<Hit> {
+        match self.press {
+            Some(Press::Button(hit)) => Some(hit),
+            _ => None,
+        }
+    }
     pub fn viewport(&self, model: &TimelineModel) -> Viewport {
         self.viewport
             .unwrap_or_else(|| Viewport::full(model))

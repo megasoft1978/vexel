@@ -7,7 +7,7 @@
 //! minimum on their thin axis (their long axis is the whole panel edge).
 
 mod menu;
-pub(crate) mod paint;
+pub mod paint;
 mod state;
 #[cfg(test)]
 mod tests;
@@ -313,6 +313,7 @@ impl Layout {
     pub fn target_rect(&self, target: Target) -> Option<Rect> {
         Some(match target {
             Target::DrawMode => self.draw_mode,
+            Target::NativeTimeline(_) => return None,
             Target::AnimateMode => self.animate_mode,
             Target::Tool(tool) => self.tools[tool as usize],
             Target::Button(Button::Mcp) => self.mcp,

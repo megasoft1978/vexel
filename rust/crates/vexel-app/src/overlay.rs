@@ -76,6 +76,20 @@ pub fn overlay_tooltip(
     let Some(mut canvas) = canvas else {
         return frame;
     };
-    draw_tooltip(&mut canvas, layout, target);
+    if matches!(target, Target::NativeTimeline(_)) {
+        draw_native_timeline_tooltip(&mut canvas, layout, target);
+    } else {
+        draw_tooltip(&mut canvas, layout, target);
+    }
     RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
+}
+
+fn draw_native_timeline_tooltip(canvas: &mut WidgetCanvas<'_>, layout: &Layout, target: Target) {
+    let Some((name, shortcut)) = crate::layout::tooltip(target) else {
+        return;
+    };
+    let Some(rect) = crate::layout::tooltip_rect(layout, target) else {
+        return;
+    };
+    crate::layout::paint::paint_tip(canvas, rect, name, shortcut);
 }

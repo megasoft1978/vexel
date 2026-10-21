@@ -23,6 +23,7 @@ pub enum Tool {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Target {
+    NativeTimeline(crate::native_timeline::layout::Hit),
     DrawMode,
     AnimateMode,
     Tool(Tool),

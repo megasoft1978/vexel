@@ -248,6 +248,7 @@ fn run(
         }
         dirty |= model.sync_history(files.document());
         motion.sync_focus(model.focus_id());
+        dirty |= motion.native_timeline_hover(native.hovered_tooltip());
         dirty |= motion.redraw_after().is_some() | motion.poll_tooltip();
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
@@ -475,9 +476,24 @@ fn run(
                     if let Some(layout) = model.layout(logical.0, logical.1) {
                         let primary =
                             vexel_app::native_animation::host::pointer_accepts_mode(pointer.button);
-                        dirty |= motion
-                            .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
-                            .1;
+                        if !(model.mode == Mode::Animate
+                            && layout.footer.is_some_and(|footer| {
+                                pointer.logical.0 >= footer.x as i32
+                                    && pointer.logical.1 >= footer.y as i32
+                                    && pointer.logical.0
+                                        < footer.x.saturating_add(footer.width) as i32
+                                    && pointer.logical.1
+                                        < footer.y.saturating_add(footer.height) as i32
+                            }))
+                        {
+                            let _ = motion.pointer_in(
+                                &layout,
+                                pointer.kind,
+                                pointer.logical,
+                                primary,
+                                &model,
+                            );
+                        }
                         let native_phase = (model.mode == Mode::Animate)
                             .then(|| match pointer.kind {
                                 PointerKind::Down if primary => Some(NativeTimelinePhase::Down),
@@ -522,6 +538,9 @@ fn run(
                             native.surface(),
                             &mut exports,
                         );
+                        dirty |= motion
+                            .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
+                            .1;
                         if pointer.kind == PointerKind::Down {
                             let _ = files.refresh_menu(&app);
                         }
