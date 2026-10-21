@@ -3,12 +3,15 @@
 //! module; this file paints rows into the section rects.
 
 use crate::animation::strip;
-use crate::chrome::{Inspector, ShapeProps, number};
+use crate::chrome::{FillKind, Inspector, ShapeProps, number};
 use crate::layout::paint::{centred, mono, paint_focus, text, text_width};
 use crate::layout::{EMPTY_CARD_BODY_H, Focus, Layout, SECTION_BODY_H, SECTION_NAMES, SECTIONS};
 use crate::model::Model;
 use crate::motion::{self, MotionFrame};
 use vexel_ui::{FontWeight, IconKind, Rect, WidgetCanvas};
+
+#[path = "inspector_ext.rs"]
+mod ext;
 
 pub const CARD_TITLE: &str = "Select a shape";
 pub const CARD_HINT: &str = "Click one on the canvas to edit it.";
@@ -103,7 +106,7 @@ pub(crate) fn draw_inspector(
             SECTION_BODY_H[i]
         };
         if body.height == full {
-            draw_body(c, i, body, content, model);
+            draw_body(c, i, body, l, content, model);
         }
     }
 }
@@ -112,10 +115,12 @@ fn draw_body(
     c: &mut WidgetCanvas<'_>,
     section: usize,
     body: Rect,
+    l: &Layout,
     content: &Inspector,
     model: &Model,
 ) {
     let t = c.tokens;
+    let ext = model.chrome.state.ext.as_ref().filter(|_| shape_selected(content));
     let shape = match content {
         Inspector::Shape(p) => Some(p),
         Inspector::NoSelection => None,
@@ -132,24 +137,18 @@ fn draw_body(
                     13,
                     FontWeight::Regular,
                 );
-                text(
-                    c,
-                    "Drag a handle to resize",
-                    inset(body, 12, 28, 20),
-                    t.text_tertiary,
-                    12,
-                    FontWeight::Regular,
-                );
+                ext::draw_selection(c, l, ext);
             }
         },
         1 => {
-            colour_field(
-                c,
-                inset(body, 12, 8, 28),
-                shape.map(ShapeProps::fill_text),
-                shape.and_then(|p| p.fill),
-            );
+            let label = match ext.map(|e| e.fill) {
+                Some(FillKind::Linear) => Some("linear gradient".to_owned()),
+                Some(FillKind::Radial) => Some("radial gradient".to_owned()),
+                _ => shape.map(ShapeProps::fill_text),
+            };
+            colour_field(c, inset(body, 12, 8, 28), label, shape.and_then(|p| p.fill));
             draw_swatches(c, body, false, shape.and_then(|p| p.fill));
+            ext::draw_fill(c, l, ext);
         }
         2 => {
             colour_field(
@@ -162,6 +161,7 @@ fn draw_body(
             number_field(c, inset(body, 12, 44, 28), "Width", w.as_deref(), "px");
             draw_swatches(c, body, true, shape.and_then(|p| p.stroke));
             draw_width_presets(c, body, shape.map(|p| p.stroke_width));
+            ext::draw_stroke(c, l, ext);
         }
         3 => {
             let (x, y) = shape.map_or((None, None), |p| {
@@ -181,17 +181,7 @@ fn draw_body(
                 y.as_deref(),
                 "",
             );
-            let m = shape.map(|p| {
-                let t = p.transform;
-                format!(
-                    "{} {} {} {}",
-                    number(t.a),
-                    number(t.b),
-                    number(t.c),
-                    number(t.d)
-                )
-            });
-            number_field(c, inset(body, 12, 44, 28), "Matrix", m.as_deref(), "");
+            ext::draw_transform(c, l, ext);
         }
         _ => {
             let loop_s = model.chrome.state.loop_seconds;
@@ -215,6 +205,10 @@ fn draw_body(
             }
         }
     }
+}
+
+fn shape_selected(content: &Inspector) -> bool {
+    matches!(content, Inspector::Shape(_))
 }
 
 fn draw_swatches(c: &mut WidgetCanvas<'_>, body: Rect, stroke: bool, selected: Option<[u8; 4]>) {
