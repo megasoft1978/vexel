@@ -83,6 +83,7 @@ impl<'src> Decoder<'src, '_> {
         let symbol = element_name(source, &target_token, b"symbol");
         if !symbol
             && !element_name(source, &target_token, b"g")
+            && !element_name(source, &target_token, b"use")
             && !basic_shape(source, &target_token)
         {
             return Err(Diagnostic {

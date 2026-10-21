@@ -85,3 +85,39 @@ pub fn handles(s: &mut Surface<'_>, rect: DeviceRect, accent: u32) {
         s.fill(x0 + edge, y0 + edge, x1 - edge, y1 - edge, [255, 255, 255]);
     }
 }
+
+/// Paints the live rotated selection outline around its bounds centre.
+pub fn rotation_preview(s: &mut Surface<'_>, rect: DeviceRect, degrees: f64, accent: u32) {
+    let (cx, cy) = ((rect.0 + rect.2) / 2.0, (rect.1 + rect.3) / 2.0);
+    let (sin, cos) = degrees.to_radians().sin_cos();
+    let corners = [
+        (rect.0, rect.1),
+        (rect.2, rect.1),
+        (rect.2, rect.3),
+        (rect.0, rect.3),
+    ];
+    let points = corners.map(|(x, y)| {
+        let (dx, dy) = (x - cx, y - cy);
+        (cx + dx * cos - dy * sin, cy + dx * sin + dy * cos)
+    });
+    for i in 0..4 {
+        line(s, points[i], points[(i + 1) % 4], rgb(accent));
+    }
+}
+
+fn line(s: &mut Surface<'_>, a: (f64, f64), b: (f64, f64), color: [u8; 3]) {
+    let steps = (b.0 - a.0).abs().max((b.1 - a.1).abs()).ceil() as usize;
+    for step in 0..=steps {
+        let t = if steps == 0 {
+            0.0
+        } else {
+            step as f64 / steps as f64
+        };
+        s.blend(
+            (a.0 + (b.0 - a.0) * t).round() as i64,
+            (a.1 + (b.1 - a.1) * t).round() as i64,
+            color,
+            1.0,
+        );
+    }
+}

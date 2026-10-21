@@ -145,7 +145,10 @@ impl TimelinePresentation {
                 | Hit::Loop
                 | Hit::OnionBefore
                 | Hit::AddDrawingTrack
-                | Hit::ImportDrawing),
+                | Hit::ImportDrawing
+                | Hit::DuplicateTrack(_)
+                | Hit::DeleteTrack(_)
+                | Hit::Ease(_)),
             ) => Some(hit),
             _ => None,
         }

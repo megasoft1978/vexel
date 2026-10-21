@@ -81,8 +81,8 @@ fn empty_selection_lays_out_one_card_and_selection_restores_the_rows() {
     assert!(empty.section_headers[4].width > 0, "Animation stays");
     let selected = open_model(Mode::Draw, true).layout(1280, 820).unwrap();
     assert_eq!(selected, Layout::new(1280, 820, Mode::Draw).unwrap());
-    // Fill/Stroke bodies grew to host the colour swatches and stroke-width presets.
-    for (i, h) in [(0, 52), (1, 72), (2, 136)] {
+    // Bodies grew for the swatches, stroke-width presets, opacity, gradient, dash and transform rows.
+    for (i, h) in [(0, 68), (1, 192), (2, 166)] {
         assert_eq!(selected.section_bodies[i].height, h);
         assert_eq!(SECTION_BODY_H[i], h);
     }

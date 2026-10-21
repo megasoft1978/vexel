@@ -1,6 +1,6 @@
 use crate::animation::driver::Driver;
 use crate::animation::playback::ManualClock;
-use crate::preview::{parse_operation, PreviewArgumentError};
+use crate::preview::{PreviewArgumentError, parse_operation};
 use crate::session::{AppDocument, McpHost, McpOutcome};
 use vexel_json::JsonDocument;
 use vexel_v1_document::{TextAnchor, TextSpec};
@@ -278,12 +278,14 @@ fn animation_control_documented_calls_work_or_say_why() {
     assert!(
         run(&mut app, "animation_control", "\"action\":\"pause\"").contains("\"playing\":false")
     );
-    assert!(run(
-        &mut app,
-        "animation_control",
-        "\"action\":\"seek\",\"timeMs\":500"
-    )
-    .contains("\"timeSeconds\":0.500"));
+    assert!(
+        run(
+            &mut app,
+            "animation_control",
+            "\"action\":\"seek\",\"timeMs\":500"
+        )
+        .contains("\"timeSeconds\":0.500")
+    );
     for (args, expected) in [
         (
             "\"action\":\"seek\"",

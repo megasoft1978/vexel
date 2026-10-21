@@ -54,6 +54,9 @@ pub enum Hit {
     Track(usize),
     Visibility(usize),
     Item { track: usize, item: usize },
+    Ease(&'static str),
+    DuplicateTrack(usize),
+    DeleteTrack(usize),
     Lane(usize),
     Empty,
 }
@@ -309,6 +312,16 @@ impl TimelineLayout {
             return Hit::Empty;
         }
         if inside(self.transport, x, y) {
+            if let Some((_, track)) = model.selected_item().map(|(ti, _, tr, _)| (ti, tr)) {
+                if matches!(track.kind, super::NativeTrackKind::Property) {
+                    let start = self.transport.x.saturating_add(220);
+                    let local = (x as u32).saturating_sub(start);
+                    let eases = ["linear", "ease_in", "ease_out", "ease_in_out", "step"];
+                    if self.transport.width >= 380 && local < 5 * 28 {
+                        return Hit::Ease(eases[(local / 28) as usize]);
+                    }
+                }
+            }
             let selector = self.mode_selector();
             if inside(selector, x, y) {
                 let local_x = x.saturating_sub(selector.x as i32).max(0) as u32;
@@ -334,6 +347,14 @@ impl TimelineLayout {
             let Some(track) = model.tracks.get(index) else {
                 return Hit::Empty;
             };
+            let row = self.row_rect(index);
+            if x >= row.x.saturating_add(row.width).saturating_sub(48) as i32 {
+                return if x >= row.x.saturating_add(row.width).saturating_sub(24) as i32 {
+                    Hit::DeleteTrack(index)
+                } else {
+                    Hit::DuplicateTrack(index)
+                };
+            }
             if x < (self
                 .panel
                 .x

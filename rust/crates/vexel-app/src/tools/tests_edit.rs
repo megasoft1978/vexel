@@ -28,20 +28,20 @@ fn down_selects_the_topmost_shape_and_drag_moves_it_by_the_mapped_delta() {
     );
     assert_eq!(doc.history_count(), 0, "selecting is not an edit");
     assert_eq!(click(&mut c, &mut doc, (15.0, 15.0)), Ok(Outcome::Updated));
-    assert_eq!(c.selection(), Some("a"));
+    assert_eq!(c.selection(), Some("b"));
 
     let got = one_undoable_entry(&mut doc, |d| {
         assert_eq!(
-            drag(&mut c, d, (15.0, 15.0), (25.0, 18.5)),
+            drag(&mut c, d, (40.0, 40.0), (50.0, 43.5)),
             Ok(Outcome::Committed)
         );
     });
     assert!(
-        got.contains("<rect id=\"a\" x=\"2e1\" y=\"1.35e1\" width=\"50\" height=\"50\"/>"),
+        got.contains("<rect id=\"b\" x=\"4e1\" y=\"3.35e1\" width=\"50\" height=\"50\"/>"),
         "{got}"
     );
-    assert!(got.contains("<rect id=\"b\" x=\"30\" y=\"30\""));
-    assert_eq!(c.selection(), Some("a"));
+    assert!(got.contains("<rect id=\"a\" x=\"10\" y=\"10\""));
+    assert_eq!(c.selection(), Some("b"));
 }
 
 #[test]
@@ -480,4 +480,81 @@ fn scale_map_rejects_invalid_parameters_and_out_of_artboard_points() {
     assert_eq!(m.to_doc(9.0, 20.0), None);
     assert_eq!(m.to_doc(411.0, 20.0), None);
     assert_eq!(m.to_doc(f64::NAN, 20.0), None);
+}
+
+#[test]
+fn edit_shortcuts_group_duplicate_reorder_and_undo() {
+    use super::EditKey;
+    let mut doc = with(
+        "<rect id=\"a\" x=\"10\" y=\"10\" width=\"20\" height=\"20\"/><rect id=\"b\" x=\"50\" y=\"10\" width=\"20\" height=\"20\"/>",
+    );
+    let mut c = ToolController::new();
+    c.set_tool(Tool::Select);
+    c.select_id(&doc, "a").unwrap();
+    let before = doc.source().unwrap();
+    assert_eq!(
+        c.edit_key(EditKey::Duplicate, &mut doc),
+        Ok(Outcome::Committed)
+    );
+    assert_eq!(
+        doc.history_count(),
+        2,
+        "duplicate and offset are two entries"
+    );
+    let duplicate = c.selection().unwrap().to_owned();
+    assert_eq!(
+        doc.geometry_bounds(&duplicate).unwrap(),
+        (22.0, 22.0, 42.0, 42.0)
+    );
+    doc.undo().unwrap();
+    doc.undo().unwrap();
+    assert_eq!(doc.source().unwrap(), before);
+    c.select_id(&doc, "a").unwrap();
+    assert_eq!(c.edit_key(EditKey::Group, &mut doc), Ok(Outcome::Ignored));
+    assert_eq!(
+        c.edit_key(EditKey::Forward, &mut doc),
+        Ok(Outcome::Committed)
+    );
+}
+
+#[test]
+fn group_selects_as_unit_then_second_click_selects_child() {
+    let mut doc =
+        with("<g id=\"g\"><rect id=\"child\" x=\"10\" y=\"10\" width=\"20\" height=\"20\"/></g>");
+    let mut c = ToolController::new();
+    c.set_tool(Tool::Select);
+    assert_eq!(click(&mut c, &mut doc, (15.0, 15.0)), Ok(Outcome::Updated));
+    assert_eq!(c.selection(), Some("g"));
+    assert_eq!(click(&mut c, &mut doc, (15.0, 15.0)), Ok(Outcome::Updated));
+    assert_eq!(c.selection(), Some("child"));
+    assert_eq!(c.key(Key::Escape, &mut doc), Ok(Outcome::Updated));
+    assert_eq!(c.selection(), None);
+}
+
+#[test]
+fn rotation_affordance_previews_and_commits_one_transform_edit() {
+    let mut doc = with("<rect id=\"r\" x=\"20\" y=\"20\" width=\"20\" height=\"20\"/>");
+    let mut c = ToolController::new();
+    c.set_tool(Tool::Select);
+    c.select_id(&doc, "r").unwrap();
+    let m = map();
+    let start = (20.0 - 6.0, 20.0 - 6.0);
+    down(&mut c, &mut doc, &m, start).unwrap();
+    mv(&mut c, &mut doc, &m, (34.0, 14.0)).unwrap();
+    assert!(c.rotate_preview().is_some());
+    let count = doc.history_count();
+    assert_eq!(
+        up(&mut c, &mut doc, &m, (34.0, 14.0)),
+        Ok(Outcome::Committed)
+    );
+    assert_eq!(doc.history_count(), count + 1);
+    let after = doc.source().unwrap();
+    doc.undo().unwrap();
+    assert!(
+        !String::from_utf8(doc.source().unwrap())
+            .unwrap()
+            .contains("transform=")
+    );
+    doc.redo().unwrap();
+    assert_eq!(doc.source().unwrap(), after);
 }

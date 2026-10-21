@@ -108,6 +108,33 @@ fn paint_transport(
         };
         c.paint_icon_color(icon, rect(cell.x + 6, cell.y + 6, 16, 16), color);
     }
+    if m.selected_item()
+        .is_some_and(|(_, _, track, _)| matches!(track.kind, super::NativeTrackKind::Property))
+    {
+        let labels = [
+            ("linear", "—"),
+            ("ease_in", "↘"),
+            ("ease_out", "↗"),
+            ("ease_in_out", "⌁"),
+            ("step", "⊓"),
+        ];
+        let start = l.transport.x.saturating_add(220);
+        if l.transport.width >= 380 {
+            for (i, (ease, glyph)) in labels.iter().enumerate() {
+                let cell = rect(start + i as u32 * 28, y, 26, 24);
+                c.paint_round(cell, 4, t.panel_hover, t.separator, 1);
+                if s.hover == Some(Hit::Ease(ease)) {
+                    c.paint_round(cell, 4, t.pressed_fill, t.accent, 1);
+                }
+                centred(c, glyph, cell, t.text_secondary, 13, FontWeight::Semibold);
+                if let Some((_, _, _, item)) = m.selected_item() {
+                    if item.ease.as_deref() == Some(*ease) {
+                        c.paint_rect(rect(cell.x + 4, cell.y + 21, 18, 1), t.accent);
+                    }
+                }
+            }
+        }
+    }
     let tick_label = format!(
         "{} / {}  {}%",
         m.current_tick,
@@ -256,6 +283,30 @@ fn paint_tracks(
                     t.text_tertiary
                 },
             );
+        }
+        if row.width >= 48 {
+            let duplicate = rect(row.x + row.width - 44, row.y + 6, 16, 16);
+            let delete = rect(row.x + row.width - 22, row.y + 6, 16, 16);
+            c.paint_icon_color(IconKind::DUPLICATE, duplicate, t.text_tertiary);
+            c.paint_icon_color(IconKind::TRASH, delete, t.text_tertiary);
+            if s.hover == Some(Hit::DuplicateTrack(index)) {
+                c.paint_round(
+                    rect(duplicate.x - 4, duplicate.y - 4, 24, 24),
+                    4,
+                    t.panel_hover,
+                    0,
+                    0,
+                );
+            }
+            if s.hover == Some(Hit::DeleteTrack(index)) {
+                c.paint_round(
+                    rect(delete.x - 4, delete.y - 4, 24, 24),
+                    4,
+                    t.panel_hover,
+                    0,
+                    0,
+                );
+            }
         }
         let kind = if matches!(track.kind, super::NativeTrackKind::Drawing) {
             "Drawing"

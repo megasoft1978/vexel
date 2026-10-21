@@ -34,6 +34,8 @@ pub enum Key {
     AddDrawingTrack,
     ImportDrawing,
     AddOpacityKey,
+    DuplicateTrack,
+    DeleteTrack,
     ZoomIn,
     ZoomOut,
     PageLeft,
@@ -55,6 +57,7 @@ enum Press {
         track: usize,
         tick: u32,
         origin_x: i32,
+        property: bool,
     },
 }
 
@@ -124,6 +127,7 @@ impl InteractionState {
                     | Hit::ImportDrawing => {
                         self.press = Some(Press::Button(hit));
                     }
+                    Hit::Ease(_) => self.press = Some(Press::Button(hit)),
                     Hit::Ruler | Hit::Lane(_) => {
                         self.press = Some(Press::Seek);
                     }
@@ -135,6 +139,9 @@ impl InteractionState {
                                 track_id: track.id.clone(),
                             });
                         }
+                    }
+                    Hit::DuplicateTrack(_) | Hit::DeleteTrack(_) => {
+                        self.press = Some(Press::Button(hit))
                     }
                     Hit::Visibility(index) => {
                         if let Some(track) = model.tracks.get(index) {
@@ -155,6 +162,7 @@ impl InteractionState {
                                 track,
                                 tick: it.tick,
                                 origin_x: point.0,
+                                property: matches!(tr.kind, super::NativeTrackKind::Property),
                             });
                             actions.push(NativeTimelineAction::SelectTrack {
                                 track_id: tr.id.clone(),
@@ -178,10 +186,14 @@ impl InteractionState {
                 }) = &self.press
                 {
                     if point.0.abs_diff(*origin_x) >= DRAG_SLOP as u32 {
+                        let mut to_tick = layout.tick_at(point.0);
+                        if matches!(&self.press, Some(Press::Item { property: true, .. })) {
+                            to_tick = to_tick.max(1);
+                        }
                         self.drag_preview = Some(DragPreview {
                             track_index: *track,
                             from_tick: *tick,
-                            to_tick: layout.tick_at(point.0),
+                            to_tick,
                         });
                     }
                 }
@@ -190,6 +202,30 @@ impl InteractionState {
                 let press = self.press.take();
                 match press {
                     Some(Press::Button(button)) if button == hit => match button {
+                        Hit::DuplicateTrack(index) => {
+                            if let Some(track) = model.tracks.get(index) {
+                                actions.push(NativeTimelineAction::DuplicateTrack {
+                                    track_id: track.id.clone(),
+                                });
+                            }
+                        }
+                        Hit::DeleteTrack(index) => {
+                            if let Some(track) = model.tracks.get(index) {
+                                actions.push(NativeTimelineAction::RemoveTrack {
+                                    track_id: track.id.clone(),
+                                });
+                            }
+                        }
+                        Hit::Ease(ease) => {
+                            if let Some((_, _, track, item)) = model.selected_item() {
+                                actions.push(NativeTimelineAction::SetPropertyKeyEase {
+                                    track_id: track.id.clone(),
+                                    tick: item.tick,
+                                    value: item.label.clone(),
+                                    ease: ease.to_owned(),
+                                });
+                            }
+                        }
                         Hit::Play => actions.push(NativeTimelineAction::TogglePlayback),
                         Hit::Loop => actions.push(NativeTimelineAction::SetLoop {
                             enabled: !model.loop_enabled,
@@ -227,12 +263,22 @@ impl InteractionState {
                         track,
                         tick,
                         origin_x,
+                        property,
                     }) => {
                         if point.0.abs_diff(origin_x) >= DRAG_SLOP as u32 {
-                            let to_tick = layout.tick_at(point.0);
+                            let mut to_tick = layout.tick_at(point.0);
+                            if property {
+                                to_tick = to_tick.max(1);
+                            }
                             if to_tick != tick {
                                 if let Some(tr) = model.tracks.get(track) {
-                                    if model.can_edit_selected_item
+                                    if model.can_edit_selected_item && property {
+                                        actions.push(NativeTimelineAction::MovePropertyKey {
+                                            track_id: tr.id.clone(),
+                                            from_tick: tick,
+                                            to_tick,
+                                        });
+                                    } else if model.can_edit_selected_item
                                         && matches!(tr.kind, super::NativeTrackKind::Drawing)
                                     {
                                         actions.push(NativeTimelineAction::MoveCel {
@@ -297,15 +343,11 @@ impl InteractionState {
             }],
             Key::Up => self.select_adjacent(model, false),
             Key::Down => self.select_adjacent(model, true),
-            Key::Delete if model.can_edit_selected_item => self
-                .selected_cel(model)
-                .into_iter()
-                .map(|(track, tick)| NativeTimelineAction::RemoveCel {
-                    track_id: track,
-                    tick,
-                })
-                .collect(),
+            Key::Delete if model.can_edit_selected_item => {
+                self.selected_edit(model).into_iter().collect()
+            }
             Key::Delete => Vec::new(),
+            Key::DuplicateTrack | Key::DeleteTrack => Vec::new(),
             Key::AddDrawingTrack if model.can_add_drawing_track => self
                 .target_action(model, |target_id| {
                     NativeTimelineAction::RequestAddDrawingTrack { target_id }
@@ -340,6 +382,28 @@ impl InteractionState {
             return None;
         }
         Some((track.id.clone(), track.items.get(item)?.tick))
+    }
+
+    fn selected_edit(&self, model: &TimelineModel) -> Option<NativeTimelineAction> {
+        let (track_index, item_index) = self
+            .selected_item
+            .or_else(|| model.selected_item().map(|(ti, ii, _, _)| (ti, ii)))?;
+        let track = model.tracks.get(track_index)?;
+        let item = track.items.get(item_index)?;
+        if item.tick == 0 {
+            return None;
+        }
+        Some(if matches!(track.kind, super::NativeTrackKind::Property) {
+            NativeTimelineAction::RemovePropertyKey {
+                track_id: track.id.clone(),
+                tick: item.tick,
+            }
+        } else {
+            NativeTimelineAction::RemoveCel {
+                track_id: track.id.clone(),
+                tick: item.tick,
+            }
+        })
     }
 
     fn target_action(
@@ -532,6 +596,7 @@ mod tests {
                     tick: 10,
                     label: "Pose A".into(),
                     selected: true,
+                    ease: None,
                 }],
             }],
             selected_target: None,
@@ -619,5 +684,94 @@ mod tests {
             }]
         );
         assert!(state.drag_preview.is_none());
+    }
+
+    #[test]
+    fn property_key_drag_selection_and_zero_protection_emit_one_move() {
+        let mut model = model();
+        model.tracks[0].kind = super::super::NativeTrackKind::Property;
+        model.tracks[0].items.push(super::super::model::Item {
+            tick: 20,
+            label: "0.5".into(),
+            selected: false,
+            ease: None,
+        });
+        let layout = TimelineLayout::new(
+            vexel_ui::Rect {
+                x: 0,
+                y: 0,
+                width: 600,
+                height: 120,
+            },
+            &model,
+            Viewport::full(&model),
+        );
+        let y = (layout.rows.y + 12) as i32;
+        let x = layout.lane_x(20).round() as i32;
+        let mut state = InteractionState::default();
+        let selected = state.pointer(Phase::Down, (x, y), &layout, &model);
+        assert!(
+            selected
+                .iter()
+                .any(|action| matches!(action, NativeTimelineAction::SelectItem { tick: 20, .. }))
+        );
+        let zero_x = layout.lane_x(0).round() as i32;
+        state.pointer(Phase::Move, (zero_x, y), &layout, &model);
+        assert_eq!(state.drag_preview.map(|preview| preview.to_tick), Some(1));
+        assert!(
+            state
+                .pointer(Phase::Up, (zero_x, y), &layout, &model)
+                .iter()
+                .any(|action| matches!(
+                    action,
+                    NativeTimelineAction::MovePropertyKey { to_tick: 1, .. }
+                ))
+        );
+        let mut zero_selected = model.clone();
+        zero_selected.tracks[0].items = vec![super::super::model::Item {
+            tick: 0,
+            label: "1.0".into(),
+            selected: true,
+            ease: None,
+        }];
+        state.selected_item = Some((0, 0));
+        assert!(
+            state.key(Key::Delete, &zero_selected).is_empty(),
+            "tick zero is immutable"
+        );
+    }
+
+    #[test]
+    fn property_key_delete_and_track_buttons_emit_edits() {
+        let mut model = model();
+        model.tracks[0].kind = super::super::NativeTrackKind::Property;
+        let layout = TimelineLayout::new(
+            vexel_ui::Rect {
+                x: 0,
+                y: 0,
+                width: 600,
+                height: 120,
+            },
+            &model,
+            Viewport::full(&model),
+        );
+        let mut state = InteractionState::default();
+        assert_eq!(
+            state.key(Key::Delete, &model),
+            vec![NativeTimelineAction::RemovePropertyKey {
+                track_id: "body".into(),
+                tick: 10
+            }]
+        );
+        let duplicate = layout.hit_test(&model, 560, (layout.rows.y + 10) as i32);
+        assert_eq!(duplicate, Hit::DuplicateTrack(0));
+        let p = (560, (layout.rows.y + 10) as i32);
+        state.pointer(Phase::Down, p, &layout, &model);
+        assert_eq!(
+            state.pointer(Phase::Up, p, &layout, &model),
+            vec![NativeTimelineAction::DuplicateTrack {
+                track_id: "body".into()
+            }]
+        );
     }
 }

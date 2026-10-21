@@ -12,6 +12,7 @@ mod map;
 mod natural;
 mod overlay;
 mod paint;
+mod rotate;
 mod size;
 mod state;
 mod surface;
@@ -27,6 +28,7 @@ pub use overlay::{
 pub use paint::{
     CHECKER, SHADOW_LAYERS, StagePaint, artboard_device_rect, over, paint_stage, well_fill,
 };
+pub use rotate::{rotation_targets, snapped_rotation};
 pub use size::{artboard_pixels, frame_matches, target_compose_size};
 pub use state::CanvasState;
 pub use view::{FIT_MARGIN, FIT_MAX_ZOOM, MAX_ZOOM, MIN_ZOOM, View, ZOOM_STEP, percent_label};

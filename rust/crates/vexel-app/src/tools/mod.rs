@@ -8,14 +8,20 @@
 mod controller;
 mod map;
 mod pen;
+mod shortcuts;
 
-pub use controller::{Key, Outcome, PointerInput, ToolController, ToolError};
+pub use controller::{EditKey, Key, Outcome, PointerInput, ToolController, ToolError};
 pub use map::{CanvasMap, ScaleMap, stage_local};
 pub use pen::MAX_PEN_VERTICES;
+pub use shortcuts::edit_tool_key;
 
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tests_edit;
+#[cfg(test)]
+mod tests_rotate;
+#[cfg(test)]
+mod tests_structure;
 #[cfg(test)]
 mod tests_support;

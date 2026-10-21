@@ -17,7 +17,7 @@ mod transform;
 
 pub use draw::{ElementKind, HIT_TOLERANCE};
 pub use paint_defs::{GradientStop, GradientUnits, Spread};
-pub use path_data::{validate_path_data, MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS};
+pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
 pub use query::{ElementInfo, Query, TreeEntry, TreeNode};
 pub use structure::Reorder;
 pub use text::{TextAnchor, TextSpec};

@@ -351,6 +351,106 @@ fn escaped_timeline_strings_are_decoded_for_snapshot_and_commands() {
 }
 
 #[test]
+fn property_key_edits_and_track_ops_round_trip_through_document_history() {
+    let mut doc = document();
+    doc.edit_timeline(settings(), EditLimits::default(), |candidate| {
+        candidate.add_property_track(
+            b"opacity", b"shape", b"opacity", b"scalar", b"linear", b"1.0", b"Opacity",
+        )
+    })
+    .unwrap();
+    let mut controller = NativeAnimationController::default();
+    let initial_candidate = doc
+        .native_timeline_candidate(settings(), EditLimits::default())
+        .unwrap();
+    let initial = initial_candidate.view().unwrap();
+    let start_revision = doc.state_revision();
+    assert!(
+        action(
+            &mut controller,
+            &mut doc,
+            NativeTimelineAction::MovePropertyKey {
+                track_id: "opacity".into(),
+                from_tick: 0,
+                to_tick: 2
+            }
+        )
+        .changed
+            == false
+    );
+    assert_eq!(
+        doc.state_revision(),
+        start_revision,
+        "tick zero cannot move"
+    );
+    assert!(
+        action(
+            &mut controller,
+            &mut doc,
+            NativeTimelineAction::SetPropertyKeyEase {
+                track_id: "opacity".into(),
+                tick: 0,
+                value: "1.0".into(),
+                ease: "step".into()
+            }
+        )
+        .changed
+            == false
+    );
+    let before = doc.state_revision();
+    assert!(
+        action(
+            &mut controller,
+            &mut doc,
+            NativeTimelineAction::DuplicateTrack {
+                track_id: "opacity".into()
+            }
+        )
+        .changed
+    );
+    assert_eq!(doc.state_revision(), before + 1);
+    assert!(doc.undo().unwrap());
+    assert_eq!(
+        doc.native_timeline_candidate(settings(), EditLimits::default())
+            .unwrap()
+            .view()
+            .unwrap()
+            .track_count(),
+        initial.track_count()
+    );
+    assert!(doc.redo().unwrap());
+    assert_eq!(
+        doc.native_timeline_candidate(settings(), EditLimits::default())
+            .unwrap()
+            .view()
+            .unwrap()
+            .track_count(),
+        initial.track_count() + 1
+    );
+    let before = doc.state_revision();
+    assert!(
+        action(
+            &mut controller,
+            &mut doc,
+            NativeTimelineAction::RemoveTrack {
+                track_id: "opacity_copy1".into()
+            }
+        )
+        .changed
+    );
+    assert_eq!(doc.state_revision(), before + 1);
+    assert!(doc.undo().unwrap());
+    assert_eq!(
+        doc.native_timeline_candidate(settings(), EditLimits::default())
+            .unwrap()
+            .view()
+            .unwrap()
+            .track_count(),
+        initial.track_count() + 1
+    );
+}
+
+#[test]
 fn stale_timeline_target_disables_snapshot_but_keeps_mode_switch_available() {
     let mut files =
         vexel_app::file_ui::FileUi::with_size(Panel(PanelResult::Cancelled), (32, 24)).unwrap();

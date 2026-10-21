@@ -10,6 +10,13 @@ use crate::session::{AppDocument, window_title};
 use vexel_geometry::Affine;
 use vexel_ui::Rect;
 
+#[path = "inspector_ext_state.rs"]
+mod ext_state;
+pub use ext_state::{
+    Dash, FillKind, ShapeExt, TransformParts, TransformView, hex_text, normalize_degrees, parse_hex,
+};
+pub(crate) use ext_state::{attr, round_to};
+
 pub const NO_DOCUMENT: &str = "No document open";
 pub const NO_SELECTION: &str = "No selection";
 pub const NO_DOCUMENT_TO_ANIMATE: &str = "No document to animate";
@@ -52,6 +59,8 @@ pub struct AppState {
     /// Typed error of the last failed open or compose.
     pub error: Option<String>,
     pub selection: Option<ShapeProps>,
+    /// Opacity, gradient, dash and transform rows of the selection.
+    pub ext: Option<ShapeExt>,
     /// SMIL loop length in seconds; `0` for a static document.
     pub loop_seconds: f64,
     /// Canvas zoom in whole percent (the same number the zoom cluster shows).
@@ -74,6 +83,9 @@ impl AppState {
                 .filter(|(_, error)| *error)
                 .map(|(text, _)| text.to_owned()),
             selection: view.selected_shape().map(ShapeProps::from_shape),
+            ext: view
+                .selected_target_id()
+                .and_then(|id| ShapeExt::read(doc.document(), id)),
             loop_seconds: 0.0,
             zoom_percent: view.canvas.view.percent(),
         }

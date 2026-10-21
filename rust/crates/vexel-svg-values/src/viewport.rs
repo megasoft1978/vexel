@@ -226,19 +226,22 @@ pub fn parse_root_viewport(attributes: AttributeList<'_>) -> Result<RootViewport
     let height =
         parse_length_with_limits(attributes.source(), height_span, 0.0, attributes.limits())
             .map_err(value_error)?;
-    if !(1.0..=4096.0).contains(&width) || !(1.0..=4096.0).contains(&height) {
+    if !width.is_finite() || width <= 0.0 || !height.is_finite() || height <= 0.0 {
         return Err(err(
             MappingErrorKind::Viewport,
-            if !(1.0..=4096.0).contains(&width) {
+            if !width.is_finite() || width <= 0.0 {
                 width_span.start
             } else {
                 height_span.start
             },
         ));
     }
+    let output_scale = (4096.0 / width.max(height)).min(1.0);
+    let output_width = (width * output_scale).ceil().clamp(1.0, 4096.0) as u32;
+    let output_height = (height * output_scale).ceil().clamp(1.0, 4096.0) as u32;
     let mut result = RootViewport {
-        width: width.ceil() as u32,
-        height: height.ceil() as u32,
+        width: output_width,
+        height: output_height,
         view_x: 0.0,
         view_y: 0.0,
         view_width: width,
@@ -794,6 +797,61 @@ mod tests {
         let use_attrs = AttributeList::new(symbol_source, use_span, &use_values).unwrap();
         let mapping = parse_symbol_mapping(target, use_attrs, 100.0, 80.0).unwrap();
         assert_eq!((mapping.a, mapping.e, mapping.f), (4.0, 25.0, 4.0));
+    }
+
+    #[test]
+    fn oversized_root_dimensions_scale_output_together_and_keep_viewbox_units() {
+        let source = b"svg width 8000 height 2000 viewBox 0 0 8000 2000";
+        let (attributes, span) = list(
+            source,
+            b"svg",
+            &[
+                (b"width", b"8000"),
+                (b"height", b"2000"),
+                (b"viewBox", b"0 0 8000 2000"),
+            ],
+        );
+        let root =
+            parse_root_viewport(AttributeList::new(source, span, &attributes).unwrap()).unwrap();
+        assert_eq!((root.width, root.height), (4096, 1024));
+        assert_eq!((root.view_width, root.view_height), (8000.0, 2000.0));
+
+        let transform = viewbox_transform(
+            root.view_x,
+            root.view_y,
+            root.view_width,
+            root.view_height,
+            0.0,
+            0.0,
+            f64::from(root.width),
+            f64::from(root.height),
+            root.preserve_aspect,
+        )
+        .unwrap();
+        assert_eq!((transform.a, transform.d), (0.512, 0.512));
+    }
+
+    #[test]
+    fn root_dimensions_still_reject_non_positive_and_malformed_values() {
+        for (width, height) in [
+            (b"0".as_slice(), b"20".as_slice()),
+            (b"20", b"-1"),
+            (b"bad", b"20"),
+        ] {
+            let source = [
+                b"svg width ".as_slice(),
+                width,
+                b" height ".as_slice(),
+                height,
+            ]
+            .concat();
+            let (attributes, span) =
+                list(&source, b"svg", &[(b"width", width), (b"height", height)]);
+            assert!(
+                parse_root_viewport(AttributeList::new(&source, span, &attributes).unwrap())
+                    .is_err()
+            );
+        }
     }
 
     #[test]
