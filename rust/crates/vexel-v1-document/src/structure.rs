@@ -1,11 +1,7 @@
 //! Source-preserving tree edits for V1 documents.
 
 use crate::{ElementKind, V1Document, V1DocumentError, path_data};
-use std::sync::Arc;
-use vexel_document_edit::{
-    EditLimits, Editor, SourceSpan, document_view_first_child, document_view_next_sibling,
-    encode_attribute,
-};
+use vexel_document_edit::{SourceSpan, document_view_first_child, document_view_next_sibling};
 
 /// Sibling z-order movement.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -250,25 +246,24 @@ impl V1Document {
 
     /// Deep-copies an element immediately after it, assigning fresh IDs to all ID-bearing descendants.
     pub fn duplicate(&mut self, id: &str) -> Result<String, V1DocumentError> {
-        let node = self.find_node(id)?;
-        let span = self
-            .editor
-            .source_span(node)
-            .ok_or(V1DocumentError::MissingStableId)?;
-        let source = self.source()?;
-        let original = &source[span.offset..span.offset + span.length];
-        let copy = self.rewrite_ids(original)?;
-        let new_id = extract_root_id(&copy).ok_or(V1DocumentError::MissingStableId)?;
-        self.editor.replace_source_span(
-            SourceSpan {
-                offset: span.offset + span.length,
-                length: 0,
-            },
-            &copy,
-        )?;
-        self.editor
-            .history_relabel_latest(vexel_document_edit::HistoryAction::EditObjects);
-        Ok(new_id)
+        self.duplicate_element(id)
+    }
+
+    pub(crate) fn next_stable_id(&self) -> Result<String, V1DocumentError> {
+        self.next_stable_id_from(&[])
+    }
+
+    pub(crate) fn next_stable_id_from(
+        &self,
+        reserved: &[String],
+    ) -> Result<String, V1DocumentError> {
+        for n in 1u64..u64::MAX {
+            let id = format!("vexel-object-{n}");
+            if !reserved.contains(&id) && self.editor.try_find_id(id.as_bytes())?.is_none() {
+                return Ok(id);
+            }
+        }
+        Err(V1DocumentError::FormattingLimit)
     }
 
     /// Reorders an element among its siblings. Moving to an existing edge is a no-op.
@@ -393,84 +388,6 @@ impl V1Document {
             .history_relabel_latest(vexel_document_edit::HistoryAction::EditObjects);
         Ok(())
     }
-
-    fn next_stable_id(&self) -> Result<String, V1DocumentError> {
-        self.next_stable_id_from(&[])
-    }
-
-    fn next_stable_id_from(&self, reserved: &[String]) -> Result<String, V1DocumentError> {
-        for n in 1u64..u64::MAX {
-            let id = format!("vexel-object-{n}");
-            if !reserved.contains(&id) && self.editor.try_find_id(id.as_bytes())?.is_none() {
-                return Ok(id);
-            }
-        }
-        Err(V1DocumentError::FormattingLimit)
-    }
-    fn rewrite_ids(&self, source: &[u8]) -> Result<Vec<u8>, V1DocumentError> {
-        let parsed = Editor::create(&Arc::new(source.to_vec()), EditLimits::default());
-        if parsed.error != vexel_document_edit::EditError::Ok {
-            return Err(V1DocumentError::Edit(parsed.error));
-        }
-        let editor = parsed.editor.ok_or(V1DocumentError::Edit(
-            vexel_document_edit::EditError::InvalidOperation,
-        ))?;
-        let model = editor.try_model()?;
-        let root = editor.root().ok_or(V1DocumentError::Edit(
-            vexel_document_edit::EditError::InvalidOperation,
-        ))?;
-        let mut nodes = vec![root];
-        let mut plans: Vec<(usize, usize, Vec<u8>)> = Vec::new();
-        let mut reserved = Vec::<String>::new();
-        while let Some(node) = nodes.pop() {
-            let mut child = document_view_first_child(model, node);
-            while let Some(item) = child {
-                nodes.push(item);
-                child = document_view_next_sibling(model, item);
-            }
-            for index in 0..editor.attribute_count(node) {
-                let Some(attribute) = editor.attribute_at(node, index) else {
-                    continue;
-                };
-                if editor.span_bytes(attribute.name) != Some(b"id") {
-                    continue;
-                }
-                let fresh = self.next_stable_id_from(&reserved)?;
-                reserved.push(fresh.clone());
-                plans.push((
-                    attribute.value.offset,
-                    attribute.value.length,
-                    encode_attribute(fresh.as_bytes(), attribute.quote)?,
-                ));
-            }
-        }
-        plans.sort_by_key(|p| std::cmp::Reverse(p.0));
-        let mut out = source.to_vec();
-        for (offset, length, replacement) in plans {
-            out.splice(offset..offset + length, replacement);
-        }
-        Ok(out)
-    }
-}
-
-fn extract_root_id(xml: &[u8]) -> Option<String> {
-    let parsed = Editor::create(&Arc::new(xml.to_vec()), EditLimits::default());
-    if parsed.error != vexel_document_edit::EditError::Ok {
-        return None;
-    }
-    let editor = parsed.editor?;
-    let root = editor.root()?;
-    for index in 0..editor.attribute_count(root) {
-        let attribute = editor.attribute_at(root, index)?;
-        if editor.span_bytes(attribute.name)? == b"id" {
-            return Some(
-                std::str::from_utf8(editor.span_bytes(attribute.value)?)
-                    .ok()?
-                    .to_owned(),
-            );
-        }
-    }
-    None
 }
 
 #[cfg(test)]

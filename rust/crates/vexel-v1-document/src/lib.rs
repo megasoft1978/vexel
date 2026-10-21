@@ -13,6 +13,7 @@ mod path_data;
 mod query;
 mod reparent;
 mod structure;
+mod structure_defs;
 mod text;
 mod transform;
 
@@ -561,6 +562,8 @@ mod path_data_tests;
 mod query_tests;
 #[cfg(test)]
 mod snapshot_tests;
+#[cfg(test)]
+mod structure_defs_tests;
 #[cfg(test)]
 mod structure_tests;
 #[cfg(test)]
