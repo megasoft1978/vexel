@@ -14,8 +14,8 @@ const MAX_COORDINATE: f64 = 1_000_000.0;
 const MIN_STOPS: usize = 2;
 const MAX_STOPS: usize = 16;
 const MAX_AUTO_ID_ATTEMPTS: u64 = 100_000;
-const GRADIENT_PREFIX: &str = "vexel-gradient-";
-const CLIP_PREFIX: &str = "vexel-clip-";
+pub(crate) const GRADIENT_PREFIX: &str = "vexel-gradient-";
+pub(crate) const CLIP_PREFIX: &str = "vexel-clip-";
 
 /// One gradient colour stop; `color` is `#rrggbb`, offset and opacity are 0..=1.
 #[derive(Clone, Debug, PartialEq)]
@@ -161,7 +161,7 @@ impl V1Document {
             coordinate(value)?;
         }
         validate_stops(stops)?;
-        let id = self.next_def_id(GRADIENT_PREFIX)?;
+        let id = self.next_def_id(GRADIENT_PREFIX, &[])?;
         let geometry = format!(
             " x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\"",
             num(x1),
@@ -192,7 +192,7 @@ impl V1Document {
         }
         positive(r)?;
         validate_stops(stops)?;
-        let id = self.next_def_id(GRADIENT_PREFIX)?;
+        let id = self.next_def_id(GRADIENT_PREFIX, &[])?;
         let geometry = format!(
             " cx=\"{}\" cy=\"{}\" r=\"{}\" fx=\"{}\" fy=\"{}\"",
             num(cx),
@@ -290,7 +290,7 @@ impl V1Document {
         coordinate(y)?;
         positive(w)?;
         positive(h)?;
-        let id = self.next_def_id(CLIP_PREFIX)?;
+        let id = self.next_def_id(CLIP_PREFIX, &[])?;
         let markup = format!(
             "<clipPath id=\"{id}\"><rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\"/></clipPath>",
             num(x),
@@ -314,7 +314,7 @@ impl V1Document {
         coordinate(cy)?;
         positive(rx)?;
         positive(ry)?;
-        let id = self.next_def_id(CLIP_PREFIX)?;
+        let id = self.next_def_id(CLIP_PREFIX, &[])?;
         let markup = format!(
             "<clipPath id=\"{id}\"><ellipse cx=\"{}\" cy=\"{}\" rx=\"{}\" ry=\"{}\"/></clipPath>",
             num(cx),
@@ -394,7 +394,7 @@ impl V1Document {
             .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))
     }
 
-    fn top_level_defs(&self) -> Result<Vec<DocumentHandle>, V1DocumentError> {
+    pub(crate) fn top_level_defs(&self) -> Result<Vec<DocumentHandle>, V1DocumentError> {
         Ok(self
             .children(self.root_node()?)?
             .into_iter()
@@ -412,7 +412,11 @@ impl V1Document {
     }
 
     /// Finds a direct child of a top-level `<defs>` by id and tag.
-    fn def_child(&self, id: &str, tags: &[&[u8]]) -> Result<DocumentHandle, V1DocumentError> {
+    pub(crate) fn def_child(
+        &self,
+        id: &str,
+        tags: &[&[u8]],
+    ) -> Result<DocumentHandle, V1DocumentError> {
         let mut wrong_kind = false;
         for defs in self.top_level_defs()? {
             for node in self.children(defs)? {
@@ -437,8 +441,13 @@ impl V1Document {
     }
 
     /// Returns `<prefix>N` with N one past the largest numbered id already in
-    /// the definitions, then skips any collision elsewhere in the document.
-    fn next_def_id(&self, prefix: &str) -> Result<String, V1DocumentError> {
+    /// the definitions, then skips any collision elsewhere in the document or
+    /// an id in `reserved`.
+    pub(crate) fn next_def_id(
+        &self,
+        prefix: &str,
+        reserved: &[String],
+    ) -> Result<String, V1DocumentError> {
         let mut next = 1u64;
         for defs in self.top_level_defs()? {
             for node in self.children(defs)? {
@@ -454,7 +463,7 @@ impl V1Document {
         }
         for _ in 0..MAX_AUTO_ID_ATTEMPTS {
             let id = format!("{prefix}{next}");
-            if self.editor.try_find_id(id.as_bytes())?.is_none() {
+            if !reserved.contains(&id) && self.editor.try_find_id(id.as_bytes())?.is_none() {
                 return Ok(id);
             }
             next += 1;
