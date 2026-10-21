@@ -41,15 +41,30 @@ pub enum ExportFormat {
     Svg,
     Png,
     Video,
+    Apng,
+    Frames,
+    /// HEVC with alpha in a QuickTime `.mov`.
+    VideoAlpha,
 }
 impl ExportFormat {
-    pub const ALL: [Self; 4] = [Self::Gif, Self::Svg, Self::Png, Self::Video];
+    pub const ALL: [Self; 7] = [
+        Self::Gif,
+        Self::Svg,
+        Self::Png,
+        Self::Video,
+        Self::Apng,
+        Self::Frames,
+        Self::VideoAlpha,
+    ];
     pub fn label(self) -> &'static str {
         match self {
             Self::Gif => "Export as GIF\u{2026}",
             Self::Svg => "Export as SVG\u{2026}",
             Self::Png => "Export as PNG\u{2026}",
             Self::Video => "Export Video\u{2026}",
+            Self::Apng => "Export APNG\u{2026}",
+            Self::Frames => "Export PNG Frames\u{2026}",
+            Self::VideoAlpha => "HEVC with alpha (.mov)\u{2026}",
         }
     }
     pub fn extension(self) -> &'static str {
@@ -58,6 +73,9 @@ impl ExportFormat {
             Self::Svg => "svg",
             Self::Png => "png",
             Self::Video => "mp4",
+            Self::Apng => "apng",
+            Self::Frames => "png",
+            Self::VideoAlpha => "mov",
         }
     }
 }
@@ -205,7 +223,12 @@ impl Model {
             Target::Button(Button::Export) => state.open,
             Target::Button(Button::ToggleInspector) => layout.width >= INSPECTOR_MIN_WINDOW,
             Target::Button(Button::Connect) => false,
-            Target::MenuItem(ExportFormat::Video) => state.open && self.native_timeline,
+            Target::MenuItem(
+                ExportFormat::Video
+                | ExportFormat::Apng
+                | ExportFormat::Frames
+                | ExportFormat::VideoAlpha,
+            ) => state.open && self.native_timeline,
             Target::MenuItem(ExportFormat::Gif) => state.open && state.loop_seconds > 0.0,
             Target::MenuItem(_) => state.open,
             _ => true,

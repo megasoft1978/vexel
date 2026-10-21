@@ -9,6 +9,7 @@ pub mod chrome;
 pub mod compose;
 pub mod file_flow;
 pub mod file_ui;
+pub mod frames_export;
 pub mod history;
 mod inspector;
 pub mod layout;

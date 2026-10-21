@@ -13,6 +13,18 @@ fn save_suggestion_uses_document_stem_and_format_extension() {
         "Walk.mp4"
     );
     assert_eq!(suggestion(Some("Walk.svg"), ExportFormat::Png), "Walk.png");
+    assert_eq!(
+        suggestion(Some("Walk.vexel"), ExportFormat::Apng),
+        "Walk.apng"
+    );
+    assert_eq!(
+        suggestion(Some("Walk.vexel"), ExportFormat::VideoAlpha),
+        "Walk.mov"
+    );
+    assert_eq!(
+        suggestion(Some("Walk.vexel"), ExportFormat::Frames),
+        "Walk_####.png"
+    );
     assert_eq!(suggestion(None, ExportFormat::Gif), "Untitled.gif");
     assert_eq!(
         suggestion(Some(".vexel"), ExportFormat::Gif),
