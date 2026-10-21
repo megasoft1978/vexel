@@ -120,7 +120,12 @@ fn draw_body(
     model: &Model,
 ) {
     let t = c.tokens;
-    let ext = model.chrome.state.ext.as_ref().filter(|_| shape_selected(content));
+    let ext = model
+        .chrome
+        .state
+        .ext
+        .as_ref()
+        .filter(|_| shape_selected(content));
     let shape = match content {
         Inspector::Shape(p) => Some(p),
         Inspector::NoSelection => None,

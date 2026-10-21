@@ -707,7 +707,7 @@ fn route_pointer(
         .then(|| (pointer.logical.0 as u32, pointer.logical.1 as u32));
     if pointer.kind == PointerKind::Down && primary {
         if let Some(point) = point {
-            if let Some(Target::SectionHeader(index @ 5..=20)) =
+            if let Some(Target::SectionHeader(index @ 5..vexel_app::layout::EXT_END)) =
                 layout.hit_test_menus(point, model.ui.mcp_open, model.export_open)
             {
                 return toolbar_actions::inspector_edit(index, model, files, tools);

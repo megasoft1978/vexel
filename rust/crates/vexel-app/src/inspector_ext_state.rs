@@ -84,11 +84,7 @@ pub fn hex_text(rgb: [u8; 3]) -> String {
 pub(crate) fn round_to(value: f64, places: i32) -> f64 {
     let k = 10f64.powi(places);
     let r = (value * k).round() / k;
-    if r == 0.0 {
-        0.0
-    } else {
-        r
-    }
+    if r == 0.0 { 0.0 } else { r }
 }
 
 /// Degrees folded into (-180, 180].

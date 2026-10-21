@@ -4,12 +4,12 @@
 //! `add_*_gradient` + `set_fill_ref` + `set_gradient_stop` for gradients.
 
 use crate::chrome::{
-    attr, hex_text, normalize_degrees, number, parse_hex, round_to, Dash, FillKind, ShapeExt,
-    TransformParts, TransformView,
+    Dash, FillKind, ShapeExt, TransformParts, TransformView, attr, hex_text, normalize_degrees,
+    number, parse_hex, round_to,
 };
 use crate::file_ui::FileUi;
 use crate::layout::ExtControl;
-use crate::model::{Model, INSPECTOR_SWATCHES};
+use crate::model::{INSPECTOR_SWATCHES, Model};
 use crate::tools::ToolController;
 use vexel_platform_apple::PanelBackend;
 use vexel_v1_document::{

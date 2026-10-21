@@ -13,8 +13,7 @@ use vexel_ui::Rect;
 #[path = "inspector_ext_state.rs"]
 mod ext_state;
 pub use ext_state::{
-    Dash, FillKind, ShapeExt, TransformParts, TransformView, hex_text, normalize_degrees,
-    parse_hex,
+    Dash, FillKind, ShapeExt, TransformParts, TransformView, hex_text, normalize_degrees, parse_hex,
 };
 pub(crate) use ext_state::{attr, round_to};
 

@@ -4,10 +4,10 @@
 mod ui_wiring_support;
 use ui_wiring_support::*;
 use vexel_app::chrome::{
-    normalize_degrees, Dash, FillKind, Inspector, ShapeExt, ShapeProps, TransformView,
+    Dash, FillKind, Inspector, ShapeExt, ShapeProps, TransformView, normalize_degrees,
 };
 use vexel_app::layout::{
-    tooltip, ExtControl, ExtRow, EXT_COUNT, EXT_END, EXT_FIRST, SECTION_BODY_H,
+    EXT_COUNT, EXT_END, EXT_FIRST, ExtControl, ExtRow, SECTION_BODY_H, tooltip,
 };
 use vexel_app::model::{Mode, Model, Target};
 use vexel_app::render::render;

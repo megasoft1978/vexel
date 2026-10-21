@@ -2,9 +2,9 @@
 //! stops, dash presets and the transform steppers. Rects come from the layout
 //! (`Layout::ext_row` / `ExtControl`), the same ones the hit test uses.
 
-use crate::chrome::{number, parse_hex, Dash, FillKind, ShapeExt, TransformView};
+use crate::chrome::{Dash, FillKind, ShapeExt, TransformView, number, parse_hex};
 use crate::layout::paint::{centred, mono, text, text_width};
-use crate::layout::{segments, stepper_buttons, stop_swatch, ExtRow, Layout, STOP_SWATCHES};
+use crate::layout::{ExtRow, Layout, STOP_SWATCHES, segments, stepper_buttons, stop_swatch};
 use crate::model::INSPECTOR_SWATCHES;
 use vexel_ui::{FontWeight, Rect, WidgetCanvas};
 
