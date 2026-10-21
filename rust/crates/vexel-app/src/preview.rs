@@ -5,7 +5,11 @@ use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
 mod args;
+mod doc_ops;
 mod errors;
+mod ext_paint;
+mod ext_query;
+mod ext_structure;
 mod native_args;
 mod native_svg;
 #[path = "session/mcp_native.rs"]
@@ -15,6 +19,7 @@ pub(crate) use animation::{
 };
 #[cfg(test)]
 pub(crate) use animation::{rasterize, rasterize_at};
+pub(crate) use doc_ops::apply as apply_doc;
 use errors::tool_error;
 
 pub const DOCUMENT_ID: &str = "preview-document";
@@ -103,6 +108,7 @@ pub enum Operation {
     },
     ExportSvg,
     Native(native_timeline::NativeOp),
+    Doc(doc_ops::DocOp),
     RenderPng {
         path: String,
         width: Option<u32>,
@@ -680,6 +686,9 @@ pub(super) fn parse_operation(
         }
         "element_add" => Ok(args::element_add(doc, args)?),
         _ => {
+            if let Some(parsed) = doc_ops::parse(doc, args, name) {
+                return parsed;
+            }
             let tool = name
                 .strip_prefix("native_timeline_")
                 .ok_or("unsupported preview operation")?;

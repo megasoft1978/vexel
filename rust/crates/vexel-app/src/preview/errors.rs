@@ -26,6 +26,7 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
         "preview allocation failed" => message,
         "export could not render the animation" => message,
         m if m.starts_with("element_add ") => m,
+        m if DOC_TOOL_PREFIXES.iter().any(|p| m.starts_with(p)) => m,
         m if m.starts_with("native_timeline_") => m,
         m if m.starts_with("native timeline ") => m,
         m if m.starts_with("export ") => m,
@@ -51,3 +52,19 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
         is_error: true,
     }
 }
+
+/// Error messages of the document-tool families start with the tool name.
+const DOC_TOOL_PREFIXES: &[&str] = &[
+    "element_group",
+    "element_ungroup",
+    "element_duplicate",
+    "element_reorder",
+    "element_get",
+    "element_query",
+    "tree_get",
+    "element_set_",
+    "gradient_",
+    "clip_",
+    "text_",
+    "attribute_",
+];
