@@ -195,6 +195,95 @@ impl NativeAnimationController {
                     self.current_tick = to_tick;
                 }
             }
+            NativeTimelineAction::MovePropertyKey {
+                track_id,
+                from_tick,
+                to_tick,
+            } => {
+                if from_tick != 0 && to_tick != 0 {
+                    outcome.changed = document
+                        .edit_timeline(self.settings, self.limits, |candidate| {
+                            candidate.move_property_key(track_id.as_bytes(), from_tick, to_tick)
+                        })
+                        .map_err(NativeAnimationError::from)?;
+                    if outcome.changed {
+                        self.selected_track = Some(track_id);
+                        self.selected_item_tick = Some(to_tick);
+                        self.current_tick = to_tick;
+                        self.candidate = None;
+                        self.candidate_revision = None;
+                    }
+                }
+            }
+            NativeTimelineAction::RemovePropertyKey { track_id, tick } => {
+                if tick != 0 {
+                    outcome.changed = document
+                        .edit_timeline(self.settings, self.limits, |candidate| {
+                            candidate.remove_property_key(track_id.as_bytes(), tick)
+                        })
+                        .map_err(NativeAnimationError::from)?;
+                    if outcome.changed {
+                        self.selected_item_tick = None;
+                        self.candidate = None;
+                        self.candidate_revision = None;
+                    }
+                }
+            }
+            NativeTimelineAction::SetPropertyKeyEase {
+                track_id,
+                tick,
+                value,
+                ease,
+            } => {
+                if tick != 0 {
+                    let ease_json = ease_json(&ease);
+                    outcome.changed = document
+                        .edit_timeline(self.settings, self.limits, |candidate| {
+                            candidate.set_property_key_with_ease(
+                                track_id.as_bytes(),
+                                tick,
+                                value.as_bytes(),
+                                Some(ease_json.as_bytes()),
+                            )
+                        })
+                        .map_err(NativeAnimationError::from)?;
+                    if outcome.changed {
+                        self.selected_track = Some(track_id.clone());
+                        self.selected_item_tick = Some(tick);
+                        self.candidate = None;
+                        self.candidate_revision = None;
+                    }
+                }
+            }
+            NativeTimelineAction::DuplicateTrack { track_id } => {
+                let candidate = self.candidate.as_ref().expect("candidate ensured");
+                let new_id = available_duplicate_track_id(candidate, &track_id)
+                    .map_err(|_| NativeAnimationError::InvalidAction)?;
+                outcome.changed = document
+                    .edit_timeline(self.settings, self.limits, |candidate| {
+                        candidate.duplicate_track(track_id.as_bytes(), new_id.as_bytes())
+                    })
+                    .map_err(NativeAnimationError::from)?;
+                if outcome.changed {
+                    self.selected_track = Some(new_id);
+                    self.selected_item_tick = None;
+                    self.candidate = None;
+                    self.candidate_revision = None;
+                }
+            }
+            NativeTimelineAction::RemoveTrack { track_id } => {
+                outcome.changed = document
+                    .edit_timeline(self.settings, self.limits, |candidate| {
+                        candidate.remove_track(track_id.as_bytes())
+                    })
+                    .map_err(NativeAnimationError::from)?;
+                if outcome.changed {
+                    self.selected_track = None;
+                    self.selected_item_tick = None;
+                    self.candidate = None;
+                    self.candidate_revision = None;
+                }
+            }
             NativeTimelineAction::SetLoop { enabled } => {
                 outcome.changed = document
                     .edit_timeline(self.settings, self.limits, |candidate| {
@@ -293,6 +382,35 @@ fn available_opacity_track_id(
             view.track_at(index)
                 .and_then(|track| super::snapshot::decode_timeline_string(track.id))
                 .is_some_and(|track_id| track_id == id)
+        });
+        if !exists {
+            return Ok(id);
+        }
+    }
+    Err(ProjectTimelineError::Limit)
+}
+
+fn ease_json(ease: &str) -> String {
+    match ease {
+        "step" => "\"step\"".into(),
+        "ease_in" => "\"ease_in\"".into(),
+        "ease_out" => "\"ease_out\"".into(),
+        "ease_in_out" => "\"ease_in_out\"".into(),
+        _ => "\"linear\"".into(),
+    }
+}
+
+fn available_duplicate_track_id(
+    candidate: &ProjectTimelineCandidate,
+    original: &str,
+) -> Result<String, ProjectTimelineError> {
+    let view = candidate.view()?;
+    for suffix in 1..=vexel_timeline::MAX_TRACKS {
+        let id = format!("{original}_copy{suffix}");
+        let exists = (0..view.track_count()).any(|index| {
+            view.track_at(index)
+                .and_then(|track| super::snapshot::decode_timeline_string(track.id))
+                .is_some_and(|existing| existing == id)
         });
         if !exists {
             return Ok(id);

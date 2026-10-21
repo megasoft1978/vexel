@@ -43,6 +43,7 @@ pub struct Item {
     pub tick: u32,
     pub label: String,
     pub selected: bool,
+    pub ease: Option<String>,
 }
 
 impl TimelineModel {
@@ -75,6 +76,7 @@ impl TimelineModel {
                             tick: item.tick.min(duration_ticks - 1),
                             label: bounded(&item.label, 256),
                             selected: item.selected,
+                            ease: item.ease.clone(),
                         })
                         .collect(),
                 }
