@@ -47,6 +47,8 @@ pub struct DocumentView {
     /// Natural size adopted by the shell through `compose_target`.
     artboard: Option<(f64, f64)>,
     compose_requests: u64,
+    /// Live rotate-drag angle in degrees, set by the shell from the tools.
+    rotation: Option<f64>,
     /// Zoom, pan, fit and hover state of the canvas well.
     pub canvas: CanvasState,
 }
@@ -74,6 +76,7 @@ impl DocumentView {
             parsed: None,
             artboard: None,
             compose_requests: 0,
+            rotation: None,
             canvas: CanvasState::default(),
         }
     }
@@ -97,6 +100,14 @@ impl DocumentView {
             .iter()
             .find(|(index, _)| *index == selected)
             .map(|(_, id)| id.as_str())
+    }
+
+    /// Sets the live rotation angle shown on the selection (`None` clears it).
+    /// True when it changed.
+    pub fn set_rotation(&mut self, degrees: Option<f64>) -> bool {
+        let changed = self.rotation != degrees;
+        self.rotation = degrees;
+        changed
     }
 
     pub fn deselect(&mut self) {
@@ -425,6 +436,7 @@ impl DocumentView {
             frame: Some(&shown.frame),
             selection: self.selected.and_then(bounds),
             hover: self.canvas.hover.and_then(bounds),
+            rotation: self.rotation,
         })
     }
 }

@@ -246,7 +246,7 @@ fn run(
             model.chrome = chrome_text;
             dirty = true;
         }
-        dirty |= model.sync_history(files.document());
+        dirty |= model.sync_history(files.document()) | doc.set_rotation(tools.rotate_angle());
         motion.sync_focus(model.focus_id());
         dirty |= motion.native_timeline_hover(native.hovered_tooltip());
         dirty |= motion.redraw_after().is_some() | motion.poll_tooltip();

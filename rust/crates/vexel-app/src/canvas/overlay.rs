@@ -10,6 +10,8 @@ pub const HOVER_WIDTH: f64 = 1.0;
 pub const HOVER_OPACITY: f64 = 0.6;
 /// Selection outline: 1.5 logical points.
 pub const SELECTION_WIDTH: f64 = 1.5;
+/// Opacity of the rotation ghost fill.
+pub const GHOST_OPACITY: f64 = 0.18;
 /// Handle size in logical points.
 pub const HANDLE: i64 = 8;
 
@@ -86,23 +88,61 @@ pub fn handles(s: &mut Surface<'_>, rect: DeviceRect, accent: u32) {
     }
 }
 
-/// Paints the live rotated selection outline around its bounds centre.
-pub fn rotation_preview(s: &mut Surface<'_>, rect: DeviceRect, degrees: f64, accent: u32) {
+/// Rotated corners of `rect` about its centre.
+fn rotated_corners(rect: DeviceRect, degrees: f64) -> [(f64, f64); 4] {
     let (cx, cy) = ((rect.0 + rect.2) / 2.0, (rect.1 + rect.3) / 2.0);
     let (sin, cos) = degrees.to_radians().sin_cos();
-    let corners = [
+    [
         (rect.0, rect.1),
         (rect.2, rect.1),
         (rect.2, rect.3),
         (rect.0, rect.3),
-    ];
-    let points = corners.map(|(x, y)| {
+    ]
+    .map(|(x, y)| {
         let (dx, dy) = (x - cx, y - cy);
         (cx + dx * cos - dy * sin, cy + dx * sin + dy * cos)
+    })
+}
+
+/// Paints the live rotated selection: a translucent ghost of the selection
+/// bounds turned by `degrees` about their centre, its outline, and a marker on
+/// the rotated top edge showing the handle's current position.
+pub fn rotation_preview(s: &mut Surface<'_>, rect: DeviceRect, degrees: f64, accent: u32) {
+    let points = rotated_corners(rect, degrees);
+    let color = rgb(accent);
+    let (min_x, max_x) = points.iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+        (lo.min(p.0), hi.max(p.0))
     });
-    for i in 0..4 {
-        line(s, points[i], points[(i + 1) % 4], rgb(accent));
+    let (min_y, max_y) = points.iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+        (lo.min(p.1), hi.max(p.1))
+    });
+    let c = s.clip.intersect(
+        min_x.floor() as i64,
+        min_y.floor() as i64,
+        max_x.ceil() as i64,
+        max_y.ceil() as i64,
+    );
+    for y in c.y0..c.y1 {
+        for x in c.x0..c.x1 {
+            let (px, py) = (x as f64 + 0.5, y as f64 + 0.5);
+            let inside = (0..4).all(|i| {
+                let (a, b) = (points[i], points[(i + 1) % 4]);
+                (b.0 - a.0) * (py - a.1) - (b.1 - a.1) * (px - a.0) >= 0.0
+            });
+            if inside {
+                s.blend(x, y, color, GHOST_OPACITY);
+            }
+        }
     }
+    for i in 0..4 {
+        line(s, points[i], points[(i + 1) % 4], color);
+    }
+    let mid = (
+        (points[0].0 + points[1].0) / 2.0,
+        (points[0].1 + points[1].1) / 2.0,
+    );
+    let (x0, y0, x1, y1) = handle_rect(mid, s.scale);
+    s.fill(x0, y0, x1, y1, color);
 }
 
 fn line(s: &mut Surface<'_>, a: (f64, f64), b: (f64, f64), color: [u8; 3]) {
