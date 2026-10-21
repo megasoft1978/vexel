@@ -79,6 +79,40 @@ fn stepper(
     glyph_button(c, up, "+", can_up);
 }
 
+/// Half a row: one-letter caption, value and `-` / `+`, for pivot X and Y.
+fn half_stepper(c: &mut WidgetCanvas<'_>, row: Rect, label: &str, shown: Option<&str>, on: bool) {
+    let t = c.tokens;
+    field(c, row);
+    text(
+        c,
+        label,
+        Rect {
+            x: row.x + 8,
+            width: 12,
+            ..row
+        },
+        t.text_secondary,
+        12,
+        FontWeight::Regular,
+    );
+    let (down, up) = stepper_buttons(row);
+    let x = row.x + 24;
+    let colour = if on { t.text_primary } else { t.text_secondary };
+    mono(
+        c,
+        shown.unwrap_or("\u{2014}"),
+        Rect {
+            x,
+            width: down.x.saturating_sub(x + 4),
+            ..row
+        },
+        colour,
+        12,
+    );
+    glyph_button(c, down, "\u{2212}", on);
+    glyph_button(c, up, "+", on);
+}
+
 fn segmented(c: &mut WidgetCanvas<'_>, row: Rect, labels: [&str; 3], active: Option<usize>) {
     let t = c.tokens;
     for (i, (rect, label)) in segments(row).into_iter().zip(labels).enumerate() {
@@ -211,7 +245,7 @@ pub(super) fn draw_stroke(c: &mut WidgetCanvas<'_>, l: &Layout, ext: Option<&Sha
     segmented(c, row, ["Solid", "Dashed", "Dotted"], active);
 }
 
-/// Transform section: rotation, pivot and scale (or "custom").
+/// Transform section: rotation, pivot X/Y and scale (or "custom").
 pub(super) fn draw_transform(c: &mut WidgetCanvas<'_>, l: &Layout, ext: Option<&ShapeExt>) {
     let parts = ext.and_then(|e| match e.transform {
         TransformView::Parts(p) => Some(p),
@@ -235,10 +269,14 @@ pub(super) fn draw_transform(c: &mut WidgetCanvas<'_>, l: &Layout, ext: Option<&
             stepper(c, row, label, v.as_deref(), on, on);
         }
     }
-    if let Some(row) = l.ext_row(ExtRow::Pivot) {
-        field(c, row);
-        caption(c, row, "Pivot");
-        let v = shown(parts.map(|p| format!("{}, {}", number(p.pivot.0), number(p.pivot.1))));
-        value(c, row, v.as_deref().unwrap_or("\u{2014}"), v.is_some());
+    let pivots = [
+        (ExtRow::PivotX, "X", parts.map(|p| number(p.pivot.0))),
+        (ExtRow::PivotY, "Y", parts.map(|p| number(p.pivot.1))),
+    ];
+    for (which, label, v) in pivots {
+        if let Some(row) = l.ext_row(which) {
+            let v = shown(v);
+            half_stepper(c, row, label, v.as_deref(), parts.is_some());
+        }
     }
 }

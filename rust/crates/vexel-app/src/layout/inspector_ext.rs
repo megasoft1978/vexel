@@ -10,7 +10,7 @@ use vexel_ui::Rect;
 /// First `Target::SectionHeader` index used by an extended control.
 pub const EXT_FIRST: usize = 21;
 /// Number of extended controls.
-pub const EXT_COUNT: usize = 28;
+pub const EXT_COUNT: usize = 32;
 /// One past the last `Target::SectionHeader` index that is an inspector control.
 pub const EXT_END: usize = EXT_FIRST + EXT_COUNT;
 
@@ -38,6 +38,10 @@ pub enum ExtControl {
     ScaleXUp,
     ScaleYDown,
     ScaleYUp,
+    PivotXDown,
+    PivotXUp,
+    PivotYDown,
+    PivotYUp,
 }
 
 impl ExtControl {
@@ -60,6 +64,10 @@ impl ExtControl {
                 Self::ScaleXUp => 25,
                 Self::ScaleYDown => 26,
                 Self::ScaleYUp => 27,
+                Self::PivotXDown => 28,
+                Self::PivotXUp => 29,
+                Self::PivotYDown => 30,
+                Self::PivotYUp => 31,
             }
     }
 
@@ -81,6 +89,10 @@ impl ExtControl {
             25 => Self::ScaleXUp,
             26 => Self::ScaleYDown,
             27 => Self::ScaleYUp,
+            28 => Self::PivotXDown,
+            29 => Self::PivotXUp,
+            30 => Self::PivotYDown,
+            31 => Self::PivotYUp,
             _ => return None,
         })
     }
@@ -106,6 +118,10 @@ impl ExtControl {
             Self::ScaleXUp => ("Scale X", "+0.1"),
             Self::ScaleYDown => ("Scale Y", "-0.1"),
             Self::ScaleYUp => ("Scale Y", "+0.1"),
+            Self::PivotXDown => ("Pivot X", "-1"),
+            Self::PivotXUp => ("Pivot X", "+1"),
+            Self::PivotYDown => ("Pivot Y", "-1"),
+            Self::PivotYUp => ("Pivot Y", "+1"),
         }
     }
 }
@@ -120,7 +136,8 @@ pub enum ExtRow {
     Angle,
     Dash,
     Rotate,
-    Pivot,
+    PivotX,
+    PivotY,
     ScaleX,
     ScaleY,
 }
@@ -136,7 +153,7 @@ impl ExtRow {
             Self::Angle => (1, 156, 28),
             Self::Dash => (2, 136, 22),
             Self::Rotate => (3, 40, 28),
-            Self::Pivot => (3, 72, 28),
+            Self::PivotX | Self::PivotY => (3, 72, 28),
             Self::ScaleX => (3, 104, 28),
             Self::ScaleY => (3, 136, 28),
         }
@@ -152,6 +169,19 @@ pub fn stepper_buttons(row: Rect) -> (Rect, Rect) {
         height: row.height.saturating_sub(6),
     };
     (at(56), at(28))
+}
+
+/// Two equal halves of a row, 8 px apart (pivot X and Y share one row).
+pub fn halves(row: Rect) -> [Rect; 2] {
+    let w = row.width.saturating_sub(8) / 2;
+    [
+        Rect { width: w, ..row },
+        Rect {
+            x: row.x + w + 8,
+            width: row.width.saturating_sub(w + 8),
+            ..row
+        },
+    ]
 }
 
 /// Equal-width segments of a three-way row, 6 px apart.
@@ -183,11 +213,16 @@ impl Layout {
         if body.height != SECTION_BODY_H[section] {
             return None;
         }
-        Some(Rect {
+        let full = Rect {
             x: body.x + 12,
             y: body.y + y,
             width: body.width.saturating_sub(24),
             height,
+        };
+        Some(match row {
+            ExtRow::PivotX => halves(full)[0],
+            ExtRow::PivotY => halves(full)[1],
+            _ => full,
         })
     }
 
@@ -218,6 +253,10 @@ impl Layout {
             ExtControl::ScaleXUp => stepper(ExtRow::ScaleX, true),
             ExtControl::ScaleYDown => stepper(ExtRow::ScaleY, false),
             ExtControl::ScaleYUp => stepper(ExtRow::ScaleY, true),
+            ExtControl::PivotXDown => stepper(ExtRow::PivotX, false),
+            ExtControl::PivotXUp => stepper(ExtRow::PivotX, true),
+            ExtControl::PivotYDown => stepper(ExtRow::PivotY, false),
+            ExtControl::PivotYUp => stepper(ExtRow::PivotY, true),
         }
     }
 
