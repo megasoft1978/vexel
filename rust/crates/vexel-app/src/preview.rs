@@ -13,6 +13,7 @@ mod ext_attr;
 mod ext_paint;
 mod ext_query;
 mod ext_structure;
+mod frames_args;
 mod native_args;
 mod native_keys;
 mod native_svg;
@@ -27,6 +28,7 @@ pub(crate) use animation::{
 pub(crate) use animation::{rasterize, rasterize_at};
 pub(crate) use doc_ops::apply as apply_doc;
 use errors::tool_error;
+pub use frames_args::FramesExport;
 pub use video_args::VideoExport;
 
 pub const DOCUMENT_ID: &str = "preview-document";
@@ -138,6 +140,7 @@ pub enum Operation {
     Native(native_timeline::NativeOp),
     Doc(doc_ops::DocOp),
     ExportVideo(Box<video_args::VideoExport>),
+    ExportFrames(Box<frames_args::FramesExport>),
     RenderPng {
         path: String,
         width: Option<u32>,
@@ -641,6 +644,9 @@ pub(super) fn parse_operation(
             match string_field(doc, args, b"format").as_deref() {
                 Some(kind @ ("mp4" | "mov")) => {
                     return video_args::parse(doc, args, path, kind == "mov");
+                }
+                Some(kind @ ("apng" | "frames")) => {
+                    return frames_args::parse(doc, args, path, kind == "apng");
                 }
                 _ => {}
             }

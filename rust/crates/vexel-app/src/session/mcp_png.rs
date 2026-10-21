@@ -194,7 +194,7 @@ pub(super) fn render_png(
 
 /// Writes `bytes` to a temporary sibling of `target` and renames it over
 /// `target`; the temporary file is removed on any failure.
-fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), &'static str> {
+pub(super) fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), &'static str> {
     static COUNTER: AtomicU32 = AtomicU32::new(0);
     let failed = "file operation failed";
     let name = target.file_name().and_then(OsStr::to_str).ok_or(failed)?;

@@ -160,9 +160,12 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             doc.object_get(args, b"format")
                 .is_some_and(|v| doc.string_equals(v, name))
         };
-        let video = format_is(b"mp4") || format_is(b"mov");
+        let video = format_is(b"mp4")
+            || format_is(b"mov")
+            || format_is(b"apng")
+            || format_is(b"frames");
         let valid_format = format_is(b"gif") || video;
-        // Video takes fps as an optional number and no duration; the preview
+        // Video, apng and frames take fps as an optional number and no duration; the preview
         // dispatcher validates both with specific messages.
         let valid_fps = video
             || number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
@@ -173,7 +176,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
                 doc,
                 id,
                 session.modern,
-                "export requires a path and a gif, mp4 or mov format; gif also needs fps 1-30 and duration 0.01-10 seconds",
+                "export requires a path and a gif, mp4, mov, apng or frames format; gif also needs fps 1-30 and duration 0.01-10 seconds",
                 "invalid_arguments",
             );
         }

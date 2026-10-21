@@ -226,6 +226,25 @@ frames. The reply carries `path`, `format`, `codec`, `width`, `height`,
 same export as "Export Video..." (H.264 MP4 at the document size, enabled when
 the document has a native timeline).
 
+`export_animation` also writes PNG animations from a native timeline. `format`
+`apng` writes one animated PNG (path ends `.png` or `.apng`; 8-bit RGBA, one
+pass over the loop, ping-pong included) and replaces an existing file
+atomically. `loops` is the play count (1-100; omitted means forever). `format`
+`frames` writes one PNG per sampled tick into the path's directory, which must
+be a granted, existing directory: `path` is `dir/name_####.png` (four or more
+`#` become the zero-padded frame number) or `dir/name` (no extension; files are
+`name_0000.png`...). It refuses to start if any target file already exists, and
+removes the files it wrote if a frame fails; `loops` is rejected. Both take
+`fps` (1-120, default the tick rate), `width` and `height` (1-4096, together,
+default the document size with the long edge capped at 4096) and `background`
+(`#rgb` or `#rrggbb`); transparency is kept unless `background` is given.
+`codec`, `quality`, `bitrate`, `alpha` and `duration` are rejected. At most
+1440 frames (longer loops keep every n-th tick); an APNG holds at most 256 MiB
+of raw pixels and a sequence writes at most 512 MiB. The apng reply carries
+`path`, `format`, `width`, `height`, `frames`, `fps`, `durationSeconds`,
+`loops` and `bytes`; the frames reply carries `directory`, `first`, `last` and
+the same measures.
+
 Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.

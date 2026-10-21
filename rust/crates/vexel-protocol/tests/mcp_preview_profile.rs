@@ -172,7 +172,7 @@ fn preview_export_animation_validates_gif_fps_duration_and_path() {
     for (id, args) in [
         (
             3,
-            r#""path":"/tmp/a.gif","format":"frames","fps":10,"duration":1"#,
+            r#""path":"/tmp/a.gif","format":"webp","fps":10,"duration":1"#,
         ),
         (
             4,
@@ -228,12 +228,14 @@ fn preview_export_animation_accepts_video_without_fps_or_duration() {
         (6, r#""path":"/tmp/a.mp4","format":"avi""#, false),
         (7, r#""path":"/tmp/a.gif","format":"gif""#, false),
         (8, r#""path":"/tmp/a.mp4","format":"mp4","codec":7"#, false),
+        (9, r#""path":"/tmp/a_####.png","format":"frames","fps":12"#, true),
+        (10, r#""path":"/tmp/a.apng","format":"apng","loops":0,"width":8,"height":8"#, true),
     ] {
         let out = call(&mut session, &mut backend, &request(id, args));
         let text = String::from_utf8_lossy(&out);
         assert_eq!(text.contains("\"isError\":false"), ok, "{args}: {text}");
     }
-    assert_eq!(backend.calls.len(), 3);
+    assert_eq!(backend.calls.len(), 5);
 }
 
 #[test]

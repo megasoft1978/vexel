@@ -277,7 +277,7 @@ fn schema_lists_video_formats_and_options() {
     let mut rig = animated(&dir);
     let listing = rig.line(r#"{"jsonrpc":"2.0","id":7,"method":"tools/list","params":{}}"#);
     for part in [
-        r#""enum":["gif","mp4","mov"]"#,
+        r#""enum":["gif","mp4","mov","apng","frames"]"#,
         r#""codec":{"type":"string","enum":["h264","hevc"]}"#,
         r#""loops":{"type":"integer","minimum":1,"maximum":100}"#,
         r#""width":{"type":"integer","minimum":1,"maximum":4096}"#,

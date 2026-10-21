@@ -30,11 +30,11 @@ pub struct VideoExport {
     pub alpha: bool,
 }
 
-fn bad(message: &str) -> PreviewArgumentError {
+pub(super) fn bad(message: &str) -> PreviewArgumentError {
     PreviewArgumentError::Actionable(message.to_owned())
 }
 
-fn number(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Result<Option<f64>, ()> {
+pub(super) fn number(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Result<Option<f64>, ()> {
     let Some(token) = doc.object_get(args, key) else {
         return Ok(None);
     };
@@ -48,7 +48,7 @@ fn number(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Result<Option<f64>
         .ok_or(())
 }
 
-fn integer(
+pub(super) fn integer(
     doc: &JsonDocument<'_>,
     args: usize,
     key: &[u8],
@@ -63,7 +63,7 @@ fn integer(
     }
 }
 
-fn text(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Option<String> {
+pub(super) fn text(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Option<String> {
     let token = doc.object_get(args, key)?;
     if doc.token(token)?.kind != JsonType::String || doc.raw_token(token)?.len() > 64 {
         return None;
@@ -71,7 +71,7 @@ fn text(doc: &JsonDocument<'_>, args: usize, key: &[u8]) -> Option<String> {
     String::from_utf8(doc.decoded_string(token)?).ok()
 }
 
-fn hex_colour(value: &str) -> Option<[u8; 3]> {
+pub(super) fn hex_colour(value: &str) -> Option<[u8; 3]> {
     let hex = value.strip_prefix('#')?;
     if !hex.bytes().all(|c| c.is_ascii_hexdigit()) {
         return None;
