@@ -184,6 +184,10 @@ fn write_project_with_payload(
 }
 
 /// One open document plus its file association.
+/// Token for an open edit group (see `ProjectSession::begin_group`).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EditGroup(history::GroupToken);
+
 #[derive(Debug)]
 pub struct ProjectSession {
     document: V1Document,
@@ -246,6 +250,22 @@ impl ProjectSession {
         edit: impl FnOnce(&mut V1Document) -> Result<R, E>,
     ) -> Result<R, SessionEditError<E>> {
         journal_integration::edit(self, edit)
+    }
+
+    /// Starts an atomic edit group; undo/redo are disabled until it closes.
+    /// Nested groups are rejected with `HistoryUnavailable`.
+    pub fn begin_group(&mut self) -> Result<EditGroup, SessionError> {
+        journal_integration::begin_group(self).map(EditGroup)
+    }
+
+    /// Collapses the group's edits into one undo step.
+    pub fn end_group(&mut self, group: EditGroup) -> Result<(), SessionError> {
+        journal_integration::end_group(self, group.0)
+    }
+
+    /// Restores the scene and payload from before the group and drops its edits.
+    pub fn rollback_group(&mut self, group: EditGroup) -> Result<(), SessionError> {
+        journal_integration::rollback_group(self, group.0)
     }
 
     pub fn undo(&mut self) -> Result<bool, SessionError> {

@@ -1,7 +1,7 @@
 //! Connects the bounded journal to the source-owning V1 editor.
 
 use super::edit_error::SessionEditError;
-use super::history::{Journal, JournalError};
+use super::history::{GroupToken, Journal, JournalError};
 use super::payload::SessionPayload;
 use super::{ProjectSession, SessionError};
 use vexel_v1_document::V1Document;
@@ -29,7 +29,50 @@ pub(super) fn edit<R, E>(
     result.map_err(SessionEditError::Operation)
 }
 
+pub(super) fn begin_group(session: &mut ProjectSession) -> Result<GroupToken, SessionError> {
+    session.journal.begin_group().map_err(map_journal_error)
+}
+
+pub(super) fn end_group(
+    session: &mut ProjectSession,
+    token: GroupToken,
+) -> Result<(), SessionError> {
+    session.journal.end_group(token).map_err(map_journal_error)
+}
+
+/// Restores the group-start scene and payload, then drops the group's states.
+pub(super) fn rollback_group(
+    session: &mut ProjectSession,
+    token: GroupToken,
+) -> Result<(), SessionError> {
+    let target = (0..=session.document.history_count())
+        .filter_map(|cursor| session.document.history_state_id_at(cursor))
+        .find_map(|scene_id| {
+            session
+                .journal
+                .rollback_target(token, std::slice::from_ref(&scene_id))
+                .map(|t| (t.scene_state_id(), t.payload().clone()))
+        });
+    let Some((scene_state_id, payload)) = target else {
+        session.journal.abandon_group();
+        return Err(SessionError::HistoryUnavailable);
+    };
+    session
+        .document
+        .history_navigate(scene_state_id)
+        .map_err(SessionError::Document)?;
+    session.document.history_boundary();
+    session.payload = payload;
+    session
+        .journal
+        .commit_rollback(token)
+        .map_err(map_journal_error)
+}
+
 pub(super) fn undo(session: &mut ProjectSession) -> Result<bool, SessionError> {
+    if session.journal.group_open() {
+        return Ok(false);
+    }
     let Some((app_state_id, scene_state_id, payload)) = undo_target(session) else {
         return Ok(false);
     };
@@ -47,6 +90,9 @@ pub(super) fn undo(session: &mut ProjectSession) -> Result<bool, SessionError> {
 }
 
 pub(super) fn redo(session: &mut ProjectSession) -> Result<bool, SessionError> {
+    if session.journal.group_open() {
+        return Ok(false);
+    }
     let Some((app_state_id, scene_state_id, payload)) = redo_target(session) else {
         return Ok(false);
     };

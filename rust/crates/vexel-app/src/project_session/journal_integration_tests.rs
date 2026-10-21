@@ -237,3 +237,97 @@ fn failed_open_and_recovery_replacement_preserve_live_history() {
         assert_eq!(journal_snapshot(&session), live_journal);
     });
 }
+
+fn repeat_after_scene(session: &mut ProjectSession) {
+    assert!(edit_loop(session, LoopMode::Repeat));
+    session
+        .edit(|document| document.add_rectangle(1.0, 1.0, 10.0, 10.0, "#123456"))
+        .unwrap();
+    session
+        .edit(|document| document.add_ellipse(20.0, 20.0, 30.0, 30.0, "#abcdef"))
+        .unwrap();
+    assert!(edit_loop(session, LoopMode::PingPong));
+}
+
+#[test]
+fn group_of_mixed_ops_is_one_undo_step_with_redo() {
+    let mut session = ProjectSession::new(V1Document::new(80, 60).unwrap()).unwrap();
+    let source = session.document().source().unwrap();
+    let payload = session.payload.timeline_bytes().to_vec();
+    let group = session.begin_group().unwrap();
+    assert_eq!(session.begin_group(), Err(SessionError::HistoryUnavailable));
+    repeat_after_scene(&mut session);
+    let final_source = session.document().source().unwrap();
+    let final_payload = session.payload.timeline_bytes().to_vec();
+    assert!(!session.undo().unwrap(), "undo disabled while open");
+    session.end_group(group).unwrap();
+
+    assert_eq!(session.journal.state_count(), 2);
+    assert!(session.undo().unwrap());
+    assert_eq!(session.document().source().unwrap(), source);
+    assert_eq!(session.payload.timeline_bytes(), payload);
+    assert!(!session.can_undo());
+    assert!(session.redo().unwrap());
+    assert_eq!(session.document().source().unwrap(), final_source);
+    assert_eq!(session.payload.timeline_bytes(), final_payload);
+    // a new group can open after the first closed
+    let again = session.begin_group().unwrap();
+    session.end_group(again).unwrap();
+}
+
+#[test]
+fn rollback_restores_scene_and_payload_and_truncates() {
+    let mut session = ProjectSession::new(V1Document::new(80, 60).unwrap()).unwrap();
+    session
+        .edit(|document| document.add_rectangle(5.0, 5.0, 9.0, 9.0, "#111111"))
+        .unwrap();
+    let source = session.document().source().unwrap();
+    let payload = session.payload.timeline_bytes().to_vec();
+    let count = session.journal.state_count();
+    let group = session.begin_group().unwrap();
+    repeat_after_scene(&mut session);
+    session.rollback_group(group).unwrap();
+
+    assert_eq!(session.document().source().unwrap(), source);
+    assert_eq!(session.payload.timeline_bytes(), payload);
+    assert_eq!(session.journal.state_count(), count);
+    assert!(!session.can_redo());
+    assert!(session.can_undo());
+    assert!(!session.is_dirty() || session.can_undo());
+}
+
+#[test]
+fn empty_group_and_empty_rollback_keep_redo() {
+    let mut session = ProjectSession::new(V1Document::new(80, 60).unwrap()).unwrap();
+    assert!(edit_loop(&mut session, LoopMode::Repeat));
+    session.undo().unwrap();
+    let group = session.begin_group().unwrap();
+    session.end_group(group).unwrap();
+    assert!(session.can_redo());
+    let group = session.begin_group().unwrap();
+    session.rollback_group(group).unwrap();
+    assert!(session.can_redo());
+}
+
+#[test]
+fn group_at_history_limit_collapses_safely() {
+    let mut session = ProjectSession::new(V1Document::new(80, 60).unwrap()).unwrap();
+    for i in 0..1100u32 {
+        session
+            .edit(|document| {
+                document.add_rectangle(1.0, 1.0, 2.0 + i as f64 % 50.0, 3.0, "#123456")
+            })
+            .unwrap();
+    }
+    let before_group = session.document().source().unwrap();
+    let group = session.begin_group().unwrap();
+    for i in 0..5u32 {
+        session
+            .edit(|document| document.add_rectangle(1.0, 1.0, 2.0, 3.0 + i as f64, "#654321"))
+            .unwrap();
+    }
+    session.end_group(group).unwrap();
+    assert!(session.journal.state_count() <= 1024);
+    assert!(session.undo().unwrap());
+    assert_eq!(session.document().source().unwrap(), before_group);
+}

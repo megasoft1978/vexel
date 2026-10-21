@@ -24,6 +24,17 @@ pub(super) enum JournalError {
     #[cfg(test)]
     InvalidReachableWindow,
     ConcurrentChange,
+    GroupOpen,
+    GroupLost,
+    GroupMismatch,
+}
+
+/// Identifies the state a group started from. Eviction may shift indices, so
+/// the stable `app_state_id` is authoritative; `cursor` is only a hint.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct GroupToken {
+    cursor: usize,
+    app_state_id: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -63,6 +74,7 @@ pub(super) struct Journal<P> {
     cursor: usize,
     next_app_state_id: u64,
     checkpoint_id: u64,
+    group: Option<GroupToken>,
 }
 
 impl<P: PayloadSnapshot> Journal<P> {
@@ -83,6 +95,7 @@ impl<P: PayloadSnapshot> Journal<P> {
             cursor: 0,
             next_app_state_id: 2,
             checkpoint_id: 1,
+            group: None,
         })
     }
 
@@ -107,6 +120,90 @@ impl<P: PayloadSnapshot> Journal<P> {
     /// Marks the current combined state as saved.
     pub(super) fn checkpoint(&mut self) {
         self.checkpoint_id = self.current().app_state_id;
+    }
+
+    pub(super) fn group_open(&self) -> bool {
+        self.group.is_some()
+    }
+
+    /// Opens an edit group at the current state. Nested groups are rejected.
+    /// Redo is untouched until the first edit inside the group truncates it.
+    pub(super) fn begin_group(&mut self) -> Result<GroupToken, JournalError> {
+        if self.group.is_some() {
+            return Err(JournalError::GroupOpen);
+        }
+        let token = GroupToken {
+            cursor: self.cursor,
+            app_state_id: self.current().app_state_id,
+        };
+        self.group = Some(token);
+        Ok(token)
+    }
+
+    fn start_index(&self, token: GroupToken) -> Option<usize> {
+        if self.states.get(token.cursor).map(|s| s.app_state_id) == Some(token.app_state_id) {
+            return Some(token.cursor);
+        }
+        self.states
+            .iter()
+            .position(|state| state.app_state_id == token.app_state_id)
+    }
+
+    /// Collapses every state after the group start into the final one, so the
+    /// group is a single undo step. If eviction removed the start state, all
+    /// retained states before the final one are dropped (the pre-group state
+    /// is gone anyway).
+    pub(super) fn end_group(&mut self, token: GroupToken) -> Result<(), JournalError> {
+        if self.group != Some(token) {
+            return Err(JournalError::GroupMismatch);
+        }
+        self.group = None;
+        let keep_from = self.start_index(token).map_or(0, |start| start + 1);
+        if keep_from >= self.cursor {
+            return Ok(());
+        }
+        self.states.drain(keep_from..self.cursor);
+        self.cursor = keep_from;
+        let current = &mut self.states[self.cursor];
+        // Hard boundary: later scene edits must not coalesce into the group.
+        current.transition = Transition::Payload;
+        Ok(())
+    }
+
+    /// State to restore before `commit_rollback`. `None` when the group start
+    /// was evicted or its scene is no longer navigable.
+    pub(super) fn rollback_target(
+        &self,
+        token: GroupToken,
+        reachable_scene_ids: &[u64],
+    ) -> Option<&JournalState<P>> {
+        if self.group != Some(token) {
+            return None;
+        }
+        let target = &self.states[self.start_index(token)?];
+        reachable_scene_ids
+            .contains(&target.scene_state_id)
+            .then_some(target)
+    }
+
+    /// Closes the group at its start state, discarding everything after it.
+    /// A group with no edits keeps the redo stack.
+    pub(super) fn commit_rollback(&mut self, token: GroupToken) -> Result<(), JournalError> {
+        if self.group != Some(token) {
+            return Err(JournalError::GroupMismatch);
+        }
+        let start = self.start_index(token).ok_or(JournalError::GroupLost)?;
+        self.group = None;
+        if self.current().app_state_id != token.app_state_id {
+            self.states.truncate(start + 1);
+        }
+        self.cursor = start;
+        Ok(())
+    }
+
+    /// Closes a group whose start was lost, leaving states as they are.
+    pub(super) fn abandon_group(&mut self) {
+        self.group = None;
     }
 
     /// Reserve and validate scene admission before running an editor closure.
