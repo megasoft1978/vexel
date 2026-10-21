@@ -6,7 +6,6 @@ use mcp_pump::McpPump;
 use std::{
     num::NonZeroUsize,
     sync::mpsc,
-    thread,
     time::{Duration, Instant},
 };
 use vexel_app::animation::{
@@ -577,7 +576,7 @@ fn run(
             }
         }
         if !batch.pending {
-            thread::sleep(Duration::from_millis(16));
+            mcp_pump.idle_wait(Duration::from_millis(16));
         }
     }
     app.destroy_window(window.id())

@@ -1,7 +1,8 @@
-//! Serves MCP requests from the shell loop: one request per pass, never while
-//! a GIF export is running. Also keeps the MCP link state and last outcome.
+//! Serves MCP requests from the shell loop: a bounded batch per pass, never
+//! while a GIF export is running. An arriving request wakes the idle loop. Also keeps the MCP link state and last outcome.
 
 use std::sync::mpsc::Receiver;
+use std::time::{Duration, Instant};
 
 use vexel_app::animation::{driver::Driver, job::ExportJob, playback::MonotonicClock};
 use vexel_app::file_ui::FileUi;
@@ -14,8 +15,14 @@ use vexel_platform_apple::PanelBackend;
 
 use crate::reset_animation_state;
 
+/// Requests served per pass and the time after which a pass stops taking more.
+const MAX_PER_PASS: usize = 16;
+const PASS_BUDGET: Duration = Duration::from_millis(8);
+
 pub struct McpPump {
     rx: Option<Receiver<UiRequest>>,
+    /// A request received while waiting for the next pass.
+    woken: Option<UiRequest>,
     host: McpHost,
     export: Option<ExportJob>,
     granted: bool,
@@ -26,6 +33,7 @@ impl McpPump {
         let granted = !grants.dirs().is_empty();
         Self {
             rx,
+            woken: None,
             host: McpHost::with_policy(grants.policy()),
             export: None,
             granted,
@@ -37,8 +45,22 @@ impl McpPump {
         model::McpState::for_session(self.granted, false)
     }
 
-    /// Finishes a running export and serves at most one queued request.
-    /// Returns true when the shell must redraw.
+    /// Sleeps up to `timeout`, returning early when an MCP request arrives
+    /// (it is served by the next `poll`).
+    pub fn idle_wait(&mut self, timeout: Duration) {
+        match (&self.rx, &self.woken) {
+            (Some(rx), None) => {
+                if let Ok(request) = rx.recv_timeout(timeout) {
+                    self.woken = Some(request);
+                }
+            }
+            (_, Some(_)) => {}
+            (None, None) => std::thread::sleep(timeout),
+        }
+    }
+
+    /// Finishes a running export and serves a bounded batch of queued
+    /// requests. Returns true when the shell must redraw.
     pub fn poll<B: PanelBackend>(
         &mut self,
         files: &mut FileUi<B>,
@@ -58,15 +80,51 @@ impl McpPump {
             };
             dirty = true;
         }
-        if self.export.is_some() {
-            return dirty;
+        let started = Instant::now();
+        for _ in 0..MAX_PER_PASS {
+            if self.export.is_some() || (started.elapsed() >= PASS_BUDGET && dirty) {
+                break;
+            }
+            let Some(request) = self
+                .woken
+                .take()
+                .or_else(|| self.rx.as_ref().and_then(|rx| rx.try_recv().ok()))
+            else {
+                break;
+            };
+            let (redraw, stop) = self.serve(request, files, native, driver, tools, model);
+            dirty |= redraw;
+            if stop {
+                break;
+            }
         }
-        let Some(UiRequest { operation, reply }) =
-            self.rx.as_ref().and_then(|rx| rx.try_recv().ok())
-        else {
-            return dirty;
-        };
+        dirty
+    }
+
+    /// Serves one request. Returns (redraw needed, stop batching).
+    fn serve<B: PanelBackend>(
+        &mut self,
+        UiRequest { operation, reply }: UiRequest,
+        files: &mut FileUi<B>,
+        native: &mut NativeAnimationHost<MonotonicClock>,
+        driver: &mut Driver<MonotonicClock>,
+        tools: &mut ToolController,
+        model: &mut Model,
+    ) -> (bool, bool) {
         let opens = matches!(operation, Operation::Open { .. });
+        // View-affecting operations always redraw and end the batch.
+        let view = opens
+            || matches!(
+                operation,
+                Operation::Control(_) | Operation::Native(_) | Operation::Export { .. }
+            );
+        let before = (
+            files.document().revision(),
+            files.document().state_revision(),
+            files.document().is_dirty(),
+            driver.is_playing(),
+            model.mcp_last,
+        );
         model.mcp = model::McpState::for_session(self.granted, true);
         match files.handle_mcp(&mut self.host, operation, driver) {
             Ok(McpOutcome::Reply(json)) => {
@@ -117,6 +175,13 @@ impl McpPump {
             }
         }
         model.mcp = model::McpState::for_session(self.granted, self.export.is_some());
-        true
+        let after = (
+            files.document().revision(),
+            files.document().state_revision(),
+            files.document().is_dirty(),
+            driver.is_playing(),
+            model.mcp_last,
+        );
+        (view || before != after, view || self.export.is_some())
     }
 }
