@@ -62,7 +62,7 @@ fn scale_produces_equivalent_absolute_paths() {
     let id = (0.0, 0.0, 10.0, 10.0);
     let dbl = (0.0, 0.0, 20.0, 20.0);
     assert_eq!(scaled("M0 0 Q5 10 10 0", id, dbl), "M 0 0 Q 10 20 20 0 ");
-    assert_eq!(scaled("m1 1 q1 2 3 4", id, dbl), "M 2 2 Q 4 6 10 10 ");
+    assert_eq!(scaled("m1 1 q1 2 3 4", id, dbl), "M 2 2 Q 4 6 8 10 ");
     // T becomes an explicit Q with the reflected control point.
     assert_eq!(
         scaled("M0 0 Q2 4 4 0 T8 0", id, dbl),

@@ -181,7 +181,7 @@ fn malformed_path_data_is_a_typed_error() {
     );
     let before = rig.state();
 
-    for d in ["M 0 0 L", "M 0 0 Q 1 1 2 2", "", "L 1 1"] {
+    for d in ["M 0 0 L", "M 0 0 Q 1 1 2", "", "L 1 1"] {
         let reply = rig.doc_tool(
             "element_add",
             &format!(r#""parentId":"root","template":"path","attributes":{{"d":"{d}"}}"#),
