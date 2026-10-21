@@ -50,3 +50,10 @@ Signing/identity/distribution decisions; showcase publication.
 ## Live click check (2026-10-21, automated via synthetic input)
 Verified in the real window: open char.vexel/ball.vexel, selection + 8 handles, resize + undo/redo, fill swatch, stroke width, timeline scrub/play, cel switching, GIF export from the toolbar (512x512, 48 frames, looping). Fixed: GIF row was disabled for native timelines; a press on a resize handle cleared the selection. Open nits: export save panel suggests `name.gif.vexel` (project panel reused); unwritable export folder reports a generic write error.
 - Keep caps: 4096-byte XML root, 32 MiB (owner 2026-10-21)
+
+## Decisions 2026-10-21 (coordinator, owner delegated)
+- Dukes `<path>` (f2) dropped: the fix conflicts with a frozen app test (clip-child `fill` stays unsupported). Naples nested `<use>` fixed; output viewport clamps to 4096 px instead of refusing.
+- Deferred past V1 (known fidelity gaps, no cap changes): DTD internal entity expansion (columbiarivermap), `<tspan>` text (corsica), ideogram clip aggregate cap, france-osm render limit.
+- MCP per-session request budget raised 120 -> 600 per minute (owner 2026-10-21) so scripted scene building is not throttled.
+- Live preview tools: 51 (adds `native_timeline_set_duration`); `element_add` accepts any group as `parentId`; path data accepts Q/T/S (arcs unsupported).
+- New app icon from generated artwork (`resources/AppIcon-source.png`, `scripts/make_icon.py --from-image`).
