@@ -138,6 +138,22 @@ published by MCP tool schemas. Timeline edits use shared project history.
 Native GIF export is synchronous; loops over 120 frames are stride-sampled,
 with frame delay multiplied by the stride.
 
+`batch` (`documentId`, optional `atomic` default `true`, `ops`: 1 to 256 entries
+of `{"tool": "<name>", "arguments": {...}}`) runs preview operations in order as
+one undo step. Every entry is validated exactly like a standalone call before
+any is applied; a malformed entry fails the request with the op index. Scene
+and native timeline operations may be mixed, and later entries can use ids
+given to earlier `element_add` calls (`id`). Success replies
+`{"ok":true,"failedCount":0,"results":[{"tool","ok","result"}...]}`. With
+`atomic:true` the first failure rolls the whole batch back and replies
+`{"ok":false,"failedIndex","error","results":[...applied so far...]}`; with
+`atomic:false` the batch continues past failures, each result carries `ok` and
+`error`, and the reply has `ok:false` and `failedCount` when any failed. Nested
+`batch`, file (`document_open`, `document_close`, `save`, `save_as`), export,
+`render_png`, `undo`/`redo` and playback tools are rejected. A batch costs
+`1 + ops/8` of the per-minute request budget. 100 `element_add` calls take about
+95 ms as one batch against about 117 ms as 100 requests (rig, handler cost only).
+
 `animation_control` (`action`: `play`, `pause` or `seek`; `timeMs` 0-10000 for
 seek) drives the SVG animation clock for SVG SMIL documents. On a document with
 a native timeline (at least one native track) it drives the native timeline

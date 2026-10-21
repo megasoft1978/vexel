@@ -392,6 +392,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "native_timeline_set_interpolation",
     "native_timeline_reorder_track",
     "native_timeline_set_duration",
+    "batch",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

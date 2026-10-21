@@ -1,6 +1,5 @@
 //! Schema, argument validation and rate-limit weight of the preview-only
-//! `batch` tool. Dispatch is not wired yet, so the tool is not in `PREVIEW_TOOLS`
-//! and is not advertised.
+//! `batch` tool. Dispatch lives in `vexel-app` (`preview/batch.rs`).
 use super::ToolSchema;
 use crate::{ToolValidationError, validate_tool_arguments};
 use vexel_json::{JsonDocument, JsonType};

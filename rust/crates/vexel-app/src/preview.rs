@@ -6,6 +6,7 @@ use vexel_v1_document::{V1Document, V1DocumentError};
 pub(crate) mod add_extras;
 mod animation;
 mod args;
+pub mod batch;
 mod doc_ops;
 mod errors;
 mod ext_attr;
@@ -132,6 +133,8 @@ pub enum Operation {
         extras: Box<add_extras::AddExtras>,
         operation: Box<Operation>,
     },
+    /// Preview-only `batch`: operations applied in order as one undo step.
+    Batch(batch::Batch),
     Native(native_timeline::NativeOp),
     Doc(doc_ops::DocOp),
     ExportVideo(Box<video_args::VideoExport>),
@@ -673,6 +676,7 @@ pub(super) fn parse_operation(
             })
         }
         "element_add" => Ok(args::element_add(doc, args)?),
+        "batch" => batch::parse(doc, args),
         _ => {
             if let Some(parsed) = doc_ops::parse(doc, args, name) {
                 return parsed;

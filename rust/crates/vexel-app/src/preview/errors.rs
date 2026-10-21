@@ -29,6 +29,7 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
         m if DOC_TOOL_PREFIXES.iter().any(|p| m.starts_with(p)) => m,
         m if m.starts_with("native_timeline_") => m,
         m if m.starts_with("native timeline ") => m,
+        m if m.starts_with("batch op ") => m,
         m if m.starts_with("export ") => m,
         m if m.starts_with("render_png ") => m,
         _ => "invalid preview tool arguments",

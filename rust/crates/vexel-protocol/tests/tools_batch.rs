@@ -44,7 +44,7 @@ fn batch_request(id: usize, count: usize) -> String {
 }
 
 #[test]
-fn batch_is_not_in_the_full_or_live_preview_listing() {
+fn batch_is_only_in_the_live_preview_listing() {
     let full = tool_schemas().unwrap();
     assert!(!String::from_utf8_lossy(&full).contains("\"name\":\"batch\""));
 
@@ -54,9 +54,7 @@ fn batch_is_not_in_the_full_or_live_preview_listing() {
         &mut session,
         r#"{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}"#,
     );
-    assert!(!listing.contains("\"name\":\"batch\""));
-    let refused = call(&mut session, &batch_request(3, 1));
-    assert!(refused.contains("\"code\":\"unknown_tool\""), "{refused}");
+    assert!(listing.contains("\"name\":\"batch\""));
 }
 
 #[test]
