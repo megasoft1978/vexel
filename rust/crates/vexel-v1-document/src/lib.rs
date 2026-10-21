@@ -16,6 +16,7 @@ mod text;
 mod transform;
 
 pub use draw::{ElementKind, HIT_TOLERANCE};
+pub use paint_defs::{GradientStop, GradientUnits, Spread};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
 
 const MAX_DIMENSION: u32 = 4096;
