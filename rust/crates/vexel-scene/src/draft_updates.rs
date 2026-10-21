@@ -120,6 +120,30 @@ impl SceneBuilder {
         self.scenes[i].masks[id.index()] = value;
         Ok(())
     }
+    /// Enclosing groups are still open (their shape count is final only when
+    /// they close), so a child group would lie outside their recorded range.
+    /// Grows each ancestor to cover `child`; closing the ancestor later
+    /// replaces its range with the exact one.
+    pub(crate) fn cover_open_ancestors(&mut self, scene: usize, child: &OpacityGroup) -> Result<()> {
+        let child_end = child.shapes.end().ok_or_else(|| invalid(0))?;
+        let mut ancestor = child.parent;
+        let mut hops = 0;
+        while let Some(parent) = ancestor {
+            hops += 1;
+            if hops > 64 {
+                break;
+            }
+            let slot = self.scenes[scene]
+                .groups
+                .get_mut(parent.index())
+                .ok_or_else(|| invalid(0))?;
+            if slot.shapes.end().is_some_and(|end| end < child_end) {
+                slot.shapes.count = child_end - slot.shapes.first;
+            }
+            ancestor = slot.parent;
+        }
+        Ok(())
+    }
     pub fn finalize_group(
         &mut self,
         token: &DraftToken,
@@ -137,6 +161,7 @@ impl SceneBuilder {
             return Err(invalid(0));
         }
         control.checkpoint().map_err(stopped)?;
+        self.cover_open_ancestors(i, &value)?;
         crate::validate::group(self, token.mark.scene, &value, id.index(), control)?;
         self.scenes[i].groups[id.index()] = value;
         Ok(())

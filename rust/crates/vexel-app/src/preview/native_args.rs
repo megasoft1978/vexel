@@ -15,7 +15,12 @@ fn sanitized(value: &[u8]) -> String {
         .collect()
 }
 
-fn invalid(tool: &str, key: &str, form: &str, value: Option<&[u8]>) -> PreviewArgumentError {
+pub(super) fn invalid(
+    tool: &str,
+    key: &str,
+    form: &str,
+    value: Option<&[u8]>,
+) -> PreviewArgumentError {
     let echo = value.map(sanitized).filter(|s| !s.is_empty());
     PreviewArgumentError::Actionable(match echo {
         Some(value) => {
@@ -414,10 +419,24 @@ fn timeline_value(
     args: usize,
     tool: &str,
 ) -> Result<Vec<u8>, PreviewArgumentError> {
-    let raw = value(doc, args, tool)?;
     let value_type = doc
         .object_get(args, b"valueType")
         .and_then(|t| doc.decoded_string(t));
+    if let Some(token) = doc
+        .object_get(args, b"value")
+        .filter(|t| doc.token(*t).is_some_and(|v| v.kind == JsonType::Object))
+    {
+        if value_type.as_deref().is_some_and(|t| t != b"trs") {
+            return Err(invalid(
+                tool,
+                "value",
+                "a number, true/false or an array for this valueType (objects are only for trs)",
+                None,
+            ));
+        }
+        return super::native_trs::from_object(doc, token, tool);
+    }
+    let raw = value(doc, args, tool)?;
     // `set_property_key` carries no valueType; no other value type is a
     // 7- or 8-element array, so such an array is always a TRS value.
     let trs_array =
@@ -425,22 +444,11 @@ fn timeline_value(
     if value_type.as_deref() != Some(b"trs".as_slice()) && !trs_array {
         return Ok(raw);
     }
-    let text = std::str::from_utf8(&raw).map_err(|_| {
-        invalid(
-            tool,
-            "value",
-            "an array of 7 or 8 finite numbers for TRS",
-            None,
-        )
-    })?;
+    let text = std::str::from_utf8(&raw)
+        .map_err(|_| invalid(tool, "value", super::native_trs::FORM, None))?;
     let trimmed = text.trim();
     let Some(inner) = trimmed.strip_prefix('[').and_then(|s| s.strip_suffix(']')) else {
-        return Err(invalid(
-            tool,
-            "value",
-            "an array of 7 or 8 finite numbers for TRS",
-            None,
-        ));
+        return Err(invalid(tool, "value", super::native_trs::FORM, None));
     };
     let nums: Vec<&str> = inner.split(',').map(str::trim).collect();
     if !(nums.len() == 7 || nums.len() == 8)
@@ -451,12 +459,7 @@ fn timeline_value(
                 .is_none()
         })
     {
-        return Err(invalid(
-            tool,
-            "value",
-            "an array of 7 or 8 finite numbers for TRS",
-            None,
-        ));
+        return Err(invalid(tool, "value", super::native_trs::FORM, None));
     }
     let keys = [
         "tx",

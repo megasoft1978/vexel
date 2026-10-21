@@ -253,10 +253,10 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "native_timeline_add_property_track",
-        description: "Create an undoable native property track with its initial tick-zero value. targetId: id attribute of an existing element, e.g. vexel-object-1. Allowed property/valueType pairs: x, y, width, height, cx, cy, r, rx, ry, opacity, fill-opacity, stroke-opacity, stroke-width, stroke-dashoffset with scalar (a number); fill or stroke with rgba (array of 4 numbers 0-1); transform with transform2d (array of 6 numbers) or trs (array [tx,ty,rotationDeg,sx,sy,pivotX,pivotY] with optional skewXDeg); visibility with boolean (interpolation step only). interpolation: step, linear or cubic. trackId: 1-128 ASCII letters, digits, `_` or `-`. Example: {\"trackId\":\"fade\",\"targetId\":\"vexel-object-1\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":0}.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"targetId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"property\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\"]},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]},\"value\":{\"type\":[\"number\",\"boolean\",\"array\"]},\"name\":{\"type\":\"string\",\"maxLength\":256}}",
+        description: "Create an undoable native property track with its initial tick-zero value. targetId: id attribute of an existing element, e.g. vexel-object-1. Allowed property/valueType pairs: x, y, width, height, cx, cy, r, rx, ry, opacity, fill-opacity, stroke-opacity, stroke-width, stroke-dashoffset with scalar (a number); fill or stroke with rgba (array of 4 numbers 0-1); transform with transform2d (array of 6 numbers) or trs (array [tx,ty,rotationDeg,sx,sy,pivotX,pivotY] with optional skewXDeg, or an object such as {\"translate\":[0,-3],\"rotate\":15,\"scale\":[1,1],\"pivot\":[250,400]}; omitted parts are identity); visibility with boolean (interpolation step only). interpolation: step, linear or cubic. trackId: 1-128 ASCII letters, digits, `_` or `-`. Example: {\"trackId\":\"fade\",\"targetId\":\"vexel-object-1\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":0}.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"targetId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"property\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\"]},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]},\"value\":{\"type\":[\"number\",\"boolean\",\"array\",\"object\"]},\"name\":{\"type\":\"string\",\"maxLength\":256}}",
         required: "documentId,trackId,targetId,property,valueType,interpolation,value",
-        fields: "documentId:string;trackId:string;targetId:string;property:string;valueType:string;interpolation:string;value:number|boolean|array;name:string",
+        fields: "documentId:string;trackId:string;targetId:string;property:string;valueType:string;interpolation:string;value:number|boolean|array|object;name:string",
     },
     ToolSchema {
         name: "native_timeline_set_loop",
@@ -267,10 +267,10 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "native_timeline_set_property_key",
-        description: "Set or replace one undoable key on a property track (not a drawing track). tick: integer 0 through durationTicks-1 (0-47 on the default 48-tick timeline; lengthen it with native_timeline_set_duration). value must match the track valueType: a number for scalar, true/false for boolean, an array of 4 numbers for rgba, 6 for transform2d or a TRS object for trs; optional ease is step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2. Example: {\"trackId\":\"fade\",\"tick\":12,\"value\":1}.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"value\":{\"type\":[\"number\",\"boolean\",\"array\"]},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\"]},\"ease\":{\"type\":\"string\"}}",
+        description: "Set or replace one undoable key on a property track (not a drawing track). tick: integer 0 through durationTicks-1 (0-47 on the default 48-tick timeline; lengthen it with native_timeline_set_duration). value must match the track valueType: a number for scalar, true/false for boolean, an array of 4 numbers for rgba, 6 for transform2d, and for trs either an array [tx,ty,rotationDeg,sx,sy,pivotX,pivotY(,skewXDeg)] or an object with optional translate ([x,y]; or tx/ty), rotate (degrees), scale (number or [x,y]; or sx/sy), pivot ([x,y]; or pivotX/pivotY) and skewX (degrees), omitted parts being identity; optional ease is step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2. Examples: {\"trackId\":\"fade\",\"tick\":12,\"value\":1}; {\"trackId\":\"swing\",\"tick\":12,\"value\":{\"rotate\":20,\"pivot\":[250,400]}}.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"value\":{\"type\":[\"number\",\"boolean\",\"array\",\"object\"]},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\"]},\"ease\":{\"type\":\"string\"}}",
         required: "documentId,trackId,tick,value",
-        fields: "documentId:string;trackId:string;tick:integer;value:number|boolean|array;valueType:string;ease:string",
+        fields: "documentId:string;trackId:string;tick:integer;value:number|boolean|array|object;valueType:string;ease:string",
     },
     ToolSchema {
         name: "native_timeline_set_cel",
@@ -397,7 +397,8 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
 pub enum ToolValidationError {
     UnknownTool,
     UnexpectedArgument,
-    WrongType,
+    /// The named argument has a type the tool does not accept.
+    WrongType(&'static str),
     MissingRequired,
     InvalidLoopMode,
     InvalidTemplateAttributes,
@@ -522,9 +523,9 @@ pub fn validate_tool_arguments(
         let Ok(field) = std::str::from_utf8(&key_bytes) else {
             return Err(ToolValidationError::UnexpectedArgument);
         };
-        let Some(expected) = tool.fields.split(';').find_map(|field_spec| {
+        let Some((field_name, expected)) = tool.fields.split(';').find_map(|field_spec| {
             let (name, kind) = field_spec.split_once(':')?;
-            (name == field).then_some(kind)
+            (name == field).then_some((name, kind))
         }) else {
             return Err(ToolValidationError::UnexpectedArgument);
         };
@@ -532,7 +533,7 @@ pub fn validate_tool_arguments(
             .split('|')
             .any(|kind| type_matches(doc, value, kind))
         {
-            return Err(ToolValidationError::WrongType);
+            return Err(ToolValidationError::WrongType(field_name));
         }
         if tool.name == "native_timeline_set_loop" && field == "mode" {
             let valid = [b"once".as_slice(), b"loop", b"ping_pong"]

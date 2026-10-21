@@ -173,13 +173,15 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
         }
     }
     if let Err(error) = validate_tool_arguments(doc, args, &name) {
+        let wrong_type;
         let (msg, code) = match error {
             crate::ToolValidationError::UnknownTool => ("unknown tool", "unknown_tool"),
             crate::ToolValidationError::UnexpectedArgument => {
                 ("unexpected argument", "invalid_arguments")
             }
-            crate::ToolValidationError::WrongType => {
-                ("argument has the wrong type", "invalid_arguments")
+            crate::ToolValidationError::WrongType(field) => {
+                wrong_type = format!("argument `{field}` has the wrong type");
+                (wrong_type.as_str(), "invalid_arguments")
             }
             crate::ToolValidationError::MissingRequired => {
                 ("required argument missing", "invalid_arguments")

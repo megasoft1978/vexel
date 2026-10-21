@@ -137,6 +137,7 @@ impl SceneBuilder {
     ) -> Result<GroupId> {
         let i = self.writable(scene)?;
         control.checkpoint().map_err(stopped)?;
+        self.cover_open_ancestors(i, &value)?;
         crate::validate::group(self, scene, &value, self.scenes[i].groups.len(), control)?;
         if self.scenes[i].groups.len() >= self.limits.groups {
             return Err(limit(LimitKind::Nodes));

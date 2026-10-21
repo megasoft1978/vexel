@@ -15,6 +15,7 @@ mod native_args;
 mod native_svg;
 #[path = "session/mcp_native.rs"]
 pub(crate) mod native_timeline;
+mod native_trs;
 pub(crate) use animation::{
     animation_list_json, document_duration, validate_animation_fragment, validate_shape,
 };
