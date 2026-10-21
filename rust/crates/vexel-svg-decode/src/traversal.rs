@@ -248,6 +248,9 @@ impl<'src> Decoder<'src, '_> {
                 offset: t.name.offset,
             });
         }
+        if name == b"tspan" {
+            crate::tspan::reject_unsupported(source, self.shared.tokens(), element)?;
+        }
         if root {
             self.root_seen = true;
         }

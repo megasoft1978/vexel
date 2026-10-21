@@ -271,3 +271,98 @@ fn word_spacing_matches_the_c_byte_cursor_quirk() {
     let next = ok("<text x='10' y='20' word-spacing='9'>A B<tspan>C</tspan></text>");
     assert!(near(xs(&next, 1).0, 10.0 + 15.0 * SCALE + 9.0));
 }
+
+fn first_color(g: &SceneGraph, shape: usize) -> [u8; 4] {
+    g.root().edge_colors[g.root().shapes[shape].edges.first]
+}
+
+#[test]
+fn tspan_absolute_x_y_start_a_new_chunk() {
+    let g = ok("<text x='10' y='20'>A<tspan x='50' y='60'>B</tspan><tspan>C</tspan></text>");
+    assert_eq!(g.root().shapes.len(), 3);
+    let (x0, _, _, y1) = xs(&g, 1);
+    assert!(near(x0, 50.0) && near(y1, 60.0));
+    // The next run continues from the end of the tspan.
+    assert!(near(xs(&g, 2).0, 50.0 + 5.0 * SCALE));
+    assert!(near(xs(&g, 2).3, 60.0));
+    assert!(near(xs(&g, 0).0, 10.0));
+}
+
+#[test]
+fn tspan_dx_dy_follow_the_legacy_c_folding_from_the_cursor() {
+    // Same C quirk as text (dx[0]/dy[0] fold into the start and again per
+    // glyph); the render-text parity goldens encode it.
+    let g = ok("<text x='10' y='20'>A<tspan dx='7' dy='3'>B</tspan></text>");
+    let (x0, _, _, y1) = xs(&g, 1);
+    assert!(near(x0, 10.0 + 5.0 * SCALE + 14.0));
+    assert!(near(y1, 26.0));
+    // With an absolute x the glyph-0 dx is reset, as for text.
+    let g = ok("<text x='10' y='20'>A<tspan x='40' dx='2'>B</tspan></text>");
+    assert!(near(xs(&g, 1).0, 40.0));
+}
+
+#[test]
+fn tspan_inherits_and_overrides_fill() {
+    let g = ok(
+        "<text x='10' y='20' fill='#ff0000'>A<tspan>B</tspan><tspan fill='#00ff00'>C</tspan></text>",
+    );
+    assert_eq!(first_color(&g, 1), [255, 0, 0, 255]);
+    assert_eq!(first_color(&g, 2), [0, 255, 0, 255]);
+}
+
+#[test]
+fn nested_tspans_inherit_from_their_parent_and_continue_the_cursor() {
+    let g = ok(
+        "<text x='10' y='20' fill='#ff0000'>A<tspan fill='#00ff00'>B<tspan>C</tspan>\
+<tspan fill='#0000ff'>D</tspan></tspan></text>",
+    );
+    assert_eq!(g.root().shapes.len(), 4);
+    let colors: Vec<_> = (0..4).map(|i| first_color(&g, i)).collect();
+    assert_eq!(colors[1], [0, 255, 0, 255]);
+    assert_eq!(colors[2], [0, 255, 0, 255]);
+    assert_eq!(colors[3], [0, 0, 255, 255]);
+    for i in 0..4 {
+        assert!(near(xs(&g, i).0, 10.0 + 5.0 * SCALE * i as f64));
+    }
+}
+
+#[test]
+fn tspan_anchor_middle_centres_each_positioned_chunk() {
+    let g = ok(
+        "<text x='100' y='20' text-anchor='middle'><tspan x='100' y='20'>AB</tspan>\
+<tspan x='50' y='40'>ABCD</tspan></text>",
+    );
+    assert!(near(xs(&g, 0).0, 100.0 - 10.0 * SCALE * 0.5));
+    assert!(near(xs(&g, 1).0, 50.0 - 20.0 * SCALE * 0.5));
+    assert!(near(xs(&g, 1).3, 40.0));
+}
+
+#[test]
+fn unsupported_tspan_attributes_fail_at_the_attribute() {
+    for attribute in [
+        "rotate='10'",
+        "textLength='30'",
+        "lengthAdjust='spacing'",
+        "baseline-shift='super'",
+        "style='baseline-shift:sub'",
+        "x='1 2'",
+        "dy='1,2'",
+    ] {
+        let input = svg(&format!(
+            "<text x='1' y='9'>A<tspan {attribute}>B</tspan></text>"
+        ));
+        let error = decode(&input, Some(Stub { panic: false })).unwrap_err();
+        assert_eq!(error.kind, ErrorKind::Unsupported, "{attribute}");
+        let name = attribute.split(['=', ':']).next().unwrap();
+        let at = input.find(&format!("<tspan {attribute}")).unwrap() + "<tspan ".len();
+        let value = at + attribute.find('\'').unwrap() + 1;
+        assert!(
+            error.offset == at || error.offset == value,
+            "{attribute} {name}"
+        );
+    }
+    // A no-op baseline-shift declaration is accepted.
+    let ok_input =
+        svg("<text x='1' y='9'>A<tspan style='baseline-shift:baseline'>B</tspan></text>");
+    assert!(decode(&ok_input, Some(Stub { panic: false })).is_ok());
+}

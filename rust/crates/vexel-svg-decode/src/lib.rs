@@ -31,6 +31,7 @@ mod text_task;
 mod transform;
 mod traversal;
 mod traversal_boundary;
+mod tspan;
 mod use_expansion;
 mod viewport;
 

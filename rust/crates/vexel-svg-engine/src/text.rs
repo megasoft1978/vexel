@@ -8,6 +8,11 @@
 //! [`TextLayoutProvider`]; without one the engine keeps returning `Unsupported`.
 //! Solid fill and solid stroke (with dashes) are published; paint servers and
 //! clip paths on text stay typed `Unsupported`, as does `textPath`.
+//!
+//! A `<tspan>` takes at most one value per x/y/dx/dy; absolute x/y start a new
+//! chunk. An element's direct text publishes in its own
+//! call, before its child elements (text after a child keeps the legacy
+//! placement the parity goldens encode).
 
 use vexel_base::{WorkControl, WorkKind};
 use vexel_scene::*;
@@ -102,28 +107,59 @@ pub(crate) fn decode(
         return Err(fail(ErrorKind::InvalidArgument, own.name.offset));
     }
     let families: Vec<&[u8]> = values.families.iter().map(Vec::as_slice).collect();
-    let inner = tokens
-        .get(element + 1..end)
-        .ok_or_else(|| fail(ErrorKind::InvalidArgument, 0))?;
-    for token in inner {
-        control.charge(WorkKind::TokenVisit, 1).map_err(stopped)?;
-        if token.depth > own.depth
-            && matches!(
+    let is_tspan = own.local_name.slice(source) == Some(b"tspan");
+    let list = |name: &[u8], reference: f64| -> Result<Vec<f64>> {
+        match media::text_attribute(source, tokens, element, end, name, None) {
+            Some(span) => media::parse_position_list(source, span, reference),
+            None => Ok(Vec::new()),
+        }
+    };
+    let is_text_node = |token: &vexel_xml::XmlToken| {
+        matches!(token.kind, TokenKind::Text | TokenKind::Cdata) && token.depth == own.depth + 1
+    };
+    let mut nodes = Vec::new();
+    {
+        // Scan for textPath, validate tspan lists and collect the direct text.
+        let inner = tokens
+            .get(element + 1..end)
+            .ok_or_else(|| fail(ErrorKind::InvalidArgument, 0))?;
+        for (offset, token) in inner.iter().enumerate() {
+            control.charge(WorkKind::TokenVisit, 1).map_err(stopped)?;
+            let child = matches!(
                 token.kind,
                 TokenKind::StartElement | TokenKind::EmptyElement
-            )
-            && token.local_name.slice(source) == Some(b"textPath")
-        {
-            return Err(fail(ErrorKind::Unsupported, token.name.offset));
+            );
+            if token.depth > own.depth
+                && child
+                && token.local_name.slice(source) == Some(b"textPath")
+            {
+                return Err(fail(ErrorKind::Unsupported, token.name.offset));
+            }
+            if is_text_node(token) {
+                nodes.push(element + 1 + offset);
+            }
+        }
+        if is_tspan {
+            reject_lists(
+                source,
+                tokens,
+                element,
+                end,
+                &[
+                    list(b"x", view_size[0])?,
+                    list(b"y", view_size[1])?,
+                    list(b"dx", view_size[0])?,
+                    list(b"dy", view_size[1])?,
+                ],
+            )?;
         }
     }
     let mut adapter = Adapter(provider);
-    for token in inner {
+    for (n, &node) in nodes.iter().enumerate() {
+        let token = &tokens[node];
         control.charge(WorkKind::TokenVisit, 1).map_err(stopped)?;
-        if !matches!(token.kind, TokenKind::Text | TokenKind::Cdata) || token.depth != own.depth + 1
-        {
-            continue;
-        }
+        // Text keeps its lists for every run (legacy); a tspan's first run takes them.
+        let first_run = !is_tspan || n == 0;
         let offset = token.value.offset;
         if token.value.length > media::MAX_TEXT_BYTES
             || token.value.length > MAX_DOCUMENT_TEXT_BYTES.saturating_sub(request.state.text_bytes)
@@ -162,19 +198,29 @@ pub(crate) fn decode(
         }
         builder.admit_text_commands(draft, layout.commands.len(), offset, control)?;
         request.state.glyph_count += layout.glyphs.len();
-        let list = |name: &[u8], reference: f64| -> Result<Vec<f64>> {
-            match media::text_attribute(source, tokens, element, end, name, None) {
-                Some(span) => media::parse_position_list(source, span, reference),
-                None => Ok(Vec::new()),
-            }
+        let (x, y, dx, dy) = if first_run {
+            (
+                list(b"x", view_size[0])?,
+                list(b"y", view_size[1])?,
+                list(b"dx", view_size[0])?,
+                list(b"dy", view_size[1])?,
+            )
+        } else {
+            Default::default()
         };
-        let x = list(b"x", view_size[0])?;
-        let y = list(b"y", view_size[1])?;
-        let dx = list(b"dx", view_size[0])?;
-        let dy = list(b"dy", view_size[1])?;
         let mut start_x = x.first().copied().unwrap_or(request.state.cursor_x);
         let mut start_y = y.first().copied().unwrap_or(request.state.cursor_y);
-        // C folds dx[0]/dy[0] into the start (and again per glyph); keep that.
+        if is_tspan {
+            reject_lists(
+                source,
+                tokens,
+                element,
+                end,
+                &[x.clone(), y.clone(), dx.clone(), dy.clone()],
+            )?;
+        }
+        // C folds dx[0]/dy[0] into the start (and again per glyph); keep that,
+        // tspans included (the parity goldens encode it).
         start_x += dx.first().copied().unwrap_or(0.0);
         start_y += dy.first().copied().unwrap_or(0.0);
         let advance = layout.advance_width * SCALE;
@@ -265,6 +311,26 @@ pub(crate) fn decode(
         request.state.has_position = true;
     }
     Ok(preserve)
+}
+
+/// A tspan takes one value per x/y/dx/dy: fail at the first longer list.
+fn reject_lists(
+    source: &[u8],
+    tokens: &[vexel_xml::XmlToken],
+    element: usize,
+    end: usize,
+    lists: &[Vec<f64>; 4],
+) -> Result<()> {
+    for (name, values) in [b"x".as_slice(), b"y", b"dx", b"dy"].into_iter().zip(lists) {
+        if values.len() > 1 {
+            let span = media::text_attribute(source, tokens, element, end, name, None);
+            return Err(fail(
+                ErrorKind::Unsupported,
+                span.map_or(tokens[element].name.offset, |span| span.offset),
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// The C `text_geometry` advances its byte cursor with `while ((b & 0xC0) !=

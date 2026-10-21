@@ -136,6 +136,38 @@ pub(crate) fn element_at(source: &[u8], offset: usize) -> Option<String> {
     (end > 0 && end <= 64).then(|| String::from_utf8_lossy(&rest[..end]).into_owned())
 }
 
+/// The unsupported `<tspan>` attribute whose name or value starts at `offset`.
+fn tspan_attribute(source: &[u8], offset: usize) -> Option<&'static str> {
+    const NAMES: [(&[u8], &str); 9] = [
+        (b"rotate", "tspan attribute rotate"),
+        (b"textLength", "tspan attribute textLength"),
+        (b"lengthAdjust", "tspan attribute lengthAdjust"),
+        (b"baseline-shift", "tspan attribute baseline-shift"),
+        (b"style", "tspan style baseline-shift"),
+        (b"x", "tspan attribute x with several values"),
+        (b"y", "tspan attribute y with several values"),
+        (b"dx", "tspan attribute dx with several values"),
+        (b"dy", "tspan attribute dy with several values"),
+    ];
+    let rest = source.get(offset..)?;
+    // Before a value sits `name="`; the name must start at a boundary.
+    let before = source[..offset]
+        .strip_suffix(b"\"")
+        .or_else(|| source[..offset].strip_suffix(b"'"))
+        .and_then(|head| head.strip_suffix(b"="));
+    NAMES
+        .iter()
+        .find(|(name, _)| {
+            let at_name = rest.starts_with(name) && rest[name.len()..].starts_with(b"=");
+            let at_value = before.is_some_and(|head| {
+                head.strip_suffix(*name)
+                    .is_some_and(|prior| prior.last().is_some_and(|b| b.is_ascii_whitespace()))
+            });
+            at_name || at_value
+        })
+        .map(|(_, feature)| *feature)
+}
+
 /// Name of the start tag enclosing `offset`: the element whose `<` is the last
 /// one before it. Attribute values cannot contain `<`, so this is sound.
 pub(crate) fn enclosing_element(source: &[u8], offset: usize) -> Option<String> {
@@ -160,9 +192,10 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
                 enclosing_element(source, offset)
             };
             let feature = match element.as_deref() {
+                Some("tspan") => tspan_attribute(source, offset).unwrap_or("text"),
                 Some("filter") => "filter",
                 Some("mask") => "mask",
-                Some("text" | "tspan" | "textPath") => "text",
+                Some("text" | "textPath") => "text",
                 Some("image") => "image",
                 Some("marker") => "marker",
                 _ => "unsupported element or attribute",
