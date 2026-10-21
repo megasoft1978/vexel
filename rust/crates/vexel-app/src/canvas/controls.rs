@@ -2,7 +2,7 @@
 //! the well, as a rect list with hit targets and tooltip text. Rects are in
 //! stage-local logical points.
 
-use vexel_platform_apple::{TextEmphasis, TextFace, draw_text_rgba};
+use vexel_platform_apple::{draw_text_rgba, TextEmphasis, TextFace};
 use vexel_ui::{FontFamily, FontWeight, Rect, Theme, Tokens, WidgetCanvas};
 
 pub const MARGIN: u32 = 8;

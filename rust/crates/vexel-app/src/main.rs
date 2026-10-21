@@ -28,7 +28,7 @@ use vexel_app::preview;
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{McpGrants, edit_shortcut};
 use vexel_app::toolbar_actions::{self, Exports};
-use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
+use vexel_app::tools::{edit_tool_key, Key, Outcome, PointerInput, ToolController};
 use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
@@ -389,6 +389,7 @@ fn run(
                 WindowEvent::KeyDown {
                     code, modifiers, ..
                 } => {
+                    tools.set_shift(modifiers.0 & Modifiers::SHIFT != 0);
                     let layout = model.layout(logical.0, logical.1);
                     if layout.as_ref().is_some_and(|l| {
                         toolbar_actions::key(
@@ -455,11 +456,19 @@ fn run(
                             .document_mut()
                             .edit(|document| tools.key(key, document));
                         dirty |= !matches!(result, Ok(Outcome::Ignored));
+                    } else if let Some(key) = edit_tool_key(code, modifiers) {
+                        let result = files
+                            .document_mut()
+                            .edit(|document| tools.edit_key(key, document));
+                        dirty |= !matches!(result, Ok(Outcome::Ignored));
                     } else if code == 48 && motion.tab(modifiers.0 & Modifiers::SHIFT != 0) {
                         dirty = true;
                     } else if model.key(code) {
                         dirty = true;
                     }
+                }
+                WindowEvent::KeyUp { modifiers, .. } => {
+                    tools.set_shift(modifiers.0 & Modifiers::SHIFT != 0);
                 }
                 WindowEvent::MenuCommand(tag) => {
                     if let Some(outcome) = file_menu(&mut files, &mut dedup, started.elapsed(), tag)
