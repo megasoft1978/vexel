@@ -166,7 +166,8 @@ impl McpHost {
                 path,
                 width,
                 height,
-            } => super::mcp_png::render_png(app, &self.policy, &path, width, height),
+                time,
+            } => super::mcp_png::render_png(app, &self.policy, &path, width, height, time),
             Operation::Export {
                 path,
                 fps,

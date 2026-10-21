@@ -502,6 +502,7 @@ fn write_png(doc: &mut AppDocument, target: &Path) -> Result<(), &'static str> {
                     path,
                     width: None,
                     height: None,
+                    time: None,
                 },
                 &mut driver,
             )

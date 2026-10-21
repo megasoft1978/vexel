@@ -410,7 +410,11 @@ fn timeline_value(
     let value_type = doc
         .object_get(args, b"valueType")
         .and_then(|t| doc.decoded_string(t));
-    if value_type.as_deref() != Some(b"trs".as_slice()) {
+    // `set_property_key` carries no valueType; no other value type is a
+    // 7- or 8-element array, so such an array is always a TRS value.
+    let trs_array =
+        raw.first() == Some(&b'[') && matches!(raw.split(|b| *b == b',').count(), 7 | 8);
+    if value_type.as_deref() != Some(b"trs".as_slice()) && !trs_array {
         return Ok(raw);
     }
     let text = std::str::from_utf8(&raw).map_err(|_| {
@@ -539,5 +543,15 @@ mod lane_tests {
             panic!()
         };
         assert_eq!(ease.unwrap(), br#"{"bezier":[0.1,0.2,0.8,1]}"#);
+        let NativeOp::SetPropertyKey { value, .. } = parsed(
+            "set_property_key",
+            r#""trackId":"t","tick":2,"value":[0,0,180,1,1,0,0]"#,
+        ) else {
+            panic!()
+        };
+        assert_eq!(
+            value,
+            br#"{"tx":0,"ty":0,"rotation_deg":180,"sx":1,"sy":1,"pivot_x":0,"pivot_y":0}"#
+        );
     }
 }

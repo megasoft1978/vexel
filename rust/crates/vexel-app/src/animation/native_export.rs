@@ -72,6 +72,54 @@ impl NativeExportSource {
         (tps != 0).then(|| f64::from(view.duration_ticks()) / f64::from(tps))
     }
 
+    /// Renders one still at `time` seconds (clamped to the last tick) as
+    /// straight RGBA. `size` is the output size, `None` for the document's.
+    pub fn render_still(
+        &self,
+        time: f64,
+        size: impl FnOnce((u32, u32)) -> Result<(u32, u32), &'static str>,
+    ) -> Result<(u32, u32, Vec<u8>), NativeExportError> {
+        let view = self
+            .candidate
+            .view()
+            .map_err(|_| NativeExportError::Timeline)?;
+        let (tps, duration) = (view.ticks_per_second(), view.duration_ticks());
+        if tps == 0 || duration == 0 {
+            return Err(NativeExportError::Timeline);
+        }
+        let tick = (time.max(0.0) * f64::from(tps))
+            .round()
+            .min(f64::from(duration - 1)) as u32;
+        let viewport = svg_viewport(Arc::clone(&self.source), &|| false)
+            .map_err(NativeExportError::Viewport)?;
+        let (width, height) = size((viewport.output_width, viewport.output_height))
+            .map_err(|_| NativeExportError::Timeline)?;
+        let geometry = SvgGeometry {
+            width: f64::from(width),
+            height: f64::from(height),
+            view_box: [
+                viewport.view_box.x,
+                viewport.view_box.y,
+                viewport.view_box.width,
+                viewport.view_box.height,
+            ],
+        };
+        let assets: Vec<_> = self
+            .candidate
+            .assets()
+            .iter()
+            .map(|asset| DrawingAsset {
+                name: &asset.name,
+                media_type: &asset.media_type,
+                source: &asset.source,
+            })
+            .collect();
+        let frame =
+            render_native_frame(&self.source, &view, &assets, tick, width, height, geometry)
+                .map_err(NativeExportError::Frame)?;
+        Ok((width, height, frame.rgba))
+    }
+
     /// Renders the loop ticks (ping-pong included) and encodes the GIF. Each
     /// frame lasts one tick, `round(100 / ticks_per_second)` centiseconds.
     /// Loops longer than [`MAX_FRAMES`] ticks keep every `stride`-th tick,

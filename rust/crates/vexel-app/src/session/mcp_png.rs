@@ -11,6 +11,7 @@
 use super::AppDocument;
 use super::mcp::{McpOutcome, source};
 use crate::animation::frame::{self, AnimationError};
+use crate::animation::native_export::NativeExportSource;
 use crate::preview::Operation;
 use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
@@ -54,10 +55,23 @@ pub(crate) fn parse(doc: &JsonDocument<'_>, args: usize) -> Result<Operation, &'
             .map(|v| Some(v as u32))
             .ok_or(BAD_ARGS)
     };
+    let time = match doc.object_get(args, b"time") {
+        None => None,
+        Some(token) => Some(
+            doc.token(token)
+                .filter(|k| k.kind == JsonType::Number)
+                .and_then(|_| doc.raw_token(token))
+                .and_then(|raw| std::str::from_utf8(raw).ok())
+                .and_then(|text| text.parse::<f64>().ok())
+                .filter(|t| t.is_finite() && (0.0..=3600.0).contains(t))
+                .ok_or(BAD_ARGS)?,
+        ),
+    };
     Ok(Operation::RenderPng {
         path,
         width: side(b"width")?,
         height: side(b"height")?,
+        time,
     })
 }
 
@@ -126,25 +140,32 @@ pub(super) fn render_png(
     path: &str,
     width: Option<u32>,
     height: Option<u32>,
+    time: Option<f64>,
 ) -> Result<McpOutcome, &'static str> {
     if !leaf_is_png(path) {
         return Err("unsupported file type");
     }
     let target = policy.resolve_save_path(path).map_err(access_error)?;
-    let source = source(app)?;
-    let scene = frame::decode(&source).map_err(|e| match e {
-        AnimationError::Limit => TOO_LARGE,
-        _ => RENDER_FAILED,
-    })?;
-    let (w, h) = target_size(scene.size(), width, height)?;
-    let tile = scene
-        .render_sized(0.0, (w, h), &AtomicBool::new(false))
-        .map_err(|e| match e {
+    let (w, h, rgba) = if let Some(native) = NativeExportSource::from_document(app) {
+        native
+            .render_still(time.unwrap_or(0.0), |doc| target_size(doc, width, height))
+            .map_err(|_| RENDER_FAILED)?
+    } else {
+        let source = source(app)?;
+        let scene = frame::decode(&source).map_err(|e| match e {
             AnimationError::Limit => TOO_LARGE,
             _ => RENDER_FAILED,
         })?;
-    drop(scene);
-    let png = vexel_png::encode_rgba8(w, h, tile.rgba(), Compression::Fixed).map_err(png_error)?;
+        let (w, h) = target_size(scene.size(), width, height)?;
+        let tile = scene
+            .render_sized(time.unwrap_or(0.0), (w, h), &AtomicBool::new(false))
+            .map_err(|e| match e {
+                AnimationError::Limit => TOO_LARGE,
+                _ => RENDER_FAILED,
+            })?;
+        (w, h, tile.rgba().to_vec())
+    };
+    let png = vexel_png::encode_rgba8(w, h, &rgba, Compression::Fixed).map_err(png_error)?;
     if png.len() > OUTPUT_LIMIT {
         return Err(TOO_LARGE);
     }

@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{element_id, policy_for, Dir, Rig};
+use common::{Dir, Rig, element_id, policy_for};
 use std::fs;
 
 fn args(members: &str) -> String {
@@ -45,7 +45,11 @@ fn walking_character_at_sunset_live_preview_native_gif() {
         "rect",
         "\"x\":\"0\",\"y\":\"0\",\"width\":\"512\",\"height\":\"512\",\"fill\":\"#000000\"",
     );
-    let gradient = call(&mut rig, "gradient_add", "\"kind\":\"radial\",\"units\":\"userSpace\",\"cx\":256,\"cy\":190,\"r\":320,\"stops\":\"0:#ffd36a:1,1:#44205f:1\"");
+    let gradient = call(
+        &mut rig,
+        "gradient_add",
+        "\"kind\":\"radial\",\"units\":\"userSpace\",\"cx\":256,\"cy\":190,\"r\":320,\"stops\":\"0:#ffd36a:1,1:#44205f:1\"",
+    );
     let gradient_id = gradient
         .split("\"gradientId\":\"")
         .nth(1)
@@ -112,8 +116,18 @@ fn walking_character_at_sunset_live_preview_native_gif() {
         "ellipse",
         "\"cx\":\"254\",\"cy\":\"237\",\"rx\":\"24\",\"ry\":\"25\",\"fill\":\"#efb18a\"",
     );
-    let arm = add(&mut rig, "root", "path", "\"d\":\"M230 280 L207 315\",\"stroke\":\"#efb18a\",\"stroke-width\":\"12\",\"fill\":\"none\"");
-    let leg = add(&mut rig, "root", "path", "\"d\":\"M240 345 L225 393\",\"stroke\":\"#273b58\",\"stroke-width\":\"14\",\"fill\":\"none\"");
+    let arm = add(
+        &mut rig,
+        "root",
+        "path",
+        "\"d\":\"M230 280 L207 315\",\"stroke\":\"#efb18a\",\"stroke-width\":\"12\",\"fill\":\"none\"",
+    );
+    let leg = add(
+        &mut rig,
+        "root",
+        "path",
+        "\"d\":\"M240 345 L225 393\",\"stroke\":\"#273b58\",\"stroke-width\":\"14\",\"fill\":\"none\"",
+    );
     let group = element_id(
         &call(
             &mut rig,
@@ -152,27 +166,43 @@ fn walking_character_at_sunset_live_preview_native_gif() {
         "element_reorder",
         &format!("\"elementId\":\"{copy}\",\"targetId\":\"{sun}\",\"before\":true"),
     );
-    assert!(call(
-        &mut rig,
-        "element_get",
-        &format!("\"elementId\":\"{group}\"")
-    )
-    .contains(&group));
-    assert!(call(
-        &mut rig,
-        "element_query",
-        "\"tag\":\"ellipse\",\"limit\":32"
-    )
-    .contains(&head));
+    assert!(
+        call(
+            &mut rig,
+            "element_get",
+            &format!("\"elementId\":\"{group}\"")
+        )
+        .contains(&group)
+    );
+    assert!(
+        call(
+            &mut rig,
+            "element_query",
+            "\"tag\":\"ellipse\",\"limit\":32"
+        )
+        .contains(&head)
+    );
     assert!(call(&mut rig, "tree_get", "\"limit\":64").contains(&group));
 
-    native(&mut rig, "add_property_track", &format!("\"trackId\":\"sun-color\",\"targetId\":\"{stop_id}\",\"property\":\"stop-color\",\"valueType\":\"rgba\",\"interpolation\":\"linear\",\"value\":[1,0.82,0.42,1]"));
+    native(
+        &mut rig,
+        "add_property_track",
+        &format!(
+            "\"trackId\":\"sun-color\",\"targetId\":\"{stop_id}\",\"property\":\"stop-color\",\"valueType\":\"rgba\",\"interpolation\":\"linear\",\"value\":[1,0.82,0.42,1]"
+        ),
+    );
     native(
         &mut rig,
         "set_property_key",
         "\"trackId\":\"sun-color\",\"tick\":24,\"value\":[0.96,0.32,0.14,1]",
     );
-    native(&mut rig, "add_property_track", &format!("\"trackId\":\"blink\",\"targetId\":\"{head}\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":1"));
+    native(
+        &mut rig,
+        "add_property_track",
+        &format!(
+            "\"trackId\":\"blink\",\"targetId\":\"{head}\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":1"
+        ),
+    );
     native(
         &mut rig,
         "set_property_key",
@@ -243,32 +273,119 @@ fn walking_character_at_sunset_live_preview_native_gif() {
     assert_eq!(&fs::read(png).unwrap()[..8], b"\x89PNG\r\n\x1a\n");
 }
 
-#[test]
-#[ignore = "exact blocked step: export_animation of the gradient scene did not complete within 30 seconds in the Codex sandbox; rerun outside the sandbox to verify native GIF frame differences"]
-fn gap_gradient_scene_native_gif_export() {
-    let dir = Dir::new();
-    let gif = dir.text("sunset.gif");
-    let mut rig = Rig::new(policy_for(&[&dir.0]));
-    call(
-        &mut rig,
-        "export_animation",
-        &format!("\"path\":\"{gif}\",\"format\":\"gif\",\"fps\":2,\"duration\":0.5"),
+/// Compressed image data of every GIF frame (sub-blocks concatenated). The
+/// palette and encoder are deterministic, so equal pixels give equal bytes.
+fn gif_frame_streams(gif: &[u8]) -> Vec<Vec<u8>> {
+    assert_eq!(&gif[..6], b"GIF89a");
+    let mut at = 13 + (3usize << ((gif[10] & 7) + 1));
+    let mut frames = Vec::new();
+    let sub_blocks = |at: &mut usize| {
+        let mut data = Vec::new();
+        while gif[*at] != 0 {
+            let len = gif[*at] as usize;
+            data.extend_from_slice(&gif[*at + 1..*at + 1 + len]);
+            *at += 1 + len;
+        }
+        *at += 1;
+        data
+    };
+    loop {
+        match gif[at] {
+            0x3B => return frames,
+            0x21 => {
+                at += 2;
+                sub_blocks(&mut at);
+            }
+            0x2C => {
+                at += 10 + 1;
+                frames.push(sub_blocks(&mut at));
+            }
+            other => panic!("bad GIF block {other:#x}"),
+        }
+    }
+}
+
+fn walking_arm(rig: &mut Rig) {
+    let arm = add(
+        rig,
+        "root",
+        "path",
+        "\"d\":\"M60 60 L200 200\",\"stroke\":\"#111111\",\"stroke-width\":\"12\"",
+    );
+    native(
+        rig,
+        "add_property_track",
+        &format!(
+            "\"trackId\":\"arm\",\"targetId\":\"{arm}\",\"property\":\"transform\",\"valueType\":\"trs\",\"interpolation\":\"linear\",\"value\":[0,0,0,1,1,60,60]"
+        ),
+    );
+    native(
+        rig,
+        "set_property_key",
+        "\"trackId\":\"arm\",\"tick\":24,\"value\":[40,0,70,1,1,60,60]",
     );
 }
 
 #[test]
-#[ignore = "exact failing step: native_timeline_add_property_track transform with valueType=trs and a 7-number array is rejected by the timeline validator; therefore arm/leg pivot rotation and group walking tracks cannot be created through the advertised live-preview tool"]
-fn gap_trs_pivot_rotation_tracks() {
-    let mut rig = Rig::new(policy_for(&[]));
-    let arm = add(
+fn gradient_scene_native_gif_export() {
+    let dir = Dir::new();
+    let gif = dir.text("sunset.gif");
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let sky = add(
         &mut rig,
         "root",
-        "path",
-        "\"d\":\"M1 1 L8 8\",\"stroke\":\"#111111\"",
+        "rect",
+        "\"x\":\"0\",\"y\":\"0\",\"width\":\"256\",\"height\":\"256\",\"fill\":\"#000000\"",
     );
-    native(
+    let gradient = call(
         &mut rig,
-        "add_property_track",
-        &format!("\"trackId\":\"arm\",\"targetId\":\"{arm}\",\"property\":\"transform\",\"valueType\":\"trs\",\"interpolation\":\"linear\",\"value\":[0,0,30,1,1,1,1]"),
+        "gradient_add",
+        "\"kind\":\"radial\",\"units\":\"userSpace\",\"cx\":128,\"cy\":100,\"r\":160,\"stops\":\"0:#ffd36a:1,1:#44205f:1\"",
     );
+    let gradient_id = gradient
+        .split("\"gradientId\":\"")
+        .nth(1)
+        .unwrap()
+        .split('"')
+        .next()
+        .unwrap();
+    call(
+        &mut rig,
+        "element_set_paint",
+        &format!("\"elementId\":\"{sky}\",\"property\":\"fill\",\"gradientId\":\"{gradient_id}\""),
+    );
+    walking_arm(&mut rig);
+    let started = std::time::Instant::now();
+    let reply = call(
+        &mut rig,
+        "export_animation",
+        &format!("\"path\":\"{gif}\",\"format\":\"gif\",\"fps\":2,\"duration\":0.5"),
+    );
+    assert!(started.elapsed().as_secs() < 120, "export too slow");
+    assert!(reply.contains("\"frames\":48"), "{reply}");
+    let streams = gif_frame_streams(&fs::read(&gif).unwrap());
+    assert_eq!(streams.len(), 48);
+    assert_ne!(streams[0], streams[24], "frames 0 and 24 are identical");
+    assert_ne!(streams[0], streams[12], "frames 0 and 12 are identical");
+}
+
+#[test]
+fn trs_pivot_rotation_tracks_render_differently() {
+    let dir = Dir::new();
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    walking_arm(&mut rig);
+    let render = |rig: &mut Rig, name: &str, time: &str| {
+        let png = dir.text(name);
+        call(
+            rig,
+            "render_png",
+            &format!("\"path\":\"{png}\",\"time\":{time}"),
+        );
+        let bytes = fs::read(png).unwrap();
+        assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
+        bytes
+    };
+    let start = render(&mut rig, "t0.png", "0");
+    let middle = render(&mut rig, "t1.png", "0.5");
+    assert_ne!(start, middle, "TRS track did not change the rendered frame");
 }

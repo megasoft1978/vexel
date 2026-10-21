@@ -123,6 +123,7 @@ pub enum Operation {
         path: String,
         width: Option<u32>,
         height: Option<u32>,
+        time: Option<f64>,
     },
 }
 
