@@ -160,7 +160,7 @@ impl Rig {
                 vexel_mcp_stdio::serve(&mut input, &mut output, session, backend).unwrap();
             });
             loop {
-                match requests.recv_timeout(Duration::from_millis(5)) {
+                match requests.recv_timeout(Duration::from_micros(100)) {
                     Ok(UiRequest { operation, reply }) => {
                         match host.handle_with(app, operation, driver) {
                             Ok(McpOutcome::Reply(json)) => {

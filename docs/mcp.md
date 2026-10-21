@@ -156,6 +156,23 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Performance
+
+`cargo test -p vexel-app --release --test mcp_bench -- --ignored --nocapture`
+builds 120 elements (the live preview scene cap is 128) and 50 opacity tracks x
+8 keys through the headless rig and prints per-tool latency. The rig measures
+handler cost only; it excludes the shell loop's wake/sleep latency.
+
+Baseline (before optimization), p50 / p95 ms:
+
+| tool | n | p50 | p95 |
+| --- | --- | --- | --- |
+| element_add | 120 | 0.26 | 0.38 |
+| native_timeline_add_property_track | 50 | 1.21 | 2.26 |
+| native_timeline_set_property_key | 400 | 1.71 | 3.20 |
+
+Total wall 0.80 s.
+
 ## Historical/unsupported transport notes
 
 Older versions of this page described a `vexel-mcp` sidecar, a per-user Unix
