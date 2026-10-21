@@ -236,9 +236,11 @@ fn failure_message(error: &ExportFailure) -> &'static str {
     match error {
         ExportFailure::Smil(error) => error_message(error),
         ExportFailure::Native(NativeExportError::Timeline) => "export needs an animation",
-        ExportFailure::Native(NativeExportError::Viewport(_) | NativeExportError::Frame(_)) => {
-            "export could not render the animation"
-        }
+        ExportFailure::Native(
+            NativeExportError::Viewport(_)
+            | NativeExportError::Frame(_)
+            | NativeExportError::TimeOutOfRange { .. },
+        ) => "export could not render the animation",
         ExportFailure::Native(NativeExportError::Encode(_)) => {
             "export exceeds frame or size limits"
         }

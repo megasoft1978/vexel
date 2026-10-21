@@ -113,7 +113,10 @@ operations. The native timeline surface includes `native_timeline_get`,
 `native_timeline_set_loop`, `native_timeline_undo`,
 `native_timeline_redo`, `native_timeline_remove_key`,
 `native_timeline_move_key`, and track remove/rename/duplicate/interpolation/
-reorder operations, alongside drawing asset/cel tools. Exact arguments are
+reorder operations, alongside drawing asset/cel tools. The timeline defaults
+to 48 ticks at 24 ticks per second (ticks 0-47); `native_timeline_set_duration`
+(`durationTicks`, optional `ticksPerSecond`) lengthens or shortens it, capped at
+3600 seconds and never below the last key/cel tick plus one. Exact arguments are
 published by MCP tool schemas. Timeline edits use shared project history.
 Native GIF export is synchronous; loops over 120 frames are stride-sampled,
 with frame delay multiplied by the stride.
@@ -121,6 +124,9 @@ with frame delay multiplied by the stride.
 ### Building an animated scene
 
 Use `element_add` to create the scene's rects, ellipses, paths, and text.
+`parentId` is `"root"` or the id of an existing group (from `element_group`), so
+nested character hierarchies can be built; native tracks, including TRS pivots,
+can target elements at any depth.
 `gradient_add` returns a `gradientId` and stop IDs; apply the gradient with
 `element_set_paint`. Create a rect or ellipse clipping path with `clip_add`,
 then apply it to a shape or group with `element_set_clip`. Use
@@ -135,8 +141,10 @@ element ID, property, `valueType`, interpolation, and initial `value`. Use
 tracks with the corresponding `native_timeline_move_key`, `remove_key`,
 `duplicate_track`, `rename_track`, `set_interpolation`, and `reorder_track`
 tools. Inspect with `element_get`, `element_query`, `tree_get`, and
-`native_timeline_get`; use `render_png` at selected ticks and `export_animation`
-for GIF output. Save a copy with `save_as` before sharing it.
+`native_timeline_get`; use `render_png` at selected times and `export_animation`
+for GIF output. `render_png` `time` is in seconds (`tick / ticksPerSecond`), not
+ticks, and a time past the end of the timeline is rejected; the reply reports
+the rendered `tick`. Save a copy with `save_as` before sharing it.
 
 Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;

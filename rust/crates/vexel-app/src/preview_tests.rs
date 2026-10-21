@@ -216,9 +216,10 @@ fn rejected_attribute_and_parent_echo_is_sanitized_and_error_json_is_valid() {
     };
     assert!(text.contains("bad??key?"), "{text}");
     assert!(!text.chars().any(|c| c.is_control()), "{text}");
-    let long_parent = "p".repeat(40);
+    // An over-long parent id is refused without being echoed.
+    let long_parent = "p".repeat(200);
     let json = format!(
-        r##"{{"documentId":"{DOCUMENT_ID}","parentId":"{long_parent}","template":"rect","attributes":{{}}}}"##
+        r##"{{"documentId":"{DOCUMENT_ID}","parentId":"{long_parent}","template":"rect","attributes":{{"x":"1","y":"2","width":"3","height":"4","fill":"#AABBCC"}}}}"##
     );
     let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
     let PreviewArgumentError::Actionable(text) =
@@ -227,7 +228,7 @@ fn rejected_attribute_and_parent_echo_is_sanitized_and_error_json_is_valid() {
         panic!("expected an actionable error");
     };
     assert!(
-        text.contains(&"p".repeat(32)) && !text.contains(&"p".repeat(33)),
+        text.contains("parentId") && !text.contains(&"p".repeat(33)),
         "{text}"
     );
 }

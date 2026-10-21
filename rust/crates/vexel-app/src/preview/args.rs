@@ -38,16 +38,6 @@ fn echo(value: &str) -> String {
         .collect()
 }
 
-pub(super) fn rejected_element_add_parent(parent: Option<&str>) -> String {
-    match parent {
-        Some(parent) => format!(
-            "element_add parentId \"{}\" is invalid; the live preview only accepts \"root\"",
-            echo(parent)
-        ),
-        None => "element_add parentId is required; use \"root\"".to_owned(),
-    }
-}
-
 /// Names `V1Document::set_attribute` accepts beyond the dedicated variants.
 const ATTRIBUTE_NAMES: &[&str] = &[
     "opacity",
@@ -228,12 +218,28 @@ pub(super) fn element_add(
     doc: &JsonDocument<'_>,
     args: usize,
 ) -> Result<Operation, PreviewArgumentError> {
-    let parent = string_field(doc, args, b"parentId");
-    if parent.as_deref().is_some_and(|parent| parent != "root") {
-        return Err(PreviewArgumentError::Actionable(
-            rejected_element_add_parent(parent.as_deref()),
-        ));
+    let operation = element_add_shape(doc, args)?;
+    match string_field(doc, args, b"parentId") {
+        Some(parent) if parent != "root" => {
+            if parent.is_empty() || parent.len() > 128 {
+                return Err(PreviewArgumentError::Actionable(
+                    "element_add parentId must be \"root\" or the id of an existing group"
+                        .to_owned(),
+                ));
+            }
+            Ok(Operation::AddIn {
+                parent,
+                operation: Box::new(operation),
+            })
+        }
+        _ => Ok(operation),
     }
+}
+
+fn element_add_shape(
+    doc: &JsonDocument<'_>,
+    args: usize,
+) -> Result<Operation, PreviewArgumentError> {
     let template = string_field(doc, args, b"template").ok_or(PreviewArgumentError::Generic(
         "invalid preview tool arguments",
     ))?;

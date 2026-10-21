@@ -17,7 +17,7 @@ use crate::preview::{
 };
 use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;
-use vexel_v1_document::{V1Document, V1DocumentError};
+use vexel_v1_document::{ElementKind, V1Document, V1DocumentError};
 
 const SOURCE_LIMIT: usize = 64 * 1024;
 const ANIMATION_LIMIT: usize = 16;
@@ -42,6 +42,8 @@ pub enum McpOutcome {
 /// [`AppDocument`].
 pub struct McpHost {
     pub(super) next_id: u64,
+    /// Group the in-flight `element_add` inserts into; `None` is the root.
+    pub(super) parent: Option<String>,
     /// The one grant policy of this process: every path tool and the GIF
     /// export job use it. Fixed at construction.
     policy: AccessPolicy,
@@ -61,7 +63,11 @@ impl McpHost {
     }
 
     pub fn with_policy(policy: AccessPolicy) -> Self {
-        Self { next_id: 1, policy }
+        Self {
+            next_id: 1,
+            parent: None,
+            policy,
+        }
     }
 
     /// The grant policy used by path tools; hand a clone to `ExportJob::spawn`.
@@ -96,6 +102,23 @@ impl McpHost {
             Operation::AnimationList => {
                 let ids = stable_ids(&source(app)?);
                 animation_list_json(app.document(), &ids).map(McpOutcome::Reply)
+            }
+            Operation::AddIn { parent, operation } => {
+                match app.document().element_kind(&parent) {
+                    Ok(ElementKind::Group) => {}
+                    Ok(_) => {
+                        return Err(
+                            "element_add parentId must be \"root\" or a group id; create a group with element_group",
+                        );
+                    }
+                    Err(_) => {
+                        return Err("element_add parentId is not an element id in the document");
+                    }
+                }
+                self.parent = Some(parent);
+                let result = self.handle_with(app, *operation, driver);
+                self.parent = None;
+                result
             }
             Operation::Add(shape) => self.add(app, shape),
             Operation::AnimationAdd { target_id, xml } => animation_add(app, &target_id, &xml),
@@ -203,11 +226,17 @@ impl McpHost {
     fn add(&mut self, app: &mut AppDocument, shape: Shape) -> Result<McpOutcome, &'static str> {
         validate_shape(shape)?;
         let (id, count) = self.reserve_id(app)?;
-        app.edit(|doc| add_shape(doc, shape, &id))
-            .map_err(|error| match error {
-                SessionEditError::Operation(_) => "shape validation failed",
-                SessionEditError::History(_) => "project history unavailable",
-            })?;
+        let parent = self.parent.clone();
+        app.edit(|doc| {
+            doc.set_insert_parent(parent.as_deref())?;
+            let added = add_shape(doc, shape, &id);
+            doc.set_insert_parent(None)?;
+            added
+        })
+        .map_err(|error| match error {
+            SessionEditError::Operation(_) => "shape validation failed",
+            SessionEditError::History(_) => "project history unavailable",
+        })?;
         self.next_id += 1;
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{id}\",\"message\":\"Shape added\"}}",

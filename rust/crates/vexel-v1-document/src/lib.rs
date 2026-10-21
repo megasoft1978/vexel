@@ -57,6 +57,8 @@ pub struct V1Document {
     width: u32,
     height: u32,
     editor: Editor,
+    /// Stable id of the group new elements are appended to; `None` is the root.
+    insert_parent: Option<String>,
 }
 
 impl V1Document {
@@ -85,6 +87,7 @@ impl V1Document {
             editor: result
                 .editor
                 .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))?,
+            insert_parent: None,
         })
     }
 
@@ -127,6 +130,7 @@ impl V1Document {
                 width,
                 height,
                 editor,
+                insert_parent: None,
             }),
             _ => Err(V1DocumentError::InvalidDimensions),
         }
@@ -190,6 +194,37 @@ impl V1Document {
         bytes.resize(length, 0);
         self.editor.materialize(&mut bytes)?;
         Ok(bytes)
+    }
+
+    /// Selects where later `add_*` calls insert: a `<g>` by stable id, or the
+    /// root for `None`. Fails unless the id names an existing group.
+    pub fn set_insert_parent(&mut self, id: Option<&str>) -> Result<(), V1DocumentError> {
+        if let Some(id) = id {
+            validate_stable_id(id)?;
+        }
+        self.insert_parent = id.map(str::to_owned);
+        if let Err(error) = self.insertion_parent() {
+            self.insert_parent = None;
+            return Err(error);
+        }
+        Ok(())
+    }
+
+    fn insertion_parent(&self) -> Result<vexel_document_edit::DocumentHandle, V1DocumentError> {
+        let Some(id) = &self.insert_parent else {
+            return self
+                .editor
+                .root()
+                .ok_or(V1DocumentError::Edit(EditError::InvalidOperation));
+        };
+        let node = self
+            .editor
+            .try_find_id(id.as_bytes())?
+            .ok_or(V1DocumentError::MissingStableId)?;
+        if self.editor.tag_name(node) != Some(b"g") {
+            return Err(V1DocumentError::Unsupported);
+        }
+        Ok(node)
     }
 
     /// Inserts a rectangle from two document-space drag points.
@@ -290,10 +325,7 @@ impl V1Document {
                 value: id,
             },
         ];
-        let root = self
-            .editor
-            .root()
-            .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))?;
+        let root = self.insertion_parent()?;
         self.editor.insert_template(
             root,
             TemplateKind::Rect,
@@ -405,10 +437,7 @@ impl V1Document {
                 value: id,
             },
         ];
-        let root = self
-            .editor
-            .root()
-            .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))?;
+        let root = self.insertion_parent()?;
         self.editor.insert_template(
             root,
             TemplateKind::Ellipse,

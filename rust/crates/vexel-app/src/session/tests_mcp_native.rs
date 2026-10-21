@@ -239,3 +239,66 @@ fn mcp_export_animation_uses_native_timeline() {
         48
     );
 }
+
+#[test]
+fn set_duration_extends_timeline_and_guards_keys_and_cap() {
+    let mut app = AppDocument::new(64, 64).unwrap();
+    rect(&mut app);
+    run(
+        &mut app,
+        "native_timeline_add_property_track",
+        "\"trackId\":\"t1\",\"targetId\":\"vexel-object-1\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":0",
+    )
+    .unwrap();
+    let key = "\"trackId\":\"t1\",\"tick\":100,\"value\":1";
+    assert!(run(&mut app, "native_timeline_set_property_key", key).is_err());
+
+    run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":240",
+    )
+    .unwrap();
+    let timeline = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(timeline.contains("\"durationTicks\":240"), "{timeline}");
+    run(&mut app, "native_timeline_set_property_key", key).unwrap();
+
+    let shrink = run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":100",
+    );
+    assert!(shrink.unwrap_err().contains("greater than the last key"));
+    run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":101",
+    )
+    .unwrap();
+
+    run(&mut app, "native_timeline_undo", "").unwrap();
+    let undone = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(undone.contains("\"durationTicks\":240"), "{undone}");
+
+    // 3600 s is the cap: 86400 ticks at 24/s is fine, one tick more is not.
+    run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":86400",
+    )
+    .unwrap();
+    let over = run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":86401",
+    );
+    assert!(over.unwrap_err().contains("3600 seconds"));
+    run(
+        &mut app,
+        "native_timeline_set_duration",
+        "\"durationTicks\":120,\"ticksPerSecond\":12",
+    )
+    .unwrap();
+    let timeline = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(timeline.contains("\"ticksPerSecond\":12"), "{timeline}");
+}

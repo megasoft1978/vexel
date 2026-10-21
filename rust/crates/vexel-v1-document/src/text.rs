@@ -84,7 +84,7 @@ impl V1Document {
                 value: spec.fill.as_bytes(),
             },
         ];
-        let root = self.editor.root().ok_or(V1DocumentError::Unsupported)?;
+        let root = self.insertion_parent()?;
         let handle = self
             .editor
             .insert_text_element(root, &attrs, spec.content.as_bytes())?;

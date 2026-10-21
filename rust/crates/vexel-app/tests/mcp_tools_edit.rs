@@ -97,7 +97,8 @@ fn library_target_links_and_lists_routed_tools() {
     // render_png is routed since WO-RUST-V1-PNG-01.
     // Eleven native_timeline_* tools are routed since the V1 native MCP slice.
     // Twenty-three document, paint, query and timeline-edit tools follow the V1 advanced-animation work.
-    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23);
+    // Plus native_timeline_set_duration.
+    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1);
     assert!(names.iter().any(|n| n == "render_png"));
 }
 
@@ -411,14 +412,14 @@ fn element_add_line_and_path_rejections() {
         assert!(reply.is_error, "{template}");
         assert_eq!(rig.state(), before);
     }
-    // A parent other than root is refused with an actionable message.
+    // A parent that is not a group is refused with an actionable message.
     let extra =
         format!(r#""parentId":"vexel-object-1","template":"line","attributes":{{{LINE_OK}}}"#);
     rejects(
         &mut rig,
         "element_add",
         &extra,
-        r#"element_add parentId \"vexel-object-1\" is invalid; the live preview only accepts \"root\""#,
+        r#"element_add parentId must be \"root\" or a group id; create a group with element_group"#,
     );
     // Wrong documentId.
     let before = rig.state();

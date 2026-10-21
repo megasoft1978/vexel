@@ -317,6 +317,16 @@ impl ProjectTimelineCandidate {
         self.transact(|editor, context| editor.set_loop(context, mode))
     }
 
+    pub fn set_timing(
+        &self,
+        duration_ticks: u32,
+        ticks_per_second: Option<u32>,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| {
+            editor.set_timing(context, duration_ticks, ticks_per_second)
+        })
+    }
+
     pub fn set_onion(
         &self,
         before: u32,

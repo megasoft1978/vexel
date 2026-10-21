@@ -283,6 +283,13 @@ fn parse_one(
                 interpolation,
             }
         }
+        "set_duration" => NativeOp::SetDuration {
+            duration_ticks: tick(doc, args, tool, "durationTicks")?,
+            ticks_per_second: match doc.object_get(args, b"ticksPerSecond") {
+                None => None,
+                Some(_) => Some(tick(doc, args, tool, "ticksPerSecond")?),
+            },
+        },
         "reorder_track" => NativeOp::ReorderTrack {
             track_id: id("trackId")?,
             index: usize::try_from(tick(doc, args, tool, "index")?)
@@ -330,6 +337,7 @@ pub(super) fn parse(
             | "duplicate_track"
             | "set_interpolation"
             | "reorder_track"
+            | "set_duration"
     )
     .then(|| parse_one(doc, args, tool).map(Operation::Native))
 }

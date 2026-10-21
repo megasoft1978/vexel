@@ -17,6 +17,10 @@ pub enum NativeExportError {
     Viewport(ComposeError),
     Frame(NativeFrameError),
     Encode(GifError),
+    /// `time` is past the end of the timeline (it is in seconds, not ticks).
+    TimeOutOfRange {
+        seconds: f64,
+    },
 }
 
 /// A finished GIF and what it contains.
@@ -79,6 +83,16 @@ impl NativeExportSource {
         time: f64,
         size: impl FnOnce((u32, u32)) -> Result<(u32, u32), &'static str>,
     ) -> Result<(u32, u32, Vec<u8>), NativeExportError> {
+        self.render_still_at(time, size)
+            .map(|(w, h, _, rgba)| (w, h, rgba))
+    }
+
+    /// Like [`Self::render_still`], also returning the tick rendered.
+    pub fn render_still_at(
+        &self,
+        time: f64,
+        size: impl FnOnce((u32, u32)) -> Result<(u32, u32), &'static str>,
+    ) -> Result<(u32, u32, u32, Vec<u8>), NativeExportError> {
         let view = self
             .candidate
             .view()
@@ -87,9 +101,15 @@ impl NativeExportSource {
         if tps == 0 || duration == 0 {
             return Err(NativeExportError::Timeline);
         }
-        let tick = (time.max(0.0) * f64::from(tps))
-            .round()
-            .min(f64::from(duration - 1)) as u32;
+        let scaled = time.max(0.0) * f64::from(tps);
+        // Up to one tick past the end still means the last tick; beyond that
+        // the caller most likely passed ticks instead of seconds.
+        if scaled > f64::from(duration) {
+            return Err(NativeExportError::TimeOutOfRange {
+                seconds: f64::from(duration) / f64::from(tps),
+            });
+        }
+        let tick = scaled.round().min(f64::from(duration - 1)) as u32;
         let viewport = svg_viewport(Arc::clone(&self.source), &|| false)
             .map_err(NativeExportError::Viewport)?;
         let (width, height) = size((viewport.output_width, viewport.output_height))
@@ -117,7 +137,7 @@ impl NativeExportSource {
         let frame =
             render_native_frame(&self.source, &view, &assets, tick, width, height, geometry)
                 .map_err(NativeExportError::Frame)?;
-        Ok((width, height, frame.rgba))
+        Ok((width, height, tick, frame.rgba))
     }
 
     /// Renders the loop ticks (ping-pong included) and encodes the GIF. Each

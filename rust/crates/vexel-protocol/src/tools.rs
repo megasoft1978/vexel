@@ -25,7 +25,7 @@ fn display_keys(keys: &[&[u8]]) -> String {
 
 fn element_add_description() -> String {
     format!(
-        "Add a rectangle, ellipse, line, or path to the live preview document. parentId must be \"root\". Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
+        "Add a rectangle, ellipse, line, or path to the live preview document. parentId is \"root\" or the id of an existing group (see element_group), so nested hierarchies can be built. Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
         display_keys(RECT_KEYS),
         display_keys(ELLIPSE_KEYS),
         display_keys(LINE_KEYS),
@@ -232,7 +232,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "native_timeline_get",
-        description: "Read the active native-v1 project's timing (ticksPerSecond, durationTicks, loop), tracks, and their items by tick (drawing cels with asset, property keys with value). The default timeline is 24 ticks per second and 48 ticks long, so valid ticks are integers 0-47.",
+        description: "Read the active native-v1 project's timing (ticksPerSecond, durationTicks, loop), tracks, and their items by tick (drawing cels with asset, property keys with value). The default timeline is 24 ticks per second and 48 ticks long, so valid ticks are integers 0-47 until native_timeline_set_duration changes it.",
         properties: "{\"documentId\":{\"type\":\"string\"}}",
         required: "documentId",
         fields: "documentId:string",
@@ -267,14 +267,14 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "native_timeline_set_property_key",
-        description: "Set or replace one undoable key on a property track (not a drawing track). tick: integer 0-47 on the default 48-tick timeline (durationTicks-1 at most). value must match the track valueType: a number for scalar, true/false for boolean, an array of 4 numbers for rgba, 6 for transform2d or a TRS object for trs; optional ease is step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2. Example: {\"trackId\":\"fade\",\"tick\":12,\"value\":1}.",
+        description: "Set or replace one undoable key on a property track (not a drawing track). tick: integer 0 through durationTicks-1 (0-47 on the default 48-tick timeline; lengthen it with native_timeline_set_duration). value must match the track valueType: a number for scalar, true/false for boolean, an array of 4 numbers for rgba, 6 for transform2d or a TRS object for trs; optional ease is step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2. Example: {\"trackId\":\"fade\",\"tick\":12,\"value\":1}.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"value\":{\"type\":[\"number\",\"boolean\",\"array\"]},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\"]},\"ease\":{\"type\":\"string\"}}",
         required: "documentId,trackId,tick,value",
         fields: "documentId:string;trackId:string;tick:integer;value:number|boolean|array;valueType:string;ease:string",
     },
     ToolSchema {
         name: "native_timeline_set_cel",
-        description: "Show asset assetName on a drawing track from tick until the next cel; a tick that already has a cel is replaced. tick: integer 0-47 on the default 48-tick timeline (durationTicks-1 at most). The asset must exist (native_timeline_add_drawing_asset) and trackId must be a drawing track (native_timeline_add_track, which already has a cel at tick 0). Example: {\"trackId\":\"ball\",\"tick\":8,\"assetName\":\"ball-low\"}.",
+        description: "Show asset assetName on a drawing track from tick until the next cel; a tick that already has a cel is replaced. tick: integer 0 through durationTicks-1 (0-47 on the default 48-tick timeline; lengthen it with native_timeline_set_duration). The asset must exist (native_timeline_add_drawing_asset) and trackId must be a drawing track (native_timeline_add_track, which already has a cel at tick 0). Example: {\"trackId\":\"ball\",\"tick\":8,\"assetName\":\"ball-low\"}.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"assetName\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"label\":{\"type\":\"string\",\"maxLength\":256}}",
         required: "documentId,trackId,tick,assetName",
         fields: "documentId:string;trackId:string;tick:integer;assetName:string;label:string",
@@ -390,6 +390,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "native_timeline_duplicate_track",
     "native_timeline_set_interpolation",
     "native_timeline_reorder_track",
+    "native_timeline_set_duration",
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -439,7 +440,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         } else if preview && tool.name == "export_animation" {
             "Export the live preview loop as a GIF inside a granted directory.".to_owned()
         } else if preview && tool.name == "render_png" {
-            "Render the open document to a PNG file inside a granted directory.".to_owned()
+            "Render the open document to a PNG file inside a granted directory. Optional time is in SECONDS (tick / ticksPerSecond; 0 to the timeline length, default 0), not ticks; a time past the end of the timeline is rejected.".to_owned()
         } else {
             tool.description.to_owned()
         };
@@ -456,7 +457,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             } else if preview && tool.name == "export_animation" {
                 r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif"]},"fps":{"type":"integer","minimum":1,"maximum":30},"duration":{"type":"number","minimum":0.01,"maximum":10}}"#
             } else if preview && tool.name == "render_png" {
-                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096}}"#
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096},"time":{"type":"number","minimum":0,"maximum":3600}}"#
             } else {
                 tool.properties
             };

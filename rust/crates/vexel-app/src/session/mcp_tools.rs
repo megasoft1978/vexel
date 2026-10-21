@@ -146,7 +146,14 @@ impl McpHost {
         add: impl FnOnce(&mut V1Document, &str) -> Result<(), V1DocumentError>,
     ) -> Result<McpOutcome, &'static str> {
         let (id, count) = self.reserve_id(app)?;
-        app.edit(|doc| add(doc, &id)).map_err(|error| match error {
+        let parent = self.parent.clone();
+        app.edit(|doc| {
+            doc.set_insert_parent(parent.as_deref())?;
+            let added = add(doc, &id);
+            doc.set_insert_parent(None)?;
+            added
+        })
+        .map_err(|error| match error {
             SessionEditError::Operation(error) => document_error(error),
             SessionEditError::History(_) => "project history unavailable",
         })?;

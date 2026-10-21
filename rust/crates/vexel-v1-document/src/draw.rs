@@ -388,9 +388,7 @@ impl V1Document {
         kind: TemplateKind,
         attrs: &[TemplateAttribute<'_>],
     ) -> Result<(), V1DocumentError> {
-        let root = self.editor.root().ok_or(V1DocumentError::Edit(
-            vexel_document_edit::EditError::InvalidOperation,
-        ))?;
+        let root = self.insertion_parent()?;
         self.editor.insert_template(root, kind, attrs)?;
         Ok(())
     }

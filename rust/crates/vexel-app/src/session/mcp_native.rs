@@ -85,6 +85,10 @@ pub enum NativeOp {
         to_tick: u32,
     },
     SetLoop(LoopMode),
+    SetDuration {
+        duration_ticks: u32,
+        ticks_per_second: Option<u32>,
+    },
     Undo,
     Redo,
 }
@@ -106,6 +110,9 @@ pub(crate) fn parse(
     };
     Some(op.map(Operation::Native))
 }
+
+/// Longest timeline `native_timeline_set_duration` accepts, in seconds.
+const MAX_DURATION_SECONDS: u64 = 3600;
 
 fn settings() -> EmptyTimelineSettings {
     EmptyTimelineSettings {
@@ -169,6 +176,29 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
         NativeOp::SetLoop(mode) => app
             .edit_timeline(settings(), limits, |c| c.set_loop(mode))
             .map_err(error)?,
+        NativeOp::SetDuration {
+            duration_ticks,
+            ticks_per_second,
+        } => {
+            let tps = match ticks_per_second {
+                Some(tps) => tps,
+                None => app
+                    .native_timeline_candidate(settings(), limits)
+                    .map_err(error)?
+                    .view()
+                    .map_err(|_| "unsupported native timeline")?
+                    .ticks_per_second(),
+            };
+            if tps != 0 && u64::from(duration_ticks) > u64::from(tps) * MAX_DURATION_SECONDS {
+                return Err(
+                    "native_timeline_set_duration duration exceeds 3600 seconds; reduce durationTicks or raise ticksPerSecond (durationTicks / ticksPerSecond must be at most 3600)",
+                );
+            }
+            app.edit_timeline(settings(), limits, |c| {
+                c.set_timing(duration_ticks, ticks_per_second)
+            })
+            .map_err(|e| operation_error(e, "set_duration", Refs::default()))?
+        }
         NativeOp::AddPropertyTrack {
             track_id,
             target_id,
@@ -368,7 +398,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_set_cel trackId must be a drawing track (property tracks use set_property_key) and label at most 256 UTF-8 bytes"
         }
         ("set_cel", TimelineError::InvalidValue) => {
-            "native_timeline_set_cel tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline)"
+            "native_timeline_set_cel tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration)"
         }
         ("remove_cel", TimelineError::InvalidReference) => {
             "native_timeline_remove_cel trackId is not a track or tick has no cel; read cel ticks with native_timeline_get"
@@ -386,7 +416,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_move_item toTick is occupied; use an unused tick"
         }
         ("move_item", TimelineError::InvalidValue) => {
-            "native_timeline_move_item fromTick 0 cannot be moved, and toTick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline)"
+            "native_timeline_move_item fromTick 0 cannot be moved, and toTick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration)"
         }
         ("add_property_track", TimelineError::InvalidReference) if !refs.target => {
             "native_timeline_add_property_track targetId is not an element id in the document; use an id such as vexel-object-1 (the elementId returned by element_add)"
@@ -404,7 +434,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_set_property_key trackId must be a property track (drawing tracks use set_cel)"
         }
         ("set_property_key", _) => {
-            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline) and value must match the track valueType"
+            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration) and value must match the track valueType"
         }
         ("remove_key", TimelineError::InvalidReference) => {
             "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key"
@@ -435,6 +465,9 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
         }
         ("set_interpolation", _) => {
             "native_timeline_set_interpolation trackId must identify a property track and interpolation must be step, linear or cubic"
+        }
+        ("set_duration", _) => {
+            "native_timeline_set_duration durationTicks must be 1-14400000 and greater than the last key or cel tick (see native_timeline_get), and ticksPerSecond 1-240"
         }
         ("reorder_track", _) => {
             "native_timeline_reorder_track trackId must exist and index must be within the track list"

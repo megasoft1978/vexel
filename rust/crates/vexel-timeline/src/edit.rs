@@ -4,6 +4,7 @@ mod initialize;
 mod initialize_tests;
 mod ops;
 mod ops_ext;
+mod ops_timing;
 #[cfg(test)]
 mod visibility_tests;
 
@@ -267,6 +268,15 @@ impl TimelineEdit {
     }
     pub fn set_loop(&mut self, context: &TimelineContext, mode: LoopMode) -> EditResult {
         ops::set_loop(self, context, mode)
+    }
+    /// Sets the duration in ticks and optionally the ticks per second.
+    pub fn set_timing(
+        &mut self,
+        context: &TimelineContext,
+        duration_ticks: u32,
+        ticks_per_second: Option<u32>,
+    ) -> EditResult {
+        ops_timing::set_timing(self, context, duration_ticks, ticks_per_second)
     }
     pub fn set_onion(
         &mut self,

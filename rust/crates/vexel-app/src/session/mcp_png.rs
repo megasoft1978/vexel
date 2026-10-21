@@ -11,7 +11,7 @@
 use super::AppDocument;
 use super::mcp::{McpOutcome, source};
 use crate::animation::frame::{self, AnimationError};
-use crate::animation::native_export::NativeExportSource;
+use crate::animation::native_export::{NativeExportError, NativeExportSource};
 use crate::preview::Operation;
 use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
@@ -25,6 +25,7 @@ use vexel_png::{Compression, PngError};
 
 const BAD_ARGS: &str = "invalid preview tool arguments";
 const TOO_LARGE: &str = "export png too large";
+const TIME_RANGE: &str = "render_png time is in seconds and is past the end of the timeline; use tick / ticksPerSecond (see native_timeline_get)";
 const RENDER_FAILED: &str = "export png render failed";
 /// Longest accepted `path` argument in bytes (matches the access policy cap).
 const PATH_LIMIT: usize = 1023;
@@ -146,10 +147,16 @@ pub(super) fn render_png(
         return Err("unsupported file type");
     }
     let target = policy.resolve_save_path(path).map_err(access_error)?;
+    let mut tick = None;
     let (w, h, rgba) = if let Some(native) = NativeExportSource::from_document(app) {
-        native
-            .render_still(time.unwrap_or(0.0), |doc| target_size(doc, width, height))
-            .map_err(|_| RENDER_FAILED)?
+        let (w, h, at, rgba) = native
+            .render_still_at(time.unwrap_or(0.0), |doc| target_size(doc, width, height))
+            .map_err(|error| match error {
+                NativeExportError::TimeOutOfRange { .. } => TIME_RANGE,
+                _ => RENDER_FAILED,
+            })?;
+        tick = Some(at);
+        (w, h, rgba)
     } else {
         let source = source(app)?;
         let scene = frame::decode(&source).map_err(|e| match e {
@@ -173,8 +180,12 @@ pub(super) fn render_png(
     let mut reply = br#"{"path":"#.to_vec();
     reply.extend(quoted(target.as_os_str().as_bytes())?);
     reply.extend_from_slice(
-        format!(r#","width":{w},"height":{h},"bytes":{}}}"#, png.len()).as_bytes(),
+        format!(r#","width":{w},"height":{h},"bytes":{}"#, png.len()).as_bytes(),
     );
+    if let Some(tick) = tick {
+        reply.extend_from_slice(format!(r#","tick":{tick}"#).as_bytes());
+    }
+    reply.push(b'}');
     String::from_utf8(reply)
         .map(McpOutcome::Reply)
         .map_err(|_| "preview allocation failed")

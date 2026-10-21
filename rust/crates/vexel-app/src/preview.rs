@@ -117,6 +117,11 @@ pub enum Operation {
         fill: String,
     },
     ExportSvg,
+    /// `element_add` into an existing group instead of the root.
+    AddIn {
+        parent: String,
+        operation: Box<Operation>,
+    },
     Native(native_timeline::NativeOp),
     Doc(doc_ops::DocOp),
     RenderPng {
