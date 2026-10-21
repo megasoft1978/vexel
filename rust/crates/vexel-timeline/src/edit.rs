@@ -65,6 +65,13 @@ impl TimelineSourceLease {
 
 impl TimelineEdit {
     pub fn new(source: &[u8], context: &TimelineContext, limits: EditLimits) -> EditResult<Self> {
+        decode(source, context).map_err(EditFailure::from)?;
+        Self::new_decoded(source, limits)
+    }
+    /// Like `new` for a source the caller already decoded against the same
+    /// context (for example a candidate opened through `new`); skips the
+    /// repeated full decode. Every committed edit is still decoded.
+    pub fn new_decoded(source: &[u8], limits: EditLimits) -> EditResult<Self> {
         if limits.commands == 0
             || limits.commands > MAX_HISTORY_COMMANDS
             || limits.bytes == 0
@@ -72,7 +79,6 @@ impl TimelineEdit {
         {
             return Err(fail(Error::InvalidArgument, 0));
         }
-        decode(source, context).map_err(EditFailure::from)?;
         if source.is_empty() || source.len() > limits.bytes {
             return Err(fail(Error::Limit, 0));
         }
