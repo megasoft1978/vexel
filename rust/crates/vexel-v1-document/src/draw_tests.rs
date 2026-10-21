@@ -418,7 +418,7 @@ fn translate_refuses_unsupported_targets_transforms_and_values() {
 #[test]
 fn element_kind_classifies_by_tag() {
     let doc = with(
-        "<rect id=\"r\"/><ellipse id=\"e\"/><circle id=\"c\"/><line id=\"l\"/><path id=\"p\"/><g id=\"g\"/>",
+        "<rect id=\"r\"/><ellipse id=\"e\"/><circle id=\"c\"/><line id=\"l\"/><path id=\"p\"/><g id=\"g\"/><text id=\"t\"/><defs id=\"d\"/>",
     );
     for (id, kind) in [
         ("r", ElementKind::Rect),
@@ -426,7 +426,9 @@ fn element_kind_classifies_by_tag() {
         ("c", ElementKind::Circle),
         ("l", ElementKind::Line),
         ("p", ElementKind::Path),
-        ("g", ElementKind::Other),
+        ("g", ElementKind::Group),
+        ("t", ElementKind::Text),
+        ("d", ElementKind::Other),
     ] {
         assert_eq!(doc.element_kind(id), Ok(kind));
     }

@@ -6,8 +6,14 @@ use vexel_document_edit::{EditError, EditLimits, Editor, TemplateAttribute, Temp
 
 pub use vexel_document_edit::EditSnapshot;
 
+mod attrs;
 mod draw;
+mod paint_defs;
 mod path_data;
+mod query;
+mod structure;
+mod text;
+mod transform;
 
 pub use draw::{ElementKind, HIT_TOLERANCE};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};

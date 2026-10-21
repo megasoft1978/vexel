@@ -23,6 +23,10 @@ pub enum ElementKind {
     Circle,
     Line,
     Path,
+    /// A `<g>` element.
+    Group,
+    /// A `<text>` element.
+    Text,
     /// Present in the source but not movable or recolourable by the tools.
     Other,
 }
@@ -35,6 +39,8 @@ impl ElementKind {
             b"circle" => Self::Circle,
             b"line" => Self::Line,
             b"path" => Self::Path,
+            b"g" => Self::Group,
+            b"text" => Self::Text,
             _ => Self::Other,
         }
     }
@@ -165,7 +171,9 @@ impl V1Document {
                 )?;
                 path_data::bounds(&segments).ok_or(V1DocumentError::InvalidPathData)?
             }
-            ElementKind::Other => return Err(V1DocumentError::Unsupported),
+            ElementKind::Group | ElementKind::Text | ElementKind::Other => {
+                return Err(V1DocumentError::Unsupported);
+            }
         };
         if let Some(raw) = self.raw_attr(node, b"transform") {
             let (tx, ty) = parse_translate(raw).ok_or(V1DocumentError::UnsupportedTransform)?;
@@ -257,7 +265,9 @@ impl V1Document {
                 let scaled = path_data::scale(raw, local, target)?;
                 vec![(b"d".to_vec(), scaled)]
             }
-            ElementKind::Other => return Err(V1DocumentError::Unsupported),
+            ElementKind::Group | ElementKind::Text | ElementKind::Other => {
+                return Err(V1DocumentError::Unsupported);
+            }
         };
         let plans: Vec<(&[u8], Vec<u8>)> = edits
             .iter()
@@ -607,7 +617,7 @@ impl V1Document {
                 let margin = HIT_TOLERANCE + half;
                 px >= x0 - margin && px <= x1 + margin && py >= y0 - margin && py <= y1 + margin
             }
-            ElementKind::Other => false,
+            ElementKind::Group | ElementKind::Text | ElementKind::Other => false,
         };
         if !inside {
             return None;
@@ -624,7 +634,10 @@ impl V1Document {
 
     fn shape(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
         let node = self.find_node(id)?;
-        if self.kind_of(node) == ElementKind::Other {
+        if matches!(
+            self.kind_of(node),
+            ElementKind::Other | ElementKind::Group | ElementKind::Text
+        ) {
             return Err(V1DocumentError::Unsupported);
         }
         Ok(node)

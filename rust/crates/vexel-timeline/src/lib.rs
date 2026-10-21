@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 //! Bounded, source preserving decoder for the native animation timeline format.
 mod access;
+mod easing;
 mod edit;
 mod json;
 pub mod sample;

@@ -3,6 +3,7 @@ mod initialize;
 #[cfg(test)]
 mod initialize_tests;
 mod ops;
+mod ops_ext;
 #[cfg(test)]
 mod visibility_tests;
 
