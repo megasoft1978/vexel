@@ -104,16 +104,39 @@ Claude Desktop:
 
 ## Tools
 
-The exact available tools depend on the selected protocol session. In live
-preview, the routed set includes document inspection and SVG editing tools,
-animation operations, rendering/export, and the native timeline allowlist.
-The six routed native timeline tools are `native_timeline_get`,
+Live preview advertises document open/close/list/info, tree and element
+inspection/query, selection, shape and fragment editing, grouping,
+duplication/reordering, attributes, text, transactions, undo/redo, SVG save and
+export, PNG rendering, gradient and clip editing, and animation/timeline
+operations. The native timeline surface includes `native_timeline_get`,
 `native_timeline_add_property_track`, `native_timeline_set_property_key`,
-`native_timeline_set_loop`, `native_timeline_undo`, and
-`native_timeline_redo`. Add-track, drawing-asset, cel, and move-item operations
-remain unrouted. Native timeline undo and redo use shared project history.
+`native_timeline_set_loop`, `native_timeline_undo`,
+`native_timeline_redo`, `native_timeline_remove_key`,
+`native_timeline_move_key`, and track remove/rename/duplicate/interpolation/
+reorder operations, alongside drawing asset/cel tools. Exact arguments are
+published by MCP tool schemas. Timeline edits use shared project history.
 Native GIF export is synchronous; loops over 120 frames are stride-sampled,
 with frame delay multiplied by the stride.
+
+### Building an animated scene
+
+Use `element_add` to create the scene's rects, ellipses, paths, and text.
+`gradient_add` returns a `gradientId` and stop IDs; apply the gradient with
+`element_set_paint`. Create a rect or ellipse clipping path with `clip_add`,
+then apply it to a shape or group with `element_set_clip`. Use
+`element_group` to collect character parts and `element_duplicate` plus
+`element_reorder` to place repeated/background elements.
+
+Create motion with `native_timeline_add_property_track`, passing the target's
+element ID, property, `valueType`, interpolation, and initial `value`. Use
+`transform` with `valueType: "trs"` for pivot rotations/translations, and
+`opacity` with `valueType: "scalar"` for blinking. Add later values with
+`native_timeline_set_property_key` (optional `ease`), then refine keys and
+tracks with the corresponding `native_timeline_move_key`, `remove_key`,
+`duplicate_track`, `rename_track`, `set_interpolation`, and `reorder_track`
+tools. Inspect with `element_get`, `element_query`, `tree_get`, and
+`native_timeline_get`; use `render_png` at selected ticks and `export_animation`
+for GIF output. Save a copy with `save_as` before sharing it.
 
 Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;

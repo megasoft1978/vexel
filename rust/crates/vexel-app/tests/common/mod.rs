@@ -172,14 +172,23 @@ impl Rig {
                                 fps,
                                 duration,
                             }) => {
-                                let mut job = ExportJob::spawn(
-                                    source,
-                                    host.policy().clone(),
-                                    path.into(),
-                                    fps,
-                                    duration,
-                                    reply,
-                                )
+                                let mut job = if source.starts_with(b"VEXEL_NATIVE_GIF\0") {
+                                    ExportJob::spawn_native_packed(
+                                        source,
+                                        host.policy().clone(),
+                                        path.into(),
+                                        reply,
+                                    )
+                                } else {
+                                    ExportJob::spawn(
+                                        source,
+                                        host.policy().clone(),
+                                        path.into(),
+                                        fps,
+                                        duration,
+                                        reply,
+                                    )
+                                }
                                 .unwrap();
                                 while job.poll().is_none() {
                                     std::thread::sleep(Duration::from_millis(2));
@@ -206,16 +215,30 @@ impl Rig {
             r#"{{"jsonrpc":"2.0","id":{},"method":"tools/call","params":{{"name":"{name}","arguments":{arguments}}}}}"#,
             self.next_id
         );
-        parse_reply(&self.line(&line))
+        let response = self.line(&line);
+        parse_reply(&response)
     }
 
     /// A tool that takes `documentId` plus extra JSON members.
     pub fn doc_tool(&mut self, name: &str, extra: &str) -> Reply {
+        let extra = extra.trim_start_matches(',');
         let comma = if extra.is_empty() { "" } else { "," };
         self.tool(
             name,
             &format!(r#"{{"documentId":"preview-document"{comma}{extra}}}"#),
         )
+    }
+
+    /// Calls a preview path tool whose schema requires `documentId` plus args.
+    pub fn preview_tool(&mut self, name: &str, arguments: &str) -> Reply {
+        let object = if arguments.trim_start().starts_with('{') {
+            arguments.to_owned()
+        } else {
+            let arguments = arguments.trim_start_matches(',');
+            let comma = if arguments.is_empty() { "" } else { "," };
+            format!(r#"{{"documentId":"preview-document"{comma}{arguments}}}"#)
+        };
+        self.tool(name, &object)
     }
 
     pub fn list_tools(&mut self) -> Vec<String> {
