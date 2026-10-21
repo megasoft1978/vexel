@@ -11,7 +11,10 @@ fn element_queries_handle_nested_and_unidentified_nodes() {
         doc.element_query(&Query {
             kind: Some(ElementKind::Rect),
             id_prefix: None,
+            id: None,
+            tag: None,
             attribute: Some(("fill".into(), Some("red".into()))),
+            cursor: 0,
             limit: 20
         })
         .unwrap(),
@@ -42,7 +45,10 @@ fn element_get_bounds_attributes_and_limits_are_bounded() {
         doc.element_query(&Query {
             kind: None,
             id_prefix: None,
+            id: None,
+            tag: None,
             attribute: None,
+            cursor: 0,
             limit: 0
         }),
         Err(V1DocumentError::InvalidGeometry)
