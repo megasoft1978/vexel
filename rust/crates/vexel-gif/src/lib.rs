@@ -2,7 +2,8 @@
 //! First-party GIF89a encoder for the ADR-0029 V1 animation export.
 //!
 //! Scope: one global palette (exact when the frame set has at most 256
-//! colour slots, otherwise a fixed uniform 6x7x6 palette without dithering),
+//! colour slots, otherwise a median-cut palette with error-diffused pixels,
+//! falling back to a fixed uniform 6x7x6 palette when that misses the bound),
 //! variable-width LZW, a NETSCAPE2.0 infinite-loop block and one graphic
 //! control block per frame. Every frame is a full-canvas image. Pixels with
 //! alpha 0 map to one transparent index; every other alpha is treated as
@@ -138,8 +139,7 @@ pub fn encode(frames: &[Frame<'_>], fps: u32) -> Result<Vec<u8>, GifError> {
         .try_reserve_exact(width as usize * height as usize)
         .map_err(|_| GifError::OutOfMemory)?;
     for frame in frames {
-        indices.clear();
-        indices.extend(frame.rgba.chunks_exact(4).map(|px| palette.index_of(px)));
+        palette.index_frame(frame.rgba, width as usize, &mut indices);
         let delay = frame.delay_cs.unwrap_or(default_delay);
         reserve(&mut out, 8 + 10 + 1 + indices.len() / 2 + 16)?;
         out.extend_from_slice(&[0x21, 0xF9, 0x04]);

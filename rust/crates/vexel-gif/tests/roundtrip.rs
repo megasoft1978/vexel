@@ -143,10 +143,67 @@ fn error_bound_is_tight_for_every_channel_value() {
             worst = worst.max(a[c].abs_diff(b[c]));
         }
     }
+    // The bound is an upper limit for every quantizing palette; the adaptive
+    // palette is allowed to beat it.
+    assert!(worst <= MAX_QUANT_ERROR, "worst {worst}");
+}
+
+#[test]
+fn smooth_two_colour_gradient_survives_quantization() {
+    // Navy-to-blue vertical sky plus ~600 distinct scene colours forces >256
+    // slots; the sky must stay close to its true colour (the fixed 6x7x6 cube
+    // turned it teal/purple with bands).
+    let (w, h) = (512usize, 512usize);
+    let lerp = |a: u8, b: u8, y: usize| {
+        (f64::from(a) + (f64::from(b) - f64::from(a)) * y as f64 / 511.0).round() as u8
+    };
+    let mut px = Vec::new();
+    for y in 0..h {
+        for x in 0..w {
+            if y < 16 && x < 20 {
+                let c = (y * 20 + x) as u32;
+                px.extend_from_slice(&[
+                    ((c % 20) * 12) as u8,
+                    (100 + c / 20 * 8) as u8,
+                    (200 - c % 20 * 3) as u8,
+                    255,
+                ]);
+            } else {
+                px.extend_from_slice(&[lerp(10, 42, y), lerp(16, 90, y), lerp(48, 160, y), 255]);
+            }
+        }
+    }
+    let f = [Frame {
+        width: w as u32,
+        height: h as u32,
+        rgba: &px,
+        delay_cs: None,
+    }];
+    assert!(!palette_is_exact(&f));
+    let d = decode(&encode(&f, 10).unwrap()).unwrap();
+    let out = d.rgba(0);
+    let mut worst = 0u8;
+    let mut sum = [0u64; 3];
+    let mut total = 0u64;
+    for y in 16..h {
+        for x in 0..w {
+            let i = (y * w + x) * 4;
+            for c in 0..3 {
+                worst = worst.max(px[i + c].abs_diff(out[i + c]));
+                total += u64::from(px[i + c].abs_diff(out[i + c]));
+                sum[c] += u64::from(out[i + c]);
+            }
+        }
+    }
+    let mean = total as f64 / (3 * (h - 16) * w) as f64;
     assert!(
-        worst <= MAX_QUANT_ERROR && worst >= MAX_QUANT_ERROR - 2,
-        "worst {worst}"
+        worst <= 16 && mean < 3.0,
+        "sky error worst {worst} mean {mean}"
     );
+    // Row means track the gradient too (dithering must not shift hue).
+    let n = ((h - 16) * w) as f64;
+    let mean_in: f64 = (16..h).map(|y| f64::from(lerp(16, 90, y))).sum::<f64>() / (h - 16) as f64;
+    assert!((sum[1] as f64 / n - mean_in).abs() < 2.0);
 }
 
 #[test]
