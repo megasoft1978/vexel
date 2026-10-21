@@ -1,7 +1,7 @@
 //! Compressed video export through `AVAssetWriter` (H.264 or HEVC, BT.709).
 //!
 //! Frames arrive as straight-alpha sRGB RGBA, are composited onto an opaque
-//! background colour and appended with exact `CMTime(ticks, timescale)` times.
+//! background colour (or premultiplied for HEVC with alpha) and appended with exact `CMTime(ticks, timescale)` times.
 //! Encoding is synchronous and never touches the main queue: `finish` waits on
 //! a channel with a timeout.
 
@@ -17,11 +17,11 @@ use objc2::runtime::AnyObject;
 use objc2_av_foundation::{
     AVAssetWriter, AVAssetWriterInput, AVAssetWriterInputPixelBufferAdaptor, AVAssetWriterStatus,
     AVFileTypeMPEG4, AVFileTypeQuickTimeMovie, AVMediaTypeVideo, AVVideoAverageBitRateKey,
-    AVVideoCodecKey, AVVideoCodecTypeH264, AVVideoCodecTypeHEVC, AVVideoColorPrimaries_ITU_R_709_2,
-    AVVideoColorPrimariesKey, AVVideoColorPropertiesKey, AVVideoCompressionPropertiesKey,
-    AVVideoHeightKey, AVVideoQualityKey, AVVideoTransferFunction_ITU_R_709_2,
-    AVVideoTransferFunctionKey, AVVideoWidthKey, AVVideoYCbCrMatrix_ITU_R_709_2,
-    AVVideoYCbCrMatrixKey,
+    AVVideoCodecKey, AVVideoCodecTypeH264, AVVideoCodecTypeHEVC, AVVideoCodecTypeHEVCWithAlpha,
+    AVVideoColorPrimaries_ITU_R_709_2, AVVideoColorPrimariesKey, AVVideoColorPropertiesKey,
+    AVVideoCompressionPropertiesKey, AVVideoHeightKey, AVVideoQualityKey,
+    AVVideoTransferFunction_ITU_R_709_2, AVVideoTransferFunctionKey, AVVideoWidthKey,
+    AVVideoYCbCrMatrix_ITU_R_709_2, AVVideoYCbCrMatrixKey,
 };
 use objc2_core_foundation::{CFRetained, CFString, CFType};
 use objc2_core_media::CMTime;
@@ -58,6 +58,9 @@ pub struct VideoSpec {
     pub timescale: i32,
     /// Opaque background (sRGB) frames are composited onto.
     pub background: [u8; 3],
+    /// Encode HEVC with alpha (`.mov` + HEVC only); frames are premultiplied and
+    /// `background` is ignored.
+    pub alpha: bool,
     /// Average bit rate; `None` picks a size-based default.
     pub bit_rate: Option<u32>,
 }
@@ -148,6 +151,11 @@ impl VideoWriter {
                 _ => return Err(VideoError::Invalid("extension must be .mp4 or .mov".into())),
             }
         };
+        if spec.alpha && (spec.codec != VideoCodec::Hevc || ext.as_deref() != Some("mov")) {
+            return Err(VideoError::Invalid(
+                "alpha needs HEVC in a .mov container".into(),
+            ));
+        }
         // AVAssetWriter refuses to overwrite.
         match std::fs::remove_file(&spec.path) {
             Ok(()) => {}
@@ -164,9 +172,10 @@ impl VideoWriter {
                     .map_err(|e| VideoError::Native(e.localizedDescription().to_string()))?;
 
             let codec = unavailable(
-                match spec.codec {
-                    VideoCodec::H264 => AVVideoCodecTypeH264,
-                    VideoCodec::Hevc => AVVideoCodecTypeHEVC,
+                match (spec.codec, spec.alpha) {
+                    (VideoCodec::H264, _) => AVVideoCodecTypeH264,
+                    (VideoCodec::Hevc, false) => AVVideoCodecTypeHEVC,
+                    (VideoCodec::Hevc, true) => AVVideoCodecTypeHEVCWithAlpha,
                 },
                 "codec",
             )?;
@@ -275,7 +284,7 @@ impl VideoWriter {
             }
             std::thread::sleep(Duration::from_millis(1));
         }
-        let buffer = make_pixel_buffer(rgba, w, h, self.spec.background)?;
+        let buffer = make_pixel_buffer(rgba, w, h, self.spec.background, self.spec.alpha)?;
         // SAFETY: buffer is a valid BGRA pixel buffer of the adaptor's size and
         // the input is ready; the time is a valid numeric CMTime.
         let ok = unsafe {
@@ -338,6 +347,7 @@ fn make_pixel_buffer(
     w: usize,
     h: usize,
     bg: [u8; 3],
+    alpha: bool,
 ) -> Result<CFRetained<CVPixelBuffer>, VideoError> {
     let mut raw: *mut CVPixelBuffer = std::ptr::null_mut();
     // SAFETY: out pointer is valid; the created buffer is owned (+1).
@@ -373,6 +383,13 @@ fn make_pixel_buffer(
             let src_row = &rgba[y * w * 4..(y + 1) * w * 4];
             let dst_row = &mut dst[y * stride..y * stride + w * 4];
             for (s, d) in src_row.chunks_exact(4).zip(dst_row.chunks_exact_mut(4)) {
+                if alpha {
+                    // Premultiplied BGRA keeps transparency for the encoder.
+                    let a = u32::from(s[3]);
+                    let pm = |c: u8| ((u32::from(c) * a + 127) / 255) as u8;
+                    d.copy_from_slice(&[pm(s[2]), pm(s[1]), pm(s[0]), s[3]]);
+                    continue;
+                }
                 let a = u32::from(s[3]);
                 let mix = |c: u8, b: u8| {
                     ((u32::from(c) * a + u32::from(b) * (255 - a) + 127) / 255) as u8

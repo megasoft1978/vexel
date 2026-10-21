@@ -41,6 +41,7 @@ fn request(name: &str, size: Option<(u32, u32)>) -> NativeVideoRequest {
         codec: VideoCodec::H264,
         size,
         background: [255, 255, 255],
+        alpha: false,
         bit_rate: Some(2_000_000),
         quality: None,
         fps: None,

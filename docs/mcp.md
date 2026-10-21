@@ -215,7 +215,10 @@ directory with an extension matching the format. Optional arguments: `fps`
 tick, never above the tick rate), `quality` (0-1) or `bitrate` (kbps, 50-200000;
 not both), `width` and `height` (1-4096, given together, default the document
 size; odd sizes round up to even), `loops` (1-100 repeats of the loop) and
-`background` (`#rgb` or `#rrggbb`, default white) behind transparency. `fps` and
+`background` (`#rgb` or `#rrggbb`, default white) behind transparency. `alpha`
+(boolean, default false) keeps transparency instead: it needs `format` `mov` and
+`codec` `hevc` (HEVC with alpha, premultiplied BGRA, `background` ignored) and
+is rejected with `mp4` or `h264`. `fps` and
 `duration` are not required for video, and `duration` is rejected. Loops longer
 than 1440 frames keep every n-th tick so the video stays at or under 1440
 frames. The reply carries `path`, `format`, `codec`, `width`, `height`,

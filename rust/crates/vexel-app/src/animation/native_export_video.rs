@@ -25,6 +25,8 @@ pub struct NativeVideoRequest {
     pub size: Option<(u32, u32)>,
     /// Opaque sRGB colour transparent areas are composited onto.
     pub background: [u8; 3],
+    /// Keep transparency (HEVC with alpha, `.mov`); `background` is ignored.
+    pub alpha: bool,
     pub bit_rate: Option<u32>,
     /// Quality 0..1 used to derive the bit rate when `bit_rate` is `None`;
     /// both `None` picks the encoder's size-based default.
@@ -140,6 +142,7 @@ impl NativeExportSource {
             codec: req.codec,
             timescale: tps as i32,
             background: req.background,
+            alpha: req.alpha,
             bit_rate,
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;

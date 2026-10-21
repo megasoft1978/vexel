@@ -26,6 +26,8 @@ pub struct VideoExport {
     pub fps: Option<u32>,
     pub loops: u32,
     pub background: [u8; 3],
+    /// Keep transparency (HEVC with alpha; `mov` + `hevc` only).
+    pub alpha: bool,
 }
 
 fn bad(message: &str) -> PreviewArgumentError {
@@ -129,6 +131,24 @@ pub(super) fn parse(
         Some(value) => hex_colour(&value)
             .ok_or_else(|| bad("export background must be a #rgb or #rrggbb colour"))?,
     };
+    let alpha = match doc.object_get(args, b"alpha") {
+        None => false,
+        Some(token) => match doc.token(token).map(|t| t.kind) {
+            Some(JsonType::True) => true,
+            Some(JsonType::False) => false,
+            _ => return Err(bad("export alpha must be true or false")),
+        },
+    };
+    if alpha && !mov {
+        return Err(bad(
+            "export alpha needs format mov (mp4 cannot carry alpha)",
+        ));
+    }
+    if alpha && codec != VideoCodec::Hevc {
+        return Err(bad(
+            "export alpha needs codec hevc (h264 cannot carry alpha)",
+        ));
+    }
     Ok(Operation::ExportVideo(Box::new(VideoExport {
         path,
         mov,
@@ -139,5 +159,6 @@ pub(super) fn parse(
         fps,
         loops,
         background,
+        alpha,
     })))
 }
