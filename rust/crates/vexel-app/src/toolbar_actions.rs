@@ -264,7 +264,7 @@ impl Stage {
         fs::DirBuilder::new()
             .mode(0o700)
             .create(&dir)
-            .map_err(|_| WRITE_FAILED)?;
+            .map_err(|error| write_failed(&error))?;
         let file = dir.join(name);
         Ok(Self { dir, file })
     }
@@ -281,7 +281,7 @@ impl Stage {
     pub(crate) fn publish(self, target: &Path) -> Result<(), &'static str> {
         let moved = fs::rename(&self.file, target);
         self.discard();
-        moved.map_err(|_| WRITE_FAILED)
+        moved.map_err(|error| write_failed(&error))
     }
 
     pub fn discard(&self) {
@@ -292,6 +292,18 @@ impl Stage {
 
 const PATH_BAD: &str = "Export path is not usable";
 const WRITE_FAILED: &str = "Export could not write the file";
+const UNWRITABLE: &str =
+    "Can't write to that folder \u{2014} choose a folder you have permission to save in";
+
+/// The message for a failed write: a folder the user cannot write to gets its
+/// own explanation; every other I/O failure keeps the generic one.
+fn write_failed(error: &std::io::Error) -> &'static str {
+    if error.kind() == std::io::ErrorKind::PermissionDenied {
+        UNWRITABLE
+    } else {
+        WRITE_FAILED
+    }
+}
 
 impl Exports {
     /// True while a GIF is rendering.
@@ -307,10 +319,9 @@ impl Exports {
         let done = if status.starts_with("Exported") {
             let moved = fs::rename(&stage.file, target);
             stage.discard();
-            if moved.is_ok() {
-                "Exported GIF"
-            } else {
-                WRITE_FAILED
+            match moved {
+                Ok(()) => "Exported GIF",
+                Err(error) => write_failed(&error),
             }
         } else {
             stage.discard();
@@ -415,19 +426,23 @@ fn write_native_gif(native: &NativeExportSource, target: PathBuf) -> Result<(), 
     let stage = Stage::create(&target)?;
     let written = fs::File::create(&stage.file)
         .and_then(|mut file| file.write_all(&gif.bytes).and_then(|()| file.sync_all()));
-    if written.is_err() {
+    if let Err(error) = written {
         stage.discard();
-        return Err(WRITE_FAILED);
+        return Err(write_failed(&error));
     }
     stage.publish(&target)
 }
 
 /// Save-panel suggestion: the document name without its extension.
 fn suggested_name(doc: &AppDocument, format: ExportFormat) -> String {
-    let name = doc.display_name().unwrap_or_else(|| "Untitled".to_owned());
-    let stem = name
-        .rsplit_once('.')
-        .map_or(name.as_str(), |(stem, _)| stem);
+    suggestion(doc.display_name().as_deref(), format)
+}
+
+/// `name.<format extension>` from the document's display name, stripping its
+/// own extension first; `Untitled` when nothing usable remains.
+fn suggestion(display_name: Option<&str>, format: ExportFormat) -> String {
+    let name = display_name.unwrap_or("Untitled");
+    let stem = name.rsplit_once('.').map_or(name, |(stem, _)| stem);
     format!(
         "{}.{}",
         if stem.is_empty() { "Untitled" } else { stem },
@@ -472,7 +487,7 @@ fn write_svg(doc: &AppDocument, target: &Path) -> Result<(), &'static str> {
         .write(true)
         .create_new(true)
         .open(&temp)
-        .map_err(|_| WRITE_FAILED)?;
+        .map_err(|error| write_failed(&error))?;
     let written = file
         .write_all(&bytes)
         .and_then(|()| file.sync_all())
@@ -480,9 +495,9 @@ fn write_svg(doc: &AppDocument, target: &Path) -> Result<(), &'static str> {
             drop(file);
             fs::rename(&temp, target)
         });
-    if written.is_err() {
+    if let Err(error) = written {
         let _ = fs::remove_file(&temp);
-        return Err(WRITE_FAILED);
+        return Err(write_failed(&error));
     }
     Ok(())
 }
@@ -518,3 +533,7 @@ fn write_png(doc: &mut AppDocument, target: &Path) -> Result<(), &'static str> {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "toolbar_export_tests.rs"]
+mod export_tests;
