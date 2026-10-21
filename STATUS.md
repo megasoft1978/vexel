@@ -41,3 +41,8 @@ Signing/identity/distribution decisions; showcase publication.
 - Native timeline MCP: V1 stays with the six routed property-track tools; add_track, add_drawing_asset, set_cel, remove_cel, move_item stay unrouted and unadvertised until the character-loop demo needs them.
 - Full 42-entry tool schema stays as is (frozen `parity.rs` count); the live-preview list is already limited to routed tools and guarded by `tools_schema_matches_dispatch`.
 - Timing-sensitive tests (pan present, cancel latency) gate in release builds on hosted CI; chrome/footer goldens are informational there until goldens are regenerated on a pinned runner image.
+
+## SVG fidelity note (2026-10-21)
+- Gradient stop inherited `color` is now resolved lazily (only for `currentColor` stops), removing a per-gradient quadratic token rescan that exhausted `PaintVisits`.
+- `ideogram-human-chromosome-20` now decodes past gradients and stops at the clip planner's aggregate cap (`MAX_CLIP_JOB_REFERENCE_BYTES`, 512 KiB, `vexel-svg-definitions/src/planner.rs`). Raising it needs a design decision (lazy/streamed clip expansion), not a cap bump.
+- Open: Dukes (`<path>`), Naples (`<use>`), image/text default value limits.

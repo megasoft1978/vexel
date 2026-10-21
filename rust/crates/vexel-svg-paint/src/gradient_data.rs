@@ -70,7 +70,9 @@ pub(crate) fn collect_stops(
     offset: usize,
 ) -> Result<(Vec<PaintStop>, usize, vexel_scene::AllocationLease)> {
     for gradient in chain {
-        let inherited_color = inherited_gradient_color(shared, *gradient, cache, control, offset)?;
+        // Resolved on first `currentColor` stop without its own color: the scan
+        // is linear in the gradient's token index, so eager lookup is quadratic.
+        let mut inherited_color: Option<Option<XmlSpan>> = None;
         let end = element_end(shared.tokens(), gradient.0, cache, control, offset)?;
         let mut values = [PaintStop {
             offset: 0.0,
@@ -138,15 +140,20 @@ pub(crate) fn collect_stops(
             {
                 return Err(unsupported(offset));
             }
+            let own_color = computed.value(Property::Color).map(|v| v.span);
             let color = if let Some(span) = computed_offset {
-                resolve_stop_color(
-                    shared.source(),
-                    span,
-                    computed
-                        .value(Property::Color)
-                        .map(|v| v.span)
-                        .or(inherited_color),
-                )?
+                let current =
+                    if own_color.is_none() && keyword(shared.source(), span, b"currentColor") {
+                        if inherited_color.is_none() {
+                            inherited_color = Some(inherited_gradient_color(
+                                shared, *gradient, cache, control, offset,
+                            )?);
+                        }
+                        inherited_color.flatten()
+                    } else {
+                        own_color
+                    };
+                resolve_stop_color(shared.source(), span, current)?
             } else {
                 [0, 0, 0, 255]
             };
