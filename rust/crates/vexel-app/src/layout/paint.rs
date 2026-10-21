@@ -23,6 +23,14 @@ pub fn tooltip(target: Target) -> Option<(&'static str, &'static str)> {
         Target::Button(Button::Export) => ("Export", "\u{21e7}\u{2318}E"),
         Target::Button(Button::ToggleInspector) => ("Toggle inspector", ""),
         Target::Button(Button::Mcp) => ("MCP activity", ""),
+        Target::NativeTimeline(hit) => match hit {
+            crate::native_timeline::layout::Hit::Play => ("Play / Pause", "Space"),
+            crate::native_timeline::layout::Hit::Loop => ("Loop mode", "once | loop | ping-pong"),
+            crate::native_timeline::layout::Hit::OnionBefore => ("Onion skin", ""),
+            crate::native_timeline::layout::Hit::AddDrawingTrack => ("Add drawing track", ""),
+            crate::native_timeline::layout::Hit::ImportDrawing => ("Import SVG as drawing", ""),
+            _ => return None,
+        },
         _ => return None,
     })
 }
@@ -41,7 +49,7 @@ pub(crate) fn tip_size(name: &str, shortcut: &str) -> (u32, u32) {
 }
 
 /// Paints a rounded level-3 tooltip label (name plus shortcut) filling `r`.
-pub(crate) fn paint_tip(c: &mut WidgetCanvas<'_>, r: Rect, name: &str, shortcut: &str) {
+pub fn paint_tip(c: &mut WidgetCanvas<'_>, r: Rect, name: &str, shortcut: &str) {
     let t = c.tokens;
     c.paint_round(r, 6, t.surface[3], t.control_edge, 1);
     let label = Rect {

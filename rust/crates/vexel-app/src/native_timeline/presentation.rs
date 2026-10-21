@@ -137,6 +137,19 @@ impl TimelinePresentation {
             .map(PresentationAction::Native)
             .collect()
     }
+
+    pub fn hovered_tooltip(&self) -> Option<Hit> {
+        match self.interaction.hover {
+            Some(
+                hit @ (Hit::Play
+                | Hit::Loop
+                | Hit::OnionBefore
+                | Hit::AddDrawingTrack
+                | Hit::ImportDrawing),
+            ) => Some(hit),
+            _ => None,
+        }
+    }
 }
 
 pub fn paint_selector(
@@ -287,5 +300,26 @@ mod tests {
             presentation.key(Key::Space, &snapshot),
             Vec::<PresentationAction>::new()
         );
+    }
+
+    #[test]
+    fn hovering_each_icon_exposes_its_tooltip_target() {
+        let snapshot = snapshot();
+        let (_, layout) = layout(&snapshot);
+        for (hit, _) in layout.control_rects() {
+            let rect = layout
+                .control_rects()
+                .into_iter()
+                .find(|(candidate, _)| *candidate == hit)
+                .unwrap()
+                .1;
+            let point = (
+                (rect.x + rect.width / 2) as i32,
+                (rect.y + rect.height / 2) as i32,
+            );
+            let mut presentation = TimelinePresentation::default();
+            let _ = presentation.pointer(Phase::Move, point, &layout, &snapshot);
+            assert_eq!(presentation.hovered_tooltip(), Some(hit));
+        }
     }
 }

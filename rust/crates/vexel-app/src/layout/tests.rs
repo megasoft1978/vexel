@@ -420,3 +420,36 @@ fn tooltips_name_every_tool_and_toolbar_button() {
         }
     }
 }
+
+#[test]
+fn native_timeline_tooltips_are_named_and_clamped_inside_window() {
+    let l = Layout::new(1280, 800, Mode::Animate).unwrap();
+    for (hit, expected) in [
+        (
+            crate::native_timeline::layout::Hit::Play,
+            ("Play / Pause", "Space"),
+        ),
+        (
+            crate::native_timeline::layout::Hit::Loop,
+            ("Loop mode", "once | loop | ping-pong"),
+        ),
+        (
+            crate::native_timeline::layout::Hit::OnionBefore,
+            ("Onion skin", ""),
+        ),
+        (
+            crate::native_timeline::layout::Hit::AddDrawingTrack,
+            ("Add drawing track", ""),
+        ),
+        (
+            crate::native_timeline::layout::Hit::ImportDrawing,
+            ("Import SVG as drawing", ""),
+        ),
+    ] {
+        let target = Target::NativeTimeline(hit);
+        assert_eq!(tooltip(target), Some(expected));
+        let r = super::tooltip_rect(&l, target).expect("native button tooltip rect");
+        assert!(r.x >= 4 && r.y >= 4);
+        assert!(r.x + r.width <= l.width && r.y + r.height <= l.height);
+    }
+}
