@@ -39,6 +39,35 @@ pub enum NativeOp {
         track_id: Vec<u8>,
         tick: u32,
         value: Vec<u8>,
+        ease: Option<Vec<u8>>,
+    },
+    RemovePropertyKey {
+        track_id: Vec<u8>,
+        tick: u32,
+    },
+    MovePropertyKey {
+        track_id: Vec<u8>,
+        from_tick: u32,
+        to_tick: u32,
+    },
+    RemoveTrack {
+        track_id: Vec<u8>,
+    },
+    RenameTrack {
+        track_id: Vec<u8>,
+        name: Vec<u8>,
+    },
+    DuplicateTrack {
+        track_id: Vec<u8>,
+        new_track_id: Vec<u8>,
+    },
+    SetTrackInterpolation {
+        track_id: Vec<u8>,
+        interpolation: Vec<u8>,
+    },
+    ReorderTrack {
+        track_id: Vec<u8>,
+        index: usize,
     },
     SetCel {
         track_id: Vec<u8>,
@@ -171,9 +200,10 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             track_id,
             tick,
             value,
+            ease,
         } => app
             .edit_timeline(settings(), limits, |c| {
-                c.set_property_key(&track_id, tick, &value)
+                c.set_property_key_with_ease(&track_id, tick, &value, ease.as_deref())
             })
             .map_err(|error| operation_error(error, "set_property_key", Refs::default()))?,
         NativeOp::AddTrack {
@@ -204,6 +234,45 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             })
             .map_err(|error| asset_error(error, &svg))?
         }
+        NativeOp::RemovePropertyKey { track_id, tick } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.remove_property_key(&track_id, tick)
+            })
+            .map_err(|e| operation_error(e, "remove_key", Refs::default()))?,
+        NativeOp::MovePropertyKey {
+            track_id,
+            from_tick,
+            to_tick,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.move_property_key(&track_id, from_tick, to_tick)
+            })
+            .map_err(|e| operation_error(e, "move_key", Refs::default()))?,
+        NativeOp::RemoveTrack { track_id } => app
+            .edit_timeline(settings(), limits, |c| c.remove_track(&track_id))
+            .map_err(|e| operation_error(e, "remove_track", Refs::default()))?,
+        NativeOp::RenameTrack { track_id, name } => app
+            .edit_timeline(settings(), limits, |c| c.rename_track(&track_id, &name))
+            .map_err(|e| operation_error(e, "rename_track", Refs::default()))?,
+        NativeOp::DuplicateTrack {
+            track_id,
+            new_track_id,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.duplicate_track(&track_id, &new_track_id)
+            })
+            .map_err(|e| operation_error(e, "duplicate_track", Refs::default()))?,
+        NativeOp::SetTrackInterpolation {
+            track_id,
+            interpolation,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.set_track_interpolation(&track_id, &interpolation)
+            })
+            .map_err(|e| operation_error(e, "set_interpolation", Refs::default()))?,
+        NativeOp::ReorderTrack { track_id, index } => app
+            .edit_timeline(settings(), limits, |c| c.reorder_track(&track_id, index))
+            .map_err(|e| operation_error(e, "reorder_track", Refs::default()))?,
         NativeOp::SetCel {
             track_id,
             tick,
@@ -337,6 +406,17 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
         ("set_property_key", _) => {
             "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline) and value must match the track valueType"
         }
+        ("remove_key", TimelineError::InvalidReference) => "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key",
+        ("remove_key", _) => "native_timeline_remove_key tick zero cannot be removed; tick must identify an existing nonzero key",
+        ("move_key", TimelineError::InvalidReference) => "native_timeline_move_key trackId and fromTick must identify an existing property key",
+        ("move_key", TimelineError::Duplicate) => "native_timeline_move_key toTick is occupied; use an unused tick",
+        ("move_key", _) => "native_timeline_move_key fromTick zero cannot be moved and toTick must be within durationTicks",
+        ("remove_track", _) => "native_timeline_remove_track trackId must identify an existing track",
+        ("rename_track", _) => "native_timeline_rename_track trackId must exist and name must be valid UTF-8 of at most 4096 bytes",
+        ("duplicate_track", TimelineError::Duplicate) => "native_timeline_duplicate_track newTrackId already exists; use a unique track ID",
+        ("duplicate_track", _) => "native_timeline_duplicate_track trackId must exist and newTrackId must be 1-128 ASCII letters, digits, `_` or `-`",
+        ("set_interpolation", _) => "native_timeline_set_interpolation trackId must identify a property track and interpolation must be step, linear or cubic",
+        ("reorder_track", _) => "native_timeline_reorder_track trackId must exist and index must be within the track list",
         (_, TimelineError::Limit) => "native timeline limit reached; reduce timeline or asset size",
         (_, _) => "",
     }
@@ -440,6 +520,7 @@ fn get(app: &AppDocument) -> Result<String, &'static str> {
         LoopMode::Repeat => "loop",
         LoopMode::PingPong => "ping_pong",
     };
+    let timeline = candidate.timeline_bytes();
     let mut out = format!(
         "{{\"ticksPerSecond\":{},\"durationTicks\":{},\"fps\":{{\"numerator\":{num},\"denominator\":{den}}},\"loop\":\"{mode}\",\"tracks\":[",
         view.ticks_per_second(),
@@ -473,6 +554,17 @@ fn get(app: &AppDocument) -> Result<String, &'static str> {
             if let Some(v) = item.value_json {
                 out.push_str(",\"value\":");
                 out.push_str(&String::from_utf8_lossy(v));
+                if let Some(raw) = timeline.get(item.source.start..item.source.end) {
+                    if let Ok(key) = JsonDocument::parse(raw) {
+                        if let Some(ease) = key
+                            .object_get(key.root(), b"ease")
+                            .and_then(|at| key.raw_token(at))
+                        {
+                            out.push_str(",\"ease\":");
+                            out.push_str(&String::from_utf8_lossy(ease));
+                        }
+                    }
+                }
             }
             out.push('}');
         }

@@ -433,15 +433,20 @@ fn insert_item(
     };
     splice(source, insert_at, remove, &insert)
 }
-fn make_key(tick: u32, value: &[u8]) -> EditResult<Vec<u8>> {
+fn make_key(tick: u32, value: &[u8], ease: Option<&[u8]>) -> EditResult<Vec<u8>> {
     value_json(value)?;
     let mut out = Vec::new();
-    out.try_reserve(value.len() + 40)
+    out.try_reserve(value.len() + ease.map_or(40, |e| e.len() + 48))
         .map_err(|_| at(Error::Limit, 0))?;
     out.extend_from_slice(b"{\"tick\":");
     out.extend_from_slice(tick.to_string().as_bytes());
     out.extend_from_slice(b",\"value\":");
     out.extend_from_slice(value);
+    if let Some(ease) = ease {
+        if ease.is_empty() || ease.len() > VALUE_JSON_LIMIT { return Err(at(Error::InvalidArgument, 0)); }
+        out.extend_from_slice(b",\"ease\":");
+        out.extend_from_slice(ease);
+    }
     out.push(b'}');
     Ok(out)
 }
@@ -461,6 +466,11 @@ fn make_cel(tick: u32, asset: &[u8], label: &[u8]) -> EditResult<Vec<u8>> {
     out.push(b'}');
     Ok(out)
 }
+fn ease_json(raw: &[u8]) -> Option<&[u8]> {
+    let marker = b",\"ease\":";
+    let start = raw.windows(marker.len()).position(|w| w == marker)? + marker.len();
+    raw.get(start..raw.len().checked_sub(1)?)
+}
 fn change_item(
     edit: &mut TimelineEdit,
     context: &TimelineContext,
@@ -468,6 +478,7 @@ fn change_item(
     tick: u32,
     raw: &[u8],
     drawing: bool,
+    preserve_ease: bool,
 ) -> EditResult {
     let source = edit.source();
     let (track, _) = selected(source, context, id)?;
@@ -511,14 +522,21 @@ fn change_item(
     if replace.is_none() && (track.item_spans.len() >= MAX_ITEMS_PER_TRACK || total >= MAX_ITEMS) {
         return Err(at(Error::Limit, track.items.start));
     }
-    let candidate = insert_item(
-        source,
-        track.items,
-        &track.item_spans,
-        replace.or(insert),
-        replace.is_some(),
-        raw,
-    )?;
+    let mut replacement = raw.to_vec();
+    if preserve_ease && ease_json(raw).is_none() {
+        if let Some(index) = replace {
+            let old_fields = fields(source, track.item_spans[index])?;
+            if let Some(old) = old_fields.iter().find(|field| field.key == b"ease") {
+                if replacement.last() == Some(&b'}') {
+                    replacement.pop();
+                    replacement.extend_from_slice(b",\"ease\":");
+                    replacement.extend_from_slice(&source[old.value.start..old.value.end]);
+                    replacement.push(b'}');
+                }
+            }
+        }
+    }
+    let candidate = insert_item(source, track.items, &track.item_spans, replace.or(insert), replace.is_some(), &replacement)?;
     edit.commit(context, candidate)
 }
 pub(super) fn set_property_key(
@@ -527,6 +545,7 @@ pub(super) fn set_property_key(
     id: &[u8],
     tick: u32,
     value: &[u8],
+    ease: Option<&[u8]>,
 ) -> EditResult {
     if id.is_empty() || value.is_empty() {
         return Err(at(Error::InvalidArgument, 0));
@@ -538,8 +557,8 @@ pub(super) fn set_property_key(
     if tick >= track.duration {
         return Err(at(Error::InvalidValue, 0));
     }
-    let key = make_key(tick, value)?;
-    change_item(edit, context, id, tick, &key, false)
+    let key = make_key(tick, value, ease)?;
+    change_item(edit, context, id, tick, &key, false, true)
 }
 pub(super) fn set_cel(
     edit: &mut TimelineEdit,
@@ -562,6 +581,7 @@ pub(super) fn set_cel(
         tick,
         &make_cel(tick, asset, label)?,
         true,
+        false,
     )
 }
 pub(super) fn remove_cel(
