@@ -312,8 +312,10 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             }
         };
         let ticks_per_second = view.ticks_per_second().max(1);
+        let prep = crate::profile::phase("native.prep");
         let source = Arc::new(document.source_bytes().ok()?);
         let viewport = svg_viewport(source.clone(), &|| false).ok()?;
+        drop(prep);
         let tick = snapshot
             .current_tick
             .min(snapshot.duration_ticks.saturating_sub(1));

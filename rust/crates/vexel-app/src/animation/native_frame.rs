@@ -44,6 +44,7 @@ pub fn render_native_frame(
         return Err(NativeFrameError::InvalidTick);
     }
 
+    let props = crate::profile::phase("native.properties");
     let snapshot = apply_native_properties(source_svg, timeline, tick).map_err(|error| {
         if error == NativePropertyError::InvalidTick {
             NativeFrameError::InvalidTick
@@ -51,8 +52,12 @@ pub fn render_native_frame(
             NativeFrameError::Property(error)
         }
     })?;
+    drop(props);
+    let compose = crate::profile::phase("native.compose");
     let base =
         compose_svg(&snapshot, output_width, output_height).map_err(NativeFrameError::Compose)?;
+    drop(compose);
+    let _cels = crate::profile::phase("native.cels");
 
     let (cel_storage, visibility) = collect_drawing_cels(timeline)?;
     let mut cel_views = Vec::new();

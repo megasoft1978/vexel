@@ -122,7 +122,9 @@ pub(crate) fn compose_document_owned(
 ) -> Result<Composed, ComposeError> {
     let (tile_width, tile_height) = offscreen_tile_size(f64::from(width), f64::from(height))
         .map_err(|_| ComposeError::InvalidSize)?;
+    let ph = crate::profile::phase("c.decode");
     let graph = decode::decode_owned(bytes, cancel)?;
+    drop(ph);
     let scene = graph.root();
     let viewport = scene.viewport;
     let view = ViewBox {
@@ -138,7 +140,9 @@ pub(crate) fn compose_document_owned(
         slice: viewport.aspect.slice,
     });
     let mut tile = blank_tile(tile_width, tile_height)?;
+    let ph = crate::profile::phase("c.render");
     let drawn = render_scene(&scene, view, aspect, &mut tile, false, cancel)?;
+    drop(ph);
     let source = graph.source();
     let target_ids_by_offset = unique_element_ids(source);
     let target_ids = drawn

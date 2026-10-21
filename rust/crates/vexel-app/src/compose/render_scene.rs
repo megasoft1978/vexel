@@ -153,6 +153,7 @@ impl Renderer<'_> {
 
     /// A fresh transparent tile the size of the view; the caller holds a reservation.
     fn new_tile(&self) -> Result<Tile, RenderError> {
+        let _alloc = crate::profile::phase("r.alloc");
         let mut rgba = Vec::new();
         rgba.try_reserve_exact(self.tile_bytes)
             .map_err(|_| RenderError::LimitExceeded)?;
@@ -279,6 +280,7 @@ impl Renderer<'_> {
             let mask = scene.view.mask(id).ok_or(RenderError::InvalidGeometry)?;
             self.mask(scene.view, mask, &mut layer)?;
         }
+        let _composite = crate::profile::phase("r.composite");
         composite_tile(dest, &layer, group.opacity, self.cancel)
     }
 
@@ -351,6 +353,7 @@ impl Renderer<'_> {
             let result = (|| {
                 let mut layer = self.new_tile()?;
                 self.paint(scene, *kind, items, &mut layer)?;
+                let _composite = crate::profile::phase("r.composite");
                 composite_tile(dest, &layer, 1.0, self.cancel)
             })();
             self.release();
@@ -367,6 +370,7 @@ impl Renderer<'_> {
         items: &[&Prepared<'_>],
         tile: &mut Tile,
     ) -> Result<(), RenderError> {
+        let _paint = crate::profile::phase("r.paint");
         match kind {
             Kind::Plain | Kind::Dashed => {
                 let shapes: Vec<_> = items.iter().map(|p| p.shape.as_dashed()).collect();
