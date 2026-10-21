@@ -1,5 +1,5 @@
 //! The Export popover: geometry under the Export button and its painting.
-//! Drawn like the MCP popover (same shadow, fill and edge tokens); its three
+//! Drawn like the MCP popover (same shadow, fill and edge tokens); its seven
 //! rows are the only targets that react while it is open.
 
 use super::paint::{motion_fill, text};
@@ -32,7 +32,7 @@ impl Layout {
     }
 
     /// Rows in [`ExportFormat::ALL`] order.
-    pub fn export_items(&self) -> [Rect; 4] {
+    pub fn export_items(&self) -> [Rect; 7] {
         let p = self.export_popover();
         std::array::from_fn(|i| {
             r(

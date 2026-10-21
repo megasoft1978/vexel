@@ -31,9 +31,9 @@ const ID_MENU0: u32 = 70;
 pub const MAX_HEADERS: usize = 8;
 /// The single registry id map: every id a [`Target`] maps to. Tab order is
 /// [`FOCUS_ORDER`] (modes, tools); the rest react to hover and press only.
-pub const REGISTERED: [u32; 28] = [
+pub const REGISTERED: [u32; 31] = [
     ID_DRAW, ID_ANIMATE, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42, 43, 44, 45,
-    46, 47, 60, 61, 70, 71, 72, 73,
+    46, 47, 60, 61, 70, 71, 72, 73, 74, 75, 76,
 ];
 /// Hover delay before a tooltip shows.
 pub const TOOLTIP_DELAY_NS: u64 = 500_000_000;

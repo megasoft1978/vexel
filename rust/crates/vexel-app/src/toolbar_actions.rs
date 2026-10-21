@@ -362,6 +362,13 @@ impl Exports {
             ExportFormat::Png => write_png(files.document_mut(), &target).map(|()| "Exported PNG"),
             ExportFormat::Gif => self.spawn_gif(files.document(), target),
             ExportFormat::Video => crate::video_export::write_video(files.document(), target),
+            ExportFormat::VideoAlpha => {
+                crate::video_export::write_video_alpha(files.document(), target)
+            }
+            ExportFormat::Apng => crate::frames_export::write_apng(files.document_mut(), target),
+            ExportFormat::Frames => {
+                crate::frames_export::write_frames(files.document_mut(), target)
+            }
         };
         model.status = match result {
             Ok(done) => done,
@@ -443,11 +450,11 @@ fn suggested_name(doc: &AppDocument, format: ExportFormat) -> String {
 fn suggestion(display_name: Option<&str>, format: ExportFormat) -> String {
     let name = display_name.unwrap_or("Untitled");
     let stem = name.rsplit_once('.').map_or(name, |(stem, _)| stem);
-    format!(
-        "{}.{}",
-        if stem.is_empty() { "Untitled" } else { stem },
-        format.extension()
-    )
+    let stem = if stem.is_empty() { "Untitled" } else { stem };
+    match format {
+        ExportFormat::Frames => format!("{stem}_####.png"),
+        _ => format!("{stem}.{}", format.extension()),
+    }
 }
 
 /// The path to write. The native Save panel is a project panel and appends

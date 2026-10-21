@@ -217,5 +217,36 @@ fn video_row_needs_a_native_timeline() {
     assert!(shell.model.target_enabled(&l, video));
     assert_eq!(ExportFormat::Video.extension(), "mp4");
     assert_eq!(ExportFormat::Video.label(), "Export Video\u{2026}");
-    assert_eq!(ExportFormat::ALL.last(), Some(&ExportFormat::Video));
+    assert_eq!(ExportFormat::ALL[3], ExportFormat::Video);
+}
+
+#[test]
+fn apng_frames_and_hevc_alpha_rows_follow_the_video_row() {
+    let mut shell = Shell::new();
+    shell.edit("a", 10.0);
+    let l = shell.layout();
+    let rows = [
+        (ExportFormat::Apng, "apng", "Export APNG\u{2026}"),
+        (ExportFormat::Frames, "png", "Export PNG Frames\u{2026}"),
+        (
+            ExportFormat::VideoAlpha,
+            "mov",
+            "HEVC with alpha (.mov)\u{2026}",
+        ),
+    ];
+    assert_eq!(&ExportFormat::ALL[4..], rows.map(|r| r.0));
+    for (format, extension, label) in rows {
+        assert_eq!(format.extension(), extension);
+        assert_eq!(format.label(), label);
+        assert!(!shell.model.target_enabled(&l, Target::MenuItem(format)));
+    }
+    shell.model.set_native_timeline(true);
+    for (format, _, _) in rows {
+        assert!(shell.model.target_enabled(&l, Target::MenuItem(format)));
+    }
+    shell.press_button(EXPORT);
+    let popover = l.export_popover();
+    for rect in l.export_items() {
+        assert!(rect.y + rect.height <= popover.y + popover.height);
+    }
 }
