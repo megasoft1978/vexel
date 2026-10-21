@@ -11,6 +11,7 @@ impl InteractionState {
         let end = model.duration_ticks.saturating_sub(1);
         match key {
             Key::Escape => {
+                self.bezier.open = false;
                 self.press = None;
                 self.drag_preview = None;
                 Vec::new()

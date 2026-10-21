@@ -82,6 +82,9 @@ impl NativeAnimationController {
                             vexel_timeline::sample::Ease::EaseIn => "ease_in".to_owned(),
                             vexel_timeline::sample::Ease::EaseOut => "ease_out".to_owned(),
                             vexel_timeline::sample::Ease::EaseInOut => "ease_in_out".to_owned(),
+                            vexel_timeline::sample::Ease::Bezier(p) => {
+                                crate::native_timeline::bezier::encode(p)
+                            }
                             other => format!("{other:?}"),
                         }),
                     });

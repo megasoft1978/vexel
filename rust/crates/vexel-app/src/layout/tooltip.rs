@@ -16,6 +16,24 @@ pub fn tooltip_rect(l: &Layout, target: Target) -> Option<Rect> {
     let (name, shortcut) = tooltip(target)?;
     let native_button = if let Target::NativeTimeline(hit) = target {
         let anchor = l.footer?;
+        if hit == crate::native_timeline::layout::Hit::EaseCustom {
+            let transport = crate::native_timeline::layout::TRANSPORT_HEIGHT;
+            let r = Rect {
+                x: anchor.x + crate::native_timeline::layout::EASE_START + 5 * 28,
+                y: anchor.y + (transport.saturating_sub(24) / 2),
+                width: 26.min(anchor.width),
+                height: 24.min(anchor.height),
+            };
+            let (w, h) = tip_size(name, shortcut);
+            let max_x = l.width.saturating_sub(w + EDGE).max(EDGE);
+            let max_y = l.height.saturating_sub(h + EDGE).max(EDGE);
+            return Some(Rect {
+                x: (r.x + r.width / 2).saturating_sub(w / 2).clamp(EDGE, max_x),
+                y: r.y.saturating_sub(h + GAP).clamp(EDGE, max_y),
+                width: w,
+                height: h,
+            });
+        }
         let size = crate::native_timeline::layout::CONTROL_SIZE;
         let gap = 4;
         let index = match hit {

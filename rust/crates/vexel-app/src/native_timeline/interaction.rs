@@ -2,6 +2,7 @@
 //! application intent; this module never mutates a project or playback engine.
 
 use super::NativeTimelineAction;
+use super::bezier::{self, BezierDraft};
 use super::layout::{Hit, TimelineLayout, Viewport};
 use super::model::TimelineModel;
 
@@ -72,6 +73,7 @@ pub struct InteractionState {
     pub selected_item: Option<(usize, usize)>,
     pub drag_preview: Option<DragPreview>,
     pub hover: Option<Hit>,
+    pub bezier: BezierDraft,
     press: Option<Press>,
 }
 
@@ -84,6 +86,7 @@ impl Default for InteractionState {
             selected_item: None,
             drag_preview: None,
             hover: None,
+            bezier: BezierDraft::default(),
             press: None,
         }
     }
@@ -109,7 +112,17 @@ impl InteractionState {
         layout: &TimelineLayout,
         model: &TimelineModel,
     ) -> Vec<NativeTimelineAction> {
-        let hit = layout.hit_test(model, point.0, point.1);
+        let editor_live = self.bezier.open
+            && model.selected_item().is_some_and(|(_, _, track, _)| {
+                matches!(track.kind, super::NativeTrackKind::Property)
+            });
+        if self.bezier.open && !editor_live {
+            self.bezier.open = false;
+        }
+        let hit = editor_live
+            .then(|| layout.bezier_hit(point.0, point.1))
+            .flatten()
+            .unwrap_or_else(|| layout.hit_test(model, point.0, point.1));
         let mut actions = Vec::with_capacity(2);
         match phase {
             Phase::Down => {
@@ -130,11 +143,15 @@ impl InteractionState {
                     | Hit::ImportDrawing => {
                         self.press = Some(Press::Button(hit));
                     }
-                    Hit::Ease(_) => self.press = Some(Press::Button(hit)),
+                    Hit::Ease(_) | Hit::EaseCustom | Hit::BezierStep { .. } | Hit::BezierApply => {
+                        self.press = Some(Press::Button(hit))
+                    }
+                    Hit::BezierPanel => {}
                     Hit::Ruler | Hit::Lane(_) => {
                         self.press = Some(Press::Seek);
                     }
                     Hit::Track(index) => {
+                        self.bezier.open = false;
                         if let Some(track) = model.tracks.get(index) {
                             self.selected_track = Some(index);
                             self.selected_item = None;
@@ -159,6 +176,7 @@ impl InteractionState {
                             model.tracks.get(track),
                             model.tracks.get(track).and_then(|t| t.items.get(item)),
                         ) {
+                            self.bezier.open = false;
                             self.selected_track = Some(track);
                             self.selected_item = Some((track, item));
                             self.press = Some(Press::Item {
@@ -218,6 +236,27 @@ impl InteractionState {
                                     track_id: track.id.clone(),
                                 });
                             }
+                        }
+                        Hit::EaseCustom => {
+                            if self.bezier.open {
+                                self.bezier.open = false;
+                            } else if let Some((_, _, _, item)) = model.selected_item() {
+                                let current = item.ease.as_deref().and_then(bezier::parse);
+                                self.bezier.set(current.unwrap_or(bezier::DEFAULT));
+                                self.bezier.open = true;
+                            }
+                        }
+                        Hit::BezierStep { field, up } => self.bezier.step(field, up),
+                        Hit::BezierApply => {
+                            if let Some((_, _, track, item)) = model.selected_item() {
+                                actions.push(NativeTimelineAction::SetPropertyKeyEase {
+                                    track_id: track.id.clone(),
+                                    tick: item.tick,
+                                    value: item.label.clone(),
+                                    ease: bezier::encode(self.bezier.values),
+                                });
+                            }
+                            self.bezier.open = false;
                         }
                         Hit::Ease(ease) => {
                             if let Some((_, _, track, item)) = model.selected_item() {
