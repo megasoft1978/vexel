@@ -1,10 +1,10 @@
 //! Source-preserving tree edits for V1 documents.
 
-use crate::{ElementKind, V1Document, V1DocumentError, path_data};
+use crate::{path_data, ElementKind, V1Document, V1DocumentError};
 use std::sync::Arc;
 use vexel_document_edit::{
-    EditLimits, Editor, SourceSpan, document_view_first_child, document_view_next_sibling,
-    encode_attribute,
+    document_view_first_child, document_view_next_sibling, encode_attribute, EditLimits, Editor,
+    SourceSpan,
 };
 
 /// Sibling z-order movement.
@@ -302,6 +302,74 @@ impl V1Document {
         let b = self
             .editor
             .source_span(siblings[j])
+            .ok_or(V1DocumentError::MissingStableId)?;
+        let source = self.source()?;
+        let start = a.offset.min(b.offset);
+        let end = (a.offset + a.length).max(b.offset + b.length);
+        let mut bytes = Vec::new();
+        if a.offset < b.offset {
+            bytes.extend_from_slice(&source[a.offset + a.length..end]);
+            bytes.extend_from_slice(&source[a.offset..a.offset + a.length]);
+        } else {
+            bytes.extend_from_slice(&source[a.offset..a.offset + a.length]);
+            bytes.extend_from_slice(&source[start..a.offset]);
+        }
+        self.editor.replace_source_span(
+            SourceSpan {
+                offset: start,
+                length: end - start,
+            },
+            &bytes,
+        )?;
+        self.editor
+            .history_relabel_latest(vexel_document_edit::HistoryAction::EditObjects);
+        Ok(())
+    }
+
+    /// Moves an element immediately before or after a sibling target.
+    pub fn reorder_relative(
+        &mut self,
+        id: &str,
+        target: &str,
+        before: bool,
+    ) -> Result<(), V1DocumentError> {
+        let node = self.find_node(id)?;
+        let target_node = self.find_node(target)?;
+        let model = self.editor.try_model()?;
+        let parent = model.parent(node).ok_or(V1DocumentError::Unsupported)?;
+        if model.parent(target_node) != Some(parent) || node == target_node {
+            return Err(V1DocumentError::Unsupported);
+        }
+        let mut siblings = Vec::new();
+        let mut child = document_view_first_child(model, parent);
+        while let Some(item) = child {
+            siblings.push(item);
+            child = document_view_next_sibling(model, item);
+        }
+        let from = siblings
+            .iter()
+            .position(|item| *item == node)
+            .ok_or(V1DocumentError::Unsupported)?;
+        let target_index = siblings
+            .iter()
+            .position(|item| *item == target_node)
+            .ok_or(V1DocumentError::Unsupported)?;
+        let desired = if before {
+            target_index
+        } else {
+            target_index + 1
+        };
+        let destination = if from < desired { desired - 1 } else { desired };
+        if from == destination {
+            return Ok(());
+        }
+        let a = self
+            .editor
+            .source_span(node)
+            .ok_or(V1DocumentError::MissingStableId)?;
+        let b = self
+            .editor
+            .source_span(siblings[destination])
             .ok_or(V1DocumentError::MissingStableId)?;
         let source = self.source()?;
         let start = a.offset.min(b.offset);
