@@ -331,6 +331,12 @@ Hot spots on the request path, ranked by p50 cost per native op at 1024:
    `prepare_payload`. 0.29 ms with about 1024 retained states at 1024 elements,
    0.003 ms with about 100 states in the bulk run. History cap: `history.rs:9`.
 
+After the redundant-decode, double-reopen and journal-identity fixes (release,
+1024 scene, p50 / p95 ms): `add_property_track` 2.28 / 3.12 to 1.48 / 2.13,
+`set_property_key` 2.44 / 3.91 to 1.45 / 2.42, `journal_admit` 0.29 / 0.43 to
+0.009 / 0.013, 8-key bulk add 11.07 to 7.60 p50 (p95 unchanged at about 19 ms).
+The hot-spot list above describes the state before that change.
+
 Largest per-add cost, off the request path: `recompose` at 4.96 ms p50 for 1024
 elements (`compose/mod.rs:117`, full re-render per source change on the compose
 worker). `edit_apply` for element_add also grows with scene size (0.14 to 0.85 ms).
