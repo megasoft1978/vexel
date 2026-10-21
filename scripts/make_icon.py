@@ -10,7 +10,7 @@ accent keyframe diamond on the path.
 Each size is drawn at 4x and downscaled with Lanczos. Small sizes (<= 64 px)
 use a simplified variant (no handles, heavier stroke) so the mark stays legible.
 
-Usage: python3 scripts/make_icon.py [--iconset-dir DIR] [--icns FILE] [--no-icns]
+Usage: python3 scripts/make_icon.py [--from-image] [--iconset-dir DIR] [--icns FILE] [--no-icns]
 Defaults: build/icon/AppIcon.iconset and resources/AppIcon.icns.
 """
 
@@ -155,14 +155,33 @@ def render(point_size: int) -> Image.Image:
     return body.resize((point_size, point_size), Image.LANCZOS)
 
 
-def build_iconset(iconset: Path) -> None:
+SOURCE = ROOT / "resources/AppIcon-source.png"
+
+
+def render_source(point_size: int) -> Image.Image:
+    """Masks the generated artwork (`resources/AppIcon-source.png`) into the icon shape."""
+    big = point_size * SUPERSAMPLE
+    shape = round(big * (1 - 2 * MARGIN))
+    x0 = round(big * MARGIN)
+    mask = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (x0, x0, x0 + shape, x0 + shape), radius=shape * CORNER, fill=255)
+    art = Image.open(SOURCE).convert("RGBA").resize((shape, shape), Image.LANCZOS)
+    body = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    body.paste(art, (x0, x0))
+    body.putalpha(mask)
+    return body.resize((point_size, point_size), Image.LANCZOS)
+
+
+def build_iconset(iconset: Path, draw=None) -> None:
+    draw = draw or render
     if iconset.exists():
         shutil.rmtree(iconset)
     iconset.mkdir(parents=True)
     cache: dict[int, Image.Image] = {}
     for size, name in ICONSET:
         if size not in cache:
-            cache[size] = render(size)
+            cache[size] = draw(size)
         cache[size].save(iconset / name, "PNG")
 
 
@@ -171,10 +190,12 @@ def main() -> int:
     parser.add_argument("--iconset-dir", type=Path,
                         default=ROOT / "build/icon/AppIcon.iconset")
     parser.add_argument("--icns", type=Path, default=ROOT / "resources/AppIcon.icns")
+    parser.add_argument("--from-image", action="store_true",
+                        help="use resources/AppIcon-source.png instead of the drawn mark")
     parser.add_argument("--no-icns", action="store_true",
                         help="write the .iconset only")
     args = parser.parse_args()
-    build_iconset(args.iconset_dir)
+    build_iconset(args.iconset_dir, render_source if args.from_image else None)
     print(f"iconset: {args.iconset_dir}")
     if args.no_icns:
         return 0
