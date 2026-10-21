@@ -111,11 +111,15 @@ impl ProjectSession {
 
         // The caller can return a candidate built with another context. Admit
         // only supported data validated against this scene and these limits.
-        let assets = {
-            let _phase = phase("copy_assets");
-            copy_assets(edited.assets()).map_err(NativeCommandError::Timeline)?
-        };
-        let edited = {
+        // A derivative of the opened candidate was already decoded when its
+        // edit was committed, so only foreign shapes are re-opened.
+        let edited = if edited.is_validated_derivative_of(&candidate, limits) {
+            edited
+        } else {
+            let assets = {
+                let _phase = phase("copy_assets");
+                copy_assets(edited.assets()).map_err(NativeCommandError::Timeline)?
+            };
             let _phase = phase("candidate_reopen");
             ProjectTimelineCandidate::open(
                 edited.timeline_bytes(),
@@ -124,8 +128,8 @@ impl ProjectSession {
                 settings,
                 limits,
             )
-        }
-        .map_err(NativeCommandError::Timeline)?;
+            .map_err(NativeCommandError::Timeline)?
+        };
         if !edited.is_editable() {
             return Err(NativeCommandError::Timeline(
                 ProjectTimelineError::UnsupportedTimeline,

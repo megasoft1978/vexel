@@ -125,6 +125,19 @@ impl ProjectTimelineCandidate {
         self.lineage == other.lineage
     }
 
+    /// True when `self` was derived from `parent` by the editing API (same
+    /// lineage, scene ids and limits). Every such derivative's timeline was
+    /// decoded against its own assets when it was committed, so re-opening it
+    /// would repeat that validation.
+    pub(super) fn is_validated_derivative_of(&self, parent: &Self, limits: EditLimits) -> bool {
+        self.lineage == parent.lineage
+            && self.editable
+            && !self.timeline.is_empty()
+            && self.limits == limits
+            && parent.limits == limits
+            && self.scene_ids == parent.scene_ids
+    }
+
     /// Import the source asset and its first cel/track as one candidate.
     pub fn import_drawing_track(
         &self,
@@ -348,7 +361,9 @@ impl ProjectTimelineCandidate {
         };
         let mut editor = {
             let _phase = phase("edit_validate");
-            TimelineEdit::new(&self.timeline, &context, self.limits)
+            // `timeline` was decoded when this candidate was opened or built
+            // from a committed (decoded) edit, under this same context.
+            TimelineEdit::new_decoded(&self.timeline, self.limits)
                 .map_err(ProjectTimelineError::Edit)?
         };
         {

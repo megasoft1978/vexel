@@ -390,27 +390,34 @@ impl<P> PayloadAdmission<'_, P> {
     }
 }
 
-/// Bounded pairwise identity accounting avoids a fallible or infallible map
-/// allocation while detecting inconsistent identity metadata.
+/// Identity accounting over a fallibly reserved, sorted (identity, bytes)
+/// list: equal identities must report equal bytes and count once.
 fn payload_bytes<P: PayloadSnapshot>(states: &[JournalState<P>]) -> Result<usize, JournalError> {
+    let mut entries: Vec<(usize, usize)> = Vec::new();
+    entries
+        .try_reserve_exact(states.len())
+        .map_err(|_| JournalError::Capacity)?;
+    entries.extend(
+        states
+            .iter()
+            .map(|state| (state.payload.identity(), state.payload.retained_bytes())),
+    );
+    entries.sort_unstable();
     let mut total = 0usize;
-    for (index, state) in states.iter().enumerate() {
-        let identity = state.payload.identity();
-        let bytes = state.payload.retained_bytes();
-        let mut seen = false;
-        for previous in &states[..index] {
-            if previous.payload.identity() == identity {
-                if previous.payload.retained_bytes() != bytes {
+    let mut previous: Option<(usize, usize)> = None;
+    for &(identity, bytes) in &entries {
+        if let Some((previous_identity, previous_bytes)) = previous {
+            if previous_identity == identity {
+                if previous_bytes != bytes {
                     return Err(JournalError::SnapshotIdentityConflict);
                 }
-                seen = true;
+                continue;
             }
         }
-        if !seen {
-            total = total.checked_add(bytes).ok_or(JournalError::Capacity)?;
-            if total > MAX_BYTES {
-                return Err(JournalError::Capacity);
-            }
+        previous = Some((identity, bytes));
+        total = total.checked_add(bytes).ok_or(JournalError::Capacity)?;
+        if total > MAX_BYTES {
+            return Err(JournalError::Capacity);
         }
     }
     Ok(total)

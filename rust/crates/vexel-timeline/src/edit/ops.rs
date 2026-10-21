@@ -35,6 +35,13 @@ fn selected(
     context: &TimelineContext,
     id: &[u8],
 ) -> Result<(Track, usize), EditFailure> {
+    selected_view(source, context, id).map(|(track, index, _)| (track, index))
+}
+fn selected_view<'a>(
+    source: &'a [u8],
+    context: &TimelineContext,
+    id: &[u8],
+) -> Result<(Track, usize, crate::TimelineView<'a>), EditFailure> {
     let view = decode(source, context).map_err(EditFailure::from)?;
     let root_fields = fields(source, root_span(source)?)?;
     let tracks = field(&root_fields, b"tracks")
@@ -79,6 +86,7 @@ fn selected(
             duration: view.duration_ticks(),
         },
         index,
+        view,
     ))
 }
 fn splice(source: &[u8], start: usize, remove: usize, insert: &[u8]) -> EditResult<Vec<u8>> {
@@ -481,7 +489,7 @@ fn change_item(
     preserve_ease: bool,
 ) -> EditResult {
     let source = edit.source();
-    let (track, _) = selected(source, context, id)?;
+    let (track, _, view) = selected_view(source, context, id)?;
     if track.drawing != drawing {
         return Err(at(Error::InvalidArgument, 0));
     }
@@ -491,7 +499,6 @@ fn change_item(
     let mut replace = None;
     let mut insert = None;
     let mut total = 0usize;
-    let view = decode(source, context).map_err(EditFailure::from)?;
     for i in 0..view.track_count() {
         total = total
             .checked_add(
