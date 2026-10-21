@@ -23,6 +23,7 @@ pub fn tooltip(target: Target) -> Option<(&'static str, &'static str)> {
         Target::Button(Button::Export) => ("Export", "\u{21e7}\u{2318}E"),
         Target::Button(Button::ToggleInspector) => ("Toggle inspector", ""),
         Target::Button(Button::Mcp) => ("MCP activity", ""),
+        Target::SectionHeader(i) => return super::ExtControl::from_index(i).map(|c| c.tip()),
         Target::NativeTimeline(hit) => match hit {
             crate::native_timeline::layout::Hit::Play => ("Play / Pause", "Space"),
             crate::native_timeline::layout::Hit::Loop => ("Loop mode", "once | loop | ping-pong"),

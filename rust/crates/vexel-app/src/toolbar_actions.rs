@@ -32,6 +32,10 @@ use std::sync::mpsc::sync_channel;
 use vexel_mcp_access::AccessPolicy;
 use vexel_platform_apple::{Modifiers, PanelBackend, PanelResult};
 
+#[path = "inspector_ext_edit.rs"]
+mod ext_edit;
+pub use ext_edit::apply as apply_ext_control;
+
 /// Frames per second of a GIF export (the exporter caps at 30).
 pub const GIF_FPS: u32 = 24;
 const KEY_SPACE: u16 = 49;
@@ -98,13 +102,17 @@ pub fn press<B: PanelBackend>(
     changed || under || action.is_some()
 }
 
-/// Applies one of the inspector's preset fill, stroke, or width edits.
+/// Applies one of the inspector's preset fill, stroke, width, opacity, gradient,
+/// dash or transform edits.
 pub fn inspector_edit<B: PanelBackend>(
     target_index: usize,
     model: &mut Model,
     files: &mut FileUi<B>,
     tools: &mut ToolController,
 ) -> bool {
+    if let Some(control) = crate::layout::ExtControl::from_index(target_index) {
+        return ext_edit::run(control, model, files, tools);
+    }
     let width_index = target_index.checked_sub(17).filter(|i| *i < 4);
     let width = width_index.map(|i| [1.0, 2.0, 4.0, 8.0][i]);
     let stroke = if (11..17).contains(&target_index) || width_index.is_some() {

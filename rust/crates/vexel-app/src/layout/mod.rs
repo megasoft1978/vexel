@@ -6,6 +6,7 @@
 //! absent. Splitters are 4 px strips; they are exempt from the 28 px target
 //! minimum on their thin axis (their long axis is the whole panel edge).
 
+mod inspector_ext;
 mod menu;
 pub mod paint;
 mod state;
@@ -13,6 +14,10 @@ mod state;
 mod tests;
 mod tooltip;
 
+pub use inspector_ext::{
+    EXT_COUNT, EXT_END, EXT_FIRST, ExtControl, ExtRow, STOP_SWATCHES, segments, stepper_buttons,
+    stop_swatch,
+};
 pub use menu::draw_export_menu;
 pub use paint::{draw_chrome, draw_chrome_with, draw_popover, status_hint, tooltip};
 pub use state::{Focus, UiState};
@@ -43,7 +48,7 @@ pub const SECTION_HEADER_H: u32 = 32;
 /// Selection body height while it holds the empty-state card.
 pub const EMPTY_CARD_BODY_H: u32 = 112;
 /// Body heights of Selection, Fill, Stroke, Transform, Animation.
-pub const SECTION_BODY_H: [u32; SECTIONS] = [52, 72, 136, 84, 52];
+pub const SECTION_BODY_H: [u32; SECTIONS] = [68, 192, 166, 172, 52];
 pub const SECTION_NAMES: [&str; SECTIONS] =
     ["Selection", "Fill", "Stroke", "Transform", "Animation"];
 const EMPTY: Rect = Rect {
@@ -373,7 +378,7 @@ impl Layout {
                 return None;
             }
         }
-        for index in 5..21 {
+        for index in 5..EXT_END {
             let target = Target::SectionHeader(index);
             if self.target_rect(target).is_some_and(|r| contains(r, point)) {
                 return Some(target);
@@ -436,7 +441,7 @@ impl Layout {
         if (17..21).contains(&index) {
             return self.inspector_width_rect((index - 17) as u8);
         }
-        None
+        self.ext_control_rect_at(index)
     }
 
     fn inspector_color_rect(&self, stroke: bool, index: u8) -> Option<Rect> {
