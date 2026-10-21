@@ -3,15 +3,11 @@
 //! (`Layout::ext_row` / `ExtControl`), the same ones the hit test uses.
 
 use crate::chrome::{Dash, FillKind, ShapeExt, TransformView, number, parse_hex};
-use crate::layout::paint::{centred, mono, text, text_width};
+use crate::layout::paint::{mono, text, text_width};
 use crate::layout::{ExtRow, Layout, STOP_SWATCHES, segments, stepper_buttons, stop_swatch};
 use crate::model::INSPECTOR_SWATCHES;
+use crate::ui_kit::{field, glyph_button, segmented_cells};
 use vexel_ui::{FontWeight, Rect, WidgetCanvas};
-
-fn field(c: &mut WidgetCanvas<'_>, r: Rect) {
-    let fill = c.tokens.surface[3];
-    c.paint_round(r, 6, fill, 0, 0);
-}
 
 fn caption(c: &mut WidgetCanvas<'_>, r: Rect, label: &str) {
     let t = c.tokens;
@@ -48,18 +44,6 @@ fn value(c: &mut WidgetCanvas<'_>, r: Rect, v: &str, enabled: bool) {
         },
         12,
     );
-}
-
-/// A small square glyph button (`-` or `+`).
-fn glyph_button(c: &mut WidgetCanvas<'_>, r: Rect, glyph: &str, enabled: bool) {
-    let t = c.tokens;
-    c.paint_round(r, 5, t.surface[4], t.control_edge, 1);
-    let colour = if enabled {
-        t.text_primary
-    } else {
-        t.text_tertiary
-    };
-    centred(c, glyph, r, colour, 14, FontWeight::Semibold);
 }
 
 /// Caption, value and `-` / `+` buttons in one field.
@@ -114,21 +98,7 @@ fn half_stepper(c: &mut WidgetCanvas<'_>, row: Rect, label: &str, shown: Option<
 }
 
 fn segmented(c: &mut WidgetCanvas<'_>, row: Rect, labels: [&str; 3], active: Option<usize>) {
-    let t = c.tokens;
-    for (i, (rect, label)) in segments(row).into_iter().zip(labels).enumerate() {
-        c.paint_round(rect, 5, t.surface[3], t.control_edge, 1);
-        if active == Some(i) {
-            let ring = Rect {
-                x: rect.x.saturating_sub(1),
-                y: rect.y.saturating_sub(1),
-                width: rect.width + 2,
-                height: rect.height + 2,
-            };
-            c.paint_round(ring, 6, 0, t.accent, 1);
-            c.paint_round(rect, 5, t.surface[3], t.control_edge, 1);
-        }
-        centred(c, label, rect, t.text_primary, 12, FontWeight::Semibold);
-    }
+    segmented_cells(c, &segments(row), &labels, active, None, true);
 }
 
 fn swatch_rgb(index: usize) -> Option<([u8; 3], u32)> {

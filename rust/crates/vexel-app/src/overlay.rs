@@ -93,3 +93,67 @@ fn draw_native_timeline_tooltip(canvas: &mut WidgetCanvas<'_>, layout: &Layout, 
     };
     crate::layout::paint::paint_tip(canvas, rect, name, shortcut);
 }
+
+/// `frame` with `paint` drawn over it on a canvas whose text goes through
+/// CoreText, like the main shell and the tooltip layer. The frame is returned
+/// unchanged when the canvas cannot be created or CoreText rejects a string.
+pub fn paint_over(
+    frame: RgbaFrame,
+    dark: bool,
+    paint: impl FnOnce(&mut WidgetCanvas<'_>),
+) -> RgbaFrame {
+    let (width, height, scale) = (frame.width(), frame.height(), frame.backing_scale() as u32);
+    let mut pixels = frame.pixels().to_vec();
+    let (len, stride) = (pixels.len(), width as usize * 4);
+    let mut text = |s: &str,
+                    rect: Rect,
+                    _theme: Theme,
+                    size: u32,
+                    color: u32,
+                    family: FontFamily,
+                    weight: FontWeight,
+                    rgba: &mut [u8],
+                    w: u32,
+                    h: u32,
+                    stride: usize| {
+        let result = draw_text_rgba(
+            rgba,
+            w,
+            h,
+            stride,
+            scale,
+            s,
+            (rect.x, rect.y, rect.width, rect.height),
+            color,
+            if family == FontFamily::Monospaced {
+                TextFace::Monospaced
+            } else {
+                TextFace::System
+            },
+            if weight == FontWeight::Semibold {
+                TextEmphasis::Semibold
+            } else {
+                TextEmphasis::Regular
+            },
+            size,
+        );
+        result.is_ok()
+    };
+    let theme = if dark { Theme::Dark } else { Theme::Light };
+    let Some(mut canvas) = WidgetCanvas::new(
+        &mut pixels,
+        len,
+        width,
+        height,
+        stride,
+        scale,
+        theme,
+        false,
+        Some(&mut text),
+    ) else {
+        return frame;
+    };
+    paint(&mut canvas);
+    drop(canvas);
+    RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
+}

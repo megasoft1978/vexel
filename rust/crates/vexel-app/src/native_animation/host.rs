@@ -270,30 +270,9 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         snapshot: &NativeTimelineSnapshot,
         dark: bool,
     ) -> RgbaFrame {
-        let (width, height, scale) = (frame.width(), frame.height(), frame.backing_scale() as u32);
-        let mut pixels = frame.pixels().to_vec();
-        let stride = (width as usize) * 4;
-        let capacity = pixels.capacity();
-        let Some(mut canvas) = vexel_ui::WidgetCanvas::new(
-            &mut pixels,
-            capacity,
-            width,
-            height,
-            stride,
-            scale,
-            if dark {
-                vexel_ui::Theme::Dark
-            } else {
-                vexel_ui::Theme::Light
-            },
-            false,
-            None,
-        ) else {
-            return frame;
-        };
-        self.presentation.paint(&mut canvas, footer, snapshot);
-        drop(canvas);
-        RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
+        crate::overlay::paint_over(frame, dark, |canvas| {
+            self.presentation.paint(canvas, footer, snapshot);
+        })
     }
 
     /// Samples and retains the latest complete native frame for the requested output size.

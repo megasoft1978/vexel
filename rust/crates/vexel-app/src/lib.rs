@@ -29,4 +29,5 @@ pub mod session;
 pub mod timeline;
 pub mod toolbar_actions;
 pub mod tools;
+pub(crate) mod ui_kit;
 pub mod video_export;

@@ -7,8 +7,8 @@ use super::interaction::{InteractionState, Key, Phase};
 use super::layout::{Hit, TimelineLayout};
 use super::model::TimelineModel;
 use super::{NativeTimelineAction, NativeTimelineSnapshot};
-use crate::layout::paint::centred;
-use vexel_ui::{FontWeight, Rect, WidgetCanvas};
+use crate::ui_kit::segmented_cells;
+use vexel_ui::{Rect, WidgetCanvas};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum TimelineMode {
@@ -168,48 +168,32 @@ pub fn paint_selector(
         return;
     }
     let tokens = canvas.tokens;
-    canvas.paint_round(bounds, 6, tokens.panel_raised, tokens.separator, 1);
-    let half = bounds.width / 2;
-    for mode in [TimelineMode::Native, TimelineMode::SvgSmil] {
-        let index = u32::from(mode == TimelineMode::SvgSmil);
-        let cell = Rect {
-            x: bounds.x.saturating_add(index.saturating_mul(half)),
-            y: bounds.y.saturating_add(2),
-            width: if index == 0 {
-                half.saturating_sub(1)
-            } else {
-                bounds.width.saturating_sub(index.saturating_mul(half))
-            },
-            height: bounds.height.saturating_sub(4),
-        };
-        let active = mode == selected;
-        if active {
-            canvas.paint_round(cell, 4, tokens.selection_fill, 0, 0);
-        } else if hovered == Some(mode) {
-            canvas.paint_round(cell, 4, tokens.panel_hover, 0, 0);
-        }
-        centred(
-            canvas,
-            match mode {
-                TimelineMode::Native => "Native",
-                TimelineMode::SvgSmil => "SVG SMIL",
-            },
-            cell,
-            if active {
-                tokens.accent
-            } else {
-                tokens.text_secondary
-            },
-            11,
-            if active {
-                FontWeight::Semibold
-            } else {
-                FontWeight::Regular
-            },
-        );
-    }
+    let w = bounds.width.saturating_sub(6) / 2;
+    let cells = [
+        Rect { width: w, ..bounds },
+        Rect {
+            x: bounds.x + w + 6,
+            width: bounds.width.saturating_sub(w + 6),
+            ..bounds
+        },
+    ];
+    let index = |mode| usize::from(mode == TimelineMode::SvgSmil);
+    segmented_cells(
+        canvas,
+        &cells,
+        &["Native", "SVG SMIL"],
+        Some(index(selected)),
+        hovered.map(index),
+        true,
+    );
     if focused && bounds.width >= 4 && bounds.height >= 4 {
-        canvas.paint_round(bounds, 6, 0, tokens.accent, 1);
+        let ring = Rect {
+            x: bounds.x.saturating_sub(3),
+            y: bounds.y.saturating_sub(3),
+            width: bounds.width + 6,
+            height: bounds.height + 6,
+        };
+        canvas.paint_round(ring, 8, 0, tokens.focus_ring, 2);
     }
 }
 
@@ -227,6 +211,7 @@ mod tests {
                 id: "body".into(),
                 name: "Body".into(),
                 target: "character".into(),
+                property: String::new(),
                 kind: NativeTrackKind::Drawing,
                 visible: true,
                 selected: false,

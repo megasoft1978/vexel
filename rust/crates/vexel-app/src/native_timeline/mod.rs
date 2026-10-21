@@ -6,8 +6,17 @@
 pub mod bezier;
 pub mod interaction;
 pub mod layout;
+#[path = "layout_bezier.rs"]
+mod layout_bezier;
 pub mod model;
+pub mod naming;
 pub mod paint;
+#[path = "paint_bezier.rs"]
+mod paint_bezier;
+#[path = "paint_tracks.rs"]
+mod paint_tracks;
+#[path = "paint_transport.rs"]
+mod paint_transport;
 pub mod presentation;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -29,6 +38,9 @@ pub struct NativeTimelineTrack {
     pub id: String,
     pub name: String,
     pub target: String,
+    /// Animated property of a property track (`opacity`, `translate x`); empty
+    /// for drawing tracks and when the document does not name one.
+    pub property: String,
     pub kind: NativeTrackKind,
     pub visible: bool,
     pub selected: bool,
