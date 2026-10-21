@@ -3,7 +3,7 @@
 
 use super::{
     PanelBackend, PanelResult, RecoveryChoice, RecoveryText, UnsavedChoice, UnsavedText,
-    checked_path, with_project_extension,
+    checked_path, with_extension,
 };
 use crate::{MainThread, guard_native_call};
 use objc2::{MainThreadMarker, rc::Retained};
@@ -53,18 +53,18 @@ pub fn open_panel(_main: MainThread, extensions: &[&str]) -> PanelResult {
 
 /// Shows the Save panel; the returned path always ends with `.vexel`.
 #[allow(deprecated)]
-pub fn save_panel(_main: MainThread, suggested_name: &str) -> PanelResult {
+pub fn save_panel(_main: MainThread, suggested_name: &str, extension: &str) -> PanelResult {
     let Some(mtm) = require_main() else {
         return PanelResult::Error;
     };
     guard_native_call(|| {
         let panel = NSSavePanel::savePanel(mtm);
-        panel.setAllowedFileTypes(Some(&types(&[super::PROJECT_EXTENSION])));
+        panel.setAllowedFileTypes(Some(&types(&[extension])));
         panel.setCanCreateDirectories(true);
         panel.setNameFieldStringValue(&NSString::from_str(suggested_name));
         if panel.runModal() == MODAL_OK {
             match url_path(panel.URL()) {
-                PanelResult::Path(path) => with_project_extension(path),
+                PanelResult::Path(path) => with_extension(path, extension),
                 other => other,
             }
         } else {
@@ -151,8 +151,8 @@ impl PanelBackend for NativePanels {
     fn open_panel(&self, extensions: &[&str]) -> PanelResult {
         open_panel(self.0, extensions)
     }
-    fn save_panel(&self, suggested_name: &str) -> PanelResult {
-        save_panel(self.0, suggested_name)
+    fn save_panel(&self, suggested_name: &str, extension: &str) -> PanelResult {
+        save_panel(self.0, suggested_name, extension)
     }
     fn confirm_unsaved(&self, text: &UnsavedText<'_>) -> UnsavedChoice {
         confirm_unsaved(self.0, text)

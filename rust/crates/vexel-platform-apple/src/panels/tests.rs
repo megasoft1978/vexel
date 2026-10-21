@@ -80,3 +80,17 @@ fn recovery_modal_responses_map_to_the_requested_choices() {
         RecoveryChoice::Cancel
     );
 }
+
+#[test]
+fn export_extension_is_appended_only_when_missing() {
+    let ok = |p: &[u8]| PanelResult::Path(p.to_vec());
+    assert_eq!(with_extension(b"/tmp/a".to_vec(), "gif"), ok(b"/tmp/a.gif"));
+    assert_eq!(
+        with_extension(b"/tmp/a.GIF".to_vec(), "gif"),
+        ok(b"/tmp/a.GIF")
+    );
+    assert_eq!(
+        with_extension(b"/tmp/a.gif.vexel".to_vec(), "gif"),
+        ok(b"/tmp/a.gif.vexel.gif")
+    );
+}

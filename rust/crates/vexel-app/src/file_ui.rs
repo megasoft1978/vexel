@@ -350,7 +350,7 @@ mod lifecycle_cadence_tests {
         fn open_panel(&self, _: &[&str]) -> PanelResult {
             PanelResult::Path(self.0.clone())
         }
-        fn save_panel(&self, _: &str) -> PanelResult {
+        fn save_panel(&self, _: &str, _: &str) -> PanelResult {
             PanelResult::Cancelled
         }
         fn confirm_unsaved(&self, _: &UnsavedText<'_>) -> UnsavedChoice {

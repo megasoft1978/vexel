@@ -102,7 +102,7 @@ impl PanelBackend for ScriptedPanels {
         }
     }
 
-    fn save_panel(&self, _: &str) -> PanelResult {
+    fn save_panel(&self, _: &str, _: &str) -> PanelResult {
         if self.0.save_error.replace(false) {
             PanelResult::Error
         } else {

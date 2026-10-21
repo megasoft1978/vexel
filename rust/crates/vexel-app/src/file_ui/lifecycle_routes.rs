@@ -53,7 +53,7 @@ mod tests {
         fn open_panel(&self, _: &[&str]) -> PanelResult {
             PanelResult::Cancelled
         }
-        fn save_panel(&self, _: &str) -> PanelResult {
+        fn save_panel(&self, _: &str, _: &str) -> PanelResult {
             PanelResult::Cancelled
         }
         fn confirm_unsaved(&self, _: &UnsavedText<'_>) -> UnsavedChoice {
@@ -75,7 +75,7 @@ mod tests {
         fn open_panel(&self, _: &[&str]) -> PanelResult {
             PanelResult::Path(self.path.clone())
         }
-        fn save_panel(&self, _: &str) -> PanelResult {
+        fn save_panel(&self, _: &str, _: &str) -> PanelResult {
             if self.save_error {
                 PanelResult::Error
             } else {

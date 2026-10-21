@@ -81,7 +81,7 @@ impl PanelBackend for Panel {
         self.0.clone()
     }
 
-    fn save_panel(&self, _: &str) -> PanelResult {
+    fn save_panel(&self, _: &str, _: &str) -> PanelResult {
         PanelResult::Cancelled
     }
 
