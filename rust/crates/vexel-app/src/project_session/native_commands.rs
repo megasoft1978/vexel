@@ -38,11 +38,7 @@ impl ProjectSession {
         settings: EmptyTimelineSettings,
         limits: EditLimits,
     ) -> Result<ProjectTimelineCandidate, NativeCommandError<()>> {
-        let source = self
-            .document
-            .source()
-            .map_err(|error| NativeCommandError::Session(SessionError::Document(error)))?;
-        let scene_ids = parse_scene_ids(&source).map_err(NativeCommandError::SceneIds)?;
+        let scene_ids = self.cached_scene_ids()?;
         self.payload
             .timeline_candidate(scene_ids, settings, limits)
             .map_err(NativeCommandError::Timeline)
@@ -50,11 +46,25 @@ impl ProjectSession {
 
     /// Returns the decoded, unique, byte-sorted IDs present in the current SVG.
     pub fn drawing_scene_ids(&self) -> Result<Vec<Vec<u8>>, NativeCommandError<()>> {
+        self.cached_scene_ids()
+    }
+
+    /// Scene ids of the current source, parsed once per source state.
+    fn cached_scene_ids(&self) -> Result<Vec<Vec<u8>>, NativeCommandError<()>> {
+        let state = self.document.history_state_id();
+        if let Some((cached, ids)) = self.scene_ids.borrow().as_ref() {
+            if *cached == state {
+                return copy_scene_ids(ids).map_err(NativeCommandError::Timeline);
+            }
+        }
         let source = self
             .document
             .source()
             .map_err(|error| NativeCommandError::Session(SessionError::Document(error)))?;
-        parse_scene_ids(&source).map_err(NativeCommandError::SceneIds)
+        let ids = parse_scene_ids(&source).map_err(NativeCommandError::SceneIds)?;
+        let copy = copy_scene_ids(&ids).map_err(NativeCommandError::Timeline)?;
+        *self.scene_ids.borrow_mut() = Some((state, ids));
+        Ok(copy)
     }
 
     /// Builds and edits a payload candidate, then publishes it as one journal

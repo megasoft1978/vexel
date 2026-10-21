@@ -182,7 +182,21 @@ Baseline (before optimization), p50 / p95 ms:
 | native_timeline_add_property_track | 50 | 1.21 | 2.26 |
 | native_timeline_set_property_key | 400 | 1.71 | 3.20 |
 
-Total wall 0.80 s.
+Total wall 0.80 s (idle machine). The scene cap is now 1024 elements; the
+benchmark keeps 120 elements to stay inside the 600 requests/min session budget.
+
+After bulk keys, shared history snapshots and per-edit serialization removal
+(machine under load, A/B run back to back): `element_add` 0.31-0.40 ms p50,
+`native_timeline_add_property_track` 1.5-1.7 ms, `native_timeline_set_property_key`
+2.0-2.2 ms (unchanged within noise at this scene size, where handler time is
+dominated by timeline encoding). A track created with 8 `keys` in one call takes
+about 11 ms p50 against about 14.9 ms for 9 separate calls, and costs one request
+instead of nine.
+
+Main-loop latency: an incoming request now wakes the idle shell loop at once
+(it used to wait out a 16 ms sleep), the loop serves up to 16 queued requests
+(8 ms budget) per pass, and the window redraws only when the document, playback
+or MCP status changed.
 
 ## Historical/unsupported transport notes
 

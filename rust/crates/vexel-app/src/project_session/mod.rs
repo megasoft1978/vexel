@@ -199,6 +199,9 @@ pub struct ProjectSession {
     recovery_conflict: bool,
     /// Metadata and identity captured around the native project load.
     baseline: Option<recovery::RecoveryBaseline>,
+    /// Scene ids of the source state named by the first member (the scene
+    /// history state id), so timeline edits do not re-serialize and re-tokenize.
+    scene_ids: std::cell::RefCell<Option<(u64, Vec<Vec<u8>>)>>,
 }
 
 impl ProjectSession {
@@ -214,6 +217,7 @@ impl ProjectSession {
             recovery_dirty: false,
             recovery_conflict: false,
             baseline: None,
+            scene_ids: std::cell::RefCell::new(None),
         })
     }
     pub fn document(&self) -> &V1Document {
@@ -368,6 +372,7 @@ impl ProjectSession {
             recovery_dirty: false,
             recovery_conflict: false,
             baseline: Some(baseline),
+            scene_ids: std::cell::RefCell::new(None),
         })
     }
 
@@ -393,6 +398,7 @@ impl ProjectSession {
             recovery_dirty: false,
             recovery_conflict: false,
             baseline: None,
+            scene_ids: std::cell::RefCell::new(None),
         })
     }
 

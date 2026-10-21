@@ -179,13 +179,10 @@ impl AppDocument {
     ) -> Result<R, crate::project_session::SessionEditError<E>> {
         let before_state_id = self.session.history_state_id();
         let before_scene_id = self.session.document().history_state_id();
-        let before = self.session.document().source().ok();
         let result = self.session.edit(f);
-        let after = self.session.document().source().ok();
-        let source_changed = match (before, after) {
-            (Some(before), Some(after)) => before != after,
-            _ => before_scene_id != self.session.document().history_state_id(),
-        };
+        // The scene history state id names the source state, so comparing ids
+        // replaces serializing the whole source twice per edit.
+        let source_changed = before_scene_id != self.session.document().history_state_id();
         if source_changed {
             self.revision += 1;
         }
@@ -198,13 +195,10 @@ impl AppDocument {
     pub fn undo(&mut self) -> Result<bool, SessionError> {
         let before_state_id = self.session.history_state_id();
         let before_scene_id = self.session.document().history_state_id();
-        let before = self.session.document().source().ok();
         let changed = self.session.undo()?;
-        let after = self.session.document().source().ok();
-        let source_changed = match (before, after) {
-            (Some(before), Some(after)) => before != after,
-            _ => before_scene_id != self.session.document().history_state_id(),
-        };
+        // The scene history state id names the source state, so comparing ids
+        // replaces serializing the whole source twice per edit.
+        let source_changed = before_scene_id != self.session.document().history_state_id();
         if source_changed {
             self.revision += 1;
         }
@@ -216,13 +210,10 @@ impl AppDocument {
     pub fn redo(&mut self) -> Result<bool, SessionError> {
         let before_state_id = self.session.history_state_id();
         let before_scene_id = self.session.document().history_state_id();
-        let before = self.session.document().source().ok();
         let changed = self.session.redo()?;
-        let after = self.session.document().source().ok();
-        let source_changed = match (before, after) {
-            (Some(before), Some(after)) => before != after,
-            _ => before_scene_id != self.session.document().history_state_id(),
-        };
+        // The scene history state id names the source state, so comparing ids
+        // replaces serializing the whole source twice per edit.
+        let source_changed = before_scene_id != self.session.document().history_state_id();
         if source_changed {
             self.revision += 1;
         }
