@@ -577,13 +577,24 @@ pub(super) fn parse_operation(
     args: usize,
     name: &str,
 ) -> Result<Operation, PreviewArgumentError> {
+    parse_operation_in(doc, args, name, false)
+}
+
+/// `inherit`: a batch op that omits `documentId` takes the batch's.
+pub(super) fn parse_operation_in(
+    doc: &JsonDocument<'_>,
+    args: usize,
+    name: &str,
+    inherit: bool,
+) -> Result<Operation, PreviewArgumentError> {
     if name == "document_list" {
         return Ok(Operation::List);
     }
     if name == "document_open" {
         return Ok(args::open(doc, args)?);
     }
-    if string_field(doc, args, b"documentId").as_deref() != Some(DOCUMENT_ID) {
+    let own_id = string_field(doc, args, b"documentId");
+    if own_id.as_deref() != Some(DOCUMENT_ID) && !(inherit && own_id.is_none()) {
         return Err(PreviewArgumentError::Generic("unknown preview document"));
     }
     match name {

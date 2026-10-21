@@ -183,3 +183,77 @@ fn batch_is_not_slower_than_single_calls() {
     println!("100 element_add: {single:?} as 100 calls, {batched:?} as one batch");
     assert!(batched <= single, "{batched:?} > {single:?}");
 }
+
+fn bare_add(index: u32) -> String {
+    format!(
+        r##"{{"tool":"element_add","arguments":{{"parentId":"root","template":"rect","attributes":{{"x":"{index}","y":"5","width":"10","height":"10","fill":"#336699"}}}}}}"##
+    )
+}
+
+#[test]
+fn ops_without_document_id_inherit_the_batch_document() {
+    let mut rig = Rig::new(no_grants());
+    let before = rig.state();
+    let ops: Vec<String> = (0..3).map(bare_add).collect();
+    let body = batch(&mut rig, None, &ops).ok().to_owned();
+    assert!(body.contains(r#""ok":true"#), "{body}");
+    assert_eq!(body.matches(r#""tool":"element_add""#).count(), 3, "{body}");
+    undo(&mut rig);
+    assert_eq!(rig.state().source, before.source, "one undo reverts all");
+
+    // Atomic: a failing op after inherited ops rolls them all back.
+    let bad = r#"{"tool":"element_delete","arguments":{"elementId":"vexel-object-999"}}"#;
+    let reply = batch(
+        &mut rig,
+        Some(true),
+        &[bare_add(0), bare_add(1), bad.to_owned()],
+    );
+    assert!(reply.ok().contains(r#""failedIndex":2"#), "{}", reply.body);
+    assert_eq!(rig.state().source, before.source);
+}
+
+#[test]
+fn mismatched_op_document_id_is_rejected_with_op_index() {
+    let mut rig = Rig::new(no_grants());
+    let before = rig.state();
+    let other = r#"{"tool":"element_delete","arguments":{"documentId":"other-doc","elementId":"vexel-object-1"}}"#;
+    let reply = batch(&mut rig, None, &[bare_add(0), other.to_owned()]);
+    let error = reply.error();
+    assert!(error.contains("batch op 1 (element_delete)"), "{error}");
+    assert!(error.contains("documentId differs"), "{error}");
+    assert_eq!(rig.state(), before);
+}
+
+#[test]
+fn op_errors_name_index_tool_and_argument() {
+    let mut rig = Rig::new(no_grants());
+    let before = rig.state();
+    let cases = [
+        (
+            r#"{"tool":"element_add","arguments":{"parentId":"root"}}"#,
+            "batch op 1 (element_add): missing required argument 'template'",
+        ),
+        (
+            r#"{"tool":"no_such_tool","arguments":{}}"#,
+            "batch op 1 (no_such_tool): unknown tool",
+        ),
+        (
+            r#"{"tool":"element_add","arguments":[]}"#,
+            "batch op 1 (element_add): 'arguments' must be an object",
+        ),
+        (
+            r#"{"tool":"element_add","arguments":{"parentId":"root","template":"rect"},"id":7}"#,
+            "batch op 1: unexpected key 'id'",
+        ),
+        (
+            r#"{"tool":"element_add","arguments":{"parentId":"root","template":"rect","bogus":"1"}}"#,
+            "batch op 1 (element_add): unexpected argument 'bogus'",
+        ),
+    ];
+    for (op, expected) in cases {
+        let reply = batch(&mut rig, None, &[bare_add(0), op.to_owned()]);
+        let error = reply.error();
+        assert!(error.contains(expected), "{error}");
+    }
+    assert_eq!(rig.state(), before);
+}

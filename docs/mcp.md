@@ -141,7 +141,12 @@ with frame delay multiplied by the stride.
 `batch` (`documentId`, optional `atomic` default `true`, `ops`: 1 to 256 entries
 of `{"tool": "<name>", "arguments": {...}}`) runs preview operations in order as
 one undo step. Every entry is validated exactly like a standalone call before
-any is applied; a malformed entry fails the request with the op index. Scene
+any is applied; a malformed entry fails the request with a message naming the
+op index, tool and argument, e.g. `batch op 2 (element_add): missing required
+argument 'template'`. An op may omit `documentId` and inherits the batch's (a
+different `documentId` inside an op is rejected):
+`{"documentId":"doc-1","ops":[{"tool":"element_add","arguments":{"parentId":"root","template":"rect"}}]}`.
+An op has only the keys `tool` and `arguments`. Scene
 and native timeline operations may be mixed, and later entries can use ids
 given to earlier `element_add` calls (`id`). Success replies
 `{"ok":true,"failedCount":0,"results":[{"tool","ok","result"}...]}`. With

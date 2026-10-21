@@ -183,6 +183,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
     }
     if let Err(error) = validate_tool_arguments(doc, args, &name) {
         let wrong_type;
+        let batch_op;
         let (msg, code) = match error {
             crate::ToolValidationError::UnknownTool => ("unknown tool", "unknown_tool"),
             crate::ToolValidationError::UnexpectedArgument => {
@@ -217,6 +218,10 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             ),
             crate::ToolValidationError::InvalidArguments => {
                 ("invalid tool arguments", "invalid_arguments")
+            }
+            crate::ToolValidationError::BatchOp(message) => {
+                batch_op = message;
+                (batch_op.as_str(), "invalid_arguments")
             }
         };
         return append_tool_error(out, doc, id, session.modern, msg, code);

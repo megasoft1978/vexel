@@ -395,7 +395,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "batch",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToolValidationError {
     UnknownTool,
     UnexpectedArgument,
@@ -410,6 +410,9 @@ pub enum ToolValidationError {
     /// A batch operation names a tool that cannot run inside a batch.
     BatchToolNotAllowed,
     InvalidArguments,
+    /// One batch operation failed validation; the message names its index,
+    /// tool and offending argument.
+    BatchOp(String),
 }
 
 /// Preview-only tools: paint/transform/text and native timeline editing.
@@ -509,6 +512,18 @@ pub fn validate_tool_arguments(
     arguments: usize,
     tool_name: &str,
 ) -> Result<(), ToolValidationError> {
+    validate_arguments(doc, arguments, tool_name, false, &mut None)
+}
+
+/// `inherit_document` treats `documentId` as supplied (a batch operation takes
+/// the batch's). `field` receives the offending or missing argument name.
+pub(super) fn validate_arguments(
+    doc: &JsonDocument<'_>,
+    arguments: usize,
+    tool_name: &str,
+    inherit_document: bool,
+    field_out: &mut Option<String>,
+) -> Result<(), ToolValidationError> {
     let Some(args) = doc.token(arguments) else {
         return Err(ToolValidationError::InvalidArguments);
     };
@@ -530,6 +545,7 @@ pub fn validate_tool_arguments(
         let Some(key_bytes) = doc.decoded_string(key_index) else {
             return Err(ToolValidationError::InvalidArguments);
         };
+        *field_out = Some(String::from_utf8_lossy(&key_bytes).into_owned());
         let Ok(field) = std::str::from_utf8(&key_bytes) else {
             return Err(ToolValidationError::UnexpectedArgument);
         };
@@ -571,7 +587,7 @@ pub fn validate_tool_arguments(
             }
         }
         if tool.name == "batch" && field == "ops" {
-            super::tools_batch::validate_ops(doc, value)?;
+            super::tools_batch::validate_ops(doc, arguments, value)?;
         }
         if tool.name == "transaction" && field == "edits" {
             let count = doc.token(value).map_or(0, |t| t.child_count);
@@ -592,7 +608,11 @@ pub fn validate_tool_arguments(
         if video_export && matches!(required, "fps" | "duration") {
             continue;
         }
+        if inherit_document && required == "documentId" {
+            continue;
+        }
         if doc.object_get(arguments, required.as_bytes()).is_none() {
+            *field_out = Some(required.to_owned());
             return Err(ToolValidationError::MissingRequired);
         }
     }

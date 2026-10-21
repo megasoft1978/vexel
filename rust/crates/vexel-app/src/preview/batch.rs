@@ -1,7 +1,7 @@
 //! Parsing of the preview `batch` tool: every entry is parsed with the same
 //! `parse_operation` a single call uses, before any of them is applied.
 
-use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, parse_operation};
+use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, parse_operation_in};
 
 /// One parsed batch entry; `tool` is kept for the per-operation result.
 #[derive(Clone, Debug, PartialEq)]
@@ -68,10 +68,11 @@ pub(super) fn parse(
         let fail = |message: &str| {
             PreviewArgumentError::Actionable(format!("batch op {index} ({tool}): {message}"))
         };
-        let operation = parse_operation(doc, arguments, &tool).map_err(|error| match error {
-            PreviewArgumentError::Generic(m) => fail(m),
-            PreviewArgumentError::Actionable(m) => fail(&m),
-        })?;
+        let operation =
+            parse_operation_in(doc, arguments, &tool, true).map_err(|error| match error {
+                PreviewArgumentError::Generic(m) => fail(m),
+                PreviewArgumentError::Actionable(m) => fail(&m),
+            })?;
         if !allowed(&operation) {
             return Err(fail("tool is not allowed in a batch"));
         }
