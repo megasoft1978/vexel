@@ -95,7 +95,6 @@ enum Gesture {
     },
     Rotate {
         id: String,
-        start: Point,
         last: Point,
         centre: Point,
         initial: f64,
@@ -170,6 +169,11 @@ impl ToolController {
         self.rotate_preview
             .as_ref()
             .map(|(id, angle)| (id.as_str(), *angle))
+    }
+
+    /// Interim rotate-drag angle in degrees, if a rotate gesture is held.
+    pub fn rotate_angle(&self) -> Option<f64> {
+        self.rotate_preview().map(|(_, angle)| angle)
     }
 
     pub fn rotate_preview_bounds(&self) -> Option<(String, (f64, f64, f64, f64), f64)> {
@@ -404,13 +408,12 @@ impl ToolController {
                 self.validate_selection(doc);
                 if let Some(id) = self.selection.clone() {
                     if let Ok(bounds) = doc.geometry_bounds(&id) {
-                        if let Some(start) = rotate_start(bounds, p) {
+                        if let Some(last) = rotate_start(bounds, p) {
                             let centre = ((bounds.0 + bounds.2) / 2.0, (bounds.1 + bounds.3) / 2.0);
                             let initial = (p.1 - centre.1).atan2(p.0 - centre.0).to_degrees();
                             self.gesture = Gesture::Rotate {
                                 id,
-                                start,
-                                last: start,
+                                last,
                                 centre,
                                 initial,
                                 current: initial,
@@ -534,13 +537,15 @@ impl ToolController {
             }
             Gesture::Rotate {
                 id,
-                start,
                 centre,
                 initial,
-                current: _,
                 ..
             } => {
-                let end = p.unwrap_or(start);
+                let Some(end) = p else {
+                    // Released outside the artboard: cancel without committing.
+                    self.rotate_preview = None;
+                    return Ok(Outcome::Cancelled);
+                };
                 let angle = crate::canvas::snapped_rotation(
                     (end.1 - centre.1).atan2(end.0 - centre.0).to_degrees() - initial,
                     self.shift,

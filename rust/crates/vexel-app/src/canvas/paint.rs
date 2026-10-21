@@ -44,6 +44,8 @@ pub struct StagePaint<'a> {
     /// Stage-local view bounds of the selected / hovered shape.
     pub selection: Option<Bounds>,
     pub hover: Option<Bounds>,
+    /// Live rotation of the selection in degrees while a rotate drag is held.
+    pub rotation: Option<f64>,
 }
 
 /// Device rectangle of the artboard: `(x, y, width, height)`.
@@ -146,7 +148,10 @@ fn paint_document(
             accent,
             1.0,
         );
-        overlay::handles(surface, rect, accent);
+        match paint.rotation {
+            Some(degrees) => overlay::rotation_preview(surface, rect, degrees, accent),
+            None => overlay::handles(surface, rect, accent),
+        }
     }
 }
 

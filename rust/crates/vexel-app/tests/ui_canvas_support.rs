@@ -59,6 +59,7 @@ pub fn render(scene: &Scene<'_>) -> Shot {
         frame: scene.frame,
         selection: scene.selection,
         hover: scene.hover,
+        rotation: None,
     };
     paint_stage(
         &mut px,
