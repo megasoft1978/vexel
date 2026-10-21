@@ -76,27 +76,12 @@ impl<C: LoopClock> NativeDriver<C> {
         let duration_ticks = timeline.duration_ticks();
         let ticks_per_second = timeline.ticks_per_second();
         let loop_mode = timeline.loop_mode();
-        let revision_changed = self.source_revision != Some(request.state_revision);
-        let timing_changed = duration_ticks != self.duration_ticks
-            || ticks_per_second != self.ticks_per_second
-            || loop_mode != self.loop_mode;
-        if revision_changed || timing_changed {
-            self.invalidate();
-            self.source_revision = Some(request.state_revision);
-            self.duration_ticks = duration_ticks;
-            self.ticks_per_second = ticks_per_second;
-            self.loop_mode = loop_mode;
-            let seconds = duration_ticks as f64 / f64::from(ticks_per_second.max(1));
-            let clock_duration = match loop_mode {
-                LoopMode::PingPong if duration_ticks > 1 => {
-                    f64::from(duration_ticks.saturating_sub(1) * 2) / f64::from(ticks_per_second)
-                }
-                _ => seconds,
-            };
-            self.playback.set_looping(loop_mode != LoopMode::Once);
-            self.playback.set_duration(clock_duration);
-            self.last_tag = None;
-        }
+        self.sync_timing(
+            request.state_revision,
+            duration_ticks,
+            ticks_per_second,
+            loop_mode,
+        );
         if duration_ticks == 0 || ticks_per_second == 0 {
             return None;
         }
@@ -117,7 +102,41 @@ impl<C: LoopClock> NativeDriver<C> {
         newest_matching(&mut self.queue, tag)
     }
 
-    pub(super) fn sample_tick(&self, seconds: f64) -> u32 {
+    /// Adopts the timing of `state_revision`'s timeline, resetting queued frames
+    /// when the revision or the timing changed. Playback is clocked from it, so
+    /// play and seek work before the first rendered frame.
+    pub fn sync_timing(
+        &mut self,
+        state_revision: u64,
+        duration_ticks: u32,
+        ticks_per_second: u32,
+        loop_mode: LoopMode,
+    ) {
+        let revision_changed = self.source_revision != Some(state_revision);
+        let timing_changed = duration_ticks != self.duration_ticks
+            || ticks_per_second != self.ticks_per_second
+            || loop_mode != self.loop_mode;
+        if revision_changed || timing_changed {
+            self.invalidate();
+            self.source_revision = Some(state_revision);
+            self.duration_ticks = duration_ticks;
+            self.ticks_per_second = ticks_per_second;
+            self.loop_mode = loop_mode;
+            let seconds = duration_ticks as f64 / f64::from(ticks_per_second.max(1));
+            let clock_duration = match loop_mode {
+                LoopMode::PingPong if duration_ticks > 1 => {
+                    f64::from(duration_ticks.saturating_sub(1) * 2) / f64::from(ticks_per_second)
+                }
+                _ => seconds,
+            };
+            self.playback.set_looping(loop_mode != LoopMode::Once);
+            self.playback.set_duration(clock_duration);
+            self.last_tag = None;
+        }
+    }
+
+    /// Integer tick sampled at `seconds` under the synced timing.
+    pub fn sample_tick(&self, seconds: f64) -> u32 {
         let duration = self.duration_ticks;
         let tps = f64::from(self.ticks_per_second);
         let raw = match self.loop_mode {

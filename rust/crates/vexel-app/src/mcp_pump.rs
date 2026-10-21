@@ -126,7 +126,17 @@ impl McpPump {
             model.mcp_last,
         );
         model.mcp = model::McpState::for_session(self.granted, true);
-        match files.handle_mcp(&mut self.host, operation, driver) {
+        let result = match operation {
+            Operation::Control(control) if native.has_native_timeline(files.document()) => native
+                .mcp_control(
+                    files.document(),
+                    control,
+                    model.mode == model::Mode::Animate,
+                )
+                .map(McpOutcome::Reply),
+            operation => files.handle_mcp(&mut self.host, operation, driver),
+        };
+        match result {
             Ok(McpOutcome::Reply(json)) => {
                 model.mcp_last = Some("Done");
                 if opens {
