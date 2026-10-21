@@ -1,7 +1,7 @@
 //! Routing of document-tool families (structure, paint/transform/text,
 //! query) onto the live `AppDocument`. Each family lives in its own module.
 
-use super::{Operation, PreviewArgumentError, ext_paint, ext_query, ext_structure};
+use super::{Operation, PreviewArgumentError, ext_attr, ext_paint, ext_query, ext_structure};
 use crate::session::{AppDocument, McpOutcome};
 use vexel_json::JsonDocument;
 
