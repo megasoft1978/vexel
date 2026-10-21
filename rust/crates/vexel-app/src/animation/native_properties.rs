@@ -67,6 +67,7 @@ pub fn apply_native_properties(
         let (value_type, values) = match sample.value {
             PropertyValue::Scalar(value) => (b"scalar".as_slice(), vec![value]),
             PropertyValue::Transform2d(values) => (b"transform2d".as_slice(), values.to_vec()),
+            PropertyValue::Trs(trs) => (b"transform2d".as_slice(), trs.to_matrix().to_vec()),
             PropertyValue::Rgba(values) => (b"rgba".as_slice(), values.to_vec()),
             PropertyValue::Boolean(value) => {
                 (b"boolean".as_slice(), vec![if value { 1.0 } else { 0.0 }])
