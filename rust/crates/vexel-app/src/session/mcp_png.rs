@@ -12,6 +12,7 @@ use super::AppDocument;
 use super::mcp::{McpOutcome, source};
 use crate::animation::frame::{self, AnimationError};
 use crate::animation::native_export::{NativeExportError, NativeExportSource};
+use crate::animation::native_export_message::{Tool, render_failure};
 use crate::preview::Operation;
 use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
@@ -153,7 +154,7 @@ pub(super) fn render_png(
             .render_still_at(time.unwrap_or(0.0), |doc| target_size(doc, width, height))
             .map_err(|error| match error {
                 NativeExportError::TimeOutOfRange { .. } => TIME_RANGE,
-                _ => RENDER_FAILED,
+                other => render_failure(Tool::RenderPng, &other),
             })?;
         tick = Some(at);
         (w, h, rgba)

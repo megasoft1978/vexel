@@ -3,6 +3,7 @@
 
 use super::export::{ExportError, ExportRequest, ExportSummary, export_gif};
 use super::native_export::{NativeExportError, NativeExportSource};
+use super::native_export_message::{Tool, render_failure};
 use std::ffi::OsString;
 use std::fs;
 use std::io::Write;
@@ -237,10 +238,10 @@ fn failure_message(error: &ExportFailure) -> &'static str {
         ExportFailure::Smil(error) => error_message(error),
         ExportFailure::Native(NativeExportError::Timeline) => "export needs an animation",
         ExportFailure::Native(
-            NativeExportError::Viewport(_)
+            error @ (NativeExportError::Viewport(_)
             | NativeExportError::Frame(_)
-            | NativeExportError::TimeOutOfRange { .. },
-        ) => "export could not render the animation",
+            | NativeExportError::TimeOutOfRange { .. }),
+        ) => render_failure(Tool::ExportGif, error),
         ExportFailure::Native(NativeExportError::Encode(_)) => {
             "export exceeds frame or size limits"
         }

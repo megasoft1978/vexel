@@ -13,6 +13,7 @@ pub mod keys;
 pub mod native_drawing;
 pub mod native_driver;
 pub mod native_export;
+pub mod native_export_message;
 pub mod native_frame;
 pub mod native_properties;
 pub mod native_stage;

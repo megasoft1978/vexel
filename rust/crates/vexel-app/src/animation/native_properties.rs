@@ -17,6 +17,9 @@ pub enum NativePropertyError {
     MissingTarget,
     DuplicateTarget,
     UnsupportedProperty,
+    /// A geometry property (for example `cy`) targets an element type that
+    /// has no such attribute (for example a `path`).
+    PropertyNotOnElement,
     InvalidValue,
     Allocation,
 }
@@ -24,6 +27,7 @@ pub enum NativePropertyError {
 #[derive(Debug, Clone)]
 struct Element<'a> {
     opening: XmlSpan,
+    tag: &'a [u8],
     id: Option<Vec<u8>>,
     attributes: Vec<Attribute<'a>>,
 }
@@ -90,6 +94,9 @@ pub fn apply_native_properties(
         }
         let index = matched.ok_or(NativePropertyError::MissingTarget)?;
         let element = &elements[index];
+        if !property_fits_tag(element.tag, write.name) {
+            return Err(NativePropertyError::PropertyNotOnElement);
+        }
         let existing = element
             .attributes
             .iter()
@@ -248,6 +255,34 @@ fn push_write(
     Ok(())
 }
 
+/// Whether the geometry property `name` exists on elements named `tag`.
+/// Only element types known to lack the attribute are rejected; every other
+/// combination is passed through to the renderer.
+pub fn property_fits_tag(tag: &[u8], name: &[u8]) -> bool {
+    let geometry: &[&[u8]] = match tag {
+        b"path" | b"line" | b"polyline" | b"polygon" | b"g" | b"a" | b"switch" => &[],
+        b"circle" => &[b"cx", b"cy", b"r"],
+        b"ellipse" => &[b"cx", b"cy", b"rx", b"ry"],
+        b"rect" => &[b"x", b"y", b"width", b"height", b"rx", b"ry"],
+        _ => return true,
+    };
+    let is_geometry = matches!(
+        name,
+        b"x" | b"y" | b"width" | b"height" | b"cx" | b"cy" | b"r" | b"rx" | b"ry"
+    );
+    !is_geometry || geometry.contains(&name)
+}
+
+/// Element type of the element with `id` in `source`, `None` when the source
+/// cannot be read or has no such element.
+pub fn element_tag(source: &[u8], id: &[u8]) -> Option<Vec<u8>> {
+    let (elements, _) = parse_elements(source).ok()?;
+    elements
+        .iter()
+        .find(|element| element.id.as_deref() == Some(id))
+        .map(|element| element.tag.to_vec())
+}
+
 fn scalar_property(name: &[u8]) -> bool {
     matches!(
         name,
@@ -325,6 +360,10 @@ fn parse_elements<'a>(
         }
         let mut element = Element {
             opening: token.source,
+            tag: token
+                .name
+                .slice(source)
+                .ok_or(NativePropertyError::InvalidSvg)?,
             id: None,
             attributes: Vec::new(),
         };

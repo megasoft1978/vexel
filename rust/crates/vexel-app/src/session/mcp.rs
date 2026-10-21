@@ -10,6 +10,7 @@ use super::mcp_tools::{attribute_set, delete, export_svg};
 use super::{AppDocument, McpGrants};
 use crate::animation::driver::Driver;
 use crate::animation::native_export::NativeExportSource;
+use crate::animation::native_export_message::{Tool, render_failure};
 use crate::animation::playback::LoopClock;
 use crate::preview::{
     Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
@@ -199,7 +200,7 @@ impl McpHost {
                 Some(native) => {
                     let gif = native
                         .export_gif()
-                        .map_err(|_| "export could not render the animation")?;
+                        .map_err(|error| render_failure(Tool::ExportGif, &error))?;
                     let mut packed = b"VEXEL_NATIVE_GIF\0".to_vec();
                     packed.extend_from_slice(&(gif.frames as u64).to_le_bytes());
                     packed.extend_from_slice(&gif.delay_cs.to_le_bytes());

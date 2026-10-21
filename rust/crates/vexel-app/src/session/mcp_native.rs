@@ -6,6 +6,7 @@
 //! animation host observes, so the UI refreshes without extra wiring.
 
 use crate::animation::native_drawing::SvgGeometry;
+use crate::animation::native_properties::{element_tag, property_fits_tag};
 use crate::preview::Operation;
 use crate::project_session::{NativeCommandError, ProjectTimelineError, SessionError};
 use crate::session::{AppDocument, McpOutcome};
@@ -207,8 +208,11 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             interpolation,
             value,
             name,
-        } => app
-            .edit_timeline(settings(), limits, |c| {
+        } => {
+            if let Some(message) = property_target_mismatch(app, &target_id, &property) {
+                return Err(message);
+            }
+            app.edit_timeline(settings(), limits, |c| {
                 c.add_property_track(
                     &track_id,
                     &target_id,
@@ -225,7 +229,8 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
                     target: known_target(app, &target_id),
                 };
                 operation_error(error, "add_property_track", refs)
-            })?,
+            })?
+        }
         NativeOp::SetPropertyKey {
             track_id,
             tick,
@@ -359,6 +364,20 @@ fn known_asset(app: &AppDocument, name: &[u8]) -> bool {
     app.native_timeline_candidate(settings(), EditLimits::default())
         .map(|c| c.assets().iter().any(|asset| asset.name == name))
         .unwrap_or(true)
+}
+
+/// A geometry property the target's element type does not have, which would
+/// make every later render fail.
+fn property_target_mismatch(
+    app: &AppDocument,
+    target_id: &[u8],
+    property: &[u8],
+) -> Option<&'static str> {
+    let source = app.source_bytes().ok()?;
+    let tag = element_tag(&source, target_id)?;
+    (!property_fits_tag(&tag, property)).then_some(
+        "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry",
+    )
 }
 
 fn known_target(app: &AppDocument, id: &[u8]) -> bool {
