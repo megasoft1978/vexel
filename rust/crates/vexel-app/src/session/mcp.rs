@@ -20,7 +20,7 @@ use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;
 use vexel_v1_document::{ElementKind, V1Document, V1DocumentError};
 
-const SOURCE_LIMIT: usize = 64 * 1024;
+const SOURCE_LIMIT: usize = 512 * 1024;
 const ANIMATION_LIMIT: usize = 16;
 
 /// What the caller must do with one applied request.
