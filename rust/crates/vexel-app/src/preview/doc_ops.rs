@@ -9,6 +9,7 @@ use vexel_json::JsonDocument;
 pub enum DocOp {
     Structure(ext_structure::Op),
     Paint(ext_paint::Op),
+    Attr(ext_attr::Op),
     Query(ext_query::Op),
 }
 
@@ -24,6 +25,9 @@ pub(super) fn parse(
     if let Some(parsed) = ext_paint::parse(doc, args, tool) {
         return Some(parsed.map(|op| Operation::Doc(DocOp::Paint(op))));
     }
+    if let Some(parsed) = ext_attr::parse(doc, args, tool) {
+        return Some(parsed.map(|op| Operation::Doc(DocOp::Attr(op))));
+    }
     ext_query::parse(doc, args, tool)
         .map(|parsed| parsed.map(|op| Operation::Doc(DocOp::Query(op))))
 }
@@ -32,6 +36,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: DocOp) -> Result<McpOutcome, &'st
     match op {
         DocOp::Structure(op) => ext_structure::apply(app, op),
         DocOp::Paint(op) => ext_paint::apply(app, op),
+        DocOp::Attr(op) => ext_attr::apply(app, op),
         DocOp::Query(op) => ext_query::apply(app, op),
     }
 }

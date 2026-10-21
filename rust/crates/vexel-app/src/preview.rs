@@ -7,6 +7,7 @@ mod animation;
 mod args;
 mod doc_ops;
 mod errors;
+mod ext_attr;
 mod ext_paint;
 mod ext_query;
 mod ext_structure;
