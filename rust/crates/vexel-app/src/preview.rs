@@ -27,12 +27,12 @@ pub(crate) use doc_ops::apply as apply_doc;
 use errors::tool_error;
 
 pub const DOCUMENT_ID: &str = "preview-document";
-pub const SCENE_LIMIT: usize = 128;
+pub const SCENE_LIMIT: usize = 1024;
 pub const CANVAS_SIZE: u32 = 512;
 const HISTORY_LIMIT: usize = 128;
 const ANIMATION_LIMIT: usize = 16;
 const ANIMATION_XML_LIMIT: usize = 4096;
-const SOURCE_LIMIT: usize = 64 * 1024;
+const SOURCE_LIMIT: usize = 512 * 1024;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum PreviewArgumentError {

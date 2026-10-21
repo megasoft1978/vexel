@@ -10,12 +10,19 @@ mod native_boundary;
 mod native_window;
 mod panels;
 mod text_layout;
+#[cfg(all(test, target_os = "macos"))]
+mod video_reader;
+#[cfg(target_os = "macos")]
+mod video_writer;
 
 #[cfg(target_os = "macos")]
 pub use text_layout::{
     MAX_FAMILIES, MAX_FAMILY_BYTES, MAX_GLYPHS, MAX_PATH_SEGMENTS, MAX_TEXT_BYTES, TextCommand,
     TextGlyph, TextLayout, TextLayoutError, TextRequest, TextStyle, TextVerb, text_layout,
 };
+
+#[cfg(target_os = "macos")]
+pub use video_writer::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
 
 pub use panels::{
     MAX_PANEL_PATH, NativePanels, PROJECT_EXTENSION, PanelBackend, PanelResult, RecoveryChoice,

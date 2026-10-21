@@ -466,10 +466,10 @@ fn export_svg_returns_source_and_changes_nothing() {
 #[test]
 fn export_svg_too_large_is_typed() {
     let mut rig = rig();
-    // 4 KiB path data per element until the source passes 64 KiB.
+    // 4 KiB path data per element until the source passes 512 KiB.
     let d = format!("M 0 0 {}", "L 1 1 ".repeat(600));
     assert!(d.len() < 4096);
-    while rig.app.source_bytes().unwrap().len() <= 64 * 1024 {
+    while rig.app.source_bytes().unwrap().len() <= 512 * 1024 {
         rig.doc_tool("element_add", &path_args(&format!(r#""d":"{d}""#)))
             .ok();
     }

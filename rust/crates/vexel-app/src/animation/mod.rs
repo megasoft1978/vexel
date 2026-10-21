@@ -14,6 +14,7 @@ pub mod native_drawing;
 pub mod native_driver;
 pub mod native_export;
 pub mod native_export_message;
+pub mod native_export_video;
 pub mod native_frame;
 pub mod native_properties;
 pub mod native_stage;
@@ -28,6 +29,8 @@ mod native_drawing_tests;
 mod native_driver_tests;
 #[cfg(test)]
 mod native_export_tests;
+#[cfg(test)]
+mod native_export_video_tests;
 #[cfg(test)]
 mod native_export_walkthrough_tests;
 #[cfg(test)]

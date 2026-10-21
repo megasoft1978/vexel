@@ -69,6 +69,29 @@ impl NativeExportSource {
         (this.candidate.view().ok()?.track_count() > 0).then_some(this)
     }
 
+    /// Raw SVG source bytes.
+    pub(super) fn svg_source(&self) -> &Arc<Vec<u8>> {
+        &self.source
+    }
+
+    /// The candidate timeline.
+    pub(super) fn timeline(&self) -> &ProjectTimelineCandidate {
+        &self.candidate
+    }
+
+    /// Embedded assets in the form the frame renderer takes.
+    pub(super) fn drawing_assets(&self) -> Vec<DrawingAsset<'_>> {
+        self.candidate
+            .assets()
+            .iter()
+            .map(|asset| DrawingAsset {
+                name: &asset.name,
+                media_type: &asset.media_type,
+                source: &asset.source,
+            })
+            .collect()
+    }
+
     /// Length of one loop in seconds, `None` when the timeline is unreadable.
     pub fn loop_seconds(&self) -> Option<f64> {
         let view = self.candidate.view().ok()?;
@@ -114,26 +137,8 @@ impl NativeExportSource {
             .map_err(NativeExportError::Viewport)?;
         let (width, height) = size((viewport.output_width, viewport.output_height))
             .map_err(|_| NativeExportError::Timeline)?;
-        let geometry = SvgGeometry {
-            width: f64::from(width),
-            height: f64::from(height),
-            view_box: [
-                viewport.view_box.x,
-                viewport.view_box.y,
-                viewport.view_box.width,
-                viewport.view_box.height,
-            ],
-        };
-        let assets: Vec<_> = self
-            .candidate
-            .assets()
-            .iter()
-            .map(|asset| DrawingAsset {
-                name: &asset.name,
-                media_type: &asset.media_type,
-                source: &asset.source,
-            })
-            .collect();
+        let geometry = svg_geometry(&viewport, width, height);
+        let assets = self.drawing_assets();
         let frame =
             render_native_frame(&self.source, &view, &assets, tick, width, height, geometry)
                 .map_err(NativeExportError::Frame)?;
@@ -165,26 +170,8 @@ impl NativeExportSource {
         {
             return Err(NativeExportError::Encode(GifError::TooManyPixels));
         }
-        let geometry = SvgGeometry {
-            width: f64::from(width),
-            height: f64::from(height),
-            view_box: [
-                viewport.view_box.x,
-                viewport.view_box.y,
-                viewport.view_box.width,
-                viewport.view_box.height,
-            ],
-        };
-        let assets: Vec<_> = self
-            .candidate
-            .assets()
-            .iter()
-            .map(|asset| DrawingAsset {
-                name: &asset.name,
-                media_type: &asset.media_type,
-                source: &asset.source,
-            })
-            .collect();
+        let geometry = svg_geometry(&viewport, width, height);
+        let assets = self.drawing_assets();
         let mut rendered = Vec::new();
         for &tick in &ticks {
             let frame =
@@ -213,6 +200,24 @@ impl NativeExportSource {
             width,
             height,
         })
+    }
+}
+
+/// Frame geometry for rendering the document viewport at `width` x `height`.
+pub(super) fn svg_geometry(
+    viewport: &crate::compose::SvgViewport,
+    width: u32,
+    height: u32,
+) -> SvgGeometry {
+    SvgGeometry {
+        width: f64::from(width),
+        height: f64::from(height),
+        view_box: [
+            viewport.view_box.x,
+            viewport.view_box.y,
+            viewport.view_box.width,
+            viewport.view_box.height,
+        ],
     }
 }
 
