@@ -2,7 +2,7 @@
 
 use crate::{ElementKind, V1Document, V1DocumentError};
 use vexel_document_edit::{
-    DocumentHandle, Editor, document_view_first_child, document_view_next_sibling,
+    document_view_first_child, document_view_next_sibling, DocumentHandle, Editor,
 };
 
 const MAX_ATTRIBUTE_COUNT: usize = 64;
@@ -25,8 +25,23 @@ pub struct ElementInfo {
 pub struct Query {
     pub kind: Option<ElementKind>,
     pub id_prefix: Option<String>,
+    /// Exact stable ID filter. When set, `id_prefix` remains available for compatibility.
+    pub id: Option<String>,
+    /// Exact source tag filter.
+    pub tag: Option<String>,
     pub attribute: Option<(String, Option<String>)>,
+    /// Number of matching elements to skip before collecting results.
+    pub cursor: usize,
     pub limit: usize,
+}
+
+/// One node in a flat, pre-order tree page.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TreeEntry {
+    pub tag: String,
+    pub id: Option<String>,
+    pub depth: usize,
+    pub parent_id: Option<String>,
 }
 
 /// A bounded tree representation of the SVG element hierarchy.
@@ -97,15 +112,20 @@ impl V1Document {
 
     /// Returns matching stable IDs in document order.
     pub fn element_query(&self, q: &Query) -> Result<Vec<String>, V1DocumentError> {
-        if !(1..=500).contains(&q.limit) {
+        if !(1..=512).contains(&q.limit) {
             return Err(V1DocumentError::InvalidGeometry);
         }
         let root = self.editor.root().ok_or(V1DocumentError::Unsupported)?;
         let mut stack = vec![root];
         let mut result = Vec::new();
+        let mut matches_seen = 0usize;
         while let Some(node) = stack.pop() {
             if let Some(raw_id) = raw_attr(&self.editor, node, b"id") {
                 let id = utf8(raw_id)?;
+                let tag = self
+                    .editor
+                    .tag_name(node)
+                    .ok_or(V1DocumentError::Unsupported)?;
                 let kind_matches = q
                     .kind
                     .is_none_or(|kind| kind_of(&self.editor, node) == kind);
@@ -113,6 +133,11 @@ impl V1Document {
                     .id_prefix
                     .as_ref()
                     .is_none_or(|prefix| id.starts_with(prefix));
+                let id_matches = q.id.as_ref().is_none_or(|exact| id == *exact);
+                let tag_matches = q
+                    .tag
+                    .as_ref()
+                    .is_none_or(|expected| tag == expected.as_bytes());
                 let attr_matches = match &q.attribute {
                     None => true,
                     Some((name, value)) => (0..self.editor.attribute_count(node)).any(|i| {
@@ -126,11 +151,14 @@ impl V1Document {
                         decode_attr_matches(&self.editor, a.value, expected)
                     }),
                 };
-                if kind_matches && prefix_matches && attr_matches {
-                    result.push(id);
-                    if result.len() == q.limit {
-                        break;
+                if kind_matches && prefix_matches && id_matches && tag_matches && attr_matches {
+                    if matches_seen >= q.cursor {
+                        result.push(id);
+                        if result.len() == q.limit {
+                            break;
+                        }
                     }
+                    matches_seen = matches_seen.saturating_add(1);
                 }
             }
             let mut children = Vec::new();
@@ -142,6 +170,48 @@ impl V1Document {
             stack.extend(children.into_iter().rev());
         }
         Ok(result)
+    }
+
+    /// Returns one flat pre-order page of the complete element tree.
+    pub fn tree_page(
+        &self,
+        cursor: usize,
+        limit: usize,
+    ) -> Result<Vec<TreeEntry>, V1DocumentError> {
+        if !(1..=512).contains(&limit) {
+            return Err(V1DocumentError::InvalidGeometry);
+        }
+        let root = self.editor.root().ok_or(V1DocumentError::Unsupported)?;
+        let mut stack = vec![(root, 0usize, None)];
+        let mut entries = Vec::new();
+        while let Some((node, depth, parent_id)) = stack.pop() {
+            let tag = utf8(
+                self.editor
+                    .tag_name(node)
+                    .ok_or(V1DocumentError::Unsupported)?,
+            )?;
+            let id = raw_attr(&self.editor, node, b"id").map(utf8).transpose()?;
+            entries.push(TreeEntry {
+                tag,
+                id: id.clone(),
+                depth,
+                parent_id: parent_id.clone(),
+            });
+            let mut children = Vec::new();
+            let mut child = document_view_first_child(self.editor.model(), node);
+            while let Some(candidate) = child {
+                children.push(candidate);
+                child = document_view_next_sibling(self.editor.model(), candidate);
+            }
+            let nearest_id = id.clone().or(parent_id);
+            stack.extend(
+                children
+                    .into_iter()
+                    .rev()
+                    .map(|child| (child, depth + 1, nearest_id.clone())),
+            );
+        }
+        Ok(entries.into_iter().skip(cursor).take(limit).collect())
     }
 
     /// Returns the SVG tree, bounded by depth and total emitted nodes.
