@@ -3,10 +3,10 @@
 //! Every mutation is one editor history entry. Attribute edits splice only the
 //! targeted start-tag bytes; nothing else is re-serialized.
 
-use crate::{numeric_text, path_data, validate_stable_id, V1Document, V1DocumentError};
+use crate::{V1Document, V1DocumentError, numeric_text, path_data, validate_stable_id};
 use vexel_document_edit::{
-    document_view_first_child, document_view_next_sibling, encode_attribute, DocumentHandle,
-    HistoryAction, SourceSpan, TemplateAttribute, TemplateKind,
+    DocumentHandle, HistoryAction, SourceSpan, TemplateAttribute, TemplateKind,
+    document_view_first_child, document_view_next_sibling, encode_attribute,
 };
 
 /// Distance, in document units, added around line and path geometry by

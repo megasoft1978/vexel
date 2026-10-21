@@ -25,7 +25,9 @@ fn element_queries_handle_nested_and_unidentified_nodes() {
 #[test]
 fn element_get_bounds_attributes_and_limits_are_bounded() {
     let long = "é".repeat(140);
-    let source = format!("<svg width=\"20\" height=\"20\"><rect id=\"r\" title=\"{long}\" width=\"1\" height=\"2\"/></svg>");
+    let source = format!(
+        "<svg width=\"20\" height=\"20\"><rect id=\"r\" title=\"{long}\" width=\"1\" height=\"2\"/></svg>"
+    );
     let doc = V1Document::from_source(source.as_bytes()).unwrap();
     let info = doc.element_get("r").unwrap();
     let title = &info

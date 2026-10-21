@@ -127,9 +127,11 @@ fn text_fill_is_one_undoable_edit() {
     let before = doc.source().unwrap();
     doc.set_text_fill(&id, "#abcdef").unwrap();
     let after = doc.source().unwrap();
-    assert!(String::from_utf8(after.clone())
-        .unwrap()
-        .contains("fill=\"#abcdef\""));
+    assert!(
+        String::from_utf8(after.clone())
+            .unwrap()
+            .contains("fill=\"#abcdef\"")
+    );
     doc.undo().unwrap();
     assert_eq!(doc.source().unwrap(), before);
     doc.redo().unwrap();

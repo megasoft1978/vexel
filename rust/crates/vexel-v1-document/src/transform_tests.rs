@@ -47,9 +47,11 @@ fn set_transform_is_one_undoable_edit_and_identity_removes_it() {
     d.redo().unwrap();
     assert_eq!(d.source().unwrap(), after);
     d.set_transform("r", &TransformSpec::default()).unwrap();
-    assert!(!String::from_utf8(d.source().unwrap())
-        .unwrap()
-        .contains("transform="));
+    assert!(
+        !String::from_utf8(d.source().unwrap())
+            .unwrap()
+            .contains("transform=")
+    );
 }
 
 #[test]

@@ -18,6 +18,10 @@ mod transform;
 pub use draw::{ElementKind, HIT_TOLERANCE};
 pub use paint_defs::{GradientStop, GradientUnits, Spread};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
+pub use query::{ElementInfo, Query, TreeNode};
+pub use structure::Reorder;
+pub use text::{TextAnchor, TextSpec};
+pub use transform::TransformSpec;
 
 const MAX_DIMENSION: u32 = 4096;
 const MAX_STABLE_ID_BYTES: usize = 128;
@@ -510,10 +514,22 @@ impl fmt::Write for FixedText {
 }
 
 #[cfg(test)]
+mod attrs_tests;
+#[cfg(test)]
 mod draw_tests;
 #[cfg(test)]
 mod history_bridge_tests;
 #[cfg(test)]
+mod paint_defs_tests;
+#[cfg(test)]
+mod query_tests;
+#[cfg(test)]
 mod snapshot_tests;
 #[cfg(test)]
+mod structure_tests;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod text_tests;
+#[cfg(test)]
+mod transform_tests;

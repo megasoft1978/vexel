@@ -1,4 +1,4 @@
-use crate::{numeric_text, ElementKind, V1Document, V1DocumentError};
+use crate::{ElementKind, V1Document, V1DocumentError, numeric_text};
 use vexel_document_edit::HistoryAction;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

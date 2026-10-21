@@ -1,7 +1,7 @@
 //! Text operations on `V1Document`.
 
-use crate::{validate_stable_id, ElementKind, V1Document, V1DocumentError};
-use vexel_document_edit::{encode_attribute, DocumentHandle, HistoryAction, TemplateAttribute};
+use crate::{ElementKind, V1Document, V1DocumentError, validate_stable_id};
+use vexel_document_edit::{DocumentHandle, HistoryAction, TemplateAttribute, encode_attribute};
 
 const MAX_COORDINATE: f64 = 1_000_000.0;
 

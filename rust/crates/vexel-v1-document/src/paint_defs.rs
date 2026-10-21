@@ -4,10 +4,10 @@
 //! root when absent). Every public edit is one history entry and only splices
 //! the bytes it must change.
 
-use crate::{validate_stable_id, V1Document, V1DocumentError};
+use crate::{V1Document, V1DocumentError, validate_stable_id};
 use vexel_document_edit::{
-    document_view_first_child, document_view_next_sibling, encode_attribute, DocumentHandle,
-    EditError, HistoryAction, SourceSpan,
+    DocumentHandle, EditError, HistoryAction, SourceSpan, document_view_first_child,
+    document_view_next_sibling, encode_attribute,
 };
 
 const MAX_COORDINATE: f64 = 1_000_000.0;

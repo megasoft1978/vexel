@@ -104,7 +104,9 @@ fn reorder_is_one_entry_and_edge_moves_are_noops() {
 
 #[test]
 fn group_bounds_and_translate_cover_children_and_hit_returns_child() {
-    let mut d=doc("<g id='g'><rect id='a' x='10' y='20' width='5' height='6'/><rect id='b' x='30' y='40' width='2' height='3'/></g>");
+    let mut d = doc(
+        "<g id='g'><rect id='a' x='10' y='20' width='5' height='6'/><rect id='b' x='30' y='40' width='2' height='3'/></g>",
+    );
     assert_eq!(d.geometry_bounds("g").unwrap(), (10.0, 20.0, 32.0, 43.0));
     assert_eq!(d.hit_test(11.0, 21.0).as_deref(), Some("a"));
     roundtrip(&mut d, |d| d.translate("g", 5.0, 7.0).unwrap());
