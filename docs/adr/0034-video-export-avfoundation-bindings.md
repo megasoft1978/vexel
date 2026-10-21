@@ -1,6 +1,6 @@
 # ADR-0034: AVFoundation bindings for compressed video export
 
-- Status: proposed (coordinator to confirm number and lock/provenance entry)
+- Status: accepted (provenance in docs/dependencies/objc2-av-video.lock.json)
 - Date: 2026-10-21
 - Related: ADR-0027, ADR-0032
 
@@ -20,5 +20,4 @@ transitive entries of `objc2-av-foundation` (not compiled).
 `vexel-platform-apple::VideoWriter` writes H.264/HEVC MP4/MOV through
 `AVAssetWriter`, BT.709 tagged, exact `CMTime(ticks, timescale)` times, frames
 composited on an opaque background. `AVAssetReader` is used only by tests.
-The provenance lock JSON under `docs/dependencies/` still needs the three
-crates' checksums (coordinator-owned).
+The provenance lock JSON is `docs/dependencies/objc2-av-video.lock.json`.
