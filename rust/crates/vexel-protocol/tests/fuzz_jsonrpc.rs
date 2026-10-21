@@ -50,7 +50,7 @@ fn check_reply(session: &mut ProtocolSession, input: &[u8]) -> Result<(), String
     }
 }
 
-/// A session past the handshake (fresh per case: sessions rate-limit at 120/min).
+/// A session past the handshake (fresh per case: sessions rate-limit at 600/min).
 fn warm_session() -> ProtocolSession {
     let mut session = ProtocolSession::default();
     for seed in seeds().iter().take(2) {

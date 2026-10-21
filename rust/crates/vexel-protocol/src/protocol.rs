@@ -352,6 +352,8 @@ fn bytes(b: JsonBuffer) -> Result<Vec<u8>, ProtocolError> {
 fn lit(out: &mut JsonBuffer, s: &str) -> Result<(), ProtocolError> {
     out.literal(s).map_err(ProtocolError::Buffer)
 }
+/// Per-session request budget per 60 s window (owner raised from 120 for scripted scene building).
+const MAX_REQUESTS_PER_MINUTE: u32 = 600;
 fn rate_check(
     session: &mut ProtocolSession,
     has_id: bool,
@@ -367,7 +369,7 @@ fn rate_check(
         session.requests_in_window = 0;
     }
     session.requests_in_window = session.requests_in_window.saturating_add(1);
-    if session.requests_in_window > 120 && has_id {
+    if session.requests_in_window > MAX_REQUESTS_PER_MINUTE && has_id {
         append_error(out, id, -32000, "rate limit exceeded", None)?;
     }
     Ok(())

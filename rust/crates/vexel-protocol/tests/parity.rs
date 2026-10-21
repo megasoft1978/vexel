@@ -202,11 +202,11 @@ fn notifications_do_not_emit_and_unknown_requests_do() {
 #[test]
 fn request_rate_limit_is_per_session_and_has_an_rpc_error_envelope() {
     let mut session=ProtocolSession::default();
-    for id in 0..120 {
+    for id in 0..600 {
         let request=format!(r#"{{"jsonrpc":"2.0","id":{id},"method":"ping","params":{{}}}}"#);
         let output=handle::<SyncFake>(&mut session,request.as_bytes(),None).unwrap();assert_response(&request,&output);
     }
-    let request=r#"{"jsonrpc":"2.0","id":120,"method":"ping","params":{}}"#;
+    let request=r#"{"jsonrpc":"2.0","id":600,"method":"ping","params":{}}"#;
     let output=handle::<SyncFake>(&mut session,request.as_bytes(),None).unwrap();assert_response(request,&output);assert!(String::from_utf8_lossy(&output).contains("rate limit exceeded"));
     session.reset();let output=handle::<SyncFake>(&mut session,request.as_bytes(),None).unwrap();assert_response(request,&output);assert!(String::from_utf8_lossy(&output).contains("\"result\":{}"));
 }
