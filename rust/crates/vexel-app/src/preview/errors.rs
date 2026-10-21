@@ -60,6 +60,7 @@ const DOC_TOOL_PREFIXES: &[&str] = &[
     "element_ungroup",
     "element_duplicate",
     "element_reorder",
+    "element_reparent",
     "element_get",
     "element_query",
     "tree_get",

@@ -12,15 +12,16 @@ use crate::animation::driver::Driver;
 use crate::animation::native_export::NativeExportSource;
 use crate::animation::native_export_message::{Tool, render_failure};
 use crate::animation::playback::LoopClock;
+use crate::preview::add_extras::AddExtras;
 use crate::preview::{
-    Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
-    object_id, validate_animation_fragment, validate_shape,
+    Control, DOCUMENT_ID, Operation, Shape, animation_list_json, document_duration,
+    validate_animation_fragment, validate_shape,
 };
 use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;
 use vexel_v1_document::{ElementKind, V1Document, V1DocumentError};
 
-const SOURCE_LIMIT: usize = 64 * 1024;
+pub(super) const SOURCE_LIMIT: usize = 64 * 1024;
 const ANIMATION_LIMIT: usize = 16;
 
 /// What the caller must do with one applied request.
@@ -45,6 +46,8 @@ pub struct McpHost {
     pub(super) next_id: u64,
     /// Group the in-flight `element_add` inserts into; `None` is the root.
     pub(super) parent: Option<String>,
+    /// Optional members of the in-flight `element_add`.
+    pub(super) extras: Option<AddExtras>,
     /// The one grant policy of this process: every path tool and the GIF
     /// export job use it. Fixed at construction.
     policy: AccessPolicy,
@@ -67,6 +70,7 @@ impl McpHost {
         Self {
             next_id: 1,
             parent: None,
+            extras: None,
             policy,
         }
     }
@@ -119,6 +123,12 @@ impl McpHost {
                 self.parent = Some(parent);
                 let result = self.handle_with(app, *operation, driver);
                 self.parent = None;
+                result
+            }
+            Operation::AddWith { extras, operation } => {
+                self.extras = Some(*extras);
+                let result = self.handle_with(app, *operation, driver);
+                self.extras = None;
                 result
             }
             Operation::Add(shape) => self.add(app, shape),
@@ -226,49 +236,24 @@ impl McpHost {
 
     fn add(&mut self, app: &mut AppDocument, shape: Shape) -> Result<McpOutcome, &'static str> {
         validate_shape(shape)?;
-        let (id, count) = self.reserve_id(app)?;
+        let (id, count, extras) = self.reserve_add(app)?;
         let parent = self.parent.clone();
         app.edit(|doc| {
             doc.set_insert_parent(parent.as_deref())?;
             let added = add_shape(doc, shape, &id);
             doc.set_insert_parent(None)?;
-            added
+            added?;
+            super::mcp_extras::apply(doc, &id, &extras)
         })
         .map_err(|error| match error {
             SessionEditError::Operation(_) => "shape validation failed",
             SessionEditError::History(_) => "project history unavailable",
         })?;
-        self.next_id += 1;
+        self.added(&extras);
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{id}\",\"message\":\"Shape added\"}}",
             count + 1
         )))
-    }
-
-    /// Checks the scene and source limits and returns the next free
-    /// `vexel-object-N` id with the current element count. The id counter
-    /// advances only when the caller's edit succeeds.
-    pub(super) fn reserve_id(
-        &mut self,
-        app: &AppDocument,
-    ) -> Result<(String, usize), &'static str> {
-        let source = source(app)?;
-        let ids = stable_ids(&source);
-        if ids.len() >= SCENE_LIMIT {
-            return Err("preview scene limit reached");
-        }
-        if source.len() > SOURCE_LIMIT {
-            return Err("preview source limit reached");
-        }
-        let mut id = object_id(self.next_id);
-        while ids.contains(&id) {
-            self.next_id = self
-                .next_id
-                .checked_add(1)
-                .ok_or("preview stable ID limit reached")?;
-            id = object_id(self.next_id);
-        }
-        Ok((id, ids.len()))
     }
 }
 

@@ -1,4 +1,4 @@
-//! Lane-owned: element_group/ungroup/duplicate/reorder routed onto the live document (coordinator stub).
+//! element_group/ungroup/duplicate/reorder/reparent routed onto the live document.
 
 use super::{DOCUMENT_ID, JsonType, PreviewArgumentError};
 use crate::session::{AppDocument, McpOutcome};
@@ -7,7 +7,8 @@ use vexel_json::JsonDocument;
 /// One validated request of this tool family.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Op {
-    Group(String),
+    /// 1..=64 sibling ids wrapped in one group.
+    Group(Vec<String>),
     Ungroup(String),
     Duplicate(String),
     Reorder {
@@ -15,7 +16,15 @@ pub enum Op {
         target_id: String,
         before: bool,
     },
+    Reparent {
+        element_id: String,
+        parent_id: String,
+        index: Option<usize>,
+    },
 }
+
+/// Most ids one `element_group` call may wrap (the document layer's cap).
+const MAX_GROUP_IDS: usize = 64;
 
 fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
     PreviewArgumentError::Actionable(format!(
@@ -51,7 +60,27 @@ pub(super) fn parse(
     let operation = match tool {
         "element_group" => (|| {
             document(doc, args, tool)?;
-            Ok(Op::Group(string(doc, args, "elementId", tool)?))
+            Ok(Op::Group(group_ids(doc, args, tool)?))
+        })(),
+        "element_reparent" => (|| {
+            document(doc, args, tool)?;
+            let index = match doc.object_get(args, b"index") {
+                None => None,
+                Some(token) => Some(
+                    doc.uint(token)
+                        .filter(|_| doc.token(token).is_some_and(|t| t.kind == JsonType::Number))
+                        .and_then(|n| usize::try_from(n).ok())
+                        .filter(|n| *n <= 100_000)
+                        .ok_or_else(|| {
+                            invalid(tool, "index", "an integer from 0 through 100000")
+                        })?,
+                ),
+            };
+            Ok(Op::Reparent {
+                element_id: string(doc, args, "elementId", tool)?,
+                parent_id: string(doc, args, "parentId", tool)?,
+                index,
+            })
         })(),
         "element_ungroup" => (|| {
             document(doc, args, tool)?;
@@ -84,6 +113,40 @@ pub(super) fn parse(
     Some(operation)
 }
 
+/// `elementId` (one id) or `elementIds` (1..=64 ids), not both.
+fn group_ids(
+    doc: &JsonDocument<'_>,
+    args: usize,
+    tool: &str,
+) -> Result<Vec<String>, PreviewArgumentError> {
+    let Some(list) = doc.object_get(args, b"elementIds") else {
+        return Ok(vec![string(doc, args, "elementId", tool)?]);
+    };
+    let form = "elementId (one id) or elementIds (1-64 non-empty id strings), not both";
+    let token = doc.token(list).filter(|t| t.kind == JsonType::Array);
+    if doc.object_get(args, b"elementId").is_some()
+        || token.is_none_or(|t| !(1..=MAX_GROUP_IDS).contains(&t.child_count))
+    {
+        return Err(invalid(tool, "elementIds", form));
+    }
+    let mut ids = Vec::new();
+    ids.try_reserve(MAX_GROUP_IDS)
+        .map_err(|_| PreviewArgumentError::Generic("preview allocation failed"))?;
+    let mut item = token.and_then(|t| t.first_child);
+    while let Some(at) = item {
+        let id = doc
+            .raw_token(at)
+            .filter(|raw| raw.len() <= 1538)
+            .and_then(|_| doc.decoded_string(at))
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .filter(|id| !id.is_empty() && id.len() <= 256)
+            .ok_or_else(|| invalid(tool, "elementIds", form))?;
+        ids.push(id);
+        item = doc.token(at).and_then(|t| t.next_sibling);
+    }
+    Ok(ids)
+}
+
 fn document(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<(), PreviewArgumentError> {
     let value = doc
         .object_get(args, b"documentId")
@@ -96,9 +159,18 @@ fn document(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<(), Previ
 }
 
 pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'static str> {
+    if let Op::Reparent {
+        element_id,
+        parent_id,
+        index,
+    } = op
+    {
+        return reparent(app, &element_id, &parent_id, index);
+    }
     let result = app.edit(|doc| match op {
-        Op::Group(id) => doc
-            .group(&[id])
+        Op::Reparent { .. } => Err(vexel_v1_document::V1DocumentError::Unsupported),
+        Op::Group(ids) => doc
+            .group(&ids)
             .map(|new_id| format!("{{\"ok\":true,\"elementId\":\"{new_id}\"}}")),
         Op::Ungroup(id) => doc.ungroup(&id).map(|ids| {
             format!(
@@ -135,6 +207,29 @@ pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'stati
             Err("element_group: project history unavailable")
         }
     }
+}
+
+fn reparent(
+    app: &mut AppDocument,
+    element_id: &str,
+    parent_id: &str,
+    index: Option<usize>,
+) -> Result<McpOutcome, &'static str> {
+    app.edit(|doc| doc.reparent(element_id, parent_id, index))
+        .map_err(|error| match error {
+            crate::project_session::SessionEditError::Operation(
+                vexel_v1_document::V1DocumentError::MissingStableId,
+            ) => "element_reparent: elementId or parentId is not an element id in the document",
+            crate::project_session::SessionEditError::Operation(_) => {
+                "element_reparent: parentId must be \"root\" or a group that is neither the element nor inside it"
+            }
+            crate::project_session::SessionEditError::History(_) => {
+                "element_reparent: project history unavailable"
+            }
+        })?;
+    Ok(McpOutcome::Reply(format!(
+        "{{\"ok\":true,\"elementId\":\"{element_id}\",\"parentId\":\"{parent_id}\"}}"
+    )))
 }
 
 #[cfg(test)]

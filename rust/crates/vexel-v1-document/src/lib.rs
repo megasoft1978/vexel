@@ -11,6 +11,7 @@ mod draw;
 mod paint_defs;
 mod path_data;
 mod query;
+mod reparent;
 mod structure;
 mod text;
 mod transform;

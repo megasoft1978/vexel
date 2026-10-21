@@ -25,7 +25,7 @@ fn display_keys(keys: &[&[u8]]) -> String {
 
 fn element_add_description() -> String {
     format!(
-        "Add a rectangle, ellipse, line, or path to the live preview document. parentId is \"root\" or the id of an existing group (see element_group), so nested hierarchies can be built. Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
+        "Add a rectangle, ellipse, line, or path to the live preview document. parentId is \"root\" or the id of an existing group (see element_group), so nested hierarchies can be built. Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}. Optional id gives the element an explicit id (1-128 characters [A-Za-z0-9_.-], starting with a letter or underscore; an id already in the document is rejected); opacity (0-1), transform ({{translateX, translateY, rotate, pivotX, pivotY, scaleX, scaleY, skewX}}, numbers as in element_set_transform) and gradientId (a gradient_add id, applied as fill, or as stroke with paint \"stroke\") are applied in the same undoable edit.",
         display_keys(RECT_KEYS),
         display_keys(ELLIPSE_KEYS),
         display_keys(LINE_KEYS),
@@ -109,7 +109,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
         description: "Add a basic SVG shape, group, or text template as a child of an element.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\"},\"template\":{\"type\":\"string\",\"enum\":[\"rect\",\"circle\",\"ellipse\",\"line\",\"path\",\"g\",\"text\"]},\"attributes\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}}}",
         required: "documentId,parentId,template",
-        fields: "documentId:string;parentId:string;template:string;attributes:object",
+        fields: "documentId:string;parentId:string;template:string;attributes:object;id:string;opacity:number;transform:object;gradientId:string;paint:string",
     },
     ToolSchema {
         name: "element_add_fragment",
@@ -141,10 +141,10 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "element_group",
-        description: "Wrap an element in an SVG group.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"}}",
-        required: "documentId,elementId",
-        fields: "documentId:string;elementId:string",
+        description: "Wrap an element in an SVG group, or wrap several sibling elements (same parent) in one group with elementIds (1-64 ids; give elementId or elementIds, not both). The group keeps their document order.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"elementIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":64,\"items\":{\"type\":\"string\"}}}",
+        required: "documentId",
+        fields: "documentId:string;elementId:string;elementIds:array",
     },
     ToolSchema {
         name: "element_ungroup",
@@ -371,6 +371,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "element_ungroup",
     "element_duplicate",
     "element_reorder",
+    "element_reparent",
     "element_get",
     "element_query",
     "tree_get",
@@ -411,6 +412,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
     super::tools_paint::PAINT_TOOLS
         .iter()
         .chain(super::tools_native_edit::NATIVE_EDIT_TOOLS)
+        .chain(super::tools_structure::STRUCTURE_TOOLS)
 }
 
 pub fn tool_schemas() -> Result<Vec<u8>, ProtocolError> {
@@ -449,7 +451,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal(",\"inputSchema\":{\"type\":\"object\",\"properties\":")
             .map_err(ProtocolError::Buffer)?;
         if preview && tool.name == "element_add" {
-            out.literal(r#"{"documentId":{"type":"string"},"parentId":{"type":"string"},"template":{"type":"string","enum":["rect","ellipse","line","path"]},"attributes":{"type":"object","additionalProperties":{"type":"string"}}}"#).map_err(ProtocolError::Buffer)?;
+            out.literal(r#"{"documentId":{"type":"string"},"parentId":{"type":"string"},"template":{"type":"string","enum":["rect","ellipse","line","path"]},"attributes":{"type":"object","additionalProperties":{"type":"string"}},"id":{"type":"string","minLength":1,"maxLength":128},"opacity":{"type":"number","minimum":0,"maximum":1},"transform":{"type":"object","properties":{"translateX":{"type":"number"},"translateY":{"type":"number"},"rotate":{"type":"number"},"pivotX":{"type":"number"},"pivotY":{"type":"number"},"scaleX":{"type":"number"},"scaleY":{"type":"number"},"skewX":{"type":"number"}},"additionalProperties":false},"gradientId":{"type":"string","minLength":1,"maxLength":128},"paint":{"type":"string","enum":["fill","stroke"]}}"#).map_err(ProtocolError::Buffer)?;
         } else {
             let properties = if preview && tool.name == "animation_add" {
                 r#"{"documentId":{"type":"string"},"targetId":{"type":"string","minLength":1,"maxLength":128},"xml":{"type":"string","maxLength":4096,"pattern":"^<animate\\s[^>]*\\s/>$"}}"#

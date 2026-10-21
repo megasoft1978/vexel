@@ -6,6 +6,7 @@ mod protocol;
 mod tools;
 mod tools_native_edit;
 mod tools_paint;
+mod tools_structure;
 
 use vexel_json::{JsonBuffer, JsonDocument};
 

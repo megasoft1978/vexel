@@ -3,6 +3,7 @@ use vexel_json::{JsonDocument, JsonType};
 use vexel_protocol::{ProtocolBackend, ToolResponse};
 use vexel_v1_document::{V1Document, V1DocumentError};
 
+pub(crate) mod add_extras;
 mod animation;
 mod args;
 mod doc_ops;
@@ -122,6 +123,11 @@ pub enum Operation {
     /// `element_add` into an existing group instead of the root.
     AddIn {
         parent: String,
+        operation: Box<Operation>,
+    },
+    /// `element_add` with optional id, opacity, transform or gradient paint.
+    AddWith {
+        extras: Box<add_extras::AddExtras>,
         operation: Box<Operation>,
     },
     Native(native_timeline::NativeOp),

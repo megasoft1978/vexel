@@ -145,19 +145,20 @@ impl McpHost {
         app: &mut AppDocument,
         add: impl FnOnce(&mut V1Document, &str) -> Result<(), V1DocumentError>,
     ) -> Result<McpOutcome, &'static str> {
-        let (id, count) = self.reserve_id(app)?;
+        let (id, count, extras) = self.reserve_add(app)?;
         let parent = self.parent.clone();
         app.edit(|doc| {
             doc.set_insert_parent(parent.as_deref())?;
             let added = add(doc, &id);
             doc.set_insert_parent(None)?;
-            added
+            added?;
+            super::mcp_extras::apply(doc, &id, &extras)
         })
         .map_err(|error| match error {
             SessionEditError::Operation(error) => document_error(error),
             SessionEditError::History(_) => "project history unavailable",
         })?;
-        self.next_id += 1;
+        self.added(&extras);
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"operation\":\"element_add\",\"elementId\":\"{id}\",\"dirty\":{},\"shapeCount\":{},\"message\":\"Shape added\"}}",
             app.is_dirty(),

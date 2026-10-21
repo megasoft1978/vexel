@@ -219,7 +219,7 @@ pub(super) fn element_add(
     args: usize,
 ) -> Result<Operation, PreviewArgumentError> {
     let operation = element_add_shape(doc, args)?;
-    match string_field(doc, args, b"parentId") {
+    let operation = match string_field(doc, args, b"parentId") {
         Some(parent) if parent != "root" => {
             if parent.is_empty() || parent.len() > 128 {
                 return Err(PreviewArgumentError::Actionable(
@@ -227,13 +227,20 @@ pub(super) fn element_add(
                         .to_owned(),
                 ));
             }
-            Ok(Operation::AddIn {
+            Operation::AddIn {
                 parent,
                 operation: Box::new(operation),
-            })
+            }
         }
-        _ => Ok(operation),
-    }
+        _ => operation,
+    };
+    Ok(match super::add_extras::parse(doc, args)? {
+        Some(extras) => Operation::AddWith {
+            extras: Box::new(extras),
+            operation: Box::new(operation),
+        },
+        None => operation,
+    })
 }
 
 fn element_add_shape(

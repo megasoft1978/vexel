@@ -130,6 +130,14 @@ can target elements at any depth.
 `gradient_add` returns a `gradientId` and stop IDs; apply the gradient with
 `element_set_paint`. Create a rect or ellipse clipping path with `clip_add`,
 then apply it to a shape or group with `element_set_clip`. Use
+`element_add` also takes optional `id` (explicit id, `[A-Za-z0-9_.-]`, max 128;
+a clash with an existing id is rejected), `opacity` (0-1), `transform`
+(`translateX`, `translateY`, `rotate`, `pivotX`, `pivotY`, `scaleX`, `scaleY`,
+`skewX`) and `gradientId` (+ `paint`: `fill` default or `stroke`), all applied in
+the same undoable edit. `element_group` accepts `elementIds[]` (1-64 siblings of
+one parent) to wrap several elements in one group, and `element_reparent`
+(`elementId`, `parentId`, optional `index`) moves an element into another group
+or back to `"root"` in one edit (ancestor transforms are not compensated). Use
 `element_group` to collect character parts and `element_duplicate` plus
 `element_reorder` to place repeated/background elements.
 
