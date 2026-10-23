@@ -25,5 +25,5 @@ Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first (esp. #6 lean process); it
 
 ## Orchestration
 
-- Protocol: `~/.codex/AGENTS.md`. Sol Medium only for named hard decisions.
+- Roles: Claude plans, implements and reviews (`~/.claude-work/CLAUDE.md`); Codex only drives browser/computer-use jobs when a prompt asks (`~/.codex/AGENTS.md`).
 - Push: commit and push when review is CLEAN and tests pass.

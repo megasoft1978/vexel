@@ -3,7 +3,7 @@
 Project instructions are in [AGENTS.md](AGENTS.md). Read it and the active work
 order before making changes. `OWNER-DIRECTIVES.md` has the highest priority.
 
-## Orchestration (yowork + codex)
+## Orchestration
 
 - Verify: `cargo check --workspace --locked`; `cargo test --workspace --locked`; `python3 -m unittest tests.test_ledger tests.test_wo_runner`
 - Browser/UI test: n/a (native macOS app, no browser UI; broad UI/E2E deferred to final stage per OWNER-DIRECTIVES.md)
