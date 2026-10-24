@@ -8,6 +8,70 @@ use vexel_app::animation::playback::ManualClock;
 use vexel_app::native_animation::NativeAnimationHost;
 use vexel_app::preview::Control;
 use vexel_app::session::AppDocument;
+use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
+
+/// 1000 rects on a grid with 8 opacity/x tracks of 8 keys: the walk_home-sized
+/// fallback so the bench runs without /private/tmp files.
+fn synthetic_doc() -> AppDocument {
+    let mut svg = String::from(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"512\" height=\"512\" viewBox=\"0 0 512 512\">",
+    );
+    for i in 0..1000u32 {
+        let (x, y) = (f64::from(i % 32) * 16.0, f64::from(i / 32) * 16.0);
+        svg.push_str(&format!(
+            "<path id=\"e{i}\" d=\"M{x} {y} C{} {} {} {} {} {} S{} {} {} {} S{} {} {} {} Z\" fill=\"#3366cc\" fill-opacity=\"0.8\" stroke=\"#112244\" stroke-width=\"1.5\" transform=\"rotate({} {x} {y})\"/>",
+            x + 10.0, y - 6.0, x + 24.0, y + 6.0, x + 30.0, y + 10.0,
+            x + 40.0, y + 24.0, x + 20.0, y + 30.0,
+            x + 8.0, y + 36.0, x - 4.0, y + 20.0,
+            i % 30
+        ));
+    }
+    svg.push_str("</svg>");
+    let path = std::env::temp_dir().join(format!("vexel-synth-{}.svg", std::process::id()));
+    std::fs::write(&path, svg).unwrap();
+    let mut doc = AppDocument::new(512, 512).unwrap();
+    doc.open_path(&path).unwrap();
+    let _ = std::fs::remove_file(&path);
+    let settings = EmptyTimelineSettings {
+        ticks_per_second: 24,
+        duration_ticks: 96,
+        fps_numerator: 24,
+        fps_denominator: 1,
+        loop_mode: LoopMode::Repeat,
+        onion_before: 0,
+        onion_after: 0,
+        onion_opacity: 0.25,
+    };
+    for n in 0..8u32 {
+        let (track, target) = (format!("t{n}"), format!("e{}", n * 120 + 3));
+        doc.edit_timeline(settings, EditLimits::default(), |c| {
+            let mut c = c.add_property_track(
+                track.as_bytes(),
+                target.as_bytes(),
+                PROPS[n as usize % 4],
+                b"scalar",
+                b"linear",
+                b"1",
+                track.as_bytes(),
+            )?;
+            for k in 1..=8u32 {
+                let v = if k % 2 == 0 { "0.2" } else { "1" };
+                c = c.set_property_key(track.as_bytes(), k * 10, v.as_bytes())?;
+            }
+            Ok::<_, vexel_app::project_session::ProjectTimelineError>(c)
+        })
+        .unwrap();
+    }
+    doc
+}
+
+const PROPS: [&[u8]; 4] = [b"opacity", b"fill-opacity", b"stroke-opacity", b"opacity"];
+
+fn fnv(bytes: &[u8]) -> u64 {
+    bytes.iter().fold(0xcbf29ce484222325u64, |h, b| {
+        (h ^ u64::from(*b)).wrapping_mul(0x100000001b3)
+    })
+}
 
 fn pct(v: &mut [f64], p: f64) -> f64 {
     v.sort_by(|a, b| a.total_cmp(b));
@@ -55,18 +119,9 @@ fn ms(t: Instant) -> f64 {
     t.elapsed().as_secs_f64() * 1000.0
 }
 
-#[test]
-#[ignore]
-fn walk_home_animate_playback() {
-    let path = Path::new("/private/tmp/vexel-accept/walk_home.vexel");
-    if !path.exists() {
-        eprintln!("skip: {} absent", path.display());
-        return;
-    }
-    let mut doc = AppDocument::new(512, 512).unwrap();
-    doc.open_path(path).unwrap();
+fn profile_run(label: &str, doc: &AppDocument) {
     vexel_app::profile::enable();
-    run("walk_home", &doc, 900);
+    run(label, doc, 900);
     for (name, v) in vexel_app::profile::take() {
         let mut v = v;
         let sum: f64 = v.iter().sum();
@@ -79,6 +134,49 @@ fn walk_home_animate_playback() {
         );
     }
 }
+
+#[test]
+#[ignore]
+fn walk_home_animate_playback() {
+    let path = Path::new("/private/tmp/vexel-accept/walk_home.vexel");
+    if !path.exists() {
+        eprintln!("skip: {} absent", path.display());
+        return;
+    }
+    let mut doc = AppDocument::new(512, 512).unwrap();
+    doc.open_path(path).unwrap();
+    profile_run("walk_home", &doc);
+}
+
+#[test]
+#[ignore]
+fn synthetic_animate_playback() {
+    profile_run("synthetic", &synthetic_doc());
+}
+
+/// Export output must stay byte-identical across playback optimisations.
+#[test]
+fn synthetic_export_hashes_are_stable() {
+    let doc = synthetic_doc();
+    let source = vexel_app::animation::native_export::NativeExportSource::from_document(&doc).unwrap();
+    let mut hashes = vec![];
+    for tick in [5u32, 12, 22, 33, 57] {
+        let (w, h, rgba) = source
+            .render_still(f64::from(tick) / 24.0, |s| Ok(s))
+            .unwrap();
+        hashes.push(format!("{w}x{h}:{:016x}", fnv(&rgba)));
+    }
+    println!("export hashes {hashes:?}");
+    assert_eq!(hashes, EXPECTED_EXPORT_HASHES);
+}
+
+const EXPECTED_EXPORT_HASHES: [&str; 5] = [
+    "512x512:aa217a0c36d12e18",
+    "512x512:5b0c34d8d34344b3",
+    "512x512:b521e2abe6e89815",
+    "512x512:5c61b7ffbd5740d6",
+    "512x512:781fde250b857ddc",
+];
 
 #[test]
 #[ignore]
