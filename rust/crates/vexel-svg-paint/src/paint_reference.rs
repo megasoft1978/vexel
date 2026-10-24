@@ -1,13 +1,19 @@
 //! The pre-optimisation sampler, kept verbatim as the byte-identity oracle for
 //! [`crate::PreparedPaint`].
-use crate::paint::{MAX_GRADIENT_STOPS};
+use crate::paint::MAX_GRADIENT_STOPS;
 use vexel_geometry::{Point, affine_map_point};
 use vexel_scene::{Paint, PaintKind, PaintStop, Spread};
 
 /// Validates a stop span before sampling. Invalid untrusted paint data or a
 /// nonfinite intermediate leaves `rgba` unchanged, matching the C no-write
 /// fallbacks without allowing an out-of-range access.
-pub(crate) fn sample_reference(paint: &Paint, stops: &[PaintStop], x: f64, y: f64, rgba: &mut [u8; 4]) {
+pub(crate) fn sample_reference(
+    paint: &Paint,
+    stops: &[PaintStop],
+    x: f64,
+    y: f64,
+    rgba: &mut [u8; 4],
+) {
     let Some(end) = paint.stops.first.checked_add(paint.stops.count) else {
         return;
     };
@@ -198,8 +204,20 @@ mod tests {
             let mut offset = 0.0f64;
             let stops: Vec<PaintStop> = (0..count + 2)
                 .map(|_| {
-                    offset = if rng.below(30) == 0 { rng.wild(-0.5, 1.5) } else { (offset + rng.range(0.0, 0.4)).min(1.0) };
-                    PaintStop { offset, rgba: [rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8] }
+                    offset = if rng.below(30) == 0 {
+                        rng.wild(-0.5, 1.5)
+                    } else {
+                        (offset + rng.range(0.0, 0.4)).min(1.0)
+                    };
+                    PaintStop {
+                        offset,
+                        rgba: [
+                            rng.below(256) as u8,
+                            rng.below(256) as u8,
+                            rng.below(256) as u8,
+                            rng.below(256) as u8,
+                        ],
+                    }
                 })
                 .collect();
             let paint = Paint {
@@ -214,10 +232,18 @@ mod tests {
                     rng.wild(-50.0, 150.0),
                     0.0,
                 ],
-                bounds: [rng.wild(-20.0, 20.0), rng.wild(-20.0, 20.0), rng.wild(30.0, 120.0), rng.wild(30.0, 120.0)],
+                bounds: [
+                    rng.wild(-20.0, 20.0),
+                    rng.wild(-20.0, 20.0),
+                    rng.wild(30.0, 120.0),
+                    rng.wild(30.0, 120.0),
+                ],
                 user_inverse: rng.affine(),
                 gradient_inverse: rng.affine(),
-                stops: TableRange { first: rng.below(3), count: rng.below(8) },
+                stops: TableRange {
+                    first: rng.below(3),
+                    count: rng.below(8),
+                },
                 pattern: None,
                 pattern_inverse: vexel_geometry::affine_identity(),
                 pattern_opacity: 1.0,
@@ -231,9 +257,16 @@ mod tests {
                     p.sample(x, y, &mut new);
                 }
                 assert_eq!(old, new, "{paint:?} at {x} {y}");
-                if old == [1, 2, 3, 4] { skipped += 1 } else { written += 1 }
+                if old == [1, 2, 3, 4] {
+                    skipped += 1
+                } else {
+                    written += 1
+                }
             }
         }
-        assert!(written > 10_000 && skipped > 10_000, "{written} written, {skipped} skipped");
+        assert!(
+            written > 10_000 && skipped > 10_000,
+            "{written} written, {skipped} skipped"
+        );
     }
 }

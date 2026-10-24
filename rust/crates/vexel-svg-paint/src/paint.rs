@@ -54,7 +54,10 @@ impl<'a> PreparedPaint<'a> {
             return None;
         }
         let bbox = if paint.object_bounding_box {
-            let (w, h) = (paint.bounds[2] - paint.bounds[0], paint.bounds[3] - paint.bounds[1]);
+            let (w, h) = (
+                paint.bounds[2] - paint.bounds[0],
+                paint.bounds[3] - paint.bounds[1],
+            );
             if !w.is_finite() || !h.is_finite() || w <= 0.0 || h <= 0.0 {
                 return None;
             }
@@ -70,11 +73,20 @@ impl<'a> PreparedPaint<'a> {
             }
             PaintKind::Radial => {
                 let (center_dx, center_dy) = (c[0] - c[3], c[1] - c[4]);
-                [center_dx, center_dy, center_dx * center_dx + center_dy * center_dy - c[2] * c[2]]
+                [
+                    center_dx,
+                    center_dy,
+                    center_dx * center_dx + center_dy * center_dy - c[2] * c[2],
+                ]
             }
             _ => return None,
         };
-        Some(Self { paint, section, bbox, constants })
+        Some(Self {
+            paint,
+            section,
+            bbox,
+            constants,
+        })
     }
 
     /// Writes the colour at `(x, y)`, or leaves `rgba` unchanged when the point
@@ -121,7 +133,11 @@ impl<'a> PreparedPaint<'a> {
         }
         let left = right - 1;
         let range = section[right].offset - section[left].offset;
-        let amount = if range <= 0.0 { 1.0 } else { (t - section[left].offset) / range };
+        let amount = if range <= 0.0 {
+            1.0
+        } else {
+            (t - section[left].offset) / range
+        };
         let mut output = [0; 4];
         for channel in 0..4 {
             output[channel] = ((1.0 - amount) * f64::from(section[left].rgba[channel])
@@ -140,8 +156,7 @@ fn map_valid(m: Affine, x: f64, y: f64) -> Option<(f64, f64)> {
         return None;
     }
     let (mx, my) = (m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f);
-    (mx.is_finite() && my.is_finite() && mx.abs() <= 1.0e6 && my.abs() <= 1.0e6)
-        .then_some((mx, my))
+    (mx.is_finite() && my.is_finite() && mx.abs() <= 1.0e6 && my.abs() <= 1.0e6).then_some((mx, my))
 }
 
 /// Validates a stop span before sampling. Invalid untrusted paint data or a
