@@ -7,7 +7,9 @@
 mod paint;
 #[cfg(test)]
 mod paint_reference;
+mod paint_table;
 pub use paint::*;
+pub use paint_table::KeyTable;
 mod cache;
 mod control;
 mod gradient_data;

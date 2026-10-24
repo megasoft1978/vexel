@@ -15,7 +15,7 @@ use crate::validate::validate;
 use crate::{GradientRef, RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
 use vexel_geometry::{Affine, Point, affine_map_point};
 use vexel_raster::Tile;
-use vexel_svg_paint::PreparedPaint;
+use vexel_svg_paint::{KeyTable, PreparedPaint};
 
 /// Per-shape state shared by every sample.
 struct ShapePass<'a, 'b> {
@@ -33,7 +33,12 @@ struct ShapePass<'a, 'b> {
     /// The fill gradient gives the same colour on every sample row of a pixel
     /// row, wherever x is (a linear gradient along y).
     fill_rows: bool,
+    /// Exact colours of the fill gradient by key, for large shapes.
+    fill_table: Option<KeyTable<'a>>,
 }
+
+/// Shapes with fewer pixels than this do not pay for building a [`KeyTable`].
+const TABLE_MIN_PIXELS: u64 = 20_000;
 
 /// Pattern paints of one shape (fill, stroke); `None` means solid paint.
 pub(crate) type ShapePaints<'a> = (Option<PatternPaint<'a>>, Option<PatternPaint<'a>>);
@@ -257,6 +262,8 @@ fn render_core_scissored(
             }
             _ => None,
         };
+        let area = u64::from(bounds.x_last - bounds.x_first + 1)
+            * u64::from(bounds.y_last - bounds.y_first + 1);
         let fill_prepared = if fill_pattern.is_some() {
             None
         } else {
@@ -279,6 +286,7 @@ fn render_core_scissored(
             fill_gradient: shape.fill_gradient.map(prepare_gradient),
             stroke_gradient: shape.stroke_gradient.map(prepare_gradient),
             fill_rows: fill_prepared.is_some_and(|p| p.depends_on_y_only(user_bound)),
+            fill_table: fill_prepared.filter(|_| area >= TABLE_MIN_PIXELS).and_then(|p| p.key_table(user_bound)),
         };
         // Without stroke or pattern paint only the fill can touch a pixel, so
         // rows and spans with no crossing can be skipped outright.
@@ -389,6 +397,15 @@ fn render_band(
             return Err(RenderError::Cancelled);
         }
         sweep.reset(shape.edges, tables, y_first, y_last)?;
+        let table = pass.fill_table.as_ref();
+        let mut x_terms: Vec<f64> = Vec::new();
+        if let Some(table) = table {
+            for x in bounds.x_first..=bounds.x_last {
+                for sx in 0..SAMPLES_PER_AXIS {
+                    x_terms.push(table.x_term(tables.column(x, sx).0));
+                }
+            }
+        }
         for y in y_first..=y_last {
             if control() {
                 return Err(RenderError::Cancelled);
@@ -406,6 +423,8 @@ fn render_band(
                     crossings[sy].collect(shape.edges, &sweep.active, sample_y[sy]);
                 }
             }
+            let y_terms: [f64; SAMPLES_PER_AXIS] =
+                std::array::from_fn(|sy| table.map_or(0.0, |t| t.y_term(sample_y[sy])));
             let (mut x_first, mut x_last) = (bounds.x_first, bounds.x_last);
             if simple {
                 let mut span: Option<(f64, f64)> = None;
@@ -576,13 +595,16 @@ fn render_band(
                 let gradient_direct =
                     fill_all_in && mask == FULL_MASK && shape.fill_gradient.is_some();
                 if gradient_direct && let Some(prepared) = pass.fill_gradient.flatten() {
+                    let base = (x - bounds.x_first) as usize * SAMPLES_PER_AXIS;
                     for sy in 0..SAMPLES_PER_AXIS {
                         for sx in 0..SAMPLES_PER_AXIS {
-                            prepared.sample(
-                                tables.column(x, sx).0,
-                                sample_y[sy],
-                                &mut samples[sy * SAMPLES_PER_AXIS + sx],
-                            );
+                            let slot = &mut samples[sy * SAMPLES_PER_AXIS + sx];
+                            let known = table
+                                .and_then(|t| t.lookup(x_terms[base + sx] + y_terms[sy]));
+                            match known {
+                                Some(color) => *slot = color,
+                                None => prepared.sample(tables.column(x, sx).0, sample_y[sy], slot),
+                            }
                         }
                     }
                 }
@@ -617,7 +639,12 @@ fn render_band(
                         );
                     }
                 }
-                let source = resolve_samples(&samples);
+                // Equal samples resolve to themselves (a transparent one to nothing).
+                let source = if gradient_direct && samples.iter().all(|s| *s == samples[0]) {
+                    if samples[0][3] == 0 { [0; 4] } else { samples[0] }
+                } else {
+                    resolve_samples(&samples)
+                };
                 let offset = (row_base + x as usize) * 4;
                 let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
                     .try_into()

@@ -275,7 +275,7 @@ mod tests {
     fn shortcut_predicates_match_sampling() {
         let mut rng = Rng(0x0BAD_5EED_1234_4321);
         let bound = 400.0;
-        let (mut constant, mut y_only) = (0u32, 0u32);
+        let (mut constant, mut y_only, mut tables, mut hits) = (0u32, 0u32, 0u32, 0u32);
         for _ in 0..6000 {
             let count = 2 + rng.below(3);
             let same = rng.below(2) == 0;
@@ -384,6 +384,18 @@ mod tests {
                     assert_eq!(out, color, "{paint:?}");
                 }
             }
+            if let Some(table) = prepared.key_table(bound) {
+                tables += 1;
+                for _ in 0..400 {
+                    let (x, y) = (rng.range(-bound, bound), rng.range(-bound, bound));
+                    let mut plain = sentinel;
+                    prepared.sample(x, y, &mut plain);
+                    if let Some(color) = table.lookup(table.x_term(x) + table.y_term(y)) {
+                        hits += 1;
+                        assert_eq!(plain, color, "{paint:?} {stops:?} at {x} {y}");
+                    }
+                }
+            }
             if prepared.depends_on_y_only(bound) {
                 y_only += 1;
                 for _ in 0..30 {
@@ -396,8 +408,8 @@ mod tests {
             }
         }
         assert!(
-            constant > 100 && y_only > 100,
-            "{constant} constant, {y_only} y-only"
+            constant > 100 && y_only > 100 && tables > 300 && hits > 50_000,
+            "{constant} constant, {y_only} y-only, {tables} tables, {hits} hits"
         );
     }
 }

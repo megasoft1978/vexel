@@ -30,12 +30,12 @@ pub fn edge_span<'a>(
 /// the colours are bit-identical.
 #[derive(Debug, Clone, Copy)]
 pub struct PreparedPaint<'a> {
-    paint: &'a Paint,
-    section: &'a [PaintStop],
+    pub(crate) paint: &'a Paint,
+    pub(crate) section: &'a [PaintStop],
     /// `(width, height)` of the bounding box when `object_bounding_box`.
-    bbox: Option<(f64, f64)>,
+    pub(crate) bbox: Option<(f64, f64)>,
     /// Linear: `(dx, dy, length)`; radial: `(center_dx, center_dy, a)`.
-    constants: [f64; 3],
+    pub(crate) constants: [f64; 3],
 }
 
 impl<'a> PreparedPaint<'a> {
@@ -185,39 +185,39 @@ impl PreparedPaint<'_> {
         (out.partial_cmp(&PLACED_LIMIT) == Some(std::cmp::Ordering::Less)).then_some(out)
     }
 
-    /// The one colour [`Self::sample`] writes at every point within `bound`
-    /// of the origin, when the stops are all one colour and every such point
-    /// is surely placed; `None` otherwise.
-    pub fn constant_color(&self, bound: f64) -> Option<[u8; 4]> {
+    /// True when every point within `bound` of the origin is surely placed
+    /// with a finite `t` (the checks [`Self::sample`] makes cannot fail).
+    pub(crate) fn always_placed(&self, bound: f64) -> bool {
         let paint = self.paint;
-        let first = self.section[0].rgba;
-        if self.section.iter().any(|stop| stop.rgba != first) {
-            return None;
-        }
-        let reach = self.placed_reach(bound)?;
+        let Some(reach) = self.placed_reach(bound) else {
+            return false;
+        };
         let c = &paint.coordinates;
         if !c.iter().all(|v| v.is_finite() && v.abs() <= 1.0e6) {
-            return None;
+            return false;
         }
         match paint.kind {
             PaintKind::Linear => {
                 let [dx, dy, length] = self.constants;
-                if length != 0.0 {
-                    let top = (reach + c[0].abs()) * dx.abs() + (reach + c[1].abs()) * dy.abs();
-                    if length < 1.0e-12 || !(top * 2.0 / length < 1.0e100) {
-                        return None;
-                    }
+                if length == 0.0 {
+                    return true;
                 }
+                let top = (reach + c[0].abs()) * dx.abs() + (reach + c[1].abs()) * dy.abs();
+                length >= 1.0e-12 && top * 2.0 / length < 1.0e100
             }
-            PaintKind::Radial => {
-                // Concentric: the discriminant is 4|a|c, never negative.
-                if c[0] != c[3] || c[1] != c[4] || !(self.constants[2] <= -1.0e-12) {
-                    return None;
-                }
-            }
-            _ => return None,
+            // Concentric: the discriminant is 4|a|c, never negative.
+            PaintKind::Radial => c[0] == c[3] && c[1] == c[4] && self.constants[2] <= -1.0e-12,
+            _ => false,
         }
-        Some(first)
+    }
+
+    /// The one colour [`Self::sample`] writes at every point within `bound`
+    /// of the origin, when the stops are all one colour and every such point
+    /// is surely placed; `None` otherwise.
+    pub fn constant_color(&self, bound: f64) -> Option<[u8; 4]> {
+        let first = self.section[0].rgba;
+        (self.section.iter().all(|stop| stop.rgba == first) && self.always_placed(bound))
+            .then_some(first)
     }
 
     /// True when [`Self::sample`] gives the same result for every x within
@@ -235,7 +235,7 @@ impl PreparedPaint<'_> {
 
 /// [`affine_map_point`] for a matrix already known to be valid.
 #[inline]
-fn map_valid(m: Affine, x: f64, y: f64) -> Option<(f64, f64)> {
+pub(crate) fn map_valid(m: Affine, x: f64, y: f64) -> Option<(f64, f64)> {
     if !x.is_finite() || !y.is_finite() {
         return None;
     }
@@ -276,7 +276,7 @@ fn spread(t: f64, spread: Spread) -> f64 {
     }
 }
 
-fn radial_t(paint: &Paint, constants: [f64; 3], gx: f64, gy: f64) -> f64 {
+pub(crate) fn radial_t(paint: &Paint, constants: [f64; 3], gx: f64, gy: f64) -> f64 {
     let (fx, fy) = (paint.coordinates[3], paint.coordinates[4]);
     let [center_dx, center_dy, a] = constants;
     let (point_dx, point_dy) = (gx - fx, gy - fy);
@@ -289,6 +289,24 @@ fn radial_t(paint: &Paint, constants: [f64; 3], gx: f64, gy: f64) -> f64 {
         return -c / b;
     }
     let discriminant = b * b - 4.0 * a * c;
+    if discriminant < 0.0 || !discriminant.is_finite() {
+        return f64::NAN;
+    }
+    let root = discriminant.sqrt();
+    let t0 = (-b - root) / (2.0 * a);
+    let t1 = (-b + root) / (2.0 * a);
+    let t = t0.max(t1);
+    if t < 0.0 { t0.min(t1) } else { t }
+}
+
+/// [`radial_t`] for a concentric paint, as a function of the squared distance
+/// `key` alone (the cross term of the discriminant is a signed zero).
+pub(crate) fn radial_t_of_key(a: f64, key: f64) -> f64 {
+    let b = 0.0f64;
+    if a.abs() <= 1e-15 {
+        return f64::NAN;
+    }
+    let discriminant = b * b - 4.0 * a * key;
     if discriminant < 0.0 || !discriminant.is_finite() {
         return f64::NAN;
     }
