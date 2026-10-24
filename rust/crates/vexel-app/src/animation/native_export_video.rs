@@ -2,6 +2,7 @@
 //! loop tick rendered and appended one at a time, so memory stays at one frame.
 //! Mirrors the GIF export's tick selection (ping-pong included).
 
+use super::native_export::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
 use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
@@ -146,19 +147,26 @@ impl NativeExportSource {
             bit_rate,
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
-        for (i, &tick) in ticks.iter().enumerate() {
-            let frame = render_native_frame(
-                self.svg_source(),
-                &view,
-                &assets,
-                tick,
-                width,
-                height,
-                geometry,
-            )
-            .map_err(NativeExportError::Frame)?;
-            writer.append(&frame.rgba, i as i64 * i64::from(ticks_per_frame))?;
-        }
+        render_ordered(
+            ticks.len(),
+            worker_count(ticks.len()),
+            |i| {
+                render_native_frame(
+                    self.svg_source(),
+                    &view,
+                    &assets,
+                    ticks[i],
+                    width,
+                    height,
+                    geometry,
+                )
+            },
+            |i, frame| writer.append(&frame.rgba, i as i64 * i64::from(ticks_per_frame)),
+        )
+        .map_err(|e| match e {
+            OrderedError::Render(e) => NativeVideoError::Export(NativeExportError::Frame(e)),
+            OrderedError::Consume(e) => NativeVideoError::Video(e),
+        })?;
         writer.finish_at(ticks.len() as i64 * i64::from(ticks_per_frame))?;
         Ok(NativeVideo {
             path: req.path.clone(),

@@ -1,6 +1,13 @@
 //! Synchronous GIF export of a native timeline: one frame per loop tick,
 //! rendered through `render_native_frame` and encoded by `vexel-gif`.
 
+#[path = "native_export_ordered.rs"]
+pub(crate) mod ordered;
+#[cfg(test)]
+#[path = "native_export_parallel_tests.rs"]
+mod parallel_tests;
+
+use self::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_drawing::{DrawingAsset, SvgGeometry};
 use super::native_frame::{NativeFrameError, render_native_frame};
 use crate::compose::{ComposeError, svg_viewport};
@@ -173,12 +180,33 @@ impl NativeExportSource {
         let geometry = svg_geometry(&viewport, width, height);
         let assets = self.drawing_assets();
         let mut rendered = Vec::new();
-        for &tick in &ticks {
-            let frame =
-                render_native_frame(&self.source, &view, &assets, tick, width, height, geometry)
-                    .map_err(NativeExportError::Frame)?;
-            rendered.push(over_white(&frame.rgba));
-        }
+        rendered
+            .try_reserve_exact(ticks.len())
+            .map_err(|_| NativeExportError::Frame(NativeFrameError::Allocation))?;
+        render_ordered(
+            ticks.len(),
+            worker_count(ticks.len()),
+            |i| {
+                render_native_frame(
+                    &self.source,
+                    &view,
+                    &assets,
+                    ticks[i],
+                    width,
+                    height,
+                    geometry,
+                )
+                .map(|frame| over_white(&frame.rgba))
+            },
+            |_, opaque| {
+                rendered.push(opaque);
+                Ok::<(), ()>(())
+            },
+        )
+        .map_err(|e| match e {
+            OrderedError::Render(e) => NativeExportError::Frame(e),
+            OrderedError::Consume(()) => NativeExportError::Timeline,
+        })?;
         let tick_cs = ((100 + tps / 2) / tps).clamp(1, u32::from(u16::MAX));
         let delay_cs = u16::try_from(u64::from(tick_cs) * stride as u64)
             .map_err(|_| NativeExportError::Encode(GifError::TooManyFrames))?;
