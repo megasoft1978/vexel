@@ -1,121 +1,51 @@
 #!/usr/bin/env python3
-"""Deterministic MCP driver: builds the animated "Walk Home" 512x512 scene.
+"""Deterministic MCP driver: animated "Walk Home" 512x512 scene, built with `batch`.
 
-Speaks MCP JSON-RPC over stdio to `vexel --mcp-preview`, builds the scene,
-saves /private/tmp/vexel-accept/walk_home.vexel, exports walk_home.gif and
-renders walk_home_a.png (0 s) and walk_home_b.png (2 s).
+Run:   python3 -I scripts/scene_walk_home.py [--fast | --paced] [--legacy]
+Saves  /private/tmp/vexel-demo/walk_home.vexel, walk_home_a.png (0 s), walk_home_b.png (2 s)
+and exports walk_home.mp4 (512x512 H.264).
 
-Run: python3 -I scripts/scene_walk_home.py
-Stdlib only. Throttled below the 600 requests/minute per-session budget.
-All motion is periodic over the 96-tick loop: every track samples a function
-of period 96 ticks (cycles are whole numbers), so tick 96 == tick 0 and the
-loop wrap is continuous. Scrolling layers translate by an exact multiple of
-their pattern period over the loop.
+Geometry, groups and gradients go through a handful of `batch` requests (see
+scene_common.Builder) and every track is created with bulk `keys[]`, so the whole
+scene costs well under the 600 requests/minute session budget. `--fast` (default)
+sends without throttle sleeps; `--paced` waits 0.35 s between calls so a screen
+recording can watch the scene build. `--legacy` runs the original per-call builder
+(scene_walk_home_legacy.py) and writes walk_home_legacy.* instead.
+All motion is periodic over the 96-tick loop: every track samples a function of
+period 96 ticks, so tick 96 == tick 0 and the loop wrap is continuous. Scrolling
+layers translate by an exact multiple of their pattern period over the loop.
 """
-import atexit
-import json
 import math
 import os
 import random
-import subprocess
 import sys
 import time
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(REPO, "build/rust/aarch64-apple-darwin/release/vexel")
-OUT = "/private/tmp/vexel-accept"
+if "--legacy" in sys.argv:
+    import runpy
+    sys.argv = [a for a in sys.argv if a not in ("--legacy", "--fast")]
+    runpy.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "scene_walk_home_legacy.py"), run_name="__main__")
+    sys.exit(0)
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import scene_common as C  # noqa: E402
+from scene_common import f, trs, hex_rgba, mix, TAU  # noqa: E402
+
+NAME = "walk_home"
 LOOP = 96
-TAU = 2 * math.pi
-MIN_INTERVAL = 0.108  # < 555 requests/minute
-
-FAST = "--fast" in sys.argv  # skip tracks (static art check)
+B = None  # Builder, set in main
 
 
-# --------------------------------------------------------------------------
-# MCP client
-# --------------------------------------------------------------------------
-class Mcp:
-    def __init__(self):
-        self.p = subprocess.Popen(
-            [APP, "--mcp-preview", "--grant-dir", OUT],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL, text=True, bufsize=1)
-        self.n = 0
-        self.last = 0.0
-        self.sent = 0
-        self.rpc("initialize", {"protocolVersion": "2024-11-05", "capabilities": {},
-                                "clientInfo": {"name": "scene_walk_home", "version": "1"}})
-        self.note("notifications/initialized")
-        tools = self.rpc("tools/list")["result"]["tools"]
-        self.tool_names = {t["name"] for t in tools}
-
-    def note(self, method):
-        self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "method": method}) + "\n")
-        self.p.stdin.flush()
-
-    def rpc(self, method, params=None):
-        wait = MIN_INTERVAL - (time.monotonic() - self.last)
-        if wait > 0:
-            time.sleep(wait)
-        self.n += 1
-        self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "id": self.n, "method": method,
-                                       "params": params or {}}) + "\n")
-        self.p.stdin.flush()
-        self.last = time.monotonic()
-        self.sent += 1
-        line = self.p.stdout.readline()
-        if not line:
-            raise RuntimeError("MCP server closed")
-        return json.loads(line)
-
-    def call(self, name, **args):
-        for attempt in range(4):
-            r = self.rpc("tools/call", {"name": name, "arguments": args})
-            res = r.get("result", {})
-            sc = res.get("structuredContent", {})
-            if res.get("isError"):
-                if "budget" in json.dumps(sc).lower() or "rate" in json.dumps(sc).lower():
-                    time.sleep(5)
-                    continue
-                raise RuntimeError("%s failed: %s args=%s" % (name, sc, json.dumps(args)[:300]))
-            return sc
-        raise RuntimeError("%s: rate limited" % name)
-
-    def close(self):
-        try:
-            self.p.stdin.close()
-        except Exception:
-            pass
-        try:
-            self.p.wait(timeout=10)
-        except Exception:
-            self.p.terminate()
-            try:
-                self.p.wait(timeout=5)
-            except Exception:
-                self.p.kill()
-                self.p.wait()
+def add(tpl, parent=None, **a):
+    return B.add(tpl, parent, **a)
 
 
-m = None
-DOC = "preview-document"
-
-
-def f(v):
-    return ("%.2f" % v).rstrip("0").rstrip(".")
-
-
-def add(tpl, parent="root", **a):
-    attrs = {k.replace("_", "-"): (v if isinstance(v, str) else f(v)) for k, v in a.items()}
-    return m.call("element_add", documentId=DOC, parentId=parent, template=tpl,
-                  attributes=attrs)["elementId"]
-
-
-def path(d, fill="none", parent="root", stroke="none", sw=1):
+def path(d, fill="none", parent=None, stroke="none", sw=1):
     return add("path", parent, d=d, fill=fill, stroke=stroke, stroke_width=sw)
 
 
-def ell(cx, cy, rx, ry, fill, parent="root"):
+def ell(cx, cy, rx, ry, fill, parent=None):
     if cx - rx >= 0 and cy - ry >= 0 and cx + rx <= 512 and cy + ry <= 512:
         return add("ellipse", parent, cx=cx, cy=cy, rx=rx, ry=ry, fill=fill)
     # off-canvas parts of scrolling layers: element_add ellipse must lie inside the canvas
@@ -130,7 +60,7 @@ def ell(cx, cy, rx, ry, fill, parent="root"):
     return path(d, fill, parent)
 
 
-def rect(x, y, w, h, fill, parent="root"):
+def rect(x, y, w, h, fill, parent=None):
     if x >= 0 and y >= 0 and x + w <= 512 and y + h <= 512:
         return add("rect", parent, x=x, y=y, width=w, height=h, fill=fill)
     return path("M%s %s L%s %s L%s %s L%s %s Z" % (
@@ -138,33 +68,19 @@ def rect(x, y, w, h, fill, parent="root"):
 
 
 def group(el):
-    return m.call("element_group", documentId=DOC, elementId=el)["elementId"]
+    return B.group(el)
 
 
 def gradient(kind, stops, **kw):
-    return m.call("gradient_add", documentId=DOC, kind=kind, stops=stops, **kw)["gradientId"]
+    return B.gradient(kind, stops, **kw)
 
 
-def paint(el, gid, prop="fill"):
-    m.call("element_set_paint", documentId=DOC, elementId=el, property=prop, gradientId=gid)
-
-
-_tid = [0]
+def paint(el, g, prop="fill"):
+    B.paint(el, g, prop)
 
 
 def track(target, prop, vtype, pts, interp="cubic"):
-    """pts: [(tick, value)] ascending, first tick 0."""
-    if FAST:
-        return
-    _tid[0] += 1
-    tid = "t%d" % _tid[0]
-    assert pts[0][0] == 0
-    m.call("native_timeline_add_property_track", documentId=DOC, trackId=tid,
-           targetId=target, property=prop, valueType=vtype, interpolation=interp,
-           value=pts[0][1])
-    for tick, v in pts[1:]:
-        m.call("native_timeline_set_property_key", documentId=DOC, trackId=tid,
-               tick=tick, value=v)
+    B.track(target, prop, vtype, pts, interp)
 
 
 def ticks(step):
@@ -176,23 +92,6 @@ def ticks(step):
 
 def sample(fn, step):
     return [(t, fn(t)) for t in ticks(step)]
-
-
-def trs(tx=0.0, ty=0.0, rot=0.0, sx=1.0, sy=1.0, pivot=(0, 0)):
-    v = {"translate": [round(tx, 3), round(ty, 3)], "rotate": round(rot, 3),
-         "pivot": [pivot[0], pivot[1]]}
-    if sx != 1.0 or sy != 1.0:
-        v["scale"] = [round(sx, 4), round(sy, 4)]
-    return v
-
-
-def hex_rgba(h, a=1.0):
-    h = h.lstrip("#")
-    return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)] + [a]
-
-
-def mix(c1, c2, t):
-    return [c1[i] + (c2[i] - c1[i]) * t for i in range(4)]
 
 
 def rot_track(el, pivot, fn, step=4):
@@ -505,7 +404,6 @@ def build():
 
 
 def build_traveler():
-    T = None
     # lantern light pool on path (behind legs)
     pool = ell(XT + 24, 448, 44, 8, "#000000")
     paint(pool, gradient("radial", "0:#ffd070:0.5,1:#ffd070:0", cx=0.5, cy=0.5, r=0.5))
@@ -532,13 +430,10 @@ def build_traveler():
     # move torso above? backpack must be behind torso; reorder below
     bp = path("M177 360 Q171 361 171 368 L171 389 Q171 393 177 393 L190 393 L190 360 Z", "#8a5a3a", body)
     path("M171 376 L190 376 L190 379 L171 379 Z", "#6e452d", body)
-    roll = ell(180, 358.5, 11, 4.5, "#5d8a78", body)
-    bpg = bp
-    # group backpack pieces: wrap first piece, add the rest
+    # backpack group (behind the torso): wrap the first piece, add the rest
     bpgroup = group(bp)
-    m.call("element_reorder", documentId=DOC, elementId=bpgroup, targetId=body_ref, before=True)
+    B.before(bpgroup, body_ref)
     ell(180, 358.5, 11, 4.5, "#5d8a78", bpgroup)
-    m.call("element_delete", documentId=DOC, elementId=roll)
     path("M171 376 L190 376 L190 379 L171 379 Z", "#6e452d", bpgroup)
     rot_track(bpgroup, (190, 364), lambda t: 2.4 * math.sin(theta(t, 4, 1.3)), 4)
 
@@ -548,7 +443,7 @@ def build_traveler():
     # far (back) arm, drawn before torso visually: reorder behind
     bua = path("M195.5 363 L203 363 L203.5 380 L197 380 Z", "#8f4632", body)
     bag = group(bua)
-    m.call("element_reorder", documentId=DOC, elementId=bag, targetId=body_ref, before=True)
+    B.before(bag, body_ref)
     bfa = path("M196.5 379 L203 379 L203.5 394 L198 394 Z", "#8f4632", bag)
     bfg = group(bfa)
     ell(200.5, 396, 3.4, 3.6, "#d9a889", bfg)
@@ -657,38 +552,37 @@ def build_traveler():
           interp="linear")
 
 
+
+
 def main():
-    global m
-    os.makedirs(OUT, exist_ok=True)
-    base = os.path.join(OUT, "walk_home_base.svg")
-    with open(base, "w") as fh:
-        fh.write('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"></svg>')
-    # one app at a time: stop leftover preview servers from earlier runs
-    subprocess.run(["pkill", "-f", APP + " --mcp-preview"], check=False)
-    time.sleep(1)
-    m = Mcp()
-    atexit.register(m.close)
+    global B
+    os.makedirs(C.OUT, exist_ok=True)
+    m = C.Mcp("scene_walk_home")
     t0 = time.time()
     try:
-        global DOC
-        m.call("document_open", path=base)
-        DOC = m.call("document_list")["documents"][0]["documentId"]
-        m.call("native_timeline_set_duration", documentId=DOC, durationTicks=LOOP, ticksPerSecond=24)
-        m.call("native_timeline_set_loop", documentId=DOC, mode="loop")
+        m.open_blank(NAME)
+        m.call("native_timeline_set_duration", documentId=m.doc, durationTicks=LOOP, ticksPerSecond=24)
+        m.call("native_timeline_set_loop", documentId=m.doc, mode="loop")
+        B = C.Builder(m, "w")
         build()
-        if "--probe" in sys.argv or FAST:
-            m.call("render_png", documentId=DOC, path=OUT + "/walk_home_a.png", width=512, height=512, time=0)
-            if FAST:
-                return
-        m.call("save_as", documentId=DOC, path=OUT + "/walk_home.vexel")
-        m.call("render_png", documentId=DOC, path=OUT + "/walk_home_a.png", width=512, height=512, time=0)
-        m.call("render_png", documentId=DOC, path=OUT + "/walk_home_b.png", width=512, height=512, time=2)
-        m.call("export_animation", documentId=DOC, path=OUT + "/walk_home.gif", format="gif", fps=24, duration=4)
+        tb = time.time()
+        stats = B.flush()
+        t_build = time.time() - tb
+        census = C.element_count(m)
+        tm = C.export_all(m, NAME, (0, 2), [dict(file=NAME + ".mp4", format="mp4", width=512, height=512)])
+        print("flush %.1fs %s" % (t_build, stats))
+        print("elements %s" % {k: v for k, v in census.items() if k != "tags"})
+        print("timing %s" % {k: round(v, 2) for k, v in tm.items() if not k.startswith("reply")})
+        print("mp4 reply %s" % tm["reply_" + NAME + ".mp4"])
+        for line in C.timing_report(m):
+            print(line)
+        print("requests=%d cost=%.1f elapsed=%.0fs" % (m.sent, m.cost, time.time() - t0))
     finally:
         m.close()
-    a = open(OUT + "/walk_home_a.png", "rb").read()
-    b = open(OUT + "/walk_home_b.png", "rb").read()
-    print("requests=%d elapsed=%.0fs a!=b: %s" % (m.sent, time.time() - t0, a != b))
+    a = open(C.OUT + "/%s_a.png" % NAME, "rb").read()
+    b = open(C.OUT + "/%s_b.png" % NAME, "rb").read()
+    print("a!=b: %s" % (a != b))
+    print(C.ffprobe(C.OUT + "/%s.mp4" % NAME))
 
 
 if __name__ == "__main__":
