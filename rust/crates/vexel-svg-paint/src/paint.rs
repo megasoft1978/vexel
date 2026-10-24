@@ -173,7 +173,9 @@ impl PreparedPaint<'_> {
             return None;
         }
         let local = match self.bbox {
-            Some((w, h)) => ((user + paint.bounds[0].abs()) / w).max((user + paint.bounds[1].abs()) / h),
+            Some((w, h)) => {
+                ((user + paint.bounds[0].abs()) / w).max((user + paint.bounds[1].abs()) / h)
+            }
             None => user,
         };
         if local.partial_cmp(&PLACED_LIMIT) != Some(std::cmp::Ordering::Less) {

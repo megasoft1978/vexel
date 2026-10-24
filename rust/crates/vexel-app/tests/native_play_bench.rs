@@ -126,7 +126,10 @@ fn ms(t: Instant) -> f64 {
 
 fn profile_run(label: &str, doc: &AppDocument) {
     vexel_app::profile::enable();
-    let size = std::env::var("SIZE").ok().and_then(|v| v.parse().ok()).unwrap_or(900);
+    let size = std::env::var("SIZE")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(900);
     run(label, doc, size);
     for (name, v) in vexel_app::profile::take() {
         let mut v = v;
