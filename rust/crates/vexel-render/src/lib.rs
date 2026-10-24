@@ -17,6 +17,7 @@
 mod adapter;
 mod bounds;
 mod clip;
+mod clip_rows;
 mod composite;
 mod dash;
 mod fill;

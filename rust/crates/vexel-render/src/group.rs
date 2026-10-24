@@ -14,9 +14,9 @@
 //! isolation are not modelled here.
 
 use crate::clip::{ClipList, RenderClip};
-use crate::composite::{all_zero, source_over};
+use crate::composite::source_over;
 use crate::mask::{self, RenderMask};
-use crate::render::{render_shapes_clipped, render_shapes_fresh};
+use crate::render::{DirtySpan, render_shapes_clipped, render_shapes_tracked};
 use crate::{RenderError, RenderShape, ViewMap};
 use std::ops::Range;
 use vexel_raster::Tile;
@@ -146,6 +146,36 @@ impl<'a> Run<'a> {
     }
 }
 
+/// Layers kept for reuse after a composite; each is all-zero again.
+const POOL_LIMIT: usize = 4;
+
+/// A transparent full-size tile plus, per row, the pixel range that may hold
+/// non-transparent pixels. Everything outside the ranges is zero.
+pub(crate) struct Layer {
+    tile: Tile,
+    dirty: Vec<DirtySpan>,
+}
+
+impl Layer {
+    /// Zeroes the dirty ranges, restoring the all-transparent state.
+    fn clear(&mut self) {
+        let row_bytes = self.tile.width() as usize * 4;
+        for (row, span) in self.tile.rgba_mut().chunks_exact_mut(row_bytes).zip(&mut self.dirty) {
+            if span.0 < span.1 {
+                row[span.0 as usize * 4..span.1 as usize * 4].fill(0);
+            }
+            *span = (0, 0);
+        }
+    }
+}
+
+/// Where a run or layer is composited: a tile, plus its dirty ranges when it
+/// is a pooled layer.
+pub(crate) struct Dest<'d> {
+    tile: &'d mut Tile,
+    dirty: Option<&'d mut [DirtySpan]>,
+}
+
 /// Render state shared by a whole call (C `group_render_context`).
 pub(crate) struct Ctx<'c> {
     pub(crate) view: ViewMap,
@@ -153,6 +183,7 @@ pub(crate) struct Ctx<'c> {
     pub(crate) mask_depth: usize,
     tile_bytes: usize,
     scratch_bytes: usize,
+    pool: Vec<Layer>,
 }
 
 impl Ctx<'_> {
@@ -182,8 +213,30 @@ impl Ctx<'_> {
             .map_err(|_| RenderError::LimitExceeded)
     }
 
+    /// A transparent layer, reusing a pooled one when available.
+    fn take_layer(&mut self) -> Result<Layer, RenderError> {
+        if let Some(layer) = self.pool.pop() {
+            return Ok(layer);
+        }
+        let tile = self.new_tile()?;
+        let mut dirty = Vec::new();
+        dirty
+            .try_reserve_exact(tile.height() as usize)
+            .map_err(|_| RenderError::LimitExceeded)?;
+        dirty.resize(tile.height() as usize, (0, 0));
+        Ok(Layer { tile, dirty })
+    }
+
+    /// Clears `layer` and keeps it for the next `take_layer`.
+    fn give_back(&mut self, mut layer: Layer) {
+        if self.pool.len() < POOL_LIMIT {
+            layer.clear();
+            self.pool.push(layer);
+        }
+    }
+
     /// Renders the pending run into its own layer and composites it at opacity 1.
-    fn flush(&mut self, run: &mut Run<'_>, destination: &mut Tile) -> Result<(), RenderError> {
+    fn flush(&mut self, run: &mut Run<'_>, destination: &mut Dest<'_>) -> Result<(), RenderError> {
         if run.shapes.is_empty() {
             return Ok(());
         }
@@ -194,11 +247,20 @@ impl Ctx<'_> {
         result
     }
 
-    fn flush_reserved(&mut self, run: &Run<'_>, destination: &mut Tile) -> Result<(), RenderError> {
-        let mut layer = self.new_tile()?;
+    fn flush_reserved(&mut self, run: &Run<'_>, destination: &mut Dest<'_>) -> Result<(), RenderError> {
+        let mut layer = self.take_layer()?;
         let lists: Vec<ClipList<'_>> = run.ranges.iter().map(|r| &run.arena[r.clone()]).collect();
-        render_shapes_fresh(&run.shapes, &lists, self.view, &mut layer, self.control)?;
-        composite_tile(destination, &layer, 1.0, self.control)
+        render_shapes_tracked(
+            &run.shapes,
+            &lists,
+            self.view,
+            &mut layer.tile,
+            &mut layer.dirty,
+            self.control,
+        )?;
+        composite_layer(destination, &layer, 1.0, self.control)?;
+        self.give_back(layer);
+        Ok(())
     }
 
     /// C `render_group_range` for one node sequence.
@@ -207,7 +269,7 @@ impl Ctx<'_> {
         nodes: &[RenderNode<'a>],
         clips: &mut Vec<&'a RenderClip<'a>>,
         run: &mut Run<'a>,
-        destination: &mut Tile,
+        destination: &mut Dest<'_>,
     ) -> Result<(), RenderError> {
         for node in nodes {
             if self.cancelled() {
@@ -241,7 +303,7 @@ impl Ctx<'_> {
         &mut self,
         group: &RenderGroup<'a>,
         clips: &mut Vec<&'a RenderClip<'a>>,
-        destination: &mut Tile,
+        destination: &mut Dest<'_>,
     ) -> Result<(), RenderError> {
         self.reserve()?;
         let result = self.layered_reserved(group, clips, destination);
@@ -253,16 +315,21 @@ impl Ctx<'_> {
         &mut self,
         group: &RenderGroup<'a>,
         clips: &mut Vec<&'a RenderClip<'a>>,
-        destination: &mut Tile,
+        destination: &mut Dest<'_>,
     ) -> Result<(), RenderError> {
-        let mut layer = self.new_tile()?;
+        let mut layer = self.take_layer()?;
         let mut run = Run::default();
-        self.walk(group.children, clips, &mut run, &mut layer)?;
-        self.flush(&mut run, &mut layer)?;
-        if let Some(mask) = group.mask {
-            mask::apply(self, mask, &mut layer)?;
+        {
+            let mut inner = Dest { tile: &mut layer.tile, dirty: Some(&mut layer.dirty) };
+            self.walk(group.children, clips, &mut run, &mut inner)?;
+            self.flush(&mut run, &mut inner)?;
         }
-        composite_tile(destination, &layer, group.opacity, self.control)
+        if let Some(mask) = group.mask {
+            mask::apply(self, mask, &mut layer.tile)?;
+        }
+        composite_layer(destination, &layer, group.opacity, self.control)?;
+        self.give_back(layer);
+        Ok(())
     }
 
     /// Renders `nodes` into the transparent `tile` (also used for mask content).
@@ -273,10 +340,12 @@ impl Ctx<'_> {
     ) -> Result<(), RenderError> {
         let mut clips = Vec::new();
         let mut run = Run::default();
-        self.walk(nodes, &mut clips, &mut run, tile)?;
+        let mut destination = Dest { tile, dirty: None };
+        self.walk(nodes, &mut clips, &mut run, &mut destination)?;
+        let tile = destination.tile;
         if !run.shapes.is_empty() {
             if has_layer(nodes) {
-                self.flush(&mut run, tile)?;
+                self.flush(&mut run, &mut Dest { tile, dirty: None })?;
             } else {
                 // Nothing layered: paint straight into the empty tile, exactly as `render_shapes`.
                 let lists: Vec<ClipList<'_>> =
@@ -288,26 +357,31 @@ impl Ctx<'_> {
     }
 }
 
-/// C `composite_tile` with blend mode normal: layer alpha times `opacity`, source-over.
-fn composite_tile(
-    destination: &mut Tile,
-    source: &Tile,
+/// C `composite_tile` with blend mode normal: layer alpha times `opacity`,
+/// source-over. Only the dirty ranges of `source` can be non-transparent.
+fn composite_layer(
+    destination: &mut Dest<'_>,
+    source: &Layer,
     opacity: f64,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    let row_bytes = source.width() as usize * 4;
-    for (dst_row, src_row) in destination
+    let row_bytes = source.tile.width() as usize * 4;
+    for (row, (dst_row, src_row)) in destination
+        .tile
         .rgba_mut()
         .chunks_exact_mut(row_bytes)
-        .zip(source.rgba().chunks_exact(row_bytes))
+        .zip(source.tile.rgba().chunks_exact(row_bytes))
+        .enumerate()
     {
         if control() {
             return Err(RenderError::Cancelled);
         }
-        if all_zero(src_row) {
+        let (first, end) = source.dirty[row];
+        if first >= end {
             continue;
         }
-        for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
+        let (from, to) = (first as usize * 4, end as usize * 4);
+        for (dst, src) in dst_row[from..to].chunks_exact_mut(4).zip(src_row[from..to].chunks_exact(4)) {
             if src[3] == 0 {
                 continue;
             }
@@ -318,6 +392,10 @@ fn composite_tile(
             let rgba = [src[0], src[1], src[2], (source_alpha * 255.0).round() as u8];
             let dst: &mut [u8; 4] = dst.try_into().map_err(|_| RenderError::InvalidGeometry)?;
             source_over(dst, rgba);
+        }
+        if let Some(spans) = destination.dirty.as_deref_mut() {
+            let span = &mut spans[row];
+            *span = if span.0 >= span.1 { (first, end) } else { (span.0.min(first), span.1.max(end)) };
         }
     }
     Ok(())
@@ -352,6 +430,7 @@ pub fn render_groups(
         mask_depth: 0,
         tile_bytes: tile.byte_count(),
         scratch_bytes: 0,
+        pool: Vec::new(),
     };
     ctx.render_tree(nodes, tile)
 }

@@ -55,6 +55,11 @@ impl Crossings {
             let xcross = edge.x0 + (py - edge.y0) * (edge.x1 - edge.x0) / (edge.y1 - edge.y0);
             self.scratch.push((xcross, if upward { 1 } else { -1 }));
         }
+        self.finish();
+    }
+
+    /// Sorts the gathered crossings and builds the suffix windings.
+    fn finish(&mut self) {
         self.scratch.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
         self.xs.clear();
         self.winding_from.clear();
@@ -63,6 +68,21 @@ impl Crossings {
             self.winding_from[i] = self.winding_from[i + 1] + direction;
         }
         self.xs.extend(self.scratch.iter().map(|c| c.0));
+    }
+
+    /// [`Self::collect`] over every edge of `edges`.
+    pub(crate) fn collect_all(&mut self, edges: &[FlatEdge], py: f64) {
+        self.scratch.clear();
+        for edge in edges {
+            let upward = edge.y0 <= py && edge.y1 > py;
+            let downward = edge.y1 <= py && edge.y0 > py;
+            if !upward && !downward {
+                continue;
+            }
+            let xcross = edge.x0 + (py - edge.y0) * (edge.x1 - edge.x0) / (edge.y1 - edge.y0);
+            self.scratch.push((xcross, if upward { 1 } else { -1 }));
+        }
+        self.finish();
     }
 
     pub(crate) fn first_x(&self) -> Option<f64> {
@@ -91,6 +111,11 @@ impl Crossings {
             cursor += 1;
         }
         cursor
+    }
+
+    /// Number of crossings at or left of `px`.
+    pub(crate) fn count_le(&self, px: f64) -> usize {
+        self.xs.partition_point(|x| *x <= px)
     }
 
     /// [`Self::inside`] given `first_right`, the count of crossings `<= px`.
