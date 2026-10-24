@@ -1,11 +1,13 @@
 //! Gesture state machine turning pointer/key events into document edits.
 
 use super::{
-    map::CanvasMap,
+    frame::{compose, decompose, rotation_about, shape_frame},
+    handles::{HANDLE_PX, handle_at, resize_bounds, rotate_start},
+    map::{CanvasMap, doc_per_pixel},
     pen::{PenPath, Vertex},
 };
 use crate::model::Tool;
-use vexel_v1_document::{Reorder, TransformSpec, V1Document, V1DocumentError};
+use vexel_v1_document::{Reorder, V1Document, V1DocumentError};
 
 /// Drags shorter than this many document units on both axes are clicks.
 pub const MIN_DRAG: f64 = 1.0;
@@ -46,6 +48,8 @@ pub enum Key {
     Delete,
     /// Finishes an open pen path.
     Enter,
+    /// Moves the selection by whole document units (arrow keys).
+    Nudge(i8, i8),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -73,7 +77,7 @@ impl From<V1DocumentError> for ToolError {
     }
 }
 
-type Point = (f64, f64);
+pub(super) type Point = (f64, f64);
 
 #[derive(Debug)]
 enum Gesture {
@@ -118,6 +122,8 @@ pub struct ToolController {
     counters: [u64; 4],
     rotate_preview: Option<(String, f64)>,
     shift: bool,
+    /// Handle grab radius in document units for the current pointer press.
+    handle_tol: f64,
 }
 
 impl Default for ToolController {
@@ -139,6 +145,7 @@ impl ToolController {
             counters: [0; 4],
             rotate_preview: None,
             shift: false,
+            handle_tol: HANDLE_PX,
         }
     }
 
@@ -209,18 +216,9 @@ impl ToolController {
             return Ok(Outcome::Ignored);
         };
         match key {
-            EditKey::Group => {
-                let info = doc.element_get(&id)?;
-                if info.kind != vexel_v1_document::ElementKind::Group {
-                    return Ok(Outcome::Ignored);
-                }
-                let sibling_ids = info.children;
-                if sibling_ids.len() < 2 {
-                    return Ok(Outcome::Ignored);
-                }
-                let grouped = doc.group(&sibling_ids)?;
-                self.selection = Some(grouped);
-            }
+            // Wraps the selected element in a new group and selects the group;
+            // Ungroup selects the first child again.
+            EditKey::Group => self.selection = Some(doc.group(&[id])?),
             EditKey::Ungroup => {
                 let children = doc.ungroup(&id)?;
                 self.selection = children.first().cloned();
@@ -306,6 +304,7 @@ impl ToolController {
                     return Ok(Outcome::Ignored);
                 };
                 self.gesture = Gesture::None;
+                self.handle_tol = HANDLE_PX * doc_per_pixel(map, (x, y));
                 self.down(p, doc)
             }
             PointerInput::Move { x, y } => {
@@ -361,6 +360,11 @@ impl ToolController {
                 Ok(Outcome::Committed)
             }
             Key::Enter => self.finish_pen(doc, false),
+            Key::Nudge(dx, dy) if !self.owns_keys() => {
+                self.validate_selection(doc);
+                self.move_selection(doc, f64::from(dx), f64::from(dy))
+            }
+            Key::Nudge(..) => Ok(Outcome::Ignored),
         }
     }
 
@@ -407,9 +411,9 @@ impl ToolController {
             Tool::Select => {
                 self.validate_selection(doc);
                 if let Some(id) = self.selection.clone() {
-                    if let Ok(bounds) = doc.geometry_bounds(&id) {
-                        if let Some(last) = rotate_start(bounds, p) {
-                            let centre = ((bounds.0 + bounds.2) / 2.0, (bounds.1 + bounds.3) / 2.0);
+                    if let Some(frame) = shape_frame(doc, &id) {
+                        let (bounds, centre) = (frame.bounds, frame.centre);
+                        if let Some(last) = rotate_start(bounds, p, self.handle_tol) {
                             let initial = (p.1 - centre.1).atan2(p.0 - centre.0).to_degrees();
                             self.gesture = Gesture::Rotate {
                                 id,
@@ -420,7 +424,9 @@ impl ToolController {
                             };
                             return Ok(Outcome::Updated);
                         }
-                        if let Some(handle) = handle_at(bounds, p) {
+                        if let Some(handle) =
+                            handle_at(bounds, p, self.handle_tol).filter(|_| !frame.transformed)
+                        {
                             self.gesture = Gesture::Resize {
                                 id,
                                 bounds,
@@ -555,17 +561,9 @@ impl ToolController {
                     return Ok(Outcome::Updated);
                 }
                 self.rotate_preview = None;
+                // Rotate on top of whatever transform the shape already has.
                 let old = doc.get_transform_matrix(&id)?;
-                if old[0] != 1.0 || old[1] != 0.0 || old[2] != 0.0 || old[3] != 1.0 {
-                    return Err(V1DocumentError::UnsupportedTransform.into());
-                }
-                let spec = TransformSpec {
-                    translate: (old[4], old[5]),
-                    rotate_deg: angle,
-                    pivot: centre,
-                    scale: (1.0, 1.0),
-                    skew_x_deg: 0.0,
-                };
+                let spec = decompose(&compose(&rotation_about(angle, centre), &old))?;
                 doc.set_transform(&id, &spec)?;
                 Ok(Outcome::Committed)
             }
@@ -669,21 +667,6 @@ pub enum EditKey {
     Back,
 }
 
-fn rotate_start(bounds: (f64, f64, f64, f64), p: Point) -> Option<Point> {
-    let corners = [
-        (bounds.0, bounds.1),
-        (bounds.2, bounds.1),
-        (bounds.2, bounds.3),
-        (bounds.0, bounds.3),
-    ];
-    corners.into_iter().find(|corner| {
-        let dx = (p.0 - corner.0).abs();
-        let dy = (p.1 - corner.1).abs();
-        let outside = (p.0 < bounds.0 || p.0 > bounds.2) && (p.1 < bounds.1 || p.1 > bounds.3);
-        outside && dx <= 16.0 && dy <= 16.0 && (dx > 2.0 || dy > 2.0)
-    })
-}
-
 fn group_ancestor(doc: &V1Document, id: &str) -> Option<String> {
     let (tree, _) = doc.tree_get(16, 1000).ok()?;
     fn find(
@@ -710,46 +693,6 @@ fn group_ancestor(doc: &V1Document, id: &str) -> Option<String> {
 
 fn far(a: Point, b: Point) -> bool {
     (b.0 - a.0).hypot(b.1 - a.1) >= MIN_DRAG
-}
-
-fn handle_points(b: (f64, f64, f64, f64)) -> [Point; 8] {
-    let mx = (b.0 + b.2) / 2.0;
-    let my = (b.1 + b.3) / 2.0;
-    [
-        (b.0, b.1),
-        (b.2, b.1),
-        (b.2, b.3),
-        (b.0, b.3),
-        (mx, b.1),
-        (b.2, my),
-        (mx, b.3),
-        (b.0, my),
-    ]
-}
-fn handle_at(b: (f64, f64, f64, f64), p: Point) -> Option<usize> {
-    handle_points(b).iter().position(|h| {
-        let dx = (h.0 - p.0).abs();
-        let dy = (h.1 - p.1).abs();
-        dx <= 2.0 && dy <= 2.0
-    })
-}
-fn resize_bounds(b: (f64, f64, f64, f64), h: usize, p: Point) -> (f64, f64, f64, f64) {
-    let (mut l, mut t, mut r, mut bot) = b;
-    if matches!(h, 0 | 3 | 7) {
-        l = p.0;
-    }
-    if matches!(h, 1 | 2 | 5) {
-        r = p.0;
-    }
-    if matches!(h, 0 | 1 | 4) {
-        t = p.1;
-    }
-    if matches!(h, 2 | 3 | 6) {
-        bot = p.1;
-    }
-    let (l, r) = if l <= r { (l, r) } else { (r, l) };
-    let (t, bot) = if t <= bot { (t, bot) } else { (bot, t) };
-    (l, t, r, bot)
 }
 
 fn check_color(value: &str) -> Result<(), V1DocumentError> {

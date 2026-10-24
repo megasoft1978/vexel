@@ -60,8 +60,8 @@ pub enum Hit {
     ModeSmil,
     Play,
     Loop,
-    OnionBefore,
-    OnionAfter,
+    /// Adds a key at the playhead (same slot the removed onion button used).
+    AddKey,
     AddDrawingTrack,
     ImportDrawing,
     Ruler,
@@ -155,7 +155,7 @@ pub fn control_rect_in(panel: Rect, hit: Hit) -> Option<Rect> {
     let index = match hit {
         Hit::Play => 0,
         Hit::Loop => 1,
-        Hit::OnionBefore => 2,
+        Hit::AddKey => 2,
         Hit::AddDrawingTrack => 3,
         Hit::ImportDrawing => 4,
         _ => return None,
@@ -211,7 +211,7 @@ impl TimelineLayout {
         [
             Hit::Play,
             Hit::Loop,
-            Hit::OnionBefore,
+            Hit::AddKey,
             Hit::AddDrawingTrack,
             Hit::ImportDrawing,
         ]
@@ -521,7 +521,7 @@ mod tests {
             [
                 Hit::Play,
                 Hit::Loop,
-                Hit::OnionBefore,
+                Hit::AddKey,
                 Hit::AddDrawingTrack,
                 Hit::ImportDrawing
             ]

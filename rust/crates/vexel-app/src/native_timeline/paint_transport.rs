@@ -58,18 +58,18 @@ pub(super) fn paint_transport(
         let enabled = match hit {
             Hit::AddDrawingTrack => m.can_add_drawing_track && has_target(m, s),
             Hit::ImportDrawing => m.can_import_asset && has_target(m, s),
+            Hit::AddKey => has_target(m, s),
             _ => true,
         };
-        let active = matches!(hit, Hit::Play) && m.playing
-            || matches!(hit, Hit::Loop) && m.loop_enabled
-            || matches!(hit, Hit::OnionBefore) && (m.onion_before > 0 || m.onion_after > 0);
+        let active =
+            matches!(hit, Hit::Play) && m.playing || matches!(hit, Hit::Loop) && m.loop_enabled;
         let hovered = enabled && s.hover == Some(hit);
         let pressed = hovered && s.pressed() == Some(hit);
         let icon = match hit {
             Hit::Play if m.playing => IconKind::PAUSE,
             Hit::Play => IconKind::PLAY,
             Hit::Loop => IconKind::LOOP,
-            Hit::OnionBefore => IconKind::LAYERS,
+            Hit::AddKey => IconKind::KEYFRAME,
             Hit::AddDrawingTrack => IconKind::PLUS,
             _ => IconKind::IMAGE,
         };

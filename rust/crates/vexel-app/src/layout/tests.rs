@@ -434,8 +434,8 @@ fn native_timeline_tooltips_are_named_and_clamped_inside_window() {
             ("Loop mode", "once | loop | ping-pong"),
         ),
         (
-            crate::native_timeline::layout::Hit::OnionBefore,
-            ("Onion skin", ""),
+            crate::native_timeline::layout::Hit::AddKey,
+            ("Add key", "K"),
         ),
         (
             crate::native_timeline::layout::Hit::AddDrawingTrack,

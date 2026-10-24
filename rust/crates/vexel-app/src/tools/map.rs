@@ -11,6 +11,20 @@ pub trait CanvasMap {
     fn to_doc(&self, x: f64, y: f64) -> Option<(f64, f64)>;
 }
 
+/// Document units per canvas pixel near `at`, measured with one-pixel probes
+/// (1.0 when the point has no valid neighbour on the artboard).
+pub fn doc_per_pixel(map: &dyn CanvasMap, at: (f64, f64)) -> f64 {
+    let Some(here) = map.to_doc(at.0, at.1) else {
+        return 1.0;
+    };
+    [1.0, -1.0]
+        .into_iter()
+        .filter_map(|step| map.to_doc(at.0 + step, at.1))
+        .map(|there| (there.0 - here.0).abs())
+        .find(|d| d.is_finite() && *d > 0.0)
+        .unwrap_or(1.0)
+}
+
 /// `doc = (canvas - origin) / scale`, valid only inside `0..=width` by `0..=height`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ScaleMap {
