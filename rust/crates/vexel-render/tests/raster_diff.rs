@@ -44,6 +44,13 @@ fn current() -> Vec<(String, String)> {
         }
         rows.push((format!("Dash-{size}"), dashed_digest(size, count / 2)));
     }
+    // Extra stroke and nest cases (sizes off the 4x4 grid, denser scenes), recorded
+    // from the unmodified rasterizer before the stroke/layer optimizations.
+    for (size, count) in [(61u32, 150usize), (203, 900), (512, 1500)] {
+        for profile in [Profile::Stroke, Profile::Nest] {
+            rows.push((format!("{profile:?}x-{size}"), digest(size, profile, count)));
+        }
+    }
     rows
 }
 

@@ -42,3 +42,22 @@ pub(crate) fn resolve_samples(samples: &[[u8; 4]; SAMPLE_COUNT]) -> [u8; 4] {
     rgba[3] = ((alpha_sum + SAMPLE_COUNT as u32 / 2) / SAMPLE_COUNT as u32) as u8;
     rgba
 }
+
+/// True when every byte is zero; chunked so the scan vectorizes.
+pub(crate) fn all_zero(bytes: &[u8]) -> bool {
+    let mut chunks = bytes.chunks_exact(64);
+    let mut acc = 0u8;
+    for chunk in &mut chunks {
+        let mut word = 0u8;
+        for byte in chunk {
+            word |= *byte;
+        }
+        if word != 0 {
+            return false;
+        }
+    }
+    for byte in chunks.remainder() {
+        acc |= *byte;
+    }
+    acc == 0
+}

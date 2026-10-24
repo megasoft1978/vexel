@@ -87,9 +87,6 @@ pub(crate) fn validate(
     if steps > MAX_STROKE_STEPS || bytes > MAX_STROKE_BYTES {
         return Err(RenderError::LimitExceeded);
     }
-    if tile.rgba().iter().any(|byte| *byte != 0) {
-        return Err(RenderError::TileNotEmpty);
-    }
     Ok(Budget { steps, bytes })
 }
 
