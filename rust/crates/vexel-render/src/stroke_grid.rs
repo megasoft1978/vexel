@@ -11,6 +11,7 @@
 //! rounding error.
 
 use crate::stroke::{Join, Segment};
+use crate::stroke_join::JoinGeom;
 use crate::{Linecap, RenderError};
 
 /// Primitives below this count are tested linearly.
@@ -59,7 +60,10 @@ fn cells_along(span: f64, axis: usize, mean: f64) -> usize {
     ((span / cell).ceil() as usize).clamp(1, axis)
 }
 
-fn join_rect(join: &Join, reach: f64) -> Rect {
+fn join_rect(join: &Join, geom: &JoinGeom, reach: f64) -> Rect {
+    if let Some([x0, y0, x1, y1]) = geom.tight {
+        return Rect { x0, y0, x1, y1 };
+    }
     let pad = reach + (reach + join.vertex.x.abs().max(join.vertex.y.abs())) * SLACK;
     Rect {
         x0: join.vertex.x - pad,
@@ -76,6 +80,7 @@ impl Grid {
     pub(crate) fn build(
         segments: &[Segment],
         joins: &[Join],
+        geoms: &[JoinGeom],
         radius: f64,
         join_reach: f64,
     ) -> Result<Option<Self>, RenderError> {
@@ -86,7 +91,7 @@ impl Grid {
         let rects: Vec<Rect> = segments
             .iter()
             .map(|s| segment_rect(s, radius))
-            .chain(joins.iter().map(|j| join_rect(j, join_reach)))
+            .chain(joins.iter().zip(geoms).map(|(j, g)| join_rect(j, g, join_reach)))
             .collect();
         let (mut min_x, mut min_y, mut max_x, mut max_y) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
         for r in &rects {
@@ -177,6 +182,20 @@ impl Grid {
 
     fn cell_range(&self, r: &Rect) -> (usize, usize, usize, usize) {
         (self.column_of(r.x0), self.column_of(r.x1), self.row_of(r.y0), self.row_of(r.y1))
+    }
+
+    /// Calls `f` for every item of every cell the rectangle touches.
+    pub(crate) fn for_each_in(&self, x0: f64, y0: f64, x1: f64, y1: f64, mut f: impl FnMut(u32)) {
+        let (c0, c1) = (self.column_of(x0), self.column_of(x1));
+        let (r0, r1) = (self.row_of(y0), self.row_of(y1));
+        for row in r0..=r1 {
+            for column in c0..=c1 {
+                let cell = row * self.columns + column;
+                for item in &self.items[self.starts[cell] as usize..self.starts[cell + 1] as usize] {
+                    f(*item);
+                }
+            }
+        }
     }
 
     /// Candidate primitives for a local-space sample.

@@ -118,7 +118,7 @@ fn parity_map_lists_exactly_the_functions_defined_in_the_c_files() {
 
 #[test]
 fn mapped_symbols_and_tests_exist_in_the_crate() {
-    let sources: String = ["lib", "adapter", "bounds", "composite", "fill", "presentation", "render", "stroke", "validate", "view"]
+    let sources: String = ["lib", "adapter", "bounds", "composite", "fill", "presentation", "render", "stroke", "stroke_join", "validate", "view"]
         .iter()
         .map(|m| std::fs::read_to_string(format!("{}/src/{m}.rs", env!("CARGO_MANIFEST_DIR"))).unwrap())
         .collect();

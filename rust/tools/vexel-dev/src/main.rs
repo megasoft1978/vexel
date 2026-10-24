@@ -2,6 +2,7 @@
 #[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
 compile_error!("Vexel initially supports Apple Silicon macOS 13+ only");
 mod args;
+mod bench;
 mod bundle;
 mod ci_policy;
 mod plist;
@@ -131,6 +132,11 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             release::install_smoke(runner, &out_dir(&root, out)?)?;
             println!("install-smoke: pass");
             Ok(())
+        }
+        Command::Bench { args } => {
+            let cargo = toolchain_and_cache(runner, &root)?;
+            run_checked(runner, &bench::release_build(&root, &cargo))?;
+            bench::run_binary(&bench::binary(&cargo), &args, &root)
         }
         Command::Notarize { path, execute } => release::notarize(
             &path,

@@ -17,6 +17,7 @@
 mod adapter;
 mod bounds;
 mod clip;
+mod clip_rows;
 mod composite;
 mod dash;
 mod fill;
@@ -32,6 +33,7 @@ mod scan;
 mod scene_tests;
 mod stroke;
 mod stroke_grid;
+mod stroke_join;
 mod text;
 mod validate;
 mod view;

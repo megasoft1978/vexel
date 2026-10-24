@@ -1,5 +1,6 @@
 # Workspace members that must stay rustfmt-clean (checked by scripts/check_rust_fmt.py).
 vexel-app
+vexel-bench
 vexel-dev
 vexel-document-edit
 vexel-gif

@@ -8,6 +8,7 @@
 
 use crate::dash::{self, Budget, Pattern};
 use crate::stroke_grid::{self, Grid};
+use crate::stroke_join::{JoinGeom, within};
 use crate::{Linecap, Linejoin, RenderError, RenderShape, StrokeStyle};
 use vexel_geometry::{Affine, Point, affine_map_point, affine_valid};
 
@@ -121,9 +122,11 @@ pub(crate) struct Join {
 pub(crate) struct StrokePrims {
     segments: Vec<Segment>,
     joins: Vec<Join>,
+    /// Per-join geometry, parallel to `joins`.
+    geoms: Vec<JoinGeom>,
+    /// Segment lengths (`hypot` of the endpoint difference), parallel to `segments`.
+    lengths: Vec<f64>,
     radius: f64,
-    join: Linejoin,
-    miter_limit: f64,
     join_reach: f64,
     grid: Option<Grid>,
     /// Hit box of every segment then every join, same arithmetic as their tests.
@@ -200,9 +203,17 @@ impl StrokePrims {
         let radius = stroke.width * 0.5;
         let join_reach =
             if stroke.join == Linejoin::Miter { radius * stroke.miter_limit } else { radius };
-        let grid = Grid::build(&segments, &joins, radius, join_reach)?;
+        let mut geoms = Vec::new();
+        reserve(&mut geoms, joins.len())?;
+        geoms.extend(
+            joins.iter().map(|j| JoinGeom::new(j, radius, stroke.join, stroke.miter_limit)),
+        );
+        let mut lengths = Vec::new();
+        reserve(&mut lengths, segments.len())?;
+        lengths.extend(segments.iter().map(|s| (s.b.x - s.a.x).hypot(s.b.y - s.a.y)));
+        let grid = Grid::build(&segments, &joins, &geoms, radius, join_reach)?;
         let mut boxes = Vec::new();
-        if grid.is_none() {
+        {
             reserve(&mut boxes, segments.len() + joins.len())?;
             for segment in &segments {
                 let square =
@@ -216,19 +227,21 @@ impl StrokePrims {
                     a.y.max(b.y) + margin,
                 ]);
             }
-            for join in &joins {
-                let (vx, vy) = (join.vertex.x, join.vertex.y);
-                let pad = join_reach + (join_reach + vx.abs().max(vy.abs())) * 1e-9;
-                boxes.push([vx - pad, vy - pad, vx + pad, vy + pad]);
+            for (join, geom) in joins.iter().zip(&geoms) {
+                boxes.push(geom.tight.unwrap_or_else(|| {
+                    let (vx, vy) = (join.vertex.x, join.vertex.y);
+                    let pad = join_reach + (join_reach + vx.abs().max(vy.abs())) * 1e-9;
+                    [vx - pad, vy - pad, vx + pad, vy + pad]
+                }));
             }
         }
         Ok(Self {
             boxes,
             segments,
             joins,
+            geoms,
+            lengths,
             radius,
-            join: stroke.join,
-            miter_limit: stroke.miter_limit,
             join_reach,
             grid,
         })
@@ -243,30 +256,70 @@ impl StrokePrims {
         grid.candidates(px, py).iter().any(|tag| {
             let (is_join, index) = stroke_grid::decode(*tag);
             if is_join {
-                self.join_hit_at(&self.joins[index], px, py)
+                self.join_hit_at(index, px, py)
             } else {
-                self.segment_hit_at(&self.segments[index], px, py)
+                self.segment_hit_at(index, px, py)
             }
         })
     }
 
-    /// True when [`Self::candidates_in`] may be used (no grid was built).
-    pub(crate) fn has_boxes(&self) -> bool {
-        self.grid.is_none()
-    }
-
     /// Tags (segments first, then joins offset by the segment count) whose hit
     /// box meets the local rectangle, padded for rounding. A sample inside the
-    /// rectangle can only be hit by one of these.
+    /// rectangle can only be hit by one of these. With a grid only the cells
+    /// the rectangle touches are scanned (a tag may repeat across cells).
     pub(crate) fn candidates_in(&self, rect: [f64; 4], out: &mut Vec<u32>) {
         out.clear();
         let pad = 1e-7 * (1.0 + rect.iter().fold(0.0f64, |m, v| m.max(v.abs())));
         let (x0, y0, x1, y1) = (rect[0] - pad, rect[1] - pad, rect[2] + pad, rect[3] + pad);
-        for (tag, b) in self.boxes.iter().enumerate() {
-            if b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0 {
-                out.push(tag as u32);
+        let meets = |b: &[f64; 4]| b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0;
+        match self.grid.as_ref() {
+            None => {
+                for (tag, b) in self.boxes.iter().enumerate() {
+                    if meets(b) {
+                        out.push(tag as u32);
+                    }
+                }
+            }
+            Some(grid) => {
+                let segments = self.segments.len();
+                grid.for_each_in(x0, y0, x1, y1, |item| {
+                    let (is_join, index) = stroke_grid::decode(item);
+                    let tag = if is_join { segments + index } else { index };
+                    if meets(&self.boxes[tag]) {
+                        out.push(tag as u32);
+                    }
+                });
             }
         }
+    }
+
+    /// True when every point of the convex hull of `corners` is provably hit by
+    /// one candidate segment's body (the rectangle between its end points,
+    /// shrunk by a margin far above rounding error), so all samples between
+    /// the corners hit without being tested.
+    pub(crate) fn body_covers(&self, corners: &[Point; 4], tags: &[u32]) -> bool {
+        let segments = self.segments.len();
+        tags.iter().any(|tag| {
+            let index = *tag as usize;
+            if index >= segments {
+                return false;
+            }
+            let segment = &self.segments[index];
+            let length = self.lengths[index];
+            let reach = self.radius;
+            if !(length > 0.0) || !length.is_finite() {
+                return false;
+            }
+            let margin = 1e-8 * (reach + length);
+            let (dx, dy) = (segment.b.x - segment.a.x, segment.b.y - segment.a.y);
+            let across_limit = (reach - margin) * length;
+            corners.iter().all(|c| {
+                let (rx, ry) = (c.x - segment.a.x, c.y - segment.a.y);
+                let dot = rx * dx + ry * dy;
+                let cross = (rx * dy - ry * dx).abs();
+                cross < across_limit && dot > margin * length && dot < (length - margin) * length
+            })
+        })
     }
 
     /// [`Self::contains`] restricted to candidate tags from [`Self::candidates_in`].
@@ -275,20 +328,21 @@ impl StrokePrims {
         tags.iter().any(|tag| {
             let index = *tag as usize;
             if index < segments {
-                self.segment_hit_at(&self.segments[index], px, py)
+                self.segment_hit_at(index, px, py)
             } else {
-                self.join_hit_at(&self.joins[index - segments], px, py)
+                self.join_hit_at(index - segments, px, py)
             }
         })
     }
 
     /// Every primitive tested in order (the grid-free path).
     pub(crate) fn contains_linear(&self, px: f64, py: f64) -> bool {
-        self.segments.iter().any(|segment| self.segment_hit_at(segment, px, py))
-            || self.joins.iter().any(|join| self.join_hit_at(join, px, py))
+        (0..self.segments.len()).any(|index| self.segment_hit_at(index, px, py))
+            || (0..self.joins.len()).any(|index| self.join_hit_at(index, px, py))
     }
 
-    fn segment_hit_at(&self, segment: &Segment, px: f64, py: f64) -> bool {
+    fn segment_hit_at(&self, index: usize, px: f64, py: f64) -> bool {
+        let segment = &self.segments[index];
         let radius = self.radius;
         let square = segment.start_cap == Linecap::Square || segment.end_cap == Linecap::Square;
         let margin = if square { radius * SQRT_2 } else { radius };
@@ -296,6 +350,7 @@ impl StrokePrims {
             && segment_hit_caps(
                 segment.a,
                 segment.b,
+                self.lengths[index],
                 px,
                 py,
                 radius,
@@ -304,10 +359,17 @@ impl StrokePrims {
             )
     }
 
-    fn join_hit_at(&self, join: &Join, px: f64, py: f64) -> bool {
-        (px - join.vertex.x).abs() <= self.join_reach
-            && (py - join.vertex.y).abs() <= self.join_reach
-            && join_hit(join, px, py, self.radius, self.join, self.miter_limit)
+    fn join_hit_at(&self, index: usize, px: f64, py: f64) -> bool {
+        let join = &self.joins[index];
+        let geom = &self.geoms[index];
+        let inside_box = match geom.tight {
+            Some(b) => px >= b[0] && px <= b[2] && py >= b[1] && py <= b[3],
+            None => {
+                (px - join.vertex.x).abs() <= self.join_reach
+                    && (py - join.vertex.y).abs() <= self.join_reach
+            }
+        };
+        inside_box && geom.hit(join.vertex, px, py, self.radius)
     }
 }
 
@@ -342,6 +404,7 @@ fn edge_box_contains(a: Point, b: Point, px: f64, py: f64, margin: f64) -> bool 
 fn segment_hit_caps(
     a: Point,
     b: Point,
+    length: f64,
     px: f64,
     py: f64,
     radius: f64,
@@ -350,10 +413,9 @@ fn segment_hit_caps(
 ) -> bool {
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let length = dx.hypot(dy);
     if length == 0.0 {
         if start_cap == Linecap::Round || end_cap == Linecap::Round {
-            return (px - a.x).hypot(py - a.y) <= radius;
+            return within(px - a.x, py - a.y, radius);
         }
         if start_cap == Linecap::Square || end_cap == Linecap::Square {
             return (px - a.x).abs() <= radius && (py - a.y).abs() <= radius;
@@ -373,60 +435,13 @@ fn segment_hit_caps(
     if along >= low && along <= high && across <= radius {
         return true;
     }
-    if start_cap == Linecap::Round && (px - a.x).hypot(py - a.y) <= radius {
+    if start_cap == Linecap::Round && within(px - a.x, py - a.y, radius) {
         return true;
     }
-    if end_cap == Linecap::Round && (px - b.x).hypot(py - b.y) <= radius {
+    if end_cap == Linecap::Round && within(px - b.x, py - b.y, radius) {
         return true;
     }
     false
-}
-
-fn in_triangle(px: f64, py: f64, a: Point, b: Point, c: Point) -> bool {
-    let d1 = (px - b.x) * (a.y - b.y) - (a.x - b.x) * (py - b.y);
-    let d2 = (px - c.x) * (b.y - c.y) - (b.x - c.x) * (py - c.y);
-    let d3 = (px - a.x) * (c.y - a.y) - (c.x - a.x) * (py - a.y);
-    let neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
-    let pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
-    !(neg && pos)
-}
-
-fn join_hit(join: &Join, px: f64, py: f64, radius: f64, style: Linejoin, miter_limit: f64) -> bool {
-    let (previous, vertex, next) = (join.previous, join.vertex, join.next);
-    if style == Linejoin::Round {
-        return (px - vertex.x).hypot(py - vertex.y) <= radius;
-    }
-    let ax = vertex.x - previous.x;
-    let ay = vertex.y - previous.y;
-    let bx = next.x - vertex.x;
-    let by = next.y - vertex.y;
-    let al = ax.hypot(ay);
-    let bl = bx.hypot(by);
-    if al == 0.0 || bl == 0.0 {
-        return false;
-    }
-    let cross = ax * by - ay * bx;
-    if cross.abs() < 1e-12 {
-        return false;
-    }
-    let side = if cross > 0.0 { -1.0 } else { 1.0 };
-    let p1 =
-        Point { x: vertex.x + side * (-ay / al) * radius, y: vertex.y + side * (ax / al) * radius };
-    let p2 =
-        Point { x: vertex.x + side * (-by / bl) * radius, y: vertex.y + side * (bx / bl) * radius };
-    if style == Linejoin::Bevel {
-        return in_triangle(px, py, vertex, p1, p2);
-    }
-    let denom = ax * by - ay * bx;
-    let qx = p2.x - p1.x;
-    let qy = p2.y - p1.y;
-    let t = (qx * by - qy * bx) / denom;
-    let miter = Point { x: p1.x + t * ax, y: p1.y + t * ay };
-    let ratio = (miter.x - vertex.x).hypot(miter.y - vertex.y) / radius;
-    if !ratio.is_finite() || ratio > miter_limit {
-        return in_triangle(px, py, vertex, p1, p2);
-    }
-    in_triangle(px, py, vertex, p1, miter) || in_triangle(px, py, vertex, miter, p2)
 }
 
 #[cfg(test)]

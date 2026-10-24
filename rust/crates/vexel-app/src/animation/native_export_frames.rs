@@ -1,10 +1,11 @@
 //! Frame-by-frame render of a native timeline loop for animated-PNG and
-//! PNG-sequence export. Frames reach the caller one at a time, so a sequence
-//! never holds more than one frame; tick selection and geometry are shared
+//! PNG-sequence export. Frames are rendered on a few threads and reach the caller
+//! one at a time in order, so a sequence holds only a handful of frames; tick selection and geometry are shared
 //! with the GIF and video exports.
 
+use super::native_export::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
-use super::native_frame::render_native_frame_cached;
+use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
 use std::sync::Arc;
 
@@ -127,27 +128,30 @@ impl NativeExportSource {
             .map_err(NativeExportError::Viewport)?;
         let geometry = svg_geometry(&viewport, plan.width, plan.height);
         let assets = self.drawing_assets();
-        let mut cache = crate::compose::DiffCache::default();
-        for index in 0..plan.frames {
-            let tick = steps[index * plan.stride as usize];
-            let frame = render_native_frame_cached(
-                self.svg_source(),
-                None,
-                &view,
-                &assets,
-                tick,
-                plan.width,
-                plan.height,
-                geometry,
-                &mut cache,
-            )
-            .map_err(NativeExportError::Frame)?;
-            let result = match req.background {
-                Some(colour) => sink(index, &over_colour(&frame.rgba, colour)),
-                None => sink(index, &frame.rgba),
-            };
-            result.map_err(NativeFramesError::Sink)?;
-        }
+        render_ordered(
+            plan.frames,
+            worker_count(plan.frames),
+            |index| {
+                render_native_frame(
+                    self.svg_source(),
+                    &view,
+                    &assets,
+                    steps[index * plan.stride as usize],
+                    plan.width,
+                    plan.height,
+                    geometry,
+                )
+                .map(|frame| match req.background {
+                    Some(colour) => over_colour(&frame.rgba, colour),
+                    None => frame.rgba.into(),
+                })
+            },
+            |index, rgba| sink(index, &rgba[..]),
+        )
+        .map_err(|e| match e {
+            OrderedError::Render(e) => NativeExportError::Frame(e).into(),
+            OrderedError::Consume(e) => NativeFramesError::Sink(e),
+        })?;
         Ok(NativeFrames {
             frames: plan.frames,
             width: plan.width,

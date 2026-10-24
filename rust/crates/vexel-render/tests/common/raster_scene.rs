@@ -17,6 +17,8 @@ pub enum Profile {
     Nest,
     Clip,
     Mix,
+    /// Nested opacity groups with axis-aligned rectangle clips, fills and gradients.
+    Rect,
 }
 
 pub struct Rng(pub u64);
@@ -211,9 +213,27 @@ fn clip(rng: &mut Rng, size: f64, parent: Option<&'static RenderClip<'static>>) 
     })
 }
 
+/// Axis-aligned rectangle clip with fractional edges.
+fn rect_clip(rng: &mut Rng, size: f64, parent: Option<&'static RenderClip<'static>>) -> &'static RenderClip<'static> {
+    let (x0, y0) = (rng.range(-size * 0.1, size * 0.7), rng.range(-size * 0.1, size * 0.7));
+    let (x1, y1) = (x0 + rng.range(size * 0.1, size * 0.8), y0 + rng.range(size * 0.1, size * 0.8));
+    let corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
+    let edges = to_edges(&corners, Affine { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 }, true);
+    let shapes = leak_slice(vec![ClipShape { edges: 0..edges.len(), evenodd: false, filled: true }]);
+    leak(RenderClip {
+        edges,
+        shapes,
+        parent,
+        object_bounding_box: false,
+        bounds: [0.0; 4],
+        user_inverse: affine_identity(),
+    })
+}
+
 fn leaf(rng: &mut Rng, size: f64, profile: Profile, clips: &[&'static RenderClip<'static>]) -> RenderNode<'static> {
     let kind = match profile {
         Profile::Fill | Profile::Clip | Profile::Nest => Kind::Fill,
+        Profile::Rect => if rng.below(2) == 0 { Kind::Fill } else { Kind::Gradient },
         Profile::Gradient => Kind::Gradient,
         Profile::Stroke => if rng.below(5) == 0 { Kind::Open } else { Kind::Stroke },
         Profile::Mix => [Kind::Fill, Kind::Gradient, Kind::Stroke, Kind::Open, Kind::Both][rng.below(5)],
@@ -226,7 +246,14 @@ fn leaf(rng: &mut Rng, size: f64, profile: Profile, clips: &[&'static RenderClip
 pub fn scene(seed: u64, size: u32, count: usize, profile: Profile) -> &'static [RenderNode<'static>] {
     let mut rng = Rng(seed ^ 0x9E37_79B9_7F4A_7C15);
     let fsize = f64::from(size);
-    let clips: Vec<&'static RenderClip<'static>> = if matches!(profile, Profile::Clip | Profile::Mix) {
+    let clips: Vec<&'static RenderClip<'static>> = if profile == Profile::Rect {
+        let mut v: Vec<&'static RenderClip<'static>> = Vec::new();
+        for i in 0..6 {
+            let parent = if i % 3 == 2 { v.last().copied() } else { None };
+            v.push(rect_clip(&mut rng, fsize, parent));
+        }
+        v
+    } else if matches!(profile, Profile::Clip | Profile::Mix) {
         let mut v: Vec<&'static RenderClip<'static>> = Vec::new();
         for i in 0..6 {
             let parent = if i % 3 == 2 { v.last().copied() } else { None };
@@ -236,7 +263,7 @@ pub fn scene(seed: u64, size: u32, count: usize, profile: Profile) -> &'static [
     } else {
         Vec::new()
     };
-    let nested = matches!(profile, Profile::Nest | Profile::Mix);
+    let nested = matches!(profile, Profile::Nest | Profile::Mix | Profile::Rect);
     let mut top = Vec::new();
     let mut made = 0;
     while made < count {

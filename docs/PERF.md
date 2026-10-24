@@ -536,3 +536,54 @@ regression test also pins the original 512×512 map output SHA-256 to
 `9e0af1a5d014af710fabb39fa152733f50c662ae1f2dc4bfe4a1d7cb3a3433a4`. The new
 4K work regression failed before the optimization with `limit:0` and zero work
 recorded, then passed after the change.
+
+## Benchmark harness (`./dev bench`)
+
+`rust/tools/vexel-bench` is the harness that performance work gates on. It
+generates seeded synthetic scenes under ignored `.cache/bench/scenes/` (LCG
+seeds are fixed, so a profile and size always give the same bytes): `fill`,
+`lin`, `rad`, `stroke`, `nest`, `opac`, `clip`, `blur`, `text` and `mix` at
+N = 100/500/1000/5000/20000 shapes (512×512 canvas). Every scene also exists
+as an animated `.vexel` built through `AppDocument::edit_timeline`: opacity,
+TRS and colour tracks (5 keys each) on up to 48 spread shapes, 96 ticks at
+24 tps.
+
+Operations call the app's own code paths, headless: `open_decode`,
+`render_512/900/2048` (first render), `zoom_recompose` (four recomposes that
+leave the `canvas::target_compose_size` band), `sel_move`/`sel_rotate` (edit +
+recompose at 900 px, undone after each trial), `save_load`, `tick_900`/
+`tick_512` (6 seek+tick samples per trial), `scrub_900` (6 random seeks),
+`export_gif`/`export_apng` (96 frames at 512) and `export_mp4`
+(AVFoundation, not hash-gated because encoder output is not byte-stable).
+Export cases cover the `fill`, `opac` and `mix` profiles only: 96 frames of a
+stroke scene take minutes per trial, and `tick_*` already measures that
+per-frame cost.
+
+Protocol: Release build, each case in its own child process under
+`/usr/bin/time -l`, 2 warmups and 15 timed trials. A case whose trial exceeds
+the per-case budget (`--budget`, default 12 s) keeps fewer trials (minimum 3)
+and warms up once. After the timed trials one untimed diagnostic trial records
+allocation count and bytes (counting `#[global_allocator]`) and the
+`VEXEL_PROFILE` phase timers. Metrics per case: p50/p95/p99/max, MAD, fps
+(1000/p50), peak RSS and the SHA-256 of the produced pixels (or output bytes).
+Results go to `bench/results/<date>/bench.json` and `summary.md`.
+
+Levels: default `reduced` (N up to 1000, the level of the committed baseline),
+`--full` (N up to 20000, animated up to 5000), `--hash-only` (N up to 500,
+deterministic ops only, one pass, no RSS; meant for hosted CI but not wired in
+because hosted timing is not reproducible).
+
+Gate: `./dev bench --check` compares with the committed `bench/baseline.json`.
+Output hashes must match exactly on every host. Wall clock is compared only
+when the host identity block (model, chip, memory, architecture, macOS, rustc)
+equals the baseline's: a case breaches when its median exceeds the baseline by
+more than 10% and by more than 2 MAD, and two consecutive breaching runs fail
+(state in `.cache/bench/streaks.json`). `./dev bench --update-baseline` is the
+only way to change the baseline; on the same host a case keeps its old timing
+unless the new median is lower, so baselines only ratchet down. A hash change
+is accepted only through that explicit update.
+
+Unsupported or limited: `blur` renders at 512 px, but the app's filter work
+limit (`LimitRender`) rejects larger sizes, so those cases are reported as
+skipped. Deterministic work counters (edge visits, samples, decodes per tick)
+are not collected because they would need counters in the raster crates.
