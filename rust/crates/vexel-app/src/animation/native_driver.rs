@@ -102,6 +102,32 @@ impl<C: LoopClock> NativeDriver<C> {
         newest_matching(&mut self.queue, tag)
     }
 
+    /// Samples the integer tick of the current clock for `size` without
+    /// rendering. The flag is true when the tag differs from the last one
+    /// planned, so a frame still has to be produced for it.
+    pub fn plan(
+        &mut self,
+        state_revision: u64,
+        size: (u32, u32),
+    ) -> Option<(NativeFrameTag, bool)> {
+        if self.source_revision != Some(state_revision)
+            || self.duration_ticks == 0
+            || self.ticks_per_second == 0
+        {
+            return None;
+        }
+        self.playback.settle();
+        let tag = NativeFrameTag {
+            state_revision,
+            tick: self.sample_tick(self.playback.time()),
+            width: size.0,
+            height: size.1,
+        };
+        let fresh = self.last_tag != Some(tag);
+        self.last_tag = Some(tag);
+        Some((tag, fresh))
+    }
+
     /// Adopts the timing of `state_revision`'s timeline, resetting queued frames
     /// when the revision or the timing changed. Playback is clocked from it, so
     /// play and seek work before the first rendered frame.

@@ -1,9 +1,8 @@
 //! Shell integration for native timeline presentation, commands and playback.
 
 use crate::animation::native_driver::NativeDriver;
-use crate::animation::native_stage::{NativeStage, OnionSettings, StageUpdate};
 use crate::animation::playback::LoopClock;
-use crate::compose::{Frame, svg_viewport};
+use crate::compose::Frame;
 use crate::file_ui::FileUi;
 use crate::native_timeline::interaction::{Key, Phase};
 use crate::native_timeline::layout::{Hit, TimelineLayout};
@@ -44,8 +43,10 @@ pub fn pointer_accepts_mode(button: Option<u8>) -> bool {
     button == Some(0)
 }
 
+use super::play_worker::PlayWorker;
+use super::prepared::Prepared;
 use super::{
-    NativeAnimationController, NativeAnimationError, NativeFrameTag, NativeRenderRequest,
+    NativeAnimationController, NativeAnimationError, NativeFrameResult, NativeFrameTag,
     NativeTimelineEffect, TimelineSurface,
 };
 
@@ -53,11 +54,19 @@ use super::{
 pub struct NativeAnimationHost<C: LoopClock> {
     controller: NativeAnimationController,
     driver: NativeDriver<C>,
-    stage: NativeStage,
     presentation: TimelinePresentation,
     state_revision: Option<u64>,
     pointer_capture: bool,
     last_tick: Option<u32>,
+    /// Playback inputs of `state_revision`, built on first use.
+    prepared: Option<Arc<Prepared>>,
+    worker: Option<PlayWorker>,
+    /// Tag the clock currently asks for; paused frames must match it.
+    want: Option<NativeFrameTag>,
+    /// Tag of the last frame handed to the caller.
+    presented: Option<NativeFrameTag>,
+    retried: Option<NativeFrameTag>,
+    was_playing: bool,
 }
 
 impl<C: LoopClock> NativeAnimationHost<C> {
@@ -69,20 +78,24 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         Self {
             controller,
             driver: NativeDriver::new(clock),
-            stage: NativeStage::new(),
             presentation,
             state_revision: None,
             pointer_capture: false,
             last_tick: None,
+            prepared: None,
+            worker: None,
+            want: None,
+            presented: None,
+            retried: None,
+            was_playing: false,
         }
     }
 
     /// Discards selection, gestures, cached frames and playback tied to a replaced document.
     pub fn document_replaced(&mut self) {
         self.controller.document_replaced();
-        self.driver.invalidate();
+        self.invalidate_play();
         self.driver.pause();
-        self.stage = NativeStage::new();
         self.presentation = TimelinePresentation::default();
         self.presentation.mode = TimelineMode::Native;
         self.controller.set_surface(TimelineSurface::Native);
@@ -153,7 +166,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
                     return Err("invalid preview animation time");
                 }
                 self.driver.seek(seconds);
-                self.driver.invalidate();
+                self.invalidate_play();
             }
         }
         self.controller.playing = self.driver.is_playing();
@@ -183,7 +196,10 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         if self.controller.playing || self.driver.is_playing() {
             self.controller.playing = false;
             self.driver.pause();
-            self.driver.invalidate();
+            self.invalidate_play();
+        }
+        if self.worker.is_some() {
+            self.cancel_play();
         }
         if self.pointer_capture {
             self.reset_presentation_interaction();
@@ -276,101 +292,191 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         })
     }
 
-    /// Samples and retains the latest complete native frame for the requested output size.
+    /// Samples the clock and renders the tick on the calling thread, at the
+    /// requested size. Headless entry for benches and tests; the app uses
+    /// [`Self::tick_async`].
     pub fn tick(&mut self, document: &AppDocument, size: (u32, u32)) -> Option<Frame> {
+        let (prepared, tag, fresh) = self.plan(document, size, size)?;
+        if !fresh {
+            return None;
+        }
+        let result = prepared.render(tag.tick, (tag.width, tag.height));
+        self.finish(NativeFrameResult { tag, result })
+    }
+
+    /// One playback step that never renders on the caller's thread: returns
+    /// the newest finished frame (if any) and posts the clock's current tick
+    /// to the worker (latest wins, one pending). While playing the tick is
+    /// rendered at `play` (on-screen) size; otherwise at `full` size. `shown`
+    /// says whether the stage still holds the last frame handed out.
+    pub fn tick_async(
+        &mut self,
+        document: &AppDocument,
+        full: (u32, u32),
+        play: (u32, u32),
+        shown: bool,
+    ) -> Option<Frame> {
         self.observe_revision(document.state_revision());
-        let snapshot = self.controller.snapshot(document).ok()?;
-        let Some(candidate) = self.controller.candidate.as_ref().cloned() else {
+        if self.worker.is_none() {
+            self.worker = PlayWorker::new();
+        }
+        let ready = self.worker.as_ref().and_then(PlayWorker::poll);
+        let out = ready.and_then(|result| {
+            let wanted = self.controller.playing || Some(result.tag) == self.want;
+            if wanted { self.finish(result) } else { None }
+        });
+        let idle = self.worker.as_ref().is_some_and(|w| !w.busy());
+        if !shown
+            && idle
+            && !self.controller.playing
+            && self.presented.is_some()
+            && self.presented == self.want
+            && self.retried != self.want
+        {
+            // The stage dropped the frame (a static compose landed): draw it again once.
+            self.retried = self.want;
+            self.presented = None;
+            self.driver.invalidate();
+        }
+        let (prepared, tag, fresh) = self.plan(document, full, play)?;
+        if fresh {
+            match &self.worker {
+                Some(worker) => worker.submit(prepared, tag),
+                None => {
+                    let result = prepared.render(tag.tick, (tag.width, tag.height));
+                    return self.finish(NativeFrameResult { tag, result }).or(out);
+                }
+            }
+        }
+        out
+    }
+
+    /// Prepared inputs for the document's revision, built once per revision.
+    fn prepared(&mut self, document: &AppDocument) -> Option<Arc<Prepared>> {
+        if self.controller.ensure_candidate(document).is_err() {
+            self.stop_invalid_preview();
+            return None;
+        }
+        let revision = document.state_revision();
+        if let Some(prepared) = self.prepared.as_ref().filter(|p| p.revision == revision) {
+            return Some(prepared.clone());
+        }
+        let built = self
+            .controller
+            .candidate
+            .as_ref()
+            .and_then(|candidate| Prepared::build(document, candidate));
+        let Some(built) = built else {
             self.stop_invalid_preview();
             return None;
         };
-        let view = match candidate.view() {
-            Ok(view) => view,
-            Err(_) => {
-                self.stop_invalid_preview();
-                return None;
-            }
-        };
-        let ticks_per_second = view.ticks_per_second().max(1);
-        let prep = crate::profile::phase("native.prep");
-        let source = Arc::new(document.source_bytes().ok()?);
-        let viewport = svg_viewport(source.clone(), &|| false).ok()?;
-        drop(prep);
-        let tick = snapshot
-            .current_tick
-            .min(snapshot.duration_ticks.saturating_sub(1));
-        let request = NativeRenderRequest {
-            state_revision: document.state_revision(),
-            tick,
-            output_width: size.0,
-            output_height: size.1,
-            source_svg: source,
-            timeline: candidate,
-            viewport,
-        };
-        let expected_tick = if self.controller.playing {
+        let built = Arc::new(built);
+        self.prepared = Some(built.clone());
+        Some(built)
+    }
+
+    /// Syncs the clock and picks the tag to render: `full` size when paused,
+    /// `play` size while playing. The flag is true when it is new.
+    fn plan(
+        &mut self,
+        document: &AppDocument,
+        full: (u32, u32),
+        play: (u32, u32),
+    ) -> Option<(Arc<Prepared>, NativeFrameTag, bool)> {
+        self.observe_revision(document.state_revision());
+        let prepared = self.prepared(document)?;
+        self.driver.sync_timing(
+            prepared.revision,
+            prepared.duration_ticks,
+            prepared.ticks_per_second,
+            prepared.loop_mode,
+        );
+        let playing = self.controller.playing;
+        let last = prepared.duration_ticks.saturating_sub(1);
+        if playing != self.was_playing {
+            // Frames of the other size class are stale now.
+            self.cancel_play();
+            self.driver.invalidate();
+        }
+        if playing {
             self.driver.play();
-            // NativeDriver chooses the deterministic integer sample from its clock.
-            tick
         } else {
             self.driver.pause();
-            if self.last_tick != Some(tick) {
-                let seconds = f64::from(tick) / f64::from(ticks_per_second);
-                self.driver.seek(seconds);
+            if self.was_playing {
+                // Pausing keeps the tick the clock stopped on.
+                let tick = self.driver.sample_tick(self.driver.time());
+                self.controller.current_tick = tick;
                 self.last_tick = Some(tick);
-            }
-            tick
-        };
-        let tag = NativeFrameTag {
-            state_revision: request.state_revision,
-            tick: expected_tick,
-            width: request.output_width,
-            height: request.output_height,
-        };
-        let onion = OnionSettings {
-            before: snapshot.onion_before,
-            after: snapshot.onion_after,
-            opacity: snapshot.onion_opacity,
-        };
-        self.stage.expect(tag, onion);
-        let mut published = None;
-        if let Some(result) = self.driver.tick(request) {
-            self.stage.expect(result.tag, onion);
-            match self.stage.accept(result) {
-                StageUpdate::Published => {
-                    self.controller.current_tick = result_tick(self.stage.expected(), tag.tick);
-                    self.controller.status = None;
-                    published = self.stage.frame().cloned();
+            } else {
+                let tick = self.controller.current_tick.min(last);
+                if self.last_tick != Some(tick) {
+                    let seconds = f64::from(tick) / f64::from(prepared.ticks_per_second.max(1));
+                    self.driver.seek(seconds);
+                    self.last_tick = Some(tick);
                 }
-                StageUpdate::Failed(error) => {
-                    self.controller.status = Some(format!("Native frame unavailable: {error:?}"));
-                }
-                StageUpdate::Stale => {}
             }
         }
+        self.was_playing = playing;
+        let (tag, fresh) = self
+            .driver
+            .plan(prepared.revision, if playing { play } else { full })?;
         self.controller.playing = self.driver.is_playing();
-        published
+        self.want = Some(tag);
+        Some((prepared, tag, fresh))
+    }
+
+    /// Accepts a finished frame for the current revision.
+    fn finish(&mut self, result: NativeFrameResult) -> Option<Frame> {
+        if self.state_revision != Some(result.tag.state_revision) {
+            return None;
+        }
+        match result.result {
+            Ok(frame) => {
+                self.controller.current_tick = result.tag.tick;
+                self.controller.status = None;
+                self.presented = Some(result.tag);
+                Some(frame)
+            }
+            Err(error) => {
+                self.controller.status = Some(format!("Native frame unavailable: {error:?}"));
+                None
+            }
+        }
+    }
+
+    /// Drops queued and finished playback frames (new epoch).
+    fn cancel_play(&mut self) {
+        if let Some(worker) = &self.worker {
+            worker.cancel();
+        }
+    }
+
+    /// Forgets everything rendered for the previous clock position.
+    fn invalidate_play(&mut self) {
+        self.driver.invalidate();
+        self.cancel_play();
+        self.want = None;
+        self.presented = None;
+        self.retried = None;
     }
 
     fn stop_invalid_preview(&mut self) {
         self.controller.playing = false;
         self.driver.pause();
-        self.driver.invalidate();
-        self.stage = NativeStage::new();
+        self.invalidate_play();
         self.last_tick = None;
     }
 
     pub fn invalidate(&mut self) {
-        self.driver.invalidate();
-        self.stage = NativeStage::new();
+        self.invalidate_play();
         self.last_tick = None;
     }
 
     fn observe_revision(&mut self, revision: u64) -> bool {
         if self.state_revision != Some(revision) {
+            self.prepared = None;
             if self.state_revision.is_some() {
-                self.driver.invalidate();
-                self.stage = NativeStage::new();
+                self.invalidate_play();
                 // MCP edits can change the native timeline without changing
                 // source bytes. Drop selections and the playhead that refer
                 // to the prior state before the next snapshot is built.
@@ -406,8 +512,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
                     };
                     self.controller.set_surface(surface);
                     self.driver.pause();
-                    self.driver.invalidate();
-                    self.stage = NativeStage::new();
+                    self.invalidate_play();
                     self.last_tick = None;
                 }
                 PresentationAction::Native(action) => {
@@ -435,8 +540,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             .controller
             .handle_action(files.document_mut(), action)?;
         if outcome.changed {
-            self.driver.invalidate();
-            self.stage = NativeStage::new();
+            self.invalidate_play();
             self.state_revision = Some(files.document().state_revision());
             self.last_tick = None;
         }
@@ -446,7 +550,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
                 / f64::from(snapshot.ticks_per_second.max(1));
             self.driver.seek(seconds);
             self.last_tick = Some(tick.min(snapshot.duration_ticks.saturating_sub(1)));
-            self.driver.invalidate();
+            self.invalidate_play();
         }
         if toggle {
             if self.controller.playing {
@@ -471,8 +575,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
                     let result =
                         super::import::handle(files, &effect, settings, EditLimits::default());
                     if result == super::import::ImportResult::Imported {
-                        self.driver.invalidate();
-                        self.stage = NativeStage::new();
+                        self.invalidate_play();
                         self.state_revision = Some(files.document().state_revision());
                         self.last_tick = None;
                     } else if result == super::import::ImportResult::Failed {
@@ -483,10 +586,6 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         }
         Ok(())
     }
-}
-
-fn result_tick(expected: Option<NativeFrameTag>, fallback: u32) -> u32 {
-    expected.map_or(fallback, |tag| tag.tick)
 }
 
 #[cfg(test)]
