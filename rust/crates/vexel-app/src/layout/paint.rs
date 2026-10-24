@@ -27,7 +27,7 @@ pub fn tooltip(target: Target) -> Option<(&'static str, &'static str)> {
         Target::NativeTimeline(hit) => match hit {
             crate::native_timeline::layout::Hit::Play => ("Play / Pause", "Space"),
             crate::native_timeline::layout::Hit::Loop => ("Loop mode", "once | loop | ping-pong"),
-            crate::native_timeline::layout::Hit::OnionBefore => ("Onion skin", ""),
+            crate::native_timeline::layout::Hit::AddKey => ("Add key", "K"),
             crate::native_timeline::layout::Hit::AddDrawingTrack => ("Add drawing track", ""),
             crate::native_timeline::layout::Hit::ImportDrawing => ("Import SVG as drawing", ""),
             crate::native_timeline::layout::Hit::EaseCustom => ("Custom bezier easing", ""),

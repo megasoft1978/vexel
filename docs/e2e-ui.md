@@ -32,7 +32,9 @@ refused or misconfigured.
 
 launch, screenshot, inspector edit (canvas pixels change), rotate via the
 inspector rotation field, Cmd+G / Cmd+Shift+G, timeline Animate mode + add key
-+ easing picker, Export Video row present, Export GIF and Export MP4 save
+(the K shortcut of the transport "Add key" button; the button is painted, not
+an AX element, so set `E2E_L_ADD_KEY` only if it gains an AX label) + easing
+picker, Export Video row present, Export GIF and Export MP4 save
 panels (full path typed into the name field, Return, file non-empty with `GIF8`
 or `ftyp` header).
 

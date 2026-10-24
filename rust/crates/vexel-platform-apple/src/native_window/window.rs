@@ -6,7 +6,6 @@ use super::{
 use crate::{MainThread, guard_native_call};
 use objc2::rc::Retained;
 use objc2_app_kit::{NSView, NSVisualEffectView, NSWindow};
-use objc2_core_foundation::CFData;
 use objc2_core_graphics::{
     CGBitmapInfo, CGColorRenderingIntent, CGColorSpace, CGDataProvider, CGImage, CGImageAlphaInfo,
 };
@@ -69,17 +68,18 @@ impl Window {
     /// Synchronously prepares and publishes one owned RGBA8 frame.
     ///
     /// Input is top-left, tightly packed, straight-alpha sRGB RGBA8. The
-    /// presenter converts it to premultiplied RGBA8 for CoreGraphics. Core
-    /// Foundation copies the converted bytes synchronously; the image's
-    /// provider retains its CFData backing. A complete candidate layer is
-    /// configured off-hierarchy before one guarded add/replace operation.
-    /// Candidate preparation leaves the current layer untouched. A failed
-    /// hierarchy operation leaves Rust's retained presenter unchanged; native
-    /// exception atomicity is not established by this API's unit tests.
+    /// presenter converts it to premultiplied RGBA8 for CoreGraphics in place
+    /// and hands the buffer to the image's data provider without a copy; the
+    /// provider frees it when the layer drops the image. The first present
+    /// configures a complete candidate layer off-hierarchy before one guarded
+    /// add. Later presents reuse that single layer and only swap its contents
+    /// (implicit animations disabled), so no layer is allocated per frame. A
+    /// failed preparation leaves the current layer untouched; native exception
+    /// atomicity is not established by this API's unit tests.
     pub fn present_rgba(&mut self, frame: super::frame::RgbaFrame) -> Result<(), WindowError> {
         let (width, height, scale) = (frame.width(), frame.height(), frame.backing_scale());
         let pixels = frame.into_premultiplied_pixels();
-        let image = guard_native_call(|| prepare_rgba_image(width, height, &pixels))
+        let image = guard_native_call(|| prepare_rgba_image(width, height, pixels))
             .map_err(WindowError::Native)?
             .ok_or(WindowError::PresentationUnavailable)?;
         let h = self.handles()?;
@@ -92,6 +92,26 @@ impl Window {
             record(&state, self.id)?.presentation_layer.clone()
         };
         let bounds = guard_native_call(|| parent.bounds()).map_err(WindowError::Native)?;
+        // SAFETY: CGImage is the exact Core Graphics object type required by
+        // CALayer.contents, and the retained image outlives every use below.
+        let object: &objc2::runtime::AnyObject =
+            unsafe { &*(image.as_ref() as *const CGImage as *const objc2::runtime::AnyObject) };
+        if let Some(layer) = previous.as_deref() {
+            guard_native_call(|| {
+                without_implicit_animations(|| {
+                    if layer.frame() != bounds {
+                        layer.setFrame(bounds);
+                    }
+                    if layer.contentsScale() != scale {
+                        layer.setContentsScale(scale);
+                    }
+                    // SAFETY: `object` points to the valid retained CGImage.
+                    unsafe { layer.setContents(Some(object)) };
+                })
+            })
+            .map_err(WindowError::Native)?;
+            return Ok(());
+        }
         let candidate = guard_native_call(|| {
             let layer = CALayer::new();
             layer.setFrame(bounds);
@@ -99,10 +119,6 @@ impl Window {
             // SAFETY: Apple's exported gravity constant has process lifetime
             // and is the documented CALayer resize-gravity value.
             layer.setContentsGravity(unsafe { kCAGravityResize });
-            // SAFETY: CGImage is the exact Core Graphics object type required
-            // by CALayer.contents, and the retained image remains live here.
-            let object: &objc2::runtime::AnyObject =
-                unsafe { &*(image.as_ref() as *const CGImage as *const objc2::runtime::AnyObject) };
             // SAFETY: `object` points to the valid retained CGImage above.
             unsafe {
                 layer.setContents(Some(object));
@@ -111,15 +127,7 @@ impl Window {
         })
         .map_err(WindowError::Native)?;
         let published = super::frame::publish_candidate(candidate, |candidate| {
-            guard_native_call(|| {
-                if let Some(old_layer) = previous.as_deref() {
-                    // SAFETY: both arguments are live CALayers; `old_layer`
-                    // is the retained current presenter attached to `parent`.
-                    unsafe { parent.replaceSublayer_with(old_layer, candidate) };
-                } else {
-                    parent.addSublayer(candidate);
-                }
-            })
+            guard_native_call(|| parent.addSublayer(candidate))
         })
         .map_err(WindowError::Native)?;
         // Native calls are complete. Commit the retained presenter only after
@@ -321,27 +329,64 @@ impl Window {
     }
 }
 
-/// Copies the caller-owned byte slice into immutable CFData, then constructs a
-/// CGImage whose provider retains that CFData for the image's full lifetime.
-fn prepare_rgba_image(
+/// Runs `f` inside a CATransaction with implicit actions disabled, so a
+/// contents swap on a live layer shows immediately instead of cross-fading.
+fn without_implicit_animations(f: impl FnOnce()) {
+    let class = objc2::runtime::AnyClass::get(c"CATransaction");
+    // SAFETY: `+begin`, `+setDisableActions:` and `+commit` are the documented
+    // CATransaction class methods; the class exists wherever QuartzCore is
+    // linked, and a missing class degrades to running `f` unwrapped.
+    unsafe {
+        if let Some(class) = class {
+            let _: () = objc2::msg_send![class, begin];
+            let _: () = objc2::msg_send![class, setDisableActions: true];
+        }
+        f();
+        if let Some(class) = class {
+            let _: () = objc2::msg_send![class, commit];
+        }
+    }
+}
+
+unsafe extern "C-unwind" fn release_pixels(
+    info: *mut std::ffi::c_void,
+    _data: std::ptr::NonNull<std::ffi::c_void>,
+    _size: usize,
+) {
+    // SAFETY: `info` is the `Box<Vec<u8>>` leaked in `prepare_rgba_image`;
+    // CoreGraphics calls this exactly once when the provider is released.
+    drop(unsafe { Box::from_raw(info.cast::<Vec<u8>>()) });
+}
+
+/// Constructs a CGImage whose data provider takes ownership of the
+/// premultiplied buffer (no copy) and frees it when the image is released.
+pub(super) fn prepare_rgba_image(
     width: u32,
     height: u32,
-    pixels: &[u8],
+    pixels: Vec<u8>,
 ) -> Option<objc2_core_foundation::CFRetained<CGImage>> {
     // SAFETY: this extern static is Apple's process-lifetime sRGB color-space
     // name constant; its pointer remains valid for the synchronous call.
     let srgb_name = unsafe { objc2_core_graphics::kCGColorSpaceSRGB };
-    let byte_count = isize::try_from(pixels.len()).ok()?;
-    // SAFETY: `pixels` points to a live initialized slice for `byte_count`
-    // bytes. CFDataCreate copies the bytes synchronously; the pointer does not
-    // escape and the bounded frame length fits CFIndex.
-    let data = unsafe { CFData::new(None, pixels.as_ptr(), byte_count) }?;
-    let provider = CGDataProvider::with_cf_data(Some(&data))?;
-    let color_space = CGColorSpace::with_name(Some(srgb_name))?;
     let bytes_per_row = usize::try_from(width).ok()?.checked_mul(4)?;
+    if pixels.len() != bytes_per_row.checked_mul(height as usize)? {
+        return None;
+    }
+    let (data, len) = (pixels.as_ptr(), pixels.len());
+    let info = Box::into_raw(Box::new(pixels));
+    // SAFETY: `data` points into the boxed Vec, whose heap buffer never moves
+    // and stays alive until `release_pixels` runs; `info` is that box.
+    let provider =
+        unsafe { CGDataProvider::with_data(info.cast(), data.cast(), len, Some(release_pixels)) };
+    let Some(provider) = provider else {
+        // SAFETY: creation failed, so CoreGraphics never took ownership.
+        drop(unsafe { Box::from_raw(info) });
+        return None;
+    };
+    let color_space = CGColorSpace::with_name(Some(srgb_name))?;
     // SAFETY: dimensions and row size were validated by RgbaFrame; provider
-    // owns a CFData copy containing exactly height * bytes_per_row bytes. The
-    // decode table is null as required for no custom decode mapping.
+    // owns exactly height * bytes_per_row bytes. The decode table is null as
+    // required for no custom decode mapping.
     unsafe {
         CGImage::new(
             width as usize,

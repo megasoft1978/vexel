@@ -44,14 +44,29 @@ fn group_selection_is_unit_and_second_click_enters_child() {
 }
 
 #[test]
-fn group_shortcut_round_trips_and_root_group_is_ignored() {
+fn group_shortcut_wraps_a_single_shape_and_ungroup_round_trips() {
     let mut doc = with(
         "<rect id=\"a\" x=\"1\" y=\"1\" width=\"5\" height=\"5\"/><rect id=\"b\" x=\"10\" y=\"1\" width=\"5\" height=\"5\"/>",
     );
     let mut c = ToolController::new();
     c.select_id(&doc, "a").unwrap();
     let before = doc.source().unwrap();
-    assert_eq!(c.edit_key(EditKey::Group, &mut doc), Ok(Outcome::Ignored));
-    assert_eq!(doc.source().unwrap(), before);
+    let count = doc.history_count();
+    assert_eq!(c.edit_key(EditKey::Group, &mut doc), Ok(Outcome::Committed));
+    assert_eq!(doc.history_count(), count + 1, "one undoable edit");
+    let group = c.selection().unwrap().to_owned();
+    assert_ne!(group, "a");
+    let info = doc.element_get(&group).unwrap();
+    assert_eq!(info.kind, ElementKind::Group);
+    assert_eq!(info.children, ["a"]);
+    // Ungroup is the symmetric step: the child is selected again.
+    assert_eq!(
+        c.edit_key(EditKey::Ungroup, &mut doc),
+        Ok(Outcome::Committed)
+    );
+    assert_eq!(c.selection(), Some("a"));
     assert_eq!(doc.element_get("a").unwrap().kind, ElementKind::Rect);
+    doc.undo().unwrap();
+    doc.undo().unwrap();
+    assert_eq!(doc.source().unwrap(), before);
 }

@@ -68,7 +68,8 @@ separately in [docs/ui/live-check.md](docs/ui/live-check.md) and
 | Text (CoreText) | Done | ([HANDOFF.md](HANDOFF.md)). |
 | Masks, opacity groups, patterns, filters, markers, stroke dashes | Done | Dashes are deferred in animation frames ([HANDOFF.md](HANDOFF.md)). |
 | Local MCP server | Partial | 53 live-preview tools, including `batch`. Tool reference in [docs/mcp.md](docs/mcp.md). A real Codex session driving Vexel over MCP is recorded in [docs/demo/](docs/demo/live-session.mp4); Claude Code setup is documented but not verified. |
-| Blend modes, gradients, JPEG, interlaced PNG | Planned | Typed disclosures, not rendered ([HANDOFF.md](HANDOFF.md)). |
+| Gradients (linear, radial) | Done | Fills render in the canvas and exports; inspector gradient fill control. |
+| Blend modes, JPEG, interlaced PNG | Planned | Typed disclosures, not rendered ([HANDOFF.md](HANDOFF.md)). |
 | Documents over 32 MiB | Planned | Refused by design; needs streaming decode ([BLOCKERS.md](BLOCKERS.md)). |
 | Signing, notarization | Planned | Owner-gated ([HANDOFF.md](HANDOFF.md)). App icon is new (generated artwork); bundle id is still a placeholder. |
 

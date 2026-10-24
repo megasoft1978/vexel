@@ -7,8 +7,11 @@
 use crate::animation::native_drawing::{
     DrawingAsset, DrawingCel, DrawingError, DrawingTrack, SvgGeometry, compose_drawing_tracks,
 };
-use crate::animation::native_properties::{NativePropertyError, apply_native_properties};
-use crate::compose::{ComposeError, Frame, compose_svg};
+use crate::animation::native_properties::{
+    NativePropertyError, SourceIndex, apply_native_properties, apply_native_properties_indexed,
+};
+use crate::compose::{ComposeError, Frame, compose_frame_owned, compose_svg};
+use std::sync::Arc;
 use vexel_timeline::{TimelineIterator, TimelineView, TrackView, string_copy};
 
 struct OwnedDrawingCel {
@@ -40,12 +43,63 @@ pub fn render_native_frame(
     output_height: u32,
     geometry: SvgGeometry,
 ) -> Result<Frame, NativeFrameError> {
+    render_with(
+        source_svg,
+        None,
+        timeline,
+        assets,
+        tick,
+        output_width,
+        output_height,
+        geometry,
+    )
+}
+
+/// Playback variant of [`render_native_frame`]: property targets resolve
+/// through `index` (built once per revision) and the patched SVG is composed
+/// without copying it or scanning ids. Pixels equal `render_native_frame`.
+pub fn render_native_frame_indexed(
+    source_svg: &[u8],
+    index: &SourceIndex,
+    timeline: &TimelineView<'_>,
+    assets: &[DrawingAsset<'_>],
+    tick: u32,
+    output_width: u32,
+    output_height: u32,
+    geometry: SvgGeometry,
+) -> Result<Frame, NativeFrameError> {
+    render_with(
+        source_svg,
+        Some(index),
+        timeline,
+        assets,
+        tick,
+        output_width,
+        output_height,
+        geometry,
+    )
+}
+
+fn render_with(
+    source_svg: &[u8],
+    index: Option<&SourceIndex>,
+    timeline: &TimelineView<'_>,
+    assets: &[DrawingAsset<'_>],
+    tick: u32,
+    output_width: u32,
+    output_height: u32,
+    geometry: SvgGeometry,
+) -> Result<Frame, NativeFrameError> {
     if tick >= timeline.duration_ticks() {
         return Err(NativeFrameError::InvalidTick);
     }
 
     let props = crate::profile::phase("native.properties");
-    let snapshot = apply_native_properties(source_svg, timeline, tick).map_err(|error| {
+    let patched = match index {
+        Some(index) => apply_native_properties_indexed(source_svg, index, timeline, tick),
+        None => apply_native_properties(source_svg, timeline, tick),
+    };
+    let snapshot = patched.map_err(|error| {
         if error == NativePropertyError::InvalidTick {
             NativeFrameError::InvalidTick
         } else {
@@ -54,8 +108,12 @@ pub fn render_native_frame(
     })?;
     drop(props);
     let compose = crate::profile::phase("native.compose");
-    let base =
-        compose_svg(&snapshot, output_width, output_height).map_err(NativeFrameError::Compose)?;
+    let base = if index.is_some() {
+        compose_frame_owned(Arc::new(snapshot), output_width, output_height)
+    } else {
+        compose_svg(&snapshot, output_width, output_height)
+    }
+    .map_err(NativeFrameError::Compose)?;
     drop(compose);
     let _cels = crate::profile::phase("native.cels");
 

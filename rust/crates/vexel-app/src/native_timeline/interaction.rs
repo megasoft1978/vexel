@@ -33,11 +33,9 @@ pub enum Key {
     Delete,
     Escape,
     ToggleLoop,
-    OnionBefore,
-    OnionAfter,
     AddDrawingTrack,
     ImportDrawing,
-    AddOpacityKey,
+    AddKey,
     DuplicateTrack,
     DeleteTrack,
     ZoomIn,
@@ -137,8 +135,7 @@ impl InteractionState {
                     | Hit::ModeSmil
                     | Hit::Play
                     | Hit::Loop
-                    | Hit::OnionBefore
-                    | Hit::OnionAfter
+                    | Hit::AddKey
                     | Hit::AddDrawingTrack
                     | Hit::ImportDrawing => {
                         self.press = Some(Press::Button(hit));
@@ -275,16 +272,7 @@ impl InteractionState {
                         Hit::Loop => actions.push(NativeTimelineAction::SetLoop {
                             enabled: !model.loop_enabled,
                         }),
-                        Hit::OnionBefore => actions.push(NativeTimelineAction::SetOnion {
-                            before: model.onion_before.saturating_sub(1),
-                            after: model.onion_after,
-                            opacity: model.onion_opacity,
-                        }),
-                        Hit::OnionAfter => actions.push(NativeTimelineAction::SetOnion {
-                            before: model.onion_before,
-                            after: model.onion_after.saturating_add(1).min(8),
-                            opacity: model.onion_opacity,
-                        }),
+                        Hit::AddKey => actions.extend(self.add_key_action(model)),
                         Hit::AddDrawingTrack if model.can_add_drawing_track => {
                             actions.extend(self.target_action(model, |target_id| {
                                 NativeTimelineAction::RequestAddDrawingTrack { target_id }
@@ -554,5 +542,46 @@ mod tests {
                 track_id: "body".into()
             }]
         );
+    }
+
+    #[test]
+    fn add_key_targets_the_selected_track_else_the_shape_and_is_empty_without_either() {
+        use super::super::layout::{TimelineLayout, Viewport};
+        let mut state = InteractionState::default();
+        let expected = vec![NativeTimelineAction::AddKey {
+            track_id: None,
+            target_id: Some("character".into()),
+            tick: 20,
+        }];
+        assert_eq!(state.key(Key::AddKey, &model()), expected);
+        let mut bare = model();
+        bare.tracks.clear();
+        assert!(state.key(Key::AddKey, &bare).is_empty());
+        bare.selected_target = Some("shape".into());
+        assert_eq!(
+            state.key(Key::AddKey, &bare),
+            vec![NativeTimelineAction::AddKey {
+                track_id: None,
+                target_id: Some("shape".into()),
+                tick: 20,
+            }]
+        );
+        // The transport button emits the same intent on a click.
+        let model = model();
+        let panel = vexel_ui::Rect {
+            x: 0,
+            y: 0,
+            width: 720,
+            height: 180,
+        };
+        let layout = TimelineLayout::new(panel, &model, Viewport::full(&model));
+        let (_, r) = layout
+            .control_rects()
+            .into_iter()
+            .find(|(hit, _)| *hit == Hit::AddKey)
+            .unwrap();
+        let at = ((r.x + r.width / 2) as i32, (r.y + r.height / 2) as i32);
+        assert!(state.pointer(Phase::Down, at, &layout, &model).is_empty());
+        assert_eq!(state.pointer(Phase::Up, at, &layout, &model), expected);
     }
 }

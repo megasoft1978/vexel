@@ -11,7 +11,7 @@
 #   VEXEL_E2E_KEEP   1 = keep the temp dir (screenshots, exports) afterwards
 # Label overrides (AX name/title/description substrings) if the UI is renamed:
 #   E2E_L_INSPECTOR_FIELD (default "Opacity"), E2E_L_ROTATE (default "Rotat"),
-#   E2E_L_ANIMATE (default "Animate"), E2E_L_ADD_KEY (default "Add Key"),
+#   E2E_L_ANIMATE (default "Animate"), E2E_L_ADD_KEY (default: none, press K),
 #   E2E_L_EASING (default "Easing"), E2E_L_EXPORT_VIDEO (default "Export Video"),
 #   E2E_L_EXPORT_GIF (default "Export GIF"), E2E_L_EXPORT_MP4 (default "Export MP4")
 #
@@ -37,7 +37,8 @@ FIXTURE_SRC="${1:-$ROOT/rust/fixtures/v1/anim/loop.svg}"
 L_FIELD="${E2E_L_INSPECTOR_FIELD:-Opacity}"
 L_ROTATE="${E2E_L_ROTATE:-Rotat}"
 L_ANIMATE="${E2E_L_ANIMATE:-Animate}"
-L_ADDKEY="${E2E_L_ADD_KEY:-Add Key}"
+# The transport "Add key" button is painted, not an AX element; K is its shortcut.
+L_ADDKEY="${E2E_L_ADD_KEY:-}"
 L_EASING="${E2E_L_EASING:-Easing}"
 L_EXPVIDEO="${E2E_L_EXPORT_VIDEO:-Export Video}"
 L_EXPGIF="${E2E_L_EXPORT_GIF:-Export GIF}"
@@ -164,7 +165,7 @@ else
   r="$(ax click "$L_ANIMATE")"; step_ok "timeline: enter Animate mode" "$r"; sleep 1
   ax code 124 >/dev/null; ax code 124 >/dev/null; sleep 0.3   # Right x2
   before="$(sum "$(shot pre-key)")"
-  r="$(ax click "$L_ADDKEY")"; sleep 1
+  if [ -n "$L_ADDKEY" ]; then r="$(ax click "$L_ADDKEY")"; else r="$(ax key k)"; fi; sleep 1
   after="$(sum "$(shot key-added)")"
   if case "$r" in err:*) true ;; *) false ;; esac; then
     record FAIL "timeline: add key" "$r"

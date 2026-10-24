@@ -4,6 +4,7 @@
 //! intact. This is the native integer-tick path; SVG SMIL evaluation remains
 //! separate.
 
+use std::collections::HashMap;
 use std::ops::Range;
 use vexel_timeline::{PropertyValue, TimelineView, sample_properties};
 use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
@@ -25,18 +26,41 @@ pub enum NativePropertyError {
 }
 
 #[derive(Debug, Clone)]
-struct Element<'a> {
+struct Element {
     opening: XmlSpan,
-    tag: &'a [u8],
+    kind: TokenKind,
+    tag: XmlSpan,
     id: Option<Vec<u8>>,
-    attributes: Vec<Attribute<'a>>,
+    attributes: Vec<Attribute>,
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Attribute<'a> {
-    name: &'a [u8],
+struct Attribute {
+    name: XmlSpan,
     value: XmlSpan,
     quote: u8,
+}
+
+/// Element table of one SVG source, built once per document revision so a
+/// tick resolves each property write by id in O(1) instead of re-tokenizing
+/// the source and scanning every element.
+#[derive(Debug, Clone)]
+pub struct SourceIndex {
+    elements: Vec<Element>,
+    by_id: HashMap<Vec<u8>, Vec<usize>>,
+}
+
+impl SourceIndex {
+    pub fn build(source: &[u8]) -> Result<Self, NativePropertyError> {
+        let elements = parse_elements(source)?;
+        let mut by_id: HashMap<Vec<u8>, Vec<usize>> = HashMap::new();
+        for (index, element) in elements.iter().enumerate() {
+            if let Some(id) = &element.id {
+                by_id.entry(id.clone()).or_default().push(index);
+            }
+        }
+        Ok(Self { elements, by_id })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -56,6 +80,26 @@ struct Patch {
 /// snapshot with those properties written in serialized track order.
 pub fn apply_native_properties(
     source: &[u8],
+    timeline: &TimelineView<'_>,
+    tick: u32,
+) -> Result<Vec<u8>, NativePropertyError> {
+    apply_with_index(source, None, timeline, tick)
+}
+
+/// Like [`apply_native_properties`], resolving targets through a prebuilt
+/// [`SourceIndex`] of the same `source`. Output is byte-identical.
+pub fn apply_native_properties_indexed(
+    source: &[u8],
+    index: &SourceIndex,
+    timeline: &TimelineView<'_>,
+    tick: u32,
+) -> Result<Vec<u8>, NativePropertyError> {
+    apply_with_index(source, Some(index), timeline, tick)
+}
+
+fn apply_with_index(
+    source: &[u8],
+    prebuilt: Option<&SourceIndex>,
     timeline: &TimelineView<'_>,
     tick: u32,
 ) -> Result<Vec<u8>, NativePropertyError> {
@@ -80,27 +124,36 @@ pub fn apply_native_properties(
         append_writes(&mut writes, target, &property, value_type, &values)?;
     }
 
-    let (elements, tokens) = parse_elements(source)?;
+    let built;
+    let index = match prebuilt {
+        Some(index) => index,
+        None => {
+            built = SourceIndex::build(source)?;
+            &built
+        }
+    };
     let mut patches = Vec::new();
     for write in writes {
-        let mut matched = None;
-        for (index, element) in elements.iter().enumerate() {
-            if element.id.as_deref() == Some(write.target.as_slice()) {
-                if matched.is_some() {
-                    return Err(NativePropertyError::DuplicateTarget);
-                }
-                matched = Some(index);
-            }
-        }
-        let index = matched.ok_or(NativePropertyError::MissingTarget)?;
-        let element = &elements[index];
-        if !property_fits_tag(element.tag, write.name) {
+        let matches = index
+            .by_id
+            .get(write.target.as_slice())
+            .map_or(&[][..], Vec::as_slice);
+        let element = match matches {
+            [] => return Err(NativePropertyError::MissingTarget),
+            [one] => &index.elements[*one],
+            _ => return Err(NativePropertyError::DuplicateTarget),
+        };
+        let tag = element
+            .tag
+            .slice(source)
+            .ok_or(NativePropertyError::InvalidSvg)?;
+        if !property_fits_tag(tag, write.name) {
             return Err(NativePropertyError::PropertyNotOnElement);
         }
         let existing = element
             .attributes
             .iter()
-            .find(|attribute| attribute.name == write.name);
+            .find(|attribute| attribute.name.slice(source) == Some(write.name));
         if let Some(attribute) = existing {
             let quote_at = attribute
                 .value
@@ -117,16 +170,12 @@ pub fn apply_native_properties(
                 replacement: encoded,
             });
         } else {
-            let element_token = tokens
-                .iter()
-                .find(|token| token.source == element.opening)
-                .ok_or(NativePropertyError::InvalidSvg)?;
             let opening_end = element
                 .opening
                 .offset
                 .checked_add(element.opening.length)
                 .ok_or(NativePropertyError::InvalidSvg)?;
-            let insert_at = match element_token.kind {
+            let insert_at = match element.kind {
                 TokenKind::EmptyElement => opening_end.checked_sub(2),
                 TokenKind::StartElement => opening_end.checked_sub(1),
                 _ => None,
@@ -276,11 +325,12 @@ pub fn property_fits_tag(tag: &[u8], name: &[u8]) -> bool {
 /// Element type of the element with `id` in `source`, `None` when the source
 /// cannot be read or has no such element.
 pub fn element_tag(source: &[u8], id: &[u8]) -> Option<Vec<u8>> {
-    let (elements, _) = parse_elements(source).ok()?;
+    let elements = parse_elements(source).ok()?;
     elements
         .iter()
         .find(|element| element.id.as_deref() == Some(id))
-        .map(|element| element.tag.to_vec())
+        .and_then(|element| element.tag.slice(source))
+        .map(<[u8]>::to_vec)
 }
 
 fn scalar_property(name: &[u8]) -> bool {
@@ -340,9 +390,7 @@ fn decode_json_string(encoded: &[u8]) -> Result<Vec<u8>, NativePropertyError> {
     Ok(decoded)
 }
 
-fn parse_elements<'a>(
-    source: &'a [u8],
-) -> Result<(Vec<Element<'a>>, Vec<vexel_xml::XmlToken>), NativePropertyError> {
+fn parse_elements(source: &[u8]) -> Result<Vec<Element>, NativePropertyError> {
     let (tokens, result) = tokenize_large(source);
     if result.diagnostic.category != vexel_xml::XmlError::None {
         return Err(NativePropertyError::InvalidSvg);
@@ -358,12 +406,14 @@ fn parse_elements<'a>(
             index += 1;
             continue;
         }
+        token
+            .name
+            .slice(source)
+            .ok_or(NativePropertyError::InvalidSvg)?;
         let mut element = Element {
             opening: token.source,
-            tag: token
-                .name
-                .slice(source)
-                .ok_or(NativePropertyError::InvalidSvg)?,
+            kind: token.kind,
+            tag: token.name,
             id: None,
             attributes: Vec::new(),
         };
@@ -376,6 +426,7 @@ fn parse_elements<'a>(
                 .name
                 .slice(source)
                 .ok_or(NativePropertyError::InvalidSvg)?;
+            let name_span = attribute.name;
             let quote_at = attribute
                 .value
                 .offset
@@ -400,7 +451,7 @@ fn parse_elements<'a>(
                 element.id = Some(decoded);
             }
             element.attributes.push(Attribute {
-                name,
+                name: name_span,
                 value: attribute.value,
                 quote,
             });
@@ -408,7 +459,7 @@ fn parse_elements<'a>(
         }
         elements.push(element);
     }
-    Ok((elements, tokens))
+    Ok(elements)
 }
 
 fn escape_attribute(value: &[u8], quote: u8) -> Result<Vec<u8>, NativePropertyError> {

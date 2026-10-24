@@ -510,7 +510,10 @@ fn edit_shortcuts_group_duplicate_reorder_and_undo() {
     doc.undo().unwrap();
     assert_eq!(doc.source().unwrap(), before);
     c.select_id(&doc, "a").unwrap();
-    assert_eq!(c.edit_key(EditKey::Group, &mut doc), Ok(Outcome::Ignored));
+    assert_eq!(c.edit_key(EditKey::Group, &mut doc), Ok(Outcome::Committed));
+    doc.undo().unwrap();
+    assert_eq!(doc.source().unwrap(), before);
+    c.select_id(&doc, "a").unwrap();
     assert_eq!(
         c.edit_key(EditKey::Forward, &mut doc),
         Ok(Outcome::Committed)

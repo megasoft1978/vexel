@@ -14,6 +14,7 @@ use crate::validate::validate;
 use crate::{GradientRef, RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
 use vexel_geometry::{Affine, Point, affine_map_point};
 use vexel_raster::Tile;
+use vexel_svg_paint::PreparedPaint;
 
 /// Per-shape state shared by every sample.
 struct ShapePass<'a, 'b> {
@@ -24,6 +25,10 @@ struct ShapePass<'a, 'b> {
     clips: ClipList<'a>,
     fill_pattern: Option<PatternPaint<'a>>,
     stroke_pattern: Option<PatternPaint<'a>>,
+    /// Prepared gradient of each channel; the outer `None` means solid paint, an
+    /// inner `None` a gradient that can never paint.
+    fill_gradient: Option<Option<PreparedPaint<'a>>>,
+    stroke_gradient: Option<Option<PreparedPaint<'a>>>,
 }
 
 /// Pattern paints of one shape (fill, stroke); `None` means solid paint.
@@ -86,6 +91,17 @@ pub(crate) fn render_shapes_clipped(
     render_core(shapes, &[], clips, &[], view, tile, control)
 }
 
+/// [`render_shapes_clipped`] into a freshly allocated transparent `tile`.
+pub(crate) fn render_shapes_fresh(
+    shapes: &[RenderShape<'_>],
+    clips: &[ClipList<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    render_core_checked(shapes, &[], clips, &[], view, tile, control, false)
+}
+
 /// A shape that survived validation, with everything its rows share.
 struct Prep<'a, 'b> {
     pass: ShapePass<'a, 'b>,
@@ -125,10 +141,29 @@ pub(crate) fn render_core(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
+    render_core_checked(shapes, patterns, clips, paints, view, tile, control, true)
+}
+
+/// [`render_core`]; `check_clear` false skips the transparent-tile scan for a
+/// tile the caller just allocated.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn render_core_checked(
+    shapes: &[RenderShape<'_>],
+    patterns: &[Option<Pattern>],
+    clips: &[ClipList<'_>],
+    paints: &[ShapePaints<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+    check_clear: bool,
+) -> Result<(), RenderError> {
     if !clips.is_empty() && clips.len() != shapes.len() {
         return Err(RenderError::InvalidGeometry);
     }
     let mut budget = validate(shapes, patterns, &view, tile)?;
+    if check_clear && !crate::composite::all_zero(tile.rgba()) {
+        return Err(RenderError::TileNotEmpty);
+    }
     let width = tile.width() as usize;
     let height = tile.height() as usize;
     let tables = AxisTables::new(&view)?;
@@ -172,6 +207,8 @@ pub(crate) fn render_core(
             clips: clips.get(shape_index).copied().unwrap_or(&[]),
             fill_pattern,
             stroke_pattern,
+            fill_gradient: shape.fill_gradient.map(prepare_gradient),
+            stroke_gradient: shape.stroke_gradient.map(prepare_gradient),
         };
         // Without stroke or pattern paint only the fill can touch a pixel, so
         // rows and spans with no crossing can be skipped outright.
@@ -255,6 +292,7 @@ fn render_band(
     let view = view.clone();
     let mut sweep = Sweep::default();
     let mut crossings: [Crossings; SAMPLES_PER_AXIS] = Default::default();
+    let mut candidates: Vec<u32> = Vec::new();
     for prep in preps {
         let Prep { pass, bounds, fill_only, full_pixel } = prep;
         let (fill_only, full_pixel) = (*fill_only, *full_pixel);
@@ -362,7 +400,8 @@ fn render_band(
                         let mut center = [0u8; 4];
                         let fill_inside =
                             || inside(shape.edges, &sweep.active, shape.evenodd, px, py);
-                        paint_sample(pass, fill_inside, px, py, &mut center);
+                        let local = map_local(pass, px, py);
+                        paint_sample(pass, fill_inside, px, py, local, None, &mut center);
                         let offset = (row_base + x as usize) * 4;
                         let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
                             .try_into()
@@ -370,6 +409,28 @@ fn render_band(
                         source_over(pixel, center);
                     }
                     continue;
+                }
+                // Stroke hit tests only need the primitives near this pixel's
+                // samples: their local bounding box comes from the four corner samples.
+                let mut culled = false;
+                if let Some(prims) = pass.prims.as_ref().filter(|p| p.has_boxes()) {
+                    let mut rect = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+                    let mut known = true;
+                    for (sy, sx) in [(0, 0), (0, 3), (3, 0), (3, 3)] {
+                        let corner = map_local(pass, tables.column(x, sx).0, sample_y[sy]);
+                        if let Some(p) = corner {
+                            rect = [rect[0].min(p.x), rect[1].min(p.y), rect[2].max(p.x), rect[3].max(p.y)];
+                        } else {
+                            known = false;
+                        }
+                    }
+                    if known {
+                        prims.candidates_in(rect, &mut candidates);
+                        culled = true;
+                        if candidates.is_empty() && !pass.fill_visible {
+                            continue;
+                        }
+                    }
                 }
                 for sy in 0..SAMPLES_PER_AXIS {
                     if !row_in_view[sy] {
@@ -381,12 +442,15 @@ fn render_band(
                             continue;
                         }
                         let fill_inside = || crossings[sy].inside(shape.evenodd, px);
+                        let index = sy * SAMPLES_PER_AXIS + sx;
                         paint_sample(
                             pass,
                             fill_inside,
                             px,
                             sample_y[sy],
-                            &mut samples[sy * SAMPLES_PER_AXIS + sx],
+                            map_local(pass, px, sample_y[sy]),
+                            culled.then_some(candidates.as_slice()),
+                            &mut samples[index],
                         );
                     }
                 }
@@ -402,6 +466,11 @@ fn render_band(
     Ok(())
 }
 
+/// Document point mapped into the stroke's local space, when the shape needs it.
+fn map_local(pass: &ShapePass<'_, '_>, px: f64, py: f64) -> Option<Point> {
+    pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }))
+}
+
 /// C `paint_sample_result`: fill first, then stroke on top; a pattern paint
 /// replaces the solid colour of its channel.
 fn paint_sample(
@@ -409,13 +478,14 @@ fn paint_sample(
     fill_inside: impl FnOnce() -> bool,
     px: f64,
     py: f64,
+    local: Option<Point>,
+    candidates: Option<&[u32]>,
     out: &mut [u8; 4],
 ) {
     let shape = pass.shape;
     if !pass.clips.iter().all(|clip| clip.contains(px, py)) {
         return;
     }
-    let local = pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }));
     if pass.fill_visible && fill_inside() {
         match (pass.fill_pattern, shape.fill_gradient) {
             (Some(paint), _) => {
@@ -425,8 +495,8 @@ fn paint_sample(
                     source_over(out, sampled);
                 }
             }
-            (None, Some(gradient)) => {
-                let sampled = sample_gradient(&gradient, px, py);
+            (None, Some(_)) => {
+                let sampled = sample_gradient(pass.fill_gradient.flatten(), px, py);
                 if sampled[3] != 0 {
                     source_over(out, sampled);
                 }
@@ -436,7 +506,10 @@ fn paint_sample(
     }
     if let (Some(prims), Some(style), Some(local)) =
         (pass.prims.as_ref(), shape.stroke.as_ref(), local)
-        && prims.contains(local.x, local.y)
+        && candidates.map_or_else(
+            || prims.contains(local.x, local.y),
+            |tags| prims.contains_among(tags, local.x, local.y),
+        )
     {
         match (pass.stroke_pattern, shape.stroke_gradient) {
             (Some(paint), _) => {
@@ -446,8 +519,8 @@ fn paint_sample(
                     source_over(out, sampled);
                 }
             }
-            (None, Some(gradient)) => {
-                let sampled = sample_gradient(&gradient, px, py);
+            (None, Some(_)) => {
+                let sampled = sample_gradient(pass.stroke_gradient.flatten(), px, py);
                 if sampled[3] != 0 {
                     source_over(out, sampled);
                 }
@@ -457,10 +530,17 @@ fn paint_sample(
     }
 }
 
+/// Validates a gradient channel once for all its samples.
+fn prepare_gradient<'a>(gradient: GradientRef<'a>) -> Option<PreparedPaint<'a>> {
+    PreparedPaint::new(gradient.paint, gradient.stops)
+}
+
 /// Colour of a gradient channel at document point `(x, y)`, through the frozen
 /// sampler. A point the sampler cannot place keeps alpha 0 and paints nothing.
-fn sample_gradient(gradient: &GradientRef<'_>, x: f64, y: f64) -> [u8; 4] {
+fn sample_gradient(gradient: Option<PreparedPaint<'_>>, x: f64, y: f64) -> [u8; 4] {
     let mut rgba = [0u8; 4];
-    vexel_svg_paint::sample(gradient.paint, gradient.stops, x, y, &mut rgba);
+    if let Some(prepared) = gradient {
+        prepared.sample(x, y, &mut rgba);
+    }
     rgba
 }

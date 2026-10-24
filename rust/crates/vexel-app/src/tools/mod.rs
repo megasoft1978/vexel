@@ -6,19 +6,23 @@
 //! integration step that follows the compose mapping; see [`map`].
 
 mod controller;
+mod frame;
+mod handles;
 mod map;
 mod pen;
 mod shortcuts;
 
 pub use controller::{EditKey, Key, Outcome, PointerInput, ToolController, ToolError};
-pub use map::{CanvasMap, ScaleMap, stage_local};
+pub use map::{CanvasMap, ScaleMap, doc_per_pixel, stage_local};
 pub use pen::MAX_PEN_VERTICES;
-pub use shortcuts::edit_tool_key;
+pub use shortcuts::{edit_tool_key, tool_key};
 
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tests_edit;
+#[cfg(test)]
+mod tests_gestures;
 #[cfg(test)]
 mod tests_rotate;
 #[cfg(test)]

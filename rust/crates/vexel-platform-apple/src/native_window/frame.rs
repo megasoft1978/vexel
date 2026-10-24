@@ -77,18 +77,37 @@ impl RgbaFrame {
     pub fn pixels(&self) -> &[u8] {
         &self.pixels
     }
-
     /// Converts straight-alpha sRGB input to the premultiplied RGBA encoding
     /// declared to CoreGraphics. Integer rounding is deterministic.
     pub(crate) fn into_premultiplied_pixels(self) -> Vec<u8> {
         let mut pixels = self.pixels;
-        for pixel in pixels.chunks_exact_mut(BYTES_PER_PIXEL) {
-            let alpha = u16::from(pixel[3]);
-            for channel in &mut pixel[..3] {
-                *channel = ((u16::from(*channel) * alpha + 127) / 255) as u8;
+        premultiply_in_place(&mut pixels);
+        pixels
+    }
+}
+
+/// `(c * a + 127) / 255` without a division, exact for every `c`, `a`.
+#[inline(always)]
+fn mul_div255(c: u32, a: u32) -> u8 {
+    let t = c * a + 127;
+    ((t + (t >> 8) + 1) >> 8) as u8
+}
+
+/// Straight to premultiplied RGBA8. Opaque pixels (the common UI case) are
+/// untouched and fully transparent ones are zeroed, both exactly as the
+/// rounded formula would produce.
+pub(crate) fn premultiply_in_place(pixels: &mut [u8]) {
+    for pixel in pixels.chunks_exact_mut(BYTES_PER_PIXEL) {
+        match pixel[3] {
+            255 => {}
+            0 => pixel[..3].fill(0),
+            alpha => {
+                let alpha = u32::from(alpha);
+                for channel in &mut pixel[..3] {
+                    *channel = mul_div255(u32::from(*channel), alpha);
+                }
             }
         }
-        pixels
     }
 }
 
@@ -194,6 +213,15 @@ mod tests {
         let frame = RgbaFrame::new(1, 1, 1.0, vec![200, 100, 50, 128]).unwrap();
         assert_eq!(frame.pixels(), &[200, 100, 50, 128]);
         assert_eq!(frame.into_premultiplied_pixels(), [100, 50, 25, 128]);
+    }
+
+    #[test]
+    fn fast_premultiply_matches_rounded_division_for_every_input() {
+        for c in 0..=255u32 {
+            for a in 0..=255u32 {
+                assert_eq!(u32::from(mul_div255(c, a)), (c * a + 127) / 255, "{c} {a}");
+            }
+        }
     }
 
     #[test]

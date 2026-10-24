@@ -143,7 +143,7 @@ impl TimelinePresentation {
             Some(
                 hit @ (Hit::Play
                 | Hit::Loop
-                | Hit::OnionBefore
+                | Hit::AddKey
                 | Hit::AddDrawingTrack
                 | Hit::ImportDrawing
                 | Hit::DuplicateTrack(_)

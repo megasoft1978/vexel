@@ -27,7 +27,7 @@ use vexel_app::preview;
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{McpGrants, edit_shortcut};
 use vexel_app::toolbar_actions::{self, Exports};
-use vexel_app::tools::{Key, Outcome, PointerInput, ToolController, edit_tool_key};
+use vexel_app::tools::{Key, Outcome, PointerInput, ToolController, edit_tool_key, tool_key};
 use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
@@ -172,11 +172,12 @@ fn run(
             }
             if model.mode == Mode::Animate && native.surface() == TimelineSurface::Native {
                 if let Some(composed) = doc.composed() {
-                    if let Some(frame) = native.tick(
-                        files.document(),
-                        (composed.frame.width, composed.frame.height),
-                    ) {
-                        dirty |= doc.present_animated(files.document().revision(), frame);
+                    let full = (composed.frame.width, composed.frame.height);
+                    let play = doc.playback_size(scale as u32).unwrap_or(full);
+                    if let Some(frame) =
+                        native.tick_async(files.document(), full, play, doc.animated_shown())
+                    {
+                        dirty |= doc.present_native(files.document().revision(), frame);
                     }
                 }
             }
@@ -185,16 +186,6 @@ fn run(
                 dirty = true;
             }
         }
-        let native_snapshot = if model.mode == Mode::Animate {
-            native
-                .snapshot(
-                    files.document(),
-                    doc.selected_target_id().map(str::to_owned),
-                )
-                .ok()
-        } else {
-            None
-        };
         {
             let revision = files.document().revision();
             if revision == 0 {
@@ -272,6 +263,15 @@ fn run(
                             let frame = match bar {
                                 Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
                                 None => frame,
+                            };
+                            let native_snapshot = match layout.footer {
+                                Some(_) if model.mode == Mode::Animate => native
+                                    .snapshot(
+                                        files.document(),
+                                        doc.selected_target_id().map(str::to_owned),
+                                    )
+                                    .ok(),
+                                _ => None,
                             };
                             let frame = match (layout.footer, native_snapshot.as_ref()) {
                                 (Some(footer), Some(snapshot)) => {
@@ -444,11 +444,11 @@ fn run(
                         && timeline::key(code, modifiers, &mut driver)
                     {
                         dirty = true;
-                    } else if playback_key(code, modifiers)
-                        .is_some_and(|key| keys::apply(&mut driver, key, false, tools.owns_keys()))
-                    {
-                        dirty = true;
-                    } else if let Some(key) = tool_key(code, modifiers) {
+                    } else if let Some(key) = tool_key(
+                        code,
+                        modifiers,
+                        model.mode == Mode::Draw && tools.selection().is_some(),
+                    ) {
                         if key == Key::Escape {
                             doc.deselect();
                         }
@@ -456,6 +456,10 @@ fn run(
                             .document_mut()
                             .edit(|document| tools.key(key, document));
                         dirty |= !matches!(result, Ok(Outcome::Ignored));
+                    } else if playback_key(code, modifiers)
+                        .is_some_and(|key| keys::apply(&mut driver, key, false, tools.owns_keys()))
+                    {
+                        dirty = true;
                     } else if let Some(key) = edit_tool_key(code, modifiers) {
                         let result = files
                             .document_mut()
@@ -640,19 +644,6 @@ fn reset_animation_state(
     native.document_replaced();
     driver.pause();
     driver.invalidate();
-}
-
-/// Escape, Delete and Return for the tools; Command/Control/Option chords are not tool keys.
-fn tool_key(code: u16, modifiers: Modifiers) -> Option<Key> {
-    if modifiers.0 & (Modifiers::COMMAND | Modifiers::CONTROL | Modifiers::OPTION) != 0 {
-        return None;
-    }
-    match code {
-        53 => Some(Key::Escape),
-        51 | 117 => Some(Key::Delete),
-        36 | 76 => Some(Key::Enter),
-        _ => None,
-    }
 }
 
 fn route_pointer(
