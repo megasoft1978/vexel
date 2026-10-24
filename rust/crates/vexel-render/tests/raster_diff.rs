@@ -51,6 +51,13 @@ fn current() -> Vec<(String, String)> {
             rows.push((format!("{profile:?}x-{size}"), digest(size, profile, count)));
         }
     }
+    // Clip-heavy and layer-heavy cases, recorded from the unmodified rasterizer
+    // before the coverage fast paths.
+    for (size, count) in [(61u32, 150usize), (203, 900), (512, 1500)] {
+        for profile in [Profile::Clip, Profile::Rect, Profile::Mix, Profile::Gradient] {
+            rows.push((format!("{profile:?}y-{size}"), digest(size + 2, profile, count)));
+        }
+    }
     rows
 }
 
