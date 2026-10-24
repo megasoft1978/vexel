@@ -10,11 +10,16 @@ use vexel_render::render_groups;
 
 const SIZE: u32 = 1024;
 const RUNS: usize = 7;
+// `VEXEL_BENCH_ONLY=Stroke` restricts the run to one profile.
 
 #[test]
 #[ignore]
 fn p50_render_ms() {
     for profile in [Profile::Fill, Profile::Gradient, Profile::Stroke, Profile::Nest, Profile::Clip] {
+        let only = std::env::var("VEXEL_BENCH_ONLY").ok();
+        if only.is_some_and(|name| name != format!("{profile:?}")) {
+            continue;
+        }
         for count in [500usize, 2000, 5000] {
             let nodes = scene(3, SIZE, count, profile);
             let mut times = Vec::new();

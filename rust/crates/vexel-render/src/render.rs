@@ -14,6 +14,7 @@ use crate::validate::validate;
 use crate::{GradientRef, RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
 use vexel_geometry::{Affine, Point, affine_map_point};
 use vexel_raster::Tile;
+use vexel_svg_paint::PreparedPaint;
 
 /// Per-shape state shared by every sample.
 struct ShapePass<'a, 'b> {
@@ -24,6 +25,10 @@ struct ShapePass<'a, 'b> {
     clips: ClipList<'a>,
     fill_pattern: Option<PatternPaint<'a>>,
     stroke_pattern: Option<PatternPaint<'a>>,
+    /// Prepared gradient of each channel; the outer `None` means solid paint, an
+    /// inner `None` a gradient that can never paint.
+    fill_gradient: Option<Option<PreparedPaint<'a>>>,
+    stroke_gradient: Option<Option<PreparedPaint<'a>>>,
 }
 
 /// Pattern paints of one shape (fill, stroke); `None` means solid paint.
@@ -172,6 +177,8 @@ pub(crate) fn render_core(
             clips: clips.get(shape_index).copied().unwrap_or(&[]),
             fill_pattern,
             stroke_pattern,
+            fill_gradient: shape.fill_gradient.map(prepare_gradient),
+            stroke_gradient: shape.stroke_gradient.map(prepare_gradient),
         };
         // Without stroke or pattern paint only the fill can touch a pixel, so
         // rows and spans with no crossing can be skipped outright.
@@ -425,8 +432,8 @@ fn paint_sample(
                     source_over(out, sampled);
                 }
             }
-            (None, Some(gradient)) => {
-                let sampled = sample_gradient(&gradient, px, py);
+            (None, Some(_)) => {
+                let sampled = sample_gradient(pass.fill_gradient.flatten(), px, py);
                 if sampled[3] != 0 {
                     source_over(out, sampled);
                 }
@@ -446,8 +453,8 @@ fn paint_sample(
                     source_over(out, sampled);
                 }
             }
-            (None, Some(gradient)) => {
-                let sampled = sample_gradient(&gradient, px, py);
+            (None, Some(_)) => {
+                let sampled = sample_gradient(pass.stroke_gradient.flatten(), px, py);
                 if sampled[3] != 0 {
                     source_over(out, sampled);
                 }
@@ -457,10 +464,17 @@ fn paint_sample(
     }
 }
 
+/// Validates a gradient channel once for all its samples.
+fn prepare_gradient<'a>(gradient: GradientRef<'a>) -> Option<PreparedPaint<'a>> {
+    PreparedPaint::new(gradient.paint, gradient.stops)
+}
+
 /// Colour of a gradient channel at document point `(x, y)`, through the frozen
 /// sampler. A point the sampler cannot place keeps alpha 0 and paints nothing.
-fn sample_gradient(gradient: &GradientRef<'_>, x: f64, y: f64) -> [u8; 4] {
+fn sample_gradient(gradient: Option<PreparedPaint<'_>>, x: f64, y: f64) -> [u8; 4] {
     let mut rgba = [0u8; 4];
-    vexel_svg_paint::sample(gradient.paint, gradient.stops, x, y, &mut rgba);
+    if let Some(prepared) = gradient {
+        prepared.sample(x, y, &mut rgba);
+    }
     rgba
 }
