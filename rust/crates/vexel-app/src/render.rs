@@ -105,16 +105,7 @@ pub fn render_with(
         )
         .ok_or("UI painter rejected checked frame geometry")?;
         let tokens = c.tokens;
-        c.rgba.fill(0);
-        c.paint_rect(
-            Rect {
-                x: 0,
-                y: 0,
-                width: width_points,
-                height: height_points,
-            },
-            tokens.window,
-        );
+        paint_window_background(&mut c, tokens.window, width_points, height_points);
         draw_chrome_with(&mut c, &layout, model, Some(motion));
         draw_stage_empty(&mut c, layout.stage);
         if let Some(footer) = layout.footer {
@@ -129,6 +120,28 @@ pub fn render_with(
     }
     RgbaFrame::new(width, height, scale as f64, pixels)
         .map_err(|_| "native frame constructor rejected geometry")
+}
+/// Fills the zeroed frame with the window colour. An opaque colour over a
+/// transparent pixel blends to exactly its own bytes, so it is written
+/// directly instead of blending every pixel; a translucent one keeps the
+/// blend path.
+fn paint_window_background(c: &mut WidgetCanvas<'_>, color: u32, w: u32, h: u32) {
+    if color & 255 == 255 {
+        let bytes = color.to_be_bytes();
+        for pixel in c.rgba.chunks_exact_mut(4) {
+            pixel.copy_from_slice(&bytes);
+        }
+    } else {
+        c.paint_rect(
+            Rect {
+                x: 0,
+                y: 0,
+                width: w,
+                height: h,
+            },
+            color,
+        );
+    }
 }
 pub(crate) fn label(
     c: &mut WidgetCanvas<'_>,
@@ -184,4 +197,57 @@ fn draw_stage_empty(c: &mut WidgetCanvas<'_>, stage: Rect) {
         13,
         FontWeight::Regular,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn direct_window_fill_equals_painted_rect() {
+        for scale in [1u32, 2] {
+            for theme in [Theme::Light, Theme::Dark] {
+                let (wp, hp) = (37u32, 23u32);
+                let (w, h) = (wp * scale, hp * scale);
+                let len = (w * h * 4) as usize;
+                let (mut fast, mut slow) = (vec![0u8; len], vec![0u8; len]);
+                let mut c = WidgetCanvas::new(
+                    &mut slow,
+                    len,
+                    w,
+                    h,
+                    (w * 4) as usize,
+                    scale,
+                    theme,
+                    false,
+                    None,
+                )
+                .unwrap();
+                let color = c.tokens.window;
+                c.paint_rect(
+                    Rect {
+                        x: 0,
+                        y: 0,
+                        width: wp,
+                        height: hp,
+                    },
+                    color,
+                );
+                let mut c = WidgetCanvas::new(
+                    &mut fast,
+                    len,
+                    w,
+                    h,
+                    (w * 4) as usize,
+                    scale,
+                    theme,
+                    false,
+                    None,
+                )
+                .unwrap();
+                paint_window_background(&mut c, color, wp, hp);
+                assert_eq!(fast, slow);
+            }
+        }
+    }
 }

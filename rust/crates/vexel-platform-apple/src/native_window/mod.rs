@@ -9,6 +9,8 @@ mod ime_native;
 mod input;
 #[cfg(test)]
 mod non_editing_tests;
+#[cfg(test)]
+mod present_bench;
 mod queue;
 mod route;
 mod teardown;
