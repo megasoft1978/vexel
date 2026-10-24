@@ -45,7 +45,8 @@ members = [
   "rust/crates/vexel-gif",
   "rust/crates/vexel-png",
   "rust/tools/vexel-dev",
-  "rust/tools/vexel-corpus"
+  "rust/tools/vexel-corpus",
+  "rust/tools/vexel-bench"
 ]
 
 [workspace.package]
