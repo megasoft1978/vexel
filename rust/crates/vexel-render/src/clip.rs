@@ -65,7 +65,12 @@ fn point_inside(edges: &[FlatEdge], evenodd: bool, x: f64, y: f64) -> bool {
 impl RenderClip<'_> {
     /// C `svg_clip_contains` for a document user-space position.
     pub(crate) fn contains(&self, x: f64, y: f64) -> bool {
-        let (root_x, root_y) = (x, y);
+        self.local_contains(x, y)
+            && self.parent.is_none_or(|parent| parent.contains(x, y))
+    }
+
+    /// The part of [`Self::contains`] that does not look at the parent chain.
+    pub(crate) fn local_contains(&self, x: f64, y: f64) -> bool {
         let Some(local) = affine_map_point(self.user_inverse, Point { x, y }) else {
             return false;
         };
@@ -77,13 +82,9 @@ impl RenderClip<'_> {
             x = (x - self.bounds[0]) / (self.bounds[2] - self.bounds[0]);
             y = (y - self.bounds[1]) / (self.bounds[3] - self.bounds[1]);
         }
-        let inside = self.shapes.iter().any(|shape| {
+        self.shapes.iter().any(|shape| {
             shape.filled && point_inside(&self.edges[shape.edges.clone()], shape.evenodd, x, y)
-        });
-        inside
-            && self
-                .parent
-                .is_none_or(|parent| parent.contains(root_x, root_y))
+        })
     }
 
     /// Checks geometry and bounds up front so sampling cannot misbehave.

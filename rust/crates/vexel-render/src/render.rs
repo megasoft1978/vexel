@@ -3,6 +3,7 @@
 
 use crate::bounds::{PixelBounds, shape_bounds};
 use crate::clip::ClipList;
+use crate::clip_rows::{ClipPlan, ClipRows, FULL_MASK};
 use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
 use crate::dash::Pattern;
 use crate::fill::{Crossings, inside};
@@ -33,6 +34,9 @@ struct ShapePass<'a, 'b> {
 
 /// Pattern paints of one shape (fill, stroke); `None` means solid paint.
 pub(crate) type ShapePaints<'a> = (Option<PatternPaint<'a>>, Option<PatternPaint<'a>>);
+
+/// Pixel x range `[first, end)` a layer row may hold; empty when `first >= end`.
+pub(crate) type DirtySpan = (u32, u32);
 
 /// Rasterizes `shapes` in document order into the empty `tile`.
 ///
@@ -91,24 +95,29 @@ pub(crate) fn render_shapes_clipped(
     render_core(shapes, &[], clips, &[], view, tile, control)
 }
 
-/// [`render_shapes_clipped`] into a freshly allocated transparent `tile`.
-pub(crate) fn render_shapes_fresh(
+/// [`render_shapes_clipped`] into a freshly allocated transparent `tile`, also
+/// recording per tile row the pixel range the shapes may have written (a
+/// superset of the non-transparent pixels).
+pub(crate) fn render_shapes_tracked(
     shapes: &[RenderShape<'_>],
     clips: &[ClipList<'_>],
     view: ViewMap,
     tile: &mut Tile,
+    dirty: &mut [DirtySpan],
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    render_core_checked(shapes, &[], clips, &[], view, tile, control, false)
+    render_core_checked(shapes, &[], clips, &[], view, tile, control, false, Some(dirty))
 }
 
 /// A shape that survived validation, with everything its rows share.
 struct Prep<'a, 'b> {
     pass: ShapePass<'a, 'b>,
     bounds: PixelBounds,
-    fill_only: bool,
     /// Resolved colour of a pixel whose 16 samples all paint the fill.
     full_pixel: Option<[u8; 4]>,
+    /// No stroke and no pattern paint: only the fill can touch a pixel.
+    simple: bool,
+    plan: ClipPlan<'a>,
 }
 
 /// Read-only state every band of one render shares.
@@ -141,7 +150,7 @@ pub(crate) fn render_core(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    render_core_checked(shapes, patterns, clips, paints, view, tile, control, true)
+    render_core_checked(shapes, patterns, clips, paints, view, tile, control, true, None)
 }
 
 /// [`render_core`]; `check_clear` false skips the transparent-tile scan for a
@@ -156,6 +165,7 @@ pub(crate) fn render_core_checked(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
     check_clear: bool,
+    dirty: Option<&mut [DirtySpan]>,
 ) -> Result<(), RenderError> {
     if !clips.is_empty() && clips.len() != shapes.len() {
         return Err(RenderError::InvalidGeometry);
@@ -219,21 +229,26 @@ pub(crate) fn render_core_checked(
         if fill_only && !pass.fill_visible {
             continue;
         }
-        let full_pixel = (fill_only && pass.clips.is_empty()).then(|| {
+        let simple = pass.prims.is_none() && fill_pattern.is_none() && stroke_pattern.is_none();
+        if simple && !pass.fill_visible {
+            continue;
+        }
+        let full_pixel = fill_only.then(|| {
             let mut sample = [0u8; 4];
             source_over(&mut sample, shape.fill_rgba);
             resolve_samples(&[sample; SAMPLE_COUNT])
         });
         pixels += u64::from(bounds.x_last - bounds.x_first + 1)
             * u64::from(bounds.y_last - bounds.y_first + 1);
-        preps.push(Prep { pass, bounds, fill_only, full_pixel });
+        let plan = ClipPlan::new(pass.clips);
+        preps.push(Prep { pass, bounds, full_pixel, simple, plan });
     }
     let shared = Shared { view: &view, tables: &tables, boundary: boundary.as_ref(), preps: &preps, width };
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get()).min(MAX_THREADS);
     if threads < 2 || pixels < PARALLEL_MIN_PIXELS || height < 2 * BAND_ROWS {
-        return render_band(&shared, 0..height as u32, tile.rgba_mut(), control);
+        return render_band(&shared, 0..height as u32, tile.rgba_mut(), dirty, control);
     }
-    render_parallel(&shared, tile.rgba_mut(), control, threads)
+    render_parallel(&shared, tile.rgba_mut(), dirty, control, threads)
 }
 
 /// Draws the row bands of `rgba` on `threads` threads; the calling thread
@@ -241,26 +256,29 @@ pub(crate) fn render_core_checked(
 fn render_parallel(
     shared: &Shared<'_, '_, '_>,
     rgba: &mut [u8],
+    dirty: Option<&mut [DirtySpan]>,
     control: &dyn Fn() -> bool,
     threads: usize,
 ) -> Result<(), RenderError> {
     use std::sync::Mutex;
     use std::sync::atomic::{AtomicBool, Ordering};
     let stop = AtomicBool::new(false);
-    let bands: Vec<(u32, &mut [u8])> = rgba
+    type Band<'d> = (u32, &'d mut [u8], Option<&'d mut [DirtySpan]>);
+    let mut spans = dirty.map(|d| d.chunks_mut(BAND_ROWS));
+    let bands: Vec<Band<'_>> = rgba
         .chunks_mut(BAND_ROWS * shared.width * 4)
         .enumerate()
-        .map(|(i, chunk)| ((i * BAND_ROWS) as u32, chunk))
+        .map(|(i, chunk)| ((i * BAND_ROWS) as u32, chunk, spans.as_mut().and_then(Iterator::next)))
         .collect();
     let queue = Mutex::new(bands.into_iter().rev().collect::<Vec<_>>());
     let first_error = Mutex::new(None);
     let work = |poll: &dyn Fn() -> bool| loop {
-        let Some((first, chunk)) = queue.lock().ok().and_then(|mut q| q.pop()) else {
+        let Some((first, chunk, band_spans)) = queue.lock().ok().and_then(|mut q| q.pop()) else {
             return;
         };
         let rows = (chunk.len() / (shared.width * 4)) as u32;
         let poll_or_stop = || stop.load(Ordering::Relaxed) || poll();
-        if let Err(error) = render_band(shared, first..first + rows, chunk, &poll_or_stop) {
+        if let Err(error) = render_band(shared, first..first + rows, chunk, band_spans, &poll_or_stop) {
             stop.store(true, Ordering::Relaxed);
             if let Ok(mut slot) = first_error.lock() {
                 slot.get_or_insert(error);
@@ -286,6 +304,7 @@ fn render_band(
     shared: &Shared<'_, '_, '_>,
     rows: std::ops::Range<u32>,
     rgba: &mut [u8],
+    mut dirty: Option<&mut [DirtySpan]>,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
     let Shared { view, tables, boundary, preps, width } = *shared;
@@ -293,9 +312,12 @@ fn render_band(
     let mut sweep = Sweep::default();
     let mut crossings: [Crossings; SAMPLES_PER_AXIS] = Default::default();
     let mut candidates: Vec<u32> = Vec::new();
+    let mut clip_rows = ClipRows::default();
     for prep in preps {
-        let Prep { pass, bounds, fill_only, full_pixel } = prep;
-        let (fill_only, full_pixel) = (*fill_only, *full_pixel);
+        let Prep { pass, bounds, full_pixel, simple, plan } = prep;
+        let simple = *simple;
+        let has_clip = !plan.is_empty();
+        let full_pixel = *full_pixel;
         let shape = pass.shape;
         let y_first = bounds.y_first.max(rows.start);
         let y_last = bounds.y_last.min(rows.end.saturating_sub(1));
@@ -324,7 +346,7 @@ fn render_band(
                 }
             }
             let (mut x_first, mut x_last) = (bounds.x_first, bounds.x_last);
-            if fill_only {
+            if simple {
                 let mut span: Option<(f64, f64)> = None;
                 let mut left_empty = true;
                 for row in &crossings {
@@ -351,9 +373,58 @@ fn render_band(
                     x_first = x_first.max(low_pixel.max(0) as u32);
                 }
             }
+            if x_first > x_last {
+                continue;
+            }
+            if let Some(spans) = dirty.as_deref_mut() {
+                let span = &mut spans[(y - rows.start) as usize];
+                *span = if span.0 >= span.1 {
+                    (x_first, x_last + 1)
+                } else {
+                    (span.0.min(x_first), span.1.max(x_last + 1))
+                };
+            }
+            let mut clip_ready = !has_clip;
             let mut cursors = [[0usize; 2]; SAMPLES_PER_AXIS];
             for x in x_first..=x_last {
-                if let Some(full) = full_pixel {
+                // C samples pattern paint once at the centre of pixels that no
+                // edge touches (see `pattern_boundary`).
+                let center_only = (pass.fill_pattern.is_some() || pass.stroke_pattern.is_some())
+                    && boundary.is_some_and(|mask| {
+                        pixel_fully_in_view(&view, x, y) && !mask.is_marked(x, y)
+                    });
+                if center_only {
+                    let (sample_x, sample_y) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
+                    if view.sample_in_view(sample_x, sample_y) && centre_clipped(pass, &view, x, y) {
+                        let (px, py) = view.to_user(sample_x, sample_y);
+                        let mut center = [0u8; 4];
+                        let fill_inside =
+                            || inside(shape.edges, &sweep.active, shape.evenodd, px, py);
+                        let local = map_local(pass, px, py);
+                        paint_sample(pass, fill_inside, px, py, local, None, &mut center);
+                        let offset = (row_base + x as usize) * 4;
+                        let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                            .try_into()
+                            .map_err(|_| RenderError::InvalidGeometry)?;
+                        source_over(pixel, center);
+                    }
+                    continue;
+                }
+                let mask = if has_clip {
+                    if !clip_ready {
+                        plan.prepare(&mut clip_rows, &sample_y);
+                        clip_ready = true;
+                    }
+                    let mask = plan.pixel_mask(&clip_rows, tables, x, &sample_y);
+                    if mask == 0 {
+                        continue;
+                    }
+                    mask
+                } else {
+                    FULL_MASK
+                };
+                let mut fill_all_in = false;
+                if simple {
                     // Samples 0 and 3 of a row bracket the other two (positions
                     // only grow), so equal crossing counts left of both mean one
                     // state for the whole row of samples.
@@ -378,38 +449,18 @@ fn render_band(
                         continue;
                     }
                     if uniform && all_in {
-                        let offset = (row_base + x as usize) * 4;
-                        let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
-                            .try_into()
-                            .map_err(|_| RenderError::InvalidGeometry)?;
-                        source_over(pixel, full);
-                        continue;
+                        if let (FULL_MASK, Some(full)) = (mask, full_pixel) {
+                            let offset = (row_base + x as usize) * 4;
+                            let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                                .try_into()
+                                .map_err(|_| RenderError::InvalidGeometry)?;
+                            source_over(pixel, full);
+                            continue;
+                        }
+                        fill_all_in = true;
                     }
                 }
-                // C samples pattern paint once at the centre of pixels that no
-                // edge touches (see `pattern_boundary`).
-                let center_only = (pass.fill_pattern.is_some() || pass.stroke_pattern.is_some())
-                    && boundary.is_some_and(|mask| {
-                        pixel_fully_in_view(&view, x, y) && !mask.is_marked(x, y)
-                    });
                 let mut samples = [[0u8; 4]; SAMPLE_COUNT];
-                if center_only {
-                    let (sample_x, sample_y) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
-                    if view.sample_in_view(sample_x, sample_y) {
-                        let (px, py) = view.to_user(sample_x, sample_y);
-                        let mut center = [0u8; 4];
-                        let fill_inside =
-                            || inside(shape.edges, &sweep.active, shape.evenodd, px, py);
-                        let local = map_local(pass, px, py);
-                        paint_sample(pass, fill_inside, px, py, local, None, &mut center);
-                        let offset = (row_base + x as usize) * 4;
-                        let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
-                            .try_into()
-                            .map_err(|_| RenderError::InvalidGeometry)?;
-                        source_over(pixel, center);
-                    }
-                    continue;
-                }
                 // Stroke hit tests only need the primitives near this pixel's
                 // samples: their local bounding box comes from the four corner samples.
                 let mut culled = false;
@@ -432,7 +483,23 @@ fn render_band(
                         }
                     }
                 }
-                for sy in 0..SAMPLES_PER_AXIS {
+                // Every sample is inside the fill and every clip: only the gradient
+                // is left to evaluate (a point it cannot place paints nothing, and
+                // source-over onto a transparent sample is the sample itself).
+                let gradient_direct =
+                    fill_all_in && mask == FULL_MASK && shape.fill_gradient.is_some();
+                if gradient_direct && let Some(prepared) = pass.fill_gradient.flatten() {
+                    for sy in 0..SAMPLES_PER_AXIS {
+                        for sx in 0..SAMPLES_PER_AXIS {
+                            prepared.sample(
+                                tables.column(x, sx).0,
+                                sample_y[sy],
+                                &mut samples[sy * SAMPLES_PER_AXIS + sx],
+                            );
+                        }
+                    }
+                }
+                for sy in 0..if gradient_direct { 0 } else { SAMPLES_PER_AXIS } {
                     if !row_in_view[sy] {
                         continue;
                     }
@@ -441,8 +508,11 @@ fn render_band(
                         if !column_in_view {
                             continue;
                         }
-                        let fill_inside = || crossings[sy].inside(shape.evenodd, px);
                         let index = sy * SAMPLES_PER_AXIS + sx;
+                        if mask & (1 << index) == 0 {
+                            continue;
+                        }
+                        let fill_inside = || fill_all_in || crossings[sy].inside(shape.evenodd, px);
                         paint_sample(
                             pass,
                             fill_inside,
@@ -466,6 +536,12 @@ fn render_band(
     Ok(())
 }
 
+/// Whether the centre of pixel `(x, y)` lies in every clip of the shape.
+fn centre_clipped(pass: &ShapePass<'_, '_>, view: &ViewMap, x: u32, y: u32) -> bool {
+    let (px, py) = view.to_user(f64::from(x) + 0.5, f64::from(y) + 0.5);
+    pass.clips.iter().all(|clip| clip.contains(px, py))
+}
+
 /// Document point mapped into the stroke's local space, when the shape needs it.
 fn map_local(pass: &ShapePass<'_, '_>, px: f64, py: f64) -> Option<Point> {
     pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }))
@@ -483,9 +559,6 @@ fn paint_sample(
     out: &mut [u8; 4],
 ) {
     let shape = pass.shape;
-    if !pass.clips.iter().all(|clip| clip.contains(px, py)) {
-        return;
-    }
     if pass.fill_visible && fill_inside() {
         match (pass.fill_pattern, shape.fill_gradient) {
             (Some(paint), _) => {
