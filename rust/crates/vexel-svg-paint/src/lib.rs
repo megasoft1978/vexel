@@ -5,6 +5,8 @@
 //! escape their source owner, while stop data is returned by value for the
 //! decoder's draft transaction to append atomically.
 mod paint;
+#[cfg(test)]
+mod paint_reference;
 pub use paint::*;
 mod cache;
 mod control;
