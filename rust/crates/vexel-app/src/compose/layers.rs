@@ -33,6 +33,12 @@ fn source_over(destination: &mut [u8], source: [u8; 4]) {
     if source_alpha == 0 {
         return;
     }
+    if source_alpha == 255 {
+        // Exact: the blend below reduces to the source colour at full alpha.
+        destination[..3].copy_from_slice(&source[..3]);
+        destination[3] = 255;
+        return;
+    }
     let destination_alpha = u32::from(destination[3]);
     let inverse = 255 - source_alpha;
     let output = source_alpha * 255 + destination_alpha * inverse;
@@ -44,6 +50,33 @@ fn source_over(destination: &mut [u8], source: [u8; 4]) {
     destination[3] = ((output + 127) / 255) as u8;
 }
 
+/// Layer alpha of every source alpha: `alpha / 255 * opacity` capped at 1,
+/// back to a byte; 0 means the pixel changes nothing.
+fn alpha_table(opacity: f64) -> [u8; 256] {
+    let mut table = [0u8; 256];
+    for (source, slot) in table.iter_mut().enumerate() {
+        let alpha = (source as f64 / 255.0 * opacity).min(1.0);
+        if alpha > 0.0 {
+            *slot = (alpha * 255.0).round() as u8;
+        }
+    }
+    table
+}
+
+/// One row of [`composite_tile`]: source-over of `src` onto `dst`.
+fn composite_row(dst_row: &mut [u8], src_row: &[u8], table: &[u8; 256]) {
+    for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
+        // A transparent source pixel never changes the destination.
+        if src[3] == 0 {
+            continue;
+        }
+        let alpha = table[usize::from(src[3])];
+        if alpha != 0 {
+            source_over(dst, [src[0], src[1], src[2], alpha]);
+        }
+    }
+}
+
 /// C `composite_tile` with blend mode normal: layer alpha times `opacity`,
 /// source-over. `control` is polled per row.
 pub(crate) fn composite_tile(
@@ -52,6 +85,7 @@ pub(crate) fn composite_tile(
     opacity: f64,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
+    let table = alpha_table(opacity);
     let row_bytes = source.width() as usize * 4;
     for (dst_row, src_row) in destination
         .rgba_mut()
@@ -61,17 +95,7 @@ pub(crate) fn composite_tile(
         if control() {
             return Err(RenderError::Cancelled);
         }
-        for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
-            // A transparent source pixel never changes the destination.
-            if src[3] == 0 {
-                continue;
-            }
-            let alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
-            if alpha <= 0.0 {
-                continue;
-            }
-            source_over(dst, [src[0], src[1], src[2], (alpha * 255.0).round() as u8]);
-        }
+        composite_row(dst_row, src_row, &table);
     }
     Ok(())
 }
@@ -85,6 +109,7 @@ pub(crate) fn composite_tile_in(
     rects: &[super::diff::Rect],
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
+    let table = alpha_table(opacity);
     let width = source.width() as usize;
     for rect in rects {
         for y in rect.y0 as usize..rect.y1 as usize {
@@ -92,20 +117,11 @@ pub(crate) fn composite_tile_in(
                 return Err(RenderError::Cancelled);
             }
             let range = (y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4;
-            let dst_row = &mut destination.rgba_mut()[range.clone()];
-            for (dst, src) in dst_row
-                .chunks_exact_mut(4)
-                .zip(source.rgba()[range].chunks_exact(4))
-            {
-                if src[3] == 0 {
-                    continue;
-                }
-                let alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
-                if alpha <= 0.0 {
-                    continue;
-                }
-                source_over(dst, [src[0], src[1], src[2], (alpha * 255.0).round() as u8]);
-            }
+            composite_row(
+                &mut destination.rgba_mut()[range.clone()],
+                &source.rgba()[range],
+                &table,
+            );
         }
     }
     Ok(())

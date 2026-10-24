@@ -30,6 +30,9 @@ struct ShapePass<'a, 'b> {
     /// inner `None` a gradient that can never paint.
     fill_gradient: Option<Option<PreparedPaint<'a>>>,
     stroke_gradient: Option<Option<PreparedPaint<'a>>>,
+    /// The fill gradient gives the same colour on every sample row of a pixel
+    /// row, wherever x is (a linear gradient along y).
+    fill_rows: bool,
 }
 
 /// Pattern paints of one shape (fill, stroke); `None` means solid paint.
@@ -224,6 +227,11 @@ fn render_core_scissored(
     };
     let mut preps = Vec::new();
     let mut pixels = 0u64;
+    let user_bound = {
+        let (x0, y0) = view.to_user(0.0, 0.0);
+        let (x1, y1) = view.to_user(f64::from(tile.width()), f64::from(tile.height()));
+        x0.abs().max(y0.abs()).max(x1.abs()).max(y1.abs()) * 1.001 + 1.0
+    };
     for (shape_index, shape) in shapes.iter().enumerate() {
         let (fill_pattern, stroke_pattern) =
             paints.get(shape_index).copied().unwrap_or((None, None));
@@ -249,19 +257,28 @@ fn render_core_scissored(
             }
             _ => None,
         };
+        let fill_prepared = if fill_pattern.is_some() {
+            None
+        } else {
+            shape.fill_gradient.map(prepare_gradient).flatten()
+        };
+        // A gradient of one colour that places every sample is a solid fill.
+        let fill_constant = fill_prepared.and_then(|p| p.constant_color(user_bound));
         let pass = ShapePass {
             shape,
             prims,
             inverse,
             fill_visible: shape.filled
                 && (fill_pattern.is_some()
-                    || shape.fill_gradient.is_some()
+                    || (shape.fill_gradient.is_some()
+                        && fill_constant.is_none_or(|color| color[3] != 0))
                     || shape.fill_rgba[3] != 0),
             clips: clips.get(shape_index).copied().unwrap_or(&[]),
             fill_pattern,
             stroke_pattern,
             fill_gradient: shape.fill_gradient.map(prepare_gradient),
             stroke_gradient: shape.stroke_gradient.map(prepare_gradient),
+            fill_rows: fill_prepared.is_some_and(|p| p.depends_on_y_only(user_bound)),
         };
         // Without stroke or pattern paint only the fill can touch a pixel, so
         // rows and spans with no crossing can be skipped outright.
@@ -276,9 +293,10 @@ fn render_core_scissored(
         if simple && !pass.fill_visible {
             continue;
         }
-        let full_pixel = fill_only.then(|| {
+        let solid = if fill_only { Some(shape.fill_rgba) } else { fill_constant.filter(|_| simple) };
+        let full_pixel = solid.map(|rgba| {
             let mut sample = [0u8; 4];
-            source_over(&mut sample, shape.fill_rgba);
+            source_over(&mut sample, rgba);
             resolve_samples(&[sample; SAMPLE_COUNT])
         });
         pixels += u64::from(bounds.x_last - bounds.x_first + 1)
@@ -427,6 +445,7 @@ fn render_band(
                     (span.0.min(x_first), span.1.max(x_last + 1))
                 };
             }
+            let mut row_pixel: Option<[u8; 4]> = None;
             let mut clip_ready = !has_clip;
             let mut cursors = [[0usize; 2]; SAMPLES_PER_AXIS];
             for x in x_first..=x_last {
@@ -498,6 +517,27 @@ fn render_band(
                                 .try_into()
                                 .map_err(|_| RenderError::InvalidGeometry)?;
                             source_over(pixel, full);
+                            continue;
+                        }
+                        if mask == FULL_MASK
+                            && pass.fill_rows
+                            && let Some(prepared) = pass.fill_gradient.flatten()
+                        {
+                            // Same colour for every pixel of this row.
+                            let source = *row_pixel.get_or_insert_with(|| {
+                                let mut samples = [[0u8; 4]; SAMPLE_COUNT];
+                                for sy in 0..SAMPLES_PER_AXIS {
+                                    let mut color = [0u8; 4];
+                                    prepared.sample(tables.column(x, 0).0, sample_y[sy], &mut color);
+                                    samples[sy * SAMPLES_PER_AXIS..][..SAMPLES_PER_AXIS].fill(color);
+                                }
+                                resolve_samples(&samples)
+                            });
+                            let offset = (row_base + x as usize) * 4;
+                            let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                                .try_into()
+                                .map_err(|_| RenderError::InvalidGeometry)?;
+                            source_over(pixel, source);
                             continue;
                         }
                         fill_all_in = true;

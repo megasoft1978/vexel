@@ -93,7 +93,7 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
             .and_then(|v| v.parse().ok())
             .unwrap_or(96),
     );
-    let (mut snap, mut tick, mut got) = (vec![], vec![], 0);
+    let (mut snap, mut tick, mut got, mut hashes) = (vec![], vec![], 0, vec![]);
     for i in 0..ticks {
         let seconds = f64::from(i) / 24.0;
         let _ = host.mcp_control(doc, Control::Seek(seconds), true);
@@ -101,10 +101,15 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
         let _ = host.snapshot(doc, None);
         snap.push(ms(t));
         let t = Instant::now();
-        if host.tick(doc, (size, size)).is_some() {
-            got += 1;
-        }
+        let frame = host.tick(doc, (size, size));
         tick.push(ms(t));
+        if let Some(frame) = frame {
+            got += 1;
+            hashes.push(format!("{i}:{:016x}", fnv(&frame.rgba)));
+        }
+    }
+    if let Some(path) = std::env::var_os("HASH_OUT") {
+        let _ = std::fs::write(path, hashes.join("\n"));
     }
     println!(
         "{label}: size {size} frames {got}/{ticks} snapshot p50 {:.2} p95 {:.2} | tick p50 {:.2} p95 {:.2} ms",
@@ -121,7 +126,8 @@ fn ms(t: Instant) -> f64 {
 
 fn profile_run(label: &str, doc: &AppDocument) {
     vexel_app::profile::enable();
-    run(label, doc, 900);
+    let size = std::env::var("SIZE").ok().and_then(|v| v.parse().ok()).unwrap_or(900);
+    run(label, doc, size);
     for (name, v) in vexel_app::profile::take() {
         let mut v = v;
         let sum: f64 = v.iter().sum();

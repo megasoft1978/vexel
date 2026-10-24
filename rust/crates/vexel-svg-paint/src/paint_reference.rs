@@ -269,4 +269,81 @@ mod tests {
             "{written} written, {skipped} skipped"
         );
     }
+
+    /// `constant_color` and `depends_on_y_only` only claim what sampling does.
+    #[test]
+    fn shortcut_predicates_match_sampling() {
+        let mut rng = Rng(0x0BAD_5EED_1234_4321);
+        let bound = 400.0;
+        let (mut constant, mut y_only) = (0u32, 0u32);
+        for _ in 0..6000 {
+            let count = 2 + rng.below(3);
+            let same = rng.below(2) == 0;
+            let base = [rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8];
+            let mut offset = 0.0f64;
+            let stops: Vec<PaintStop> = (0..count)
+                .map(|i| {
+                    offset = if i == count - 1 { 1.0 } else { (offset + rng.range(0.0, 0.5)).min(1.0) };
+                    let rgba = if same {
+                        base
+                    } else {
+                        [rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8, rng.below(256) as u8]
+                    };
+                    PaintStop { offset, rgba }
+                })
+                .collect();
+            let plain = |rng: &mut Rng| match rng.below(4) {
+                0 => vexel_geometry::affine_identity(),
+                1 => Affine { a: rng.range(0.2, 2.0), b: -0.0, c: -0.0, d: rng.range(0.2, 2.0), e: rng.range(-50.0, 50.0), f: rng.range(-50.0, 50.0) },
+                2 => Affine { a: 1.0, b: 0.0, c: 0.0, d: rng.range(0.5, 2.0), e: 0.0, f: rng.range(-9.0, 9.0) },
+                _ => rng.affine(),
+            };
+            let radial = rng.below(2) == 0;
+            let (cx, cy) = (rng.range(0.0, 300.0), rng.range(0.0, 300.0));
+            let coordinates = if radial {
+                let focal = rng.below(4) == 0;
+                [cx, cy, rng.range(0.0, 200.0), if focal { cx + 5.0 } else { cx }, cy, 0.0]
+            } else if rng.below(2) == 0 {
+                [cx, cy, cx, rng.range(0.0, 400.0), 0.0, 0.0]
+            } else {
+                [cx, cy, rng.range(0.0, 400.0), rng.range(0.0, 400.0), 0.0, 0.0]
+            };
+            let paint = Paint {
+                kind: if radial { PaintKind::Radial } else { PaintKind::Linear },
+                spread: [Spread::Pad, Spread::Reflect, Spread::Repeat][rng.below(3)],
+                object_bounding_box: rng.below(3) == 0,
+                coordinates,
+                bounds: [rng.range(-5.0, 5.0), rng.range(-5.0, 5.0), rng.range(10.0, 300.0), rng.range(10.0, 300.0)],
+                user_inverse: plain(&mut rng),
+                gradient_inverse: plain(&mut rng),
+                stops: TableRange { first: 0, count },
+                pattern: None,
+                pattern_inverse: vexel_geometry::affine_identity(),
+                pattern_opacity: 1.0,
+            };
+            let Some(prepared) = PreparedPaint::new(&paint, &stops) else {
+                continue;
+            };
+            let sentinel = [9u8, 8, 7, 6];
+            if let Some(color) = prepared.constant_color(bound) {
+                constant += 1;
+                for _ in 0..60 {
+                    let mut out = sentinel;
+                    prepared.sample(rng.range(-bound, bound), rng.range(-bound, bound), &mut out);
+                    assert_eq!(out, color, "{paint:?}");
+                }
+            }
+            if prepared.depends_on_y_only(bound) {
+                y_only += 1;
+                for _ in 0..30 {
+                    let y = rng.range(-bound, bound);
+                    let (mut a, mut b) = (sentinel, sentinel);
+                    prepared.sample(rng.range(-bound, bound), y, &mut a);
+                    prepared.sample(rng.range(-bound, bound), y, &mut b);
+                    assert_eq!(a, b, "{paint:?} at y {y}");
+                }
+            }
+        }
+        assert!(constant > 100 && y_only > 100, "{constant} constant, {y_only} y-only");
+    }
 }

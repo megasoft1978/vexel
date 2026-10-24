@@ -11,7 +11,7 @@
 //! No new rasterization happens here.
 
 use super::clips::ClipStore;
-use super::diff::Rect;
+use super::diff::{Rect, device_rect};
 use super::layers::{Geo, composite_tile, composite_tile_in, mask_layer};
 use super::shapes::{Entry, OwnedShape, Prepared, prepare};
 use std::cell::OnceCell;
@@ -138,6 +138,15 @@ struct Scene<'s, 'v, V, A> {
     view: &'s SceneView<'v, V, A>,
     entries: &'s [Entry<'v>],
     clips: &'s [OnceCell<RenderClip<'s>>],
+    /// Conservative pixel bounds of each scene shape.
+    bounds: &'s [Option<Rect>],
+}
+
+/// Union of the bounds of the scene shapes `indices`; `None` when none paints.
+fn union_of(bounds: &[Option<Rect>], indices: impl Iterator<Item = usize>) -> Option<Rect> {
+    indices
+        .filter_map(|i| bounds.get(i).copied().flatten())
+        .reduce(Rect::union)
 }
 
 /// The regions and shapes of a differential render.
@@ -195,11 +204,25 @@ impl<'c> Renderer<'c> {
 
 impl Renderer<'_> {
     /// Source-over of `layer` into `dest`, over the produced regions only.
-    fn composite(&self, dest: &mut Tile, layer: &Tile, opacity: f64) -> Result<(), RenderError> {
-        match self.only {
-            Some(only) => composite_tile_in(dest, layer, opacity, only.rects, self.cancel),
-            None => composite_tile(dest, layer, opacity, self.cancel),
-        }
+    /// `region` bounds every non-transparent pixel of `layer`; `None` means
+    /// the whole layer may hold pixels.
+    fn composite(
+        &self,
+        dest: &mut Tile,
+        layer: &Tile,
+        opacity: f64,
+        region: Option<Option<Rect>>,
+    ) -> Result<(), RenderError> {
+        let rects: Vec<Rect> = match (self.only, region) {
+            (Some(only), Some(region)) => region
+                .into_iter()
+                .flat_map(|g| only.rects.iter().filter_map(move |r| r.intersect(g)))
+                .collect(),
+            (Some(only), None) => only.rects.to_vec(),
+            (None, Some(region)) => region.into_iter().collect(),
+            (None, None) => return composite_tile(dest, layer, opacity, self.cancel),
+        };
+        composite_tile_in(dest, layer, opacity, &rects, self.cancel)
     }
 
     fn cancelled(&self) -> bool {
@@ -257,10 +280,26 @@ impl Renderer<'_> {
         let store = ClipStore::new(view.clips)?;
         let cells = store.cells();
         store.fill(view.clips, &cells)?;
+        let computed: Vec<Option<Rect>>;
+        let bounds = match self.only {
+            Some(only) => only.bounds,
+            None => {
+                let (w, h) = (self.map.width(), self.map.height());
+                computed = entries
+                    .iter()
+                    .map(|e| match e {
+                        Entry::Draw(p) => device_rect(&p.shape, &self.geo, w, h),
+                        Entry::Skip(_) => None,
+                    })
+                    .collect();
+                &computed
+            }
+        };
         let scene = Scene {
             view,
             entries,
             clips: &cells,
+            bounds,
         };
         // Without groups the tile is empty and a single batch paints straight into it.
         self.range(
@@ -348,6 +387,7 @@ impl Renderer<'_> {
     ) -> Result<(), RenderError> {
         let group = &scene.view.groups[index];
         let mut layer = self.new_tile()?;
+        let children_range = children.clone();
         self.range(scene, children, Some(index), &mut layer, depth + 1, false)?;
         if let Some(id) = group.filter {
             let filter = scene.view.filter(id).ok_or(RenderError::InvalidGeometry)?;
@@ -370,7 +410,11 @@ impl Renderer<'_> {
             self.mask(scene.view, mask, &mut layer)?;
         }
         let _composite = crate::profile::phase("r.composite");
-        self.composite(dest, &layer, group.opacity)
+        // Filters spread pixels and masks reshape them; otherwise the layer
+        // only holds what its shapes painted.
+        let region = (group.filter.is_none() && group.mask.is_none())
+            .then(|| union_of(scene.bounds, children_range));
+        self.composite(dest, &layer, group.opacity, region)
     }
 
     /// C `apply_mask`: renders the mask content scene and multiplies it into `layer`.
@@ -438,7 +482,11 @@ impl Renderer<'_> {
                 let mut layer = self.new_tile()?;
                 self.paint(scene, *kind, items, &mut layer)?;
                 let _composite = crate::profile::phase("r.composite");
-                self.composite(dest, &layer, 1.0)
+                let region = Some(union_of(
+                    scene.bounds,
+                    items.iter().map(|p| p.shape.scene_index),
+                ));
+                self.composite(dest, &layer, 1.0, region)
             })();
             self.release();
             result?;

@@ -70,13 +70,24 @@ impl Rect {
         [self.x0, self.y0, self.x1, self.y1]
     }
 
-    fn union(self, o: Self) -> Self {
+    pub(super) fn union(self, o: Self) -> Self {
         Self {
             x0: self.x0.min(o.x0),
             y0: self.y0.min(o.y0),
             x1: self.x1.max(o.x1),
             y1: self.y1.max(o.y1),
         }
+    }
+
+    /// The rectangle both cover, if any.
+    pub(super) fn intersect(self, o: Self) -> Option<Self> {
+        let r = Self {
+            x0: self.x0.max(o.x0),
+            y0: self.y0.max(o.y0),
+            x1: self.x1.min(o.x1),
+            y1: self.y1.min(o.y1),
+        };
+        (r.x0 < r.x1 && r.y0 < r.y1).then_some(r)
     }
 
     pub(super) fn meets(self, o: Self) -> bool {
@@ -143,7 +154,7 @@ fn eligible<V: ViewportRead, A: Copy>(view: &SceneView<'_, V, A>, entries: &[Ent
 }
 
 /// Conservative device rectangle every pixel of `shape` lies in.
-fn device_rect(shape: &OwnedShape, geo: &Geo, width: u32, height: u32) -> Option<Rect> {
+pub(super) fn device_rect(shape: &OwnedShape, geo: &Geo, width: u32, height: u32) -> Option<Rect> {
     if shape.edges.is_empty() {
         return None;
     }

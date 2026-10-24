@@ -149,6 +149,88 @@ impl<'a> PreparedPaint<'a> {
     }
 }
 
+/// Both maps accept every point whose coordinates are at most this in
+/// magnitude with a wide margin (they reject beyond 1e6).
+const PLACED_LIMIT: f64 = 1.0e5;
+
+/// Largest magnitude the matrix can map a point within `(bx, by)` to.
+fn reach(m: Affine, bx: f64, by: f64) -> f64 {
+    let x = m.a.abs() * bx + m.c.abs() * by + m.e.abs();
+    let y = m.b.abs() * bx + m.d.abs() * by + m.f.abs();
+    x.max(y)
+}
+
+impl PreparedPaint<'_> {
+    /// Bound on the gradient-space coordinates of any user point within
+    /// `bound` of the origin, when both maps surely accept all such points.
+    fn placed_reach(&self, bound: f64) -> Option<f64> {
+        let paint = self.paint;
+        if !(bound.is_finite() && bound >= 0.0) {
+            return None;
+        }
+        let user = reach(paint.user_inverse, bound, bound);
+        if user.partial_cmp(&PLACED_LIMIT) != Some(std::cmp::Ordering::Less) {
+            return None;
+        }
+        let local = match self.bbox {
+            Some((w, h)) => ((user + paint.bounds[0].abs()) / w).max((user + paint.bounds[1].abs()) / h),
+            None => user,
+        };
+        if local.partial_cmp(&PLACED_LIMIT) != Some(std::cmp::Ordering::Less) {
+            return None;
+        }
+        let out = reach(paint.gradient_inverse, local, local);
+        (out.partial_cmp(&PLACED_LIMIT) == Some(std::cmp::Ordering::Less)).then_some(out)
+    }
+
+    /// The one colour [`Self::sample`] writes at every point within `bound`
+    /// of the origin, when the stops are all one colour and every such point
+    /// is surely placed; `None` otherwise.
+    pub fn constant_color(&self, bound: f64) -> Option<[u8; 4]> {
+        let paint = self.paint;
+        let first = self.section[0].rgba;
+        if self.section.iter().any(|stop| stop.rgba != first) {
+            return None;
+        }
+        let reach = self.placed_reach(bound)?;
+        let c = &paint.coordinates;
+        if !c.iter().all(|v| v.is_finite() && v.abs() <= 1.0e6) {
+            return None;
+        }
+        match paint.kind {
+            PaintKind::Linear => {
+                let [dx, dy, length] = self.constants;
+                if length != 0.0 {
+                    let top = (reach + c[0].abs()) * dx.abs() + (reach + c[1].abs()) * dy.abs();
+                    if length < 1.0e-12 || !(top * 2.0 / length < 1.0e100) {
+                        return None;
+                    }
+                }
+            }
+            PaintKind::Radial => {
+                // Concentric: the discriminant is 4|a|c, never negative.
+                if c[0] != c[3] || c[1] != c[4] || !(self.constants[2] <= -1.0e-12) {
+                    return None;
+                }
+            }
+            _ => return None,
+        }
+        Some(first)
+    }
+
+    /// True when [`Self::sample`] gives the same result for every x within
+    /// `bound` of the origin at a given y: a linear gradient along y whose
+    /// maps leave y independent of x and accept all such points.
+    pub fn depends_on_y_only(&self, bound: f64) -> bool {
+        let paint = self.paint;
+        paint.kind == PaintKind::Linear
+            && self.constants[0] == 0.0
+            && paint.user_inverse.b == 0.0
+            && paint.gradient_inverse.b == 0.0
+            && self.placed_reach(bound).is_some()
+    }
+}
+
 /// [`affine_map_point`] for a matrix already known to be valid.
 #[inline]
 fn map_valid(m: Affine, x: f64, y: f64) -> Option<(f64, f64)> {
