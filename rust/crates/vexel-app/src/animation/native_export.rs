@@ -9,8 +9,8 @@ mod parallel_tests;
 
 use self::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_drawing::{DrawingAsset, SvgGeometry};
-use super::native_frame::{NativeFrameError, render_native_frame};
-use crate::compose::{ComposeError, svg_viewport};
+use super::native_frame::{NativeFrameError, render_native_frame, render_native_frame_cached};
+use crate::compose::{ComposeError, DiffCache, svg_viewport};
 use crate::project_session::ProjectTimelineCandidate;
 use crate::session::AppDocument;
 use std::sync::Arc;
@@ -97,6 +97,48 @@ impl NativeExportSource {
                 source: &asset.source,
             })
             .collect()
+    }
+
+    /// Renders `ticks` in order through the differential playback renderer
+    /// (previous frame reused), handing each frame to `sink`. Same pixels as
+    /// [`Self::render_still`]; used to verify and measure playback.
+    pub fn render_ticks_differential(
+        &self,
+        ticks: &[u32],
+        size: (u32, u32),
+        mut sink: impl FnMut(usize, &[u8]),
+    ) -> Result<(), NativeExportError> {
+        let view = self
+            .candidate
+            .view()
+            .map_err(|_| NativeExportError::Timeline)?;
+        let viewport = svg_viewport(Arc::clone(&self.source), &|| false)
+            .map_err(NativeExportError::Viewport)?;
+        let geometry = svg_geometry(&viewport, size.0, size.1);
+        let assets = self.drawing_assets();
+        let mut cache = DiffCache::default();
+        for (i, &tick) in ticks.iter().enumerate() {
+            let frame = render_native_frame_cached(
+                &self.source,
+                None,
+                &view,
+                &assets,
+                tick,
+                size.0,
+                size.1,
+                geometry,
+                &mut cache,
+            )
+            .map_err(NativeExportError::Frame)?;
+            sink(i, &frame.rgba);
+        }
+        Ok(())
+    }
+
+    /// The tick shown at each step of one loop (ping-pong included).
+    pub fn loop_tick_list(&self) -> Option<Vec<u32>> {
+        let view = self.candidate.view().ok()?;
+        Some(loop_ticks(view.duration_ticks(), view.loop_mode()))
     }
 
     /// Length of one loop in seconds, `None` when the timeline is unreadable.

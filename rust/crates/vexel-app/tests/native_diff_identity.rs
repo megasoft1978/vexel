@@ -234,15 +234,20 @@ fn compare(label: &str, doc: &AppDocument, size: u32) -> Option<(f64, f64)> {
         ref_ms.push(t.elapsed().as_secs_f64() * 1000.0);
         want.push(fnv(&rgba));
     }
+    let ticks: Vec<u32> = source
+        .loop_tick_list()
+        .unwrap()
+        .into_iter()
+        .step_by(plan.stride as usize)
+        .collect();
     let mut got = vec![];
     let mut cached_ms = vec![];
     let mut last = Instant::now();
     source
-        .render_frames(&req, |_, rgba| -> Result<(), ()> {
+        .render_ticks_differential(&ticks, (size, size), |_, rgba| {
             cached_ms.push(last.elapsed().as_secs_f64() * 1000.0);
             got.push(fnv(rgba));
             last = Instant::now();
-            Ok(())
         })
         .unwrap();
     let bad: Vec<_> = (0..want.len()).filter(|&i| want[i] != got[i]).collect();
