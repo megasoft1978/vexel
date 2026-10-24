@@ -14,9 +14,9 @@
 //! isolation are not modelled here.
 
 use crate::clip::{ClipList, RenderClip};
-use crate::composite::source_over;
+use crate::composite::{all_zero, source_over};
 use crate::mask::{self, RenderMask};
-use crate::render::render_shapes_clipped;
+use crate::render::{render_shapes_clipped, render_shapes_fresh};
 use crate::{RenderError, RenderShape, ViewMap};
 use std::ops::Range;
 use vexel_raster::Tile;
@@ -197,7 +197,7 @@ impl Ctx<'_> {
     fn flush_reserved(&mut self, run: &Run<'_>, destination: &mut Tile) -> Result<(), RenderError> {
         let mut layer = self.new_tile()?;
         let lists: Vec<ClipList<'_>> = run.ranges.iter().map(|r| &run.arena[r.clone()]).collect();
-        render_shapes_clipped(&run.shapes, &lists, self.view, &mut layer, self.control)?;
+        render_shapes_fresh(&run.shapes, &lists, self.view, &mut layer, self.control)?;
         composite_tile(destination, &layer, 1.0, self.control)
     }
 
@@ -304,7 +304,13 @@ fn composite_tile(
         if control() {
             return Err(RenderError::Cancelled);
         }
+        if all_zero(src_row) {
+            continue;
+        }
         for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
+            if src[3] == 0 {
+                continue;
+            }
             let source_alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
             if source_alpha <= 0.0 {
                 continue;
@@ -337,7 +343,7 @@ pub fn render_groups(
         return Err(RenderError::InvalidGeometry);
     }
     survey(nodes, 0, 0, &mut Survey::default())?;
-    if tile.rgba().iter().any(|byte| *byte != 0) {
+    if !crate::composite::all_zero(tile.rgba()) {
         return Err(RenderError::TileNotEmpty);
     }
     let mut ctx = Ctx {

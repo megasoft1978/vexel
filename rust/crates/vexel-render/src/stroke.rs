@@ -126,6 +126,8 @@ pub(crate) struct StrokePrims {
     miter_limit: f64,
     join_reach: f64,
     grid: Option<Grid>,
+    /// Hit box of every segment then every join, same arithmetic as their tests.
+    boxes: Vec<[f64; 4]>,
 }
 
 pub(crate) fn reserve<T>(vec: &mut Vec<T>, additional: usize) -> Result<(), RenderError> {
@@ -199,7 +201,29 @@ impl StrokePrims {
         let join_reach =
             if stroke.join == Linejoin::Miter { radius * stroke.miter_limit } else { radius };
         let grid = Grid::build(&segments, &joins, radius, join_reach)?;
+        let mut boxes = Vec::new();
+        if grid.is_none() {
+            reserve(&mut boxes, segments.len() + joins.len())?;
+            for segment in &segments {
+                let square =
+                    segment.start_cap == Linecap::Square || segment.end_cap == Linecap::Square;
+                let margin = if square { radius * SQRT_2 } else { radius };
+                let (a, b) = (segment.a, segment.b);
+                boxes.push([
+                    a.x.min(b.x) - margin,
+                    a.y.min(b.y) - margin,
+                    a.x.max(b.x) + margin,
+                    a.y.max(b.y) + margin,
+                ]);
+            }
+            for join in &joins {
+                let (vx, vy) = (join.vertex.x, join.vertex.y);
+                let pad = join_reach + (join_reach + vx.abs().max(vy.abs())) * 1e-9;
+                boxes.push([vx - pad, vy - pad, vx + pad, vy + pad]);
+            }
+        }
         Ok(Self {
+            boxes,
             segments,
             joins,
             radius,
@@ -222,6 +246,38 @@ impl StrokePrims {
                 self.join_hit_at(&self.joins[index], px, py)
             } else {
                 self.segment_hit_at(&self.segments[index], px, py)
+            }
+        })
+    }
+
+    /// True when [`Self::candidates_in`] may be used (no grid was built).
+    pub(crate) fn has_boxes(&self) -> bool {
+        self.grid.is_none()
+    }
+
+    /// Tags (segments first, then joins offset by the segment count) whose hit
+    /// box meets the local rectangle, padded for rounding. A sample inside the
+    /// rectangle can only be hit by one of these.
+    pub(crate) fn candidates_in(&self, rect: [f64; 4], out: &mut Vec<u32>) {
+        out.clear();
+        let pad = 1e-7 * (1.0 + rect.iter().fold(0.0f64, |m, v| m.max(v.abs())));
+        let (x0, y0, x1, y1) = (rect[0] - pad, rect[1] - pad, rect[2] + pad, rect[3] + pad);
+        for (tag, b) in self.boxes.iter().enumerate() {
+            if b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0 {
+                out.push(tag as u32);
+            }
+        }
+    }
+
+    /// [`Self::contains`] restricted to candidate tags from [`Self::candidates_in`].
+    pub(crate) fn contains_among(&self, tags: &[u32], px: f64, py: f64) -> bool {
+        let segments = self.segments.len();
+        tags.iter().any(|tag| {
+            let index = *tag as usize;
+            if index < segments {
+                self.segment_hit_at(&self.segments[index], px, py)
+            } else {
+                self.join_hit_at(&self.joins[index - segments], px, py)
             }
         })
     }
