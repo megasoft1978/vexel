@@ -1,0 +1,16 @@
+[package]
+name = "vexel-bench"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "vexel-bench"
+path = "src/main.rs"
+
+[dependencies]
+vexel-app = { path = "../../crates/vexel-app" }
+vexel-timeline = { path = "../../crates/vexel-timeline" }
+vexel-v1-document = { path = "../../crates/vexel-v1-document" }

@@ -282,6 +282,15 @@ name = "vexel-base"
 version = "0.1.0"
 
 [[package]]
+name = "vexel-bench"
+version = "0.1.0"
+dependencies = [
+ "vexel-app",
+ "vexel-timeline",
+ "vexel-v1-document",
+]
+
+[[package]]
 name = "vexel-corpus"
 version = "0.1.0"
 dependencies = [

@@ -29,6 +29,10 @@ pub enum Command {
         path: PathBuf,
         execute: bool,
     },
+    /// Harness arguments: `run ...` or `check ...`.
+    Bench {
+        args: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,7 +69,8 @@ impl fmt::Display for UsageError {
 pub const USAGE: &str = "Usage: vexel-dev info|build|check\n       \
 vexel-dev check-ci WORKFLOW.yml\n       \
 vexel-dev bundle [--out DIR] [--icon FILE.icns]\n       \
-vexel-dev dmg|sbom|install-smoke [--out DIR]";
+vexel-dev dmg|sbom|install-smoke [--out DIR]\n       \
+vexel-dev bench [--check] [--update-baseline] [--hash-only|--full] [--only TEXT] [--out DIR]";
 
 /// Parses the arguments after the program name.
 pub fn parse(args: &[String]) -> Result<Command, UsageError> {
@@ -118,6 +123,7 @@ pub fn parse(args: &[String]) -> Result<Command, UsageError> {
             out: flags(name, rest, false)?.0,
         }),
         "notarize" => parse_notarize(name, rest),
+        "bench" => crate::bench::parse(rest).map(|args| Command::Bench { args }),
         other => Err(UsageError::UnknownCommand(other.to_string())),
     }
 }
