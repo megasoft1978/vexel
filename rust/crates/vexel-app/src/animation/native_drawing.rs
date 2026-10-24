@@ -227,6 +227,19 @@ pub fn compose_drawing_tracks(
         .try_reserve_exact(expected)
         .map_err(|_| DrawingError::Limit)?;
     output.extend_from_slice(&base.rgba);
+    if layers.is_empty() {
+        // Nothing to overlay: only the premultiply round trip remains.
+        for pixel in output.chunks_exact_mut(4) {
+            premultiply(pixel);
+            unpremultiply(pixel);
+        }
+        return Ok(Frame {
+            width: base.width,
+            height: base.height,
+            rgba: output,
+            disclosures: Vec::new(),
+        });
+    }
     for pixel in output.chunks_exact_mut(4) {
         premultiply(pixel);
     }
@@ -269,12 +282,20 @@ pub(super) fn admit_frame_bytes(cumulative: usize, next: usize) -> Result<usize,
 }
 fn premultiply(pixel: &mut [u8]) {
     let alpha = u32::from(pixel[3]);
+    // Exact: (c * 255 + 127) / 255 == c.
+    if alpha == 255 {
+        return;
+    }
     for channel in 0..3 {
         pixel[channel] = ((u32::from(pixel[channel]) * alpha + 127) / 255) as u8;
     }
 }
 fn unpremultiply(pixel: &mut [u8]) {
     let alpha = u32::from(pixel[3]);
+    // Exact: (c * 255 + 127) / 255 == c.
+    if alpha == 255 {
+        return;
+    }
     if alpha == 0 {
         pixel[..3].fill(0);
         return;

@@ -63,18 +63,32 @@ fn alpha_table(opacity: f64) -> [u8; 256] {
     table
 }
 
+/// Alpha bytes of four RGBA pixels read as one little-endian word.
+const ALPHA_OF_FOUR: u128 = 0xFF00_0000_FF00_0000_FF00_0000_FF00_0000;
+
 /// One row of [`composite_tile`]: source-over of `src` onto `dst`.
 fn composite_row(dst_row: &mut [u8], src_row: &[u8], table: &[u8; 256]) {
-    for (dst, src) in dst_row.chunks_exact_mut(4).zip(src_row.chunks_exact(4)) {
-        // A transparent source pixel never changes the destination.
-        if src[3] == 0 {
-            continue;
+    let blend = |dst: &mut [u8], src: &[u8]| {
+        for (dst, src) in dst.chunks_exact_mut(4).zip(src.chunks_exact(4)) {
+            // A transparent source pixel never changes the destination.
+            if src[3] == 0 {
+                continue;
+            }
+            let alpha = table[usize::from(src[3])];
+            if alpha != 0 {
+                source_over(dst, [src[0], src[1], src[2], alpha]);
+            }
         }
-        let alpha = table[usize::from(src[3])];
-        if alpha != 0 {
-            source_over(dst, [src[0], src[1], src[2], alpha]);
+    };
+    let mut dst_quads = dst_row.chunks_exact_mut(16);
+    let mut src_quads = src_row.chunks_exact(16);
+    for (dst, src) in (&mut dst_quads).zip(&mut src_quads) {
+        let word = u128::from_le_bytes(src.try_into().unwrap_or([0; 16]));
+        if word & ALPHA_OF_FOUR != 0 {
+            blend(dst, src);
         }
     }
+    blend(dst_quads.into_remainder(), src_quads.remainder());
 }
 
 /// C `composite_tile` with blend mode normal: layer alpha times `opacity`,

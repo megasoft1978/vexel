@@ -79,6 +79,28 @@ pub fn render_dashed_shapes(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
+    dashed(shapes, view, tile, control, true)
+}
+
+/// [`render_dashed_shapes`] for a `tile` the caller knows is fully transparent
+/// (it just allocated it): skips the scan that proves it. On a tile holding
+/// pixels the result is unspecified, not an error.
+pub fn render_dashed_shapes_fresh(
+    shapes: &[DashedShape<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    dashed(shapes, view, tile, control, false)
+}
+
+fn dashed(
+    shapes: &[DashedShape<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+    check_clear: bool,
+) -> Result<(), RenderError> {
     let mut plain: Vec<RenderShape<'_>> = Vec::new();
     plain.try_reserve_exact(shapes.len()).map_err(|_| RenderError::LimitExceeded)?;
     let mut patterns: Vec<Option<Pattern>> = Vec::new();
@@ -88,7 +110,7 @@ pub fn render_dashed_shapes(
         patterns.push(Pattern::new(item.dashes, offset)?);
         plain.push(item.shape);
     }
-    render_core(&plain, &patterns, &[], &[], view, tile, control)
+    render_core_checked(&plain, &patterns, &[], &[], view, tile, control, check_clear, None)
 }
 
 /// [`render_shapes`] with a per-shape clip chain: `clips` is empty or parallel

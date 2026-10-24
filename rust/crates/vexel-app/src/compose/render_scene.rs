@@ -20,7 +20,7 @@ use vexel_render::filter::apply_filter_chain;
 use vexel_render::{
     GROUP_SCRATCH_LIMIT, MAX_GROUP_DEPTH, MAX_MASK_DEPTH, MAX_MASK_INSTANCES, PatternPaintShape,
     PreserveAspect, RenderClip, RenderError, RenderNode, UnsupportedKind, ViewBox, ViewMap,
-    render_dashed_shapes, render_dashed_shapes_in, render_groups, render_pattern_shapes,
+    render_dashed_shapes_fresh, render_dashed_shapes_in, render_groups, render_pattern_shapes,
 };
 use vexel_scene::{Mask, SceneView, ViewportRead};
 
@@ -531,7 +531,8 @@ impl Renderer<'_> {
                     return Ok(());
                 }
                 let shapes: Vec<_> = items.iter().map(|p| p.shape.as_dashed()).collect();
-                render_dashed_shapes(&shapes, self.map, tile, self.cancel)
+                // The tile is the caller's blank tile or a layer allocated for this batch.
+                render_dashed_shapes_fresh(&shapes, self.map, tile, self.cancel)
             }
             Kind::Pattern => {
                 let shapes: Vec<_> = items
