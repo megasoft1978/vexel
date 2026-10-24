@@ -4,7 +4,7 @@
 //! with the GIF and video exports.
 
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
-use super::native_frame::render_native_frame;
+use super::native_frame::render_native_frame_cached;
 use crate::compose::svg_viewport;
 use std::sync::Arc;
 
@@ -127,16 +127,19 @@ impl NativeExportSource {
             .map_err(NativeExportError::Viewport)?;
         let geometry = svg_geometry(&viewport, plan.width, plan.height);
         let assets = self.drawing_assets();
+        let mut cache = crate::compose::DiffCache::default();
         for index in 0..plan.frames {
             let tick = steps[index * plan.stride as usize];
-            let frame = render_native_frame(
+            let frame = render_native_frame_cached(
                 self.svg_source(),
+                None,
                 &view,
                 &assets,
                 tick,
                 plan.width,
                 plan.height,
                 geometry,
+                &mut cache,
             )
             .map_err(NativeExportError::Frame)?;
             let result = match req.background {

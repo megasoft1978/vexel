@@ -4,14 +4,14 @@
 //! are fixed for a revision, so ticks reuse them instead of re-deriving them.
 //! Any edit changes the state revision and the host drops the whole value.
 
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use vexel_timeline::LoopMode;
 
 use crate::animation::native_drawing::{DrawingAsset, SvgGeometry};
-use crate::animation::native_frame::{NativeFrameError, render_native_frame_indexed};
+use crate::animation::native_frame::{NativeFrameError, render_native_frame_cached};
 use crate::animation::native_properties::{NativePropertyError, SourceIndex};
-use crate::compose::{Frame, SvgViewport, svg_viewport};
+use crate::compose::{DiffCache, Frame, SvgViewport, svg_viewport};
 use crate::project_session::ProjectTimelineCandidate;
 use crate::session::AppDocument;
 
@@ -25,6 +25,8 @@ pub struct Prepared {
     /// Root viewport and id table: parsed on first render, so the worker pays
     /// for them and the UI thread never does.
     derived: OnceLock<Result<Derived, NativeFrameError>>,
+    /// Previous frame for differential repainting; one render runs at a time.
+    diff: Mutex<DiffCache>,
 }
 
 struct Derived {
@@ -53,6 +55,7 @@ impl Prepared {
             source,
             candidate: candidate.clone(),
             derived: OnceLock::new(),
+            diff: Mutex::default(),
         })
     }
 
@@ -87,9 +90,13 @@ impl Prepared {
             })
             .collect();
         let viewport = derived.viewport;
-        render_native_frame_indexed(
+        let mut cache = self
+            .diff
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        render_native_frame_cached(
             &self.source,
-            &derived.index,
+            Some(&derived.index),
             &timeline,
             &assets,
             tick,
@@ -105,6 +112,7 @@ impl Prepared {
                     viewport.view_box.height,
                 ],
             },
+            &mut cache,
         )
     }
 }

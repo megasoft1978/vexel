@@ -13,6 +13,17 @@ pub(crate) struct PixelBounds {
     pub y_last: u32,
 }
 
+impl PixelBounds {
+    /// These bounds limited to the pixel rectangle `[x0, y0, x1, y1)`.
+    pub(crate) fn within(self, [x0, y0, x1, y1]: [u32; 4]) -> Option<Self> {
+        let x_first = self.x_first.max(x0);
+        let y_first = self.y_first.max(y0);
+        let x_last = self.x_last.min(x1.checked_sub(1)?);
+        let y_last = self.y_last.min(y1.checked_sub(1)?);
+        (x_first <= x_last && y_first <= y_last).then_some(Self { x_first, x_last, y_first, y_last })
+    }
+}
+
 struct Extent {
     left: f64,
     top: f64,

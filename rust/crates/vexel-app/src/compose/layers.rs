@@ -76,6 +76,41 @@ pub(crate) fn composite_tile(
     Ok(())
 }
 
+/// [`composite_tile`] limited to the pixel rectangles `rects`; pixels outside
+/// them are left as they are.
+pub(crate) fn composite_tile_in(
+    destination: &mut Tile,
+    source: &Tile,
+    opacity: f64,
+    rects: &[super::diff::Rect],
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    let width = source.width() as usize;
+    for rect in rects {
+        for y in rect.y0 as usize..rect.y1 as usize {
+            if control() {
+                return Err(RenderError::Cancelled);
+            }
+            let range = (y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4;
+            let dst_row = &mut destination.rgba_mut()[range.clone()];
+            for (dst, src) in dst_row
+                .chunks_exact_mut(4)
+                .zip(source.rgba()[range].chunks_exact(4))
+            {
+                if src[3] == 0 {
+                    continue;
+                }
+                let alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
+                if alpha <= 0.0 {
+                    continue;
+                }
+                source_over(dst, [src[0], src[1], src[2], (alpha * 255.0).round() as u8]);
+            }
+        }
+    }
+    Ok(())
+}
+
 /// C `linear_luminance`: sRGB to linear light, Rec. 709 weights.
 fn linear_luminance(rgba: &[u8]) -> f64 {
     let linear = |byte: u8| {

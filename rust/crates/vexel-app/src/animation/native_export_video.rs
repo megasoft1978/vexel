@@ -3,7 +3,7 @@
 //! Mirrors the GIF export's tick selection (ping-pong included).
 
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
-use super::native_frame::render_native_frame;
+use super::native_frame::render_native_frame_cached;
 use crate::compose::svg_viewport;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -146,15 +146,18 @@ impl NativeExportSource {
             bit_rate,
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
+        let mut cache = crate::compose::DiffCache::default();
         for (i, &tick) in ticks.iter().enumerate() {
-            let frame = render_native_frame(
+            let frame = render_native_frame_cached(
                 self.svg_source(),
+                None,
                 &view,
                 &assets,
                 tick,
                 width,
                 height,
                 geometry,
+                &mut cache,
             )
             .map_err(NativeExportError::Frame)?;
             writer.append(&frame.rgba, i as i64 * i64::from(ticks_per_frame))?;

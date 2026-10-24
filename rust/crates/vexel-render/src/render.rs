@@ -91,6 +91,29 @@ pub(crate) fn render_shapes_clipped(
     render_core(shapes, &[], clips, &[], view, tile, control)
 }
 
+/// [`render_dashed_shapes`] limited to the pixel rectangle `scissor`
+/// (`[x0, y0, x1, y1]`, end exclusive). Pixels inside it equal a full render;
+/// pixels outside are left untouched. The tile is not checked to be empty, so
+/// disjoint scissors may be painted into one tile one after another.
+pub fn render_dashed_shapes_in(
+    shapes: &[DashedShape<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    scissor: [u32; 4],
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    let mut plain: Vec<RenderShape<'_>> = Vec::new();
+    plain.try_reserve_exact(shapes.len()).map_err(|_| RenderError::LimitExceeded)?;
+    let mut patterns: Vec<Option<Pattern>> = Vec::new();
+    patterns.try_reserve_exact(shapes.len()).map_err(|_| RenderError::LimitExceeded)?;
+    for item in shapes {
+        let offset = item.shape.stroke.map_or(0.0, |s| s.dash_offset);
+        patterns.push(Pattern::new(item.dashes, offset)?);
+        plain.push(item.shape);
+    }
+    render_core_scissored(&plain, &patterns, &[], &[], view, tile, control, false, Some(scissor))
+}
+
 /// [`render_shapes_clipped`] into a freshly allocated transparent `tile`.
 pub(crate) fn render_shapes_fresh(
     shapes: &[RenderShape<'_>],
@@ -157,6 +180,22 @@ pub(crate) fn render_core_checked(
     control: &dyn Fn() -> bool,
     check_clear: bool,
 ) -> Result<(), RenderError> {
+    render_core_scissored(shapes, patterns, clips, paints, view, tile, control, check_clear, None)
+}
+
+/// [`render_core_checked`] restricted to the pixel rectangle `scissor`.
+#[allow(clippy::too_many_arguments)]
+fn render_core_scissored(
+    shapes: &[RenderShape<'_>],
+    patterns: &[Option<Pattern>],
+    clips: &[ClipList<'_>],
+    paints: &[ShapePaints<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+    check_clear: bool,
+    scissor: Option<[u32; 4]>,
+) -> Result<(), RenderError> {
     if !clips.is_empty() && clips.len() != shapes.len() {
         return Err(RenderError::InvalidGeometry);
     }
@@ -187,6 +226,9 @@ pub(crate) fn render_core_checked(
         let inverse =
             if style.is_some() || patterned { stroke::invert(shape.transform) } else { None };
         let Some(bounds) = shape_bounds(shape, &view, inverse)? else {
+            continue;
+        };
+        let Some(bounds) = scissor.map_or(Some(bounds), |s| bounds.within(s)) else {
             continue;
         };
         let prims = match (style.as_ref(), inverse) {

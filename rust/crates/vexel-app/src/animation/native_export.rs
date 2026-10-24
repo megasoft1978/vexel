@@ -2,8 +2,8 @@
 //! rendered through `render_native_frame` and encoded by `vexel-gif`.
 
 use super::native_drawing::{DrawingAsset, SvgGeometry};
-use super::native_frame::{NativeFrameError, render_native_frame};
-use crate::compose::{ComposeError, svg_viewport};
+use super::native_frame::{NativeFrameError, render_native_frame, render_native_frame_cached};
+use crate::compose::{ComposeError, DiffCache, svg_viewport};
 use crate::project_session::ProjectTimelineCandidate;
 use crate::session::AppDocument;
 use std::sync::Arc;
@@ -92,6 +92,12 @@ impl NativeExportSource {
             .collect()
     }
 
+    /// The tick shown at each step of one loop (ping-pong included).
+    pub fn loop_tick_list(&self) -> Option<Vec<u32>> {
+        let view = self.candidate.view().ok()?;
+        Some(loop_ticks(view.duration_ticks(), view.loop_mode()))
+    }
+
     /// Length of one loop in seconds, `None` when the timeline is unreadable.
     pub fn loop_seconds(&self) -> Option<f64> {
         let view = self.candidate.view().ok()?;
@@ -173,10 +179,20 @@ impl NativeExportSource {
         let geometry = svg_geometry(&viewport, width, height);
         let assets = self.drawing_assets();
         let mut rendered = Vec::new();
+        let mut cache = DiffCache::default();
         for &tick in &ticks {
-            let frame =
-                render_native_frame(&self.source, &view, &assets, tick, width, height, geometry)
-                    .map_err(NativeExportError::Frame)?;
+            let frame = render_native_frame_cached(
+                &self.source,
+                None,
+                &view,
+                &assets,
+                tick,
+                width,
+                height,
+                geometry,
+                &mut cache,
+            )
+            .map_err(NativeExportError::Frame)?;
             rendered.push(over_white(&frame.rgba));
         }
         let tick_cs = ((100 + tps / 2) / tps).clamp(1, u32::from(u16::MAX));

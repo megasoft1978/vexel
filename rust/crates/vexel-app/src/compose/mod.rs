@@ -9,6 +9,7 @@
 
 mod clips;
 mod decode;
+mod diff;
 mod error;
 mod inflate;
 mod launch;
@@ -41,6 +42,7 @@ mod tests_wire;
 
 pub use decode::MAX_SVG_BYTES;
 pub(crate) use decode::{Gate, SessionError, install_text, run};
+pub use diff::DiffCache;
 pub use error::{ComposeError, Disclosure};
 pub use launch::{Launch, parse_launch, parse_launch_with_home};
 pub use open::{OpenError, open_path};
@@ -120,7 +122,7 @@ pub(crate) fn compose_document_owned(
     height: u32,
     cancel: &dyn Fn() -> bool,
 ) -> Result<Composed, ComposeError> {
-    compose_owned(bytes, width, height, cancel, true)
+    compose_owned(bytes, width, height, cancel, true, None)
 }
 
 /// The frame of [`compose_svg`] for an owned buffer: no source copy and no
@@ -138,7 +140,26 @@ pub(crate) fn compose_frame_owned(
             valid_up_to: error.valid_up_to(),
         });
     }
-    compose_owned(bytes, width, height, &|| false, false).map(|c| c.frame)
+    compose_owned(bytes, width, height, &|| false, false, None).map(|c| c.frame)
+}
+
+/// [`compose_frame_owned`] repainting only what changed since the previous
+/// frame composed with the same `cache`. Same pixels.
+pub(crate) fn compose_frame_cached(
+    bytes: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+    cache: &mut DiffCache,
+) -> Result<Frame, ComposeError> {
+    if bytes.len() > MAX_SVG_BYTES {
+        return Err(ComposeError::LimitDecode);
+    }
+    if let Err(error) = std::str::from_utf8(&bytes) {
+        return Err(ComposeError::InvalidUtf8 {
+            valid_up_to: error.valid_up_to(),
+        });
+    }
+    compose_owned(bytes, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
 }
 
 fn compose_owned(
@@ -147,6 +168,7 @@ fn compose_owned(
     height: u32,
     cancel: &dyn Fn() -> bool,
     with_ids: bool,
+    cache: Option<&mut DiffCache>,
 ) -> Result<Composed, ComposeError> {
     let (tile_width, tile_height) = offscreen_tile_size(f64::from(width), f64::from(height))
         .map_err(|_| ComposeError::InvalidSize)?;
@@ -169,7 +191,10 @@ fn compose_owned(
     });
     let mut tile = blank_tile(tile_width, tile_height)?;
     let ph = crate::profile::phase("c.render");
-    let drawn = render_scene(&scene, view, aspect, &mut tile, false, cancel)?;
+    let drawn = match cache {
+        Some(cache) => diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache)?,
+        None => render_scene(&scene, view, aspect, &mut tile, false, cancel)?,
+    };
     drop(ph);
     let source = graph.source();
     let target_ids_by_offset = if with_ids {

@@ -11,7 +11,8 @@
 //! No new rasterization happens here.
 
 use super::clips::ClipStore;
-use super::layers::{Geo, composite_tile, mask_layer};
+use super::diff::Rect;
+use super::layers::{Geo, composite_tile, composite_tile_in, mask_layer};
 use super::shapes::{Entry, OwnedShape, Prepared, prepare};
 use std::cell::OnceCell;
 use vexel_raster::Tile;
@@ -19,7 +20,7 @@ use vexel_render::filter::apply_filter_chain;
 use vexel_render::{
     GROUP_SCRATCH_LIMIT, MAX_GROUP_DEPTH, MAX_MASK_DEPTH, MAX_MASK_INSTANCES, PatternPaintShape,
     PreserveAspect, RenderClip, RenderError, RenderNode, UnsupportedKind, ViewBox, ViewMap,
-    render_dashed_shapes, render_groups, render_pattern_shapes,
+    render_dashed_shapes, render_dashed_shapes_in, render_groups, render_pattern_shapes,
 };
 use vexel_scene::{Mask, SceneView, ViewportRead};
 
@@ -47,16 +48,7 @@ pub(crate) fn render_scene<V: ViewportRead, A: Copy>(
     strict: bool,
     cancel: &dyn Fn() -> bool,
 ) -> Result<Drawn, RenderError> {
-    let map = ViewMap::from_viewbox(view_box, tile.width(), tile.height(), aspect)?;
-    let mut renderer = Renderer {
-        geo: geo(view_box, aspect, tile),
-        map,
-        cancel,
-        tile_bytes: tile.byte_count(),
-        scratch: 0,
-        mask_depth: 0,
-        masks: 0,
-    };
+    let mut renderer = Renderer::new(view_box, aspect, tile, cancel)?;
     let entries = renderer.draw(view, tile, strict)?;
     let mut drawn = Drawn::default();
     for (scene_index, entry) in entries.into_iter().enumerate() {
@@ -97,7 +89,7 @@ fn geo(view: ViewBox, aspect: Option<PreserveAspect>, tile: &Tile) -> Geo {
 
 /// How a batch of shapes is handed to the renderer.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Kind {
+pub(super) enum Kind {
     Plain,
     Dashed,
     Pattern,
@@ -116,6 +108,31 @@ fn kind_of(prepared: &Prepared<'_>) -> Kind {
     }
 }
 
+/// Splits the shapes of `range` into the batches the renderer paints.
+pub(super) fn batch_runs<'e, 'v>(
+    entries: &'e [Entry<'v>],
+    range: std::ops::Range<usize>,
+) -> Result<Vec<(Kind, Vec<&'e Prepared<'v>>)>, RenderError> {
+    let mut batches: Vec<(Kind, Vec<&Prepared<'_>>)> = Vec::new();
+    for entry in entries.get(range).ok_or(RenderError::InvalidGeometry)? {
+        let Entry::Draw(prepared) = entry else {
+            continue;
+        };
+        let kind = kind_of(prepared);
+        match batches.last_mut() {
+            Some((batch, items)) if kind == Kind::Plain || *batch == kind => {
+                items.push(prepared);
+            }
+            Some((batch, items)) if *batch == Kind::Plain => {
+                *batch = kind;
+                items.push(prepared);
+            }
+            _ => batches.push((kind, vec![prepared])),
+        }
+    }
+    Ok(batches)
+}
+
 /// One prepared scene: its entries and clips.
 struct Scene<'s, 'v, V, A> {
     view: &'s SceneView<'v, V, A>,
@@ -123,17 +140,68 @@ struct Scene<'s, 'v, V, A> {
     clips: &'s [OnceCell<RenderClip<'s>>],
 }
 
-struct Renderer<'c> {
-    geo: Geo,
+/// The regions and shapes of a differential render.
+#[derive(Clone, Copy)]
+pub(super) struct Only<'c> {
+    /// Pixel rectangles to produce, pairwise disjoint.
+    pub rects: &'c [Rect],
+    /// Conservative pixel bounds of each scene shape.
+    pub bounds: &'c [Option<Rect>],
+}
+
+impl Only<'_> {
+    fn hit(&self, scene_index: usize) -> bool {
+        self.bounds
+            .get(scene_index)
+            .copied()
+            .flatten()
+            .is_some_and(|b| self.rects.iter().any(|r| r.meets(b)))
+    }
+}
+
+pub(super) struct Renderer<'c> {
+    pub(super) geo: Geo,
     map: ViewMap,
     cancel: &'c dyn Fn() -> bool,
     tile_bytes: usize,
     scratch: usize,
     mask_depth: usize,
     masks: usize,
+    /// Differential render: only shapes flagged here are painted. Batching and
+    /// layer decisions still follow the whole scene, so painted pixels equal
+    /// a full render.
+    pub(super) only: Option<Only<'c>>,
+}
+
+impl<'c> Renderer<'c> {
+    pub(super) fn new(
+        view_box: ViewBox,
+        aspect: Option<PreserveAspect>,
+        tile: &Tile,
+        cancel: &'c dyn Fn() -> bool,
+    ) -> Result<Self, RenderError> {
+        Ok(Self {
+            geo: geo(view_box, aspect, tile),
+            map: ViewMap::from_viewbox(view_box, tile.width(), tile.height(), aspect)?,
+            cancel,
+            tile_bytes: tile.byte_count(),
+            scratch: 0,
+            mask_depth: 0,
+            masks: 0,
+            only: None,
+        })
+    }
 }
 
 impl Renderer<'_> {
+    /// Source-over of `layer` into `dest`, over the produced regions only.
+    fn composite(&self, dest: &mut Tile, layer: &Tile, opacity: f64) -> Result<(), RenderError> {
+        match self.only {
+            Some(only) => composite_tile_in(dest, layer, opacity, only.rects, self.cancel),
+            None => composite_tile(dest, layer, opacity, self.cancel),
+        }
+    }
+
     fn cancelled(&self) -> bool {
         (self.cancel)()
     }
@@ -175,18 +243,34 @@ impl Renderer<'_> {
         {
             return Err(RenderError::Unsupported(*kind));
         }
+        self.draw_entries(view, &entries, tile)?;
+        Ok(entries)
+    }
+
+    /// Renders prepared `entries` of `view` into the empty `tile`.
+    pub(super) fn draw_entries<V: ViewportRead, A: Copy>(
+        &mut self,
+        view: &SceneView<'_, V, A>,
+        entries: &[Entry<'_>],
+        tile: &mut Tile,
+    ) -> Result<(), RenderError> {
         let store = ClipStore::new(view.clips)?;
         let cells = store.cells();
         store.fill(view.clips, &cells)?;
         let scene = Scene {
             view,
-            entries: &entries,
+            entries,
             clips: &cells,
         };
-        let count = entries.len();
         // Without groups the tile is empty and a single batch paints straight into it.
-        self.range(&scene, 0..count, None, tile, 0, view.groups.is_empty())?;
-        Ok(entries)
+        self.range(
+            &scene,
+            0..entries.len(),
+            None,
+            tile,
+            0,
+            view.groups.is_empty(),
+        )
     }
 
     /// C `render_group_range` over the shapes `range` whose parent group is `parent`.
@@ -238,6 +322,11 @@ impl Renderer<'_> {
         }
         let children =
             group.shapes.first..group.shapes.end().ok_or(RenderError::InvalidGeometry)?;
+        if let Some(only) = self.only
+            && !children.clone().any(|i| only.hit(i))
+        {
+            return Ok(());
+        }
         let layered = group.opacity != 1.0 || group.filter.is_some() || group.mask.is_some();
         if !layered {
             return self.range(scene, children, Some(index), dest, depth + 1, false);
@@ -281,7 +370,7 @@ impl Renderer<'_> {
             self.mask(scene.view, mask, &mut layer)?;
         }
         let _composite = crate::profile::phase("r.composite");
-        composite_tile(dest, &layer, group.opacity, self.cancel)
+        self.composite(dest, &layer, group.opacity)
     }
 
     /// C `apply_mask`: renders the mask content scene and multiplies it into `layer`.
@@ -319,32 +408,27 @@ impl Renderer<'_> {
         dest: &mut Tile,
         direct: bool,
     ) -> Result<(), RenderError> {
-        let mut batches: Vec<(Kind, Vec<&Prepared<'_>>)> = Vec::new();
-        for entry in scene
-            .entries
-            .get(range)
-            .ok_or(RenderError::InvalidGeometry)?
-        {
-            let Entry::Draw(prepared) = entry else {
-                continue;
-            };
-            let kind = kind_of(prepared);
-            match batches.last_mut() {
-                Some((batch, items)) if kind == Kind::Plain || *batch == kind => {
-                    items.push(prepared);
-                }
-                Some((batch, items)) if *batch == Kind::Plain => {
-                    *batch = kind;
-                    items.push(prepared);
-                }
-                _ => batches.push((kind, vec![prepared])),
-            }
-        }
+        let batches = batch_runs(scene.entries, range)?;
         let single = batches.len() == 1;
         for (kind, items) in &batches {
             if self.cancelled() {
                 return Err(RenderError::Cancelled);
             }
+            let filtered: Vec<&Prepared<'_>>;
+            let items = match self.only {
+                Some(only) => {
+                    filtered = items
+                        .iter()
+                        .copied()
+                        .filter(|p| only.hit(p.shape.scene_index))
+                        .collect();
+                    if filtered.is_empty() {
+                        continue;
+                    }
+                    &filtered
+                }
+                None => items,
+            };
             if direct && single {
                 self.paint(scene, *kind, items, dest)?;
                 continue;
@@ -354,7 +438,7 @@ impl Renderer<'_> {
                 let mut layer = self.new_tile()?;
                 self.paint(scene, *kind, items, &mut layer)?;
                 let _composite = crate::profile::phase("r.composite");
-                composite_tile(dest, &layer, 1.0, self.cancel)
+                self.composite(dest, &layer, 1.0)
             })();
             self.release();
             result?;
@@ -373,6 +457,31 @@ impl Renderer<'_> {
         let _paint = crate::profile::phase("r.paint");
         match kind {
             Kind::Plain | Kind::Dashed => {
+                if let Some(only) = self.only {
+                    for rect in only.rects {
+                        let shapes: Vec<_> = items
+                            .iter()
+                            .filter(|p| {
+                                only.bounds
+                                    .get(p.shape.scene_index)
+                                    .copied()
+                                    .flatten()
+                                    .is_some_and(|b| rect.meets(b))
+                            })
+                            .map(|p| p.shape.as_dashed())
+                            .collect();
+                        if !shapes.is_empty() {
+                            render_dashed_shapes_in(
+                                &shapes,
+                                self.map,
+                                tile,
+                                rect.scissor(),
+                                self.cancel,
+                            )?;
+                        }
+                    }
+                    return Ok(());
+                }
                 let shapes: Vec<_> = items.iter().map(|p| p.shape.as_dashed()).collect();
                 render_dashed_shapes(&shapes, self.map, tile, self.cancel)
             }

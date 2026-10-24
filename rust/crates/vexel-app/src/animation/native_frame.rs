@@ -10,7 +10,9 @@ use crate::animation::native_drawing::{
 use crate::animation::native_properties::{
     NativePropertyError, SourceIndex, apply_native_properties, apply_native_properties_indexed,
 };
-use crate::compose::{ComposeError, Frame, compose_frame_owned, compose_svg};
+use crate::compose::{
+    ComposeError, DiffCache, Frame, compose_frame_cached, compose_frame_owned, compose_svg,
+};
 use std::sync::Arc;
 use vexel_timeline::{TimelineIterator, TimelineView, TrackView, string_copy};
 
@@ -52,6 +54,7 @@ pub fn render_native_frame(
         output_width,
         output_height,
         geometry,
+        None,
     )
 }
 
@@ -77,6 +80,36 @@ pub fn render_native_frame_indexed(
         output_width,
         output_height,
         geometry,
+        None,
+    )
+}
+
+/// Frame-sequence variant of [`render_native_frame`] / [`_indexed`]: `cache`
+/// carries the previous frame of the same source so only changed shapes are
+/// repainted. Pixels are identical to the uncached functions.
+///
+/// [`_indexed`]: render_native_frame_indexed
+pub fn render_native_frame_cached(
+    source_svg: &[u8],
+    index: Option<&SourceIndex>,
+    timeline: &TimelineView<'_>,
+    assets: &[DrawingAsset<'_>],
+    tick: u32,
+    output_width: u32,
+    output_height: u32,
+    geometry: SvgGeometry,
+    cache: &mut DiffCache,
+) -> Result<Frame, NativeFrameError> {
+    render_with(
+        source_svg,
+        index,
+        timeline,
+        assets,
+        tick,
+        output_width,
+        output_height,
+        geometry,
+        Some(cache),
     )
 }
 
@@ -89,6 +122,7 @@ fn render_with(
     output_width: u32,
     output_height: u32,
     geometry: SvgGeometry,
+    cache: Option<&mut DiffCache>,
 ) -> Result<Frame, NativeFrameError> {
     if tick >= timeline.duration_ticks() {
         return Err(NativeFrameError::InvalidTick);
@@ -108,7 +142,9 @@ fn render_with(
     })?;
     drop(props);
     let compose = crate::profile::phase("native.compose");
-    let base = if index.is_some() {
+    let base = if let Some(cache) = cache {
+        compose_frame_cached(Arc::new(snapshot), output_width, output_height, cache)
+    } else if index.is_some() {
         compose_frame_owned(Arc::new(snapshot), output_width, output_height)
     } else {
         compose_svg(&snapshot, output_width, output_height)

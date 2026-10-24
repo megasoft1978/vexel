@@ -52,7 +52,7 @@ pub use pattern::{
     pattern_pixel_size, render_pattern_shapes, render_pattern_tile, render_pattern_tiles,
 };
 pub use presentation::{OFFSCREEN_BACKING_SCALE, offscreen_tile_size, render_offscreen};
-pub use render::{DashedShape, render_dashed_shapes, render_shapes};
+pub use render::{DashedShape, render_dashed_shapes, render_dashed_shapes_in, render_shapes};
 pub use text::require_fill_only_text;
 pub use view::{PreserveAspect, ViewBox, ViewMap};
 

@@ -12,7 +12,7 @@ use vexel_scene::{Paint, PaintStop, SceneView, TableRange, ViewportRead};
 
 /// A gradient paint owned by its shape. The stops are copied out of the scene
 /// table and `paint.stops` is rebased to index that copy from zero.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OwnedGradient {
     paint: Paint,
     stops: Vec<PaintStop>,
@@ -58,7 +58,7 @@ impl OwnedShape {
 }
 
 /// A renderable shape that owns its geometry so it outlives the scene graph.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OwnedShape {
     /// Index of the shape in scene (source) order.
     pub scene_index: usize,
