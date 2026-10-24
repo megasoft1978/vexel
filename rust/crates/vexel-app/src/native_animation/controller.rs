@@ -7,6 +7,9 @@ use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
 use super::{NativeActionOutcome, NativeAnimationError, NativeTimelineEffect, TimelineSurface};
 use crate::project_session::{ProjectTimelineCandidate, ProjectTimelineError};
 
+#[path = "add_key.rs"]
+mod add_key;
+
 const DEFAULT_TICKS_PER_SECOND: u32 = 24;
 const DEFAULT_DURATION_TICKS: u32 = 48;
 
@@ -318,6 +321,11 @@ impl NativeAnimationController {
                     })
                     .map_err(NativeAnimationError::from)?;
             }
+            NativeTimelineAction::AddKey {
+                track_id,
+                target_id,
+                tick,
+            } => self.add_key(document, track_id, target_id, tick, &mut outcome)?,
             NativeTimelineAction::AddOpacityKey {
                 target_id,
                 tick,

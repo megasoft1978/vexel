@@ -21,16 +21,6 @@ impl InteractionState {
             Key::ToggleLoop => vec![NativeTimelineAction::SetLoop {
                 enabled: !model.loop_enabled,
             }],
-            Key::OnionBefore => vec![NativeTimelineAction::SetOnion {
-                before: model.onion_before.saturating_sub(1),
-                after: model.onion_after,
-                opacity: model.onion_opacity,
-            }],
-            Key::OnionAfter => vec![NativeTimelineAction::SetOnion {
-                before: model.onion_before,
-                after: model.onion_after.saturating_add(1).min(8),
-                opacity: model.onion_opacity,
-            }],
             Key::Home => vec![NativeTimelineAction::Seek { tick: 0 }],
             Key::End => vec![NativeTimelineAction::Seek { tick: end }],
             Key::Left => vec![NativeTimelineAction::Seek {
@@ -58,14 +48,7 @@ impl InteractionState {
                 })
             }
             Key::ImportDrawing => Vec::new(),
-            Key::AddOpacityKey if model.can_edit_selected_item => {
-                self.target_action(model, |target_id| NativeTimelineAction::AddOpacityKey {
-                    target_id,
-                    tick,
-                    value: 1.0,
-                })
-            }
-            Key::AddOpacityKey => Vec::new(),
+            Key::AddKey => self.add_key_action(model),
             Key::ZoomIn | Key::ZoomOut => self.zoom(key == Key::ZoomIn, tick, model),
             Key::PageLeft | Key::PageRight => self.page(key == Key::PageRight, model),
         }
@@ -107,6 +90,48 @@ impl InteractionState {
                 }
             },
         )
+    }
+
+    /// The add-key intent for the selected property track, else for the
+    /// selected shape (a drawing track counts as its shape). Empty when
+    /// nothing is selected.
+    pub(super) fn add_key_action(&self, model: &TimelineModel) -> Vec<NativeTimelineAction> {
+        let tick = model
+            .current_tick
+            .min(model.duration_ticks.saturating_sub(1));
+        let track = self
+            .selected_track
+            .and_then(|index| model.tracks.get(index))
+            .or_else(|| model.selected_track().map(|(_, track)| track));
+        if let Some(track) = track {
+            if matches!(
+                track.kind,
+                crate::native_timeline::NativeTrackKind::Property
+            ) {
+                return vec![NativeTimelineAction::AddKey {
+                    track_id: Some(track.id.clone()),
+                    target_id: None,
+                    tick,
+                }];
+            }
+            if !track.target.is_empty() {
+                return vec![NativeTimelineAction::AddKey {
+                    track_id: None,
+                    target_id: Some(track.target.clone()),
+                    tick,
+                }];
+            }
+        }
+        model
+            .selected_target
+            .iter()
+            .filter(|target| !target.is_empty())
+            .map(|target| NativeTimelineAction::AddKey {
+                track_id: None,
+                target_id: Some(target.clone()),
+                tick,
+            })
+            .collect()
     }
 
     pub(super) fn target_action(

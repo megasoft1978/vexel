@@ -137,6 +137,14 @@ pub enum NativeTimelineAction {
         tick: u32,
         value: f64,
     },
+    /// Adds or updates a property key at `tick` holding the curve's current
+    /// value. `track_id` wins; otherwise the first property track of
+    /// `target_id` is used (an opacity track is created when it has none).
+    AddKey {
+        track_id: Option<String>,
+        target_id: Option<String>,
+        tick: u32,
+    },
     TogglePlayback,
     SetLoop {
         enabled: bool,

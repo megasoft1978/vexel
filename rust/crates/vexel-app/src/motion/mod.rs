@@ -44,7 +44,7 @@ pub fn control_id(target: Target) -> u32 {
         Target::NativeTimeline(hit) => match hit {
             crate::native_timeline::layout::Hit::Play => 100,
             crate::native_timeline::layout::Hit::Loop => 101,
-            crate::native_timeline::layout::Hit::OnionBefore => 102,
+            crate::native_timeline::layout::Hit::AddKey => 102,
             crate::native_timeline::layout::Hit::AddDrawingTrack => 103,
             crate::native_timeline::layout::Hit::ImportDrawing => 104,
             _ => 105,

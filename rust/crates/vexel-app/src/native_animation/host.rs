@@ -35,6 +35,7 @@ pub fn key_for_code(code: u16) -> Option<Key> {
         121 => Key::PageRight,
         24 => Key::ZoomIn,
         27 => Key::ZoomOut,
+        40 => Key::AddKey,
         _ => return None,
     })
 }
