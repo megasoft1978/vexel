@@ -366,6 +366,15 @@ fn composite_layer(
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
     let row_bytes = source.tile.width() as usize * 4;
+    // The layer alpha scaled by the opacity, evaluated once per possible alpha
+    // with the same expression the per-pixel code used; 0 means "no effect".
+    let mut alpha_lut = [0u8; 256];
+    for (alpha, slot) in alpha_lut.iter_mut().enumerate() {
+        let scaled = (alpha as f64 / 255.0 * opacity).min(1.0);
+        if scaled > 0.0 {
+            *slot = (scaled * 255.0).round() as u8;
+        }
+    }
     for (row, (dst_row, src_row)) in destination
         .tile
         .rgba_mut()
@@ -382,16 +391,12 @@ fn composite_layer(
         }
         let (from, to) = (first as usize * 4, end as usize * 4);
         for (dst, src) in dst_row[from..to].chunks_exact_mut(4).zip(src_row[from..to].chunks_exact(4)) {
-            if src[3] == 0 {
+            let alpha = alpha_lut[usize::from(src[3])];
+            if alpha == 0 {
                 continue;
             }
-            let source_alpha = (f64::from(src[3]) / 255.0 * opacity).min(1.0);
-            if source_alpha <= 0.0 {
-                continue;
-            }
-            let rgba = [src[0], src[1], src[2], (source_alpha * 255.0).round() as u8];
             let dst: &mut [u8; 4] = dst.try_into().map_err(|_| RenderError::InvalidGeometry)?;
-            source_over(dst, rgba);
+            source_over(dst, [src[0], src[1], src[2], alpha]);
         }
         if let Some(spans) = destination.dirty.as_deref_mut() {
             let span = &mut spans[row];

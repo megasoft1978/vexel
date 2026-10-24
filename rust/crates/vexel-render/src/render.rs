@@ -483,7 +483,23 @@ fn render_band(
                         }
                     }
                 }
-                for sy in 0..SAMPLES_PER_AXIS {
+                // Every sample is inside the fill and every clip: only the gradient
+                // is left to evaluate (a point it cannot place paints nothing, and
+                // source-over onto a transparent sample is the sample itself).
+                let gradient_direct =
+                    fill_all_in && mask == FULL_MASK && shape.fill_gradient.is_some();
+                if gradient_direct && let Some(prepared) = pass.fill_gradient.flatten() {
+                    for sy in 0..SAMPLES_PER_AXIS {
+                        for sx in 0..SAMPLES_PER_AXIS {
+                            prepared.sample(
+                                tables.column(x, sx).0,
+                                sample_y[sy],
+                                &mut samples[sy * SAMPLES_PER_AXIS + sx],
+                            );
+                        }
+                    }
+                }
+                for sy in 0..if gradient_direct { 0 } else { SAMPLES_PER_AXIS } {
                     if !row_in_view[sy] {
                         continue;
                     }

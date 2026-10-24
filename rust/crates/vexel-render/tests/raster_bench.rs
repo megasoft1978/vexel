@@ -17,7 +17,7 @@ const DEFAULT_RUNS: usize = 7;
 #[ignore]
 fn p50_render_ms() {
     let runs = std::env::var("VEXEL_BENCH_RUNS").ok().and_then(|v| v.parse().ok()).unwrap_or(DEFAULT_RUNS);
-    for profile in [Profile::Fill, Profile::Gradient, Profile::Stroke, Profile::Nest, Profile::Clip, Profile::Rect] {
+    for profile in [Profile::Fill, Profile::Gradient, Profile::Stroke, Profile::Nest, Profile::Clip, Profile::Rect, Profile::Mix] {
         let only = std::env::var("VEXEL_BENCH_ONLY").ok();
         if only.is_some_and(|name| name != format!("{profile:?}")) {
             continue;
