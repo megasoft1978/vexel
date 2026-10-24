@@ -213,7 +213,7 @@ impl StrokePrims {
         lengths.extend(segments.iter().map(|s| (s.b.x - s.a.x).hypot(s.b.y - s.a.y)));
         let grid = Grid::build(&segments, &joins, &geoms, radius, join_reach)?;
         let mut boxes = Vec::new();
-        if grid.is_none() {
+        {
             reserve(&mut boxes, segments.len() + joins.len())?;
             for segment in &segments {
                 let square =
@@ -263,23 +263,63 @@ impl StrokePrims {
         })
     }
 
-    /// True when [`Self::candidates_in`] may be used (no grid was built).
-    pub(crate) fn has_boxes(&self) -> bool {
-        self.grid.is_none()
-    }
-
     /// Tags (segments first, then joins offset by the segment count) whose hit
     /// box meets the local rectangle, padded for rounding. A sample inside the
-    /// rectangle can only be hit by one of these.
+    /// rectangle can only be hit by one of these. With a grid only the cells
+    /// the rectangle touches are scanned (a tag may repeat across cells).
     pub(crate) fn candidates_in(&self, rect: [f64; 4], out: &mut Vec<u32>) {
         out.clear();
         let pad = 1e-7 * (1.0 + rect.iter().fold(0.0f64, |m, v| m.max(v.abs())));
         let (x0, y0, x1, y1) = (rect[0] - pad, rect[1] - pad, rect[2] + pad, rect[3] + pad);
-        for (tag, b) in self.boxes.iter().enumerate() {
-            if b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0 {
-                out.push(tag as u32);
+        let meets = |b: &[f64; 4]| b[0] <= x1 && b[2] >= x0 && b[1] <= y1 && b[3] >= y0;
+        match self.grid.as_ref() {
+            None => {
+                for (tag, b) in self.boxes.iter().enumerate() {
+                    if meets(b) {
+                        out.push(tag as u32);
+                    }
+                }
+            }
+            Some(grid) => {
+                let segments = self.segments.len();
+                grid.for_each_in(x0, y0, x1, y1, |item| {
+                    let (is_join, index) = stroke_grid::decode(item);
+                    let tag = if is_join { segments + index } else { index };
+                    if meets(&self.boxes[tag]) {
+                        out.push(tag as u32);
+                    }
+                });
             }
         }
+    }
+
+    /// True when every point of the convex hull of `corners` is provably hit by
+    /// one candidate segment's body (the rectangle between its end points,
+    /// shrunk by a margin far above rounding error), so all samples between
+    /// the corners hit without being tested.
+    pub(crate) fn body_covers(&self, corners: &[Point; 4], tags: &[u32]) -> bool {
+        let segments = self.segments.len();
+        tags.iter().any(|tag| {
+            let index = *tag as usize;
+            if index >= segments {
+                return false;
+            }
+            let segment = &self.segments[index];
+            let length = self.lengths[index];
+            let reach = self.radius;
+            if !(length > 0.0) || !length.is_finite() {
+                return false;
+            }
+            let margin = 1e-8 * (reach + length);
+            let (dx, dy) = (segment.b.x - segment.a.x, segment.b.y - segment.a.y);
+            let across_limit = (reach - margin) * length;
+            corners.iter().all(|c| {
+                let (rx, ry) = (c.x - segment.a.x, c.y - segment.a.y);
+                let dot = rx * dx + ry * dy;
+                let cross = (rx * dy - ry * dx).abs();
+                cross < across_limit && dot > margin * length && dot < (length - margin) * length
+            })
+        })
     }
 
     /// [`Self::contains`] restricted to candidate tags from [`Self::candidates_in`].

@@ -184,6 +184,20 @@ impl Grid {
         (self.column_of(r.x0), self.column_of(r.x1), self.row_of(r.y0), self.row_of(r.y1))
     }
 
+    /// Calls `f` for every item of every cell the rectangle touches.
+    pub(crate) fn for_each_in(&self, x0: f64, y0: f64, x1: f64, y1: f64, mut f: impl FnMut(u32)) {
+        let (c0, c1) = (self.column_of(x0), self.column_of(x1));
+        let (r0, r1) = (self.row_of(y0), self.row_of(y1));
+        for row in r0..=r1 {
+            for column in c0..=c1 {
+                let cell = row * self.columns + column;
+                for item in &self.items[self.starts[cell] as usize..self.starts[cell + 1] as usize] {
+                    f(*item);
+                }
+            }
+        }
+    }
+
     /// Candidate primitives for a local-space sample.
     pub(crate) fn candidates(&self, px: f64, py: f64) -> &[u32] {
         let cell = self.row_of(py) * self.columns + self.column_of(px);

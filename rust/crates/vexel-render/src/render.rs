@@ -401,7 +401,7 @@ fn render_band(
                         let fill_inside =
                             || inside(shape.edges, &sweep.active, shape.evenodd, px, py);
                         let local = map_local(pass, px, py);
-                        paint_sample(pass, fill_inside, px, py, local, None, &mut center);
+                        paint_sample(pass, fill_inside, px, py, local, Cull::None, &mut center);
                         let offset = (row_base + x as usize) * 4;
                         let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
                             .try_into()
@@ -464,12 +464,15 @@ fn render_band(
                 // Stroke hit tests only need the primitives near this pixel's
                 // samples: their local bounding box comes from the four corner samples.
                 let mut culled = false;
-                if let Some(prims) = pass.prims.as_ref().filter(|p| p.has_boxes()) {
+                let mut stroke_full = false;
+                if let Some(prims) = pass.prims.as_ref() {
                     let mut rect = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
                     let mut known = true;
-                    for (sy, sx) in [(0, 0), (0, 3), (3, 0), (3, 3)] {
+                    let mut corners = [Point { x: 0.0, y: 0.0 }; 4];
+                    for (slot, (sy, sx)) in [(0, 0), (0, 3), (3, 0), (3, 3)].into_iter().enumerate() {
                         let corner = map_local(pass, tables.column(x, sx).0, sample_y[sy]);
                         if let Some(p) = corner {
+                            corners[slot] = p;
                             rect = [rect[0].min(p.x), rect[1].min(p.y), rect[2].max(p.x), rect[3].max(p.y)];
                         } else {
                             known = false;
@@ -478,6 +481,7 @@ fn render_band(
                     if known {
                         prims.candidates_in(rect, &mut candidates);
                         culled = true;
+                        stroke_full = prims.body_covers(&corners, &candidates);
                         if candidates.is_empty() && !pass.fill_visible {
                             continue;
                         }
@@ -519,7 +523,13 @@ fn render_band(
                             px,
                             sample_y[sy],
                             map_local(pass, px, sample_y[sy]),
-                            culled.then_some(candidates.as_slice()),
+                            if stroke_full {
+                                Cull::Full
+                            } else if culled {
+                                Cull::Tags(candidates.as_slice())
+                            } else {
+                                Cull::None
+                            },
                             &mut samples[index],
                         );
                     }
@@ -547,6 +557,17 @@ fn map_local(pass: &ShapePass<'_, '_>, px: f64, py: f64) -> Option<Point> {
     pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }))
 }
 
+/// How a sample's stroke hit test is narrowed.
+#[derive(Clone, Copy)]
+enum Cull<'a> {
+    /// Test every primitive (or the grid cell).
+    None,
+    /// Test only these candidate tags.
+    Tags(&'a [u32]),
+    /// The sample is known to be inside the stroke.
+    Full,
+}
+
 /// C `paint_sample_result`: fill first, then stroke on top; a pattern paint
 /// replaces the solid colour of its channel.
 fn paint_sample(
@@ -555,7 +576,7 @@ fn paint_sample(
     px: f64,
     py: f64,
     local: Option<Point>,
-    candidates: Option<&[u32]>,
+    cull: Cull<'_>,
     out: &mut [u8; 4],
 ) {
     let shape = pass.shape;
@@ -579,10 +600,11 @@ fn paint_sample(
     }
     if let (Some(prims), Some(style), Some(local)) =
         (pass.prims.as_ref(), shape.stroke.as_ref(), local)
-        && candidates.map_or_else(
-            || prims.contains(local.x, local.y),
-            |tags| prims.contains_among(tags, local.x, local.y),
-        )
+        && match cull {
+            Cull::Full => true,
+            Cull::Tags(tags) => prims.contains_among(tags, local.x, local.y),
+            Cull::None => prims.contains(local.x, local.y),
+        }
     {
         match (pass.stroke_pattern, shape.stroke_gradient) {
             (Some(paint), _) => {
