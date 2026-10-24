@@ -2,6 +2,8 @@
 
 mod commands;
 mod controller;
+mod play_worker;
+mod prepared;
 mod snapshot;
 
 pub mod host;

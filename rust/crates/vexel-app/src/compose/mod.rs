@@ -120,6 +120,34 @@ pub(crate) fn compose_document_owned(
     height: u32,
     cancel: &dyn Fn() -> bool,
 ) -> Result<Composed, ComposeError> {
+    compose_owned(bytes, width, height, cancel, true)
+}
+
+/// The frame of [`compose_svg`] for an owned buffer: no source copy and no
+/// element-id scan (playback frames are never hit tested). Same pixels.
+pub(crate) fn compose_frame_owned(
+    bytes: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+) -> Result<Frame, ComposeError> {
+    if bytes.len() > MAX_SVG_BYTES {
+        return Err(ComposeError::LimitDecode);
+    }
+    if let Err(error) = std::str::from_utf8(&bytes) {
+        return Err(ComposeError::InvalidUtf8 {
+            valid_up_to: error.valid_up_to(),
+        });
+    }
+    compose_owned(bytes, width, height, &|| false, false).map(|c| c.frame)
+}
+
+fn compose_owned(
+    bytes: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+    cancel: &dyn Fn() -> bool,
+    with_ids: bool,
+) -> Result<Composed, ComposeError> {
     let (tile_width, tile_height) = offscreen_tile_size(f64::from(width), f64::from(height))
         .map_err(|_| ComposeError::InvalidSize)?;
     let ph = crate::profile::phase("c.decode");
@@ -144,7 +172,11 @@ pub(crate) fn compose_document_owned(
     let drawn = render_scene(&scene, view, aspect, &mut tile, false, cancel)?;
     drop(ph);
     let source = graph.source();
-    let target_ids_by_offset = unique_element_ids(source);
+    let target_ids_by_offset = if with_ids {
+        unique_element_ids(source)
+    } else {
+        HashMap::new()
+    };
     let target_ids = drawn
         .shapes
         .iter()
