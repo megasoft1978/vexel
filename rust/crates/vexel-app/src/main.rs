@@ -172,11 +172,12 @@ fn run(
             }
             if model.mode == Mode::Animate && native.surface() == TimelineSurface::Native {
                 if let Some(composed) = doc.composed() {
-                    if let Some(frame) = native.tick(
-                        files.document(),
-                        (composed.frame.width, composed.frame.height),
-                    ) {
-                        dirty |= doc.present_animated(files.document().revision(), frame);
+                    let full = (composed.frame.width, composed.frame.height);
+                    let play = doc.playback_size(scale as u32).unwrap_or(full);
+                    if let Some(frame) =
+                        native.tick_async(files.document(), full, play, doc.animated_shown())
+                    {
+                        dirty |= doc.present_native(files.document().revision(), frame);
                     }
                 }
             }
@@ -185,16 +186,6 @@ fn run(
                 dirty = true;
             }
         }
-        let native_snapshot = if model.mode == Mode::Animate {
-            native
-                .snapshot(
-                    files.document(),
-                    doc.selected_target_id().map(str::to_owned),
-                )
-                .ok()
-        } else {
-            None
-        };
         {
             let revision = files.document().revision();
             if revision == 0 {
@@ -272,6 +263,15 @@ fn run(
                             let frame = match bar {
                                 Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
                                 None => frame,
+                            };
+                            let native_snapshot = match layout.footer {
+                                Some(_) if model.mode == Mode::Animate => native
+                                    .snapshot(
+                                        files.document(),
+                                        doc.selected_target_id().map(str::to_owned),
+                                    )
+                                    .ok(),
+                                _ => None,
                             };
                             let frame = match (layout.footer, native_snapshot.as_ref()) {
                                 (Some(footer), Some(snapshot)) => {

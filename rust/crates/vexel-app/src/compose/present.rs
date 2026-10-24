@@ -38,6 +38,9 @@ pub struct DocumentView {
     animated: bool,
     /// Static compose pixels parked while a native or SMIL frame is shown.
     static_rgba: Option<Vec<u8>>,
+    /// A playback frame rendered at on-screen size (smaller than `composed`),
+    /// painted instead of `composed.frame` while animated.
+    playback: Option<Frame>,
     status: Option<(String, bool)>,
     /// Scene index of the shape picked with the select tool, shown by the
     /// inspector.
@@ -71,6 +74,7 @@ impl DocumentView {
             previous: None,
             animated: false,
             static_rgba: None,
+            playback: None,
             status: None,
             selected: None,
             parsed: None,
@@ -142,8 +146,48 @@ impl DocumentView {
         true
     }
 
+    /// Presents a native frame: a full-size one replaces the composed pixels
+    /// ([`DocumentView::present_animated`]); a smaller one (playback at the
+    /// on-screen size) is painted over them and keeps the pointer map. Refused
+    /// (false) for another revision or before the static compose finished.
+    pub fn present_native(&mut self, revision: u64, frame: Frame) -> bool {
+        let Some(composed) = self.composed.as_ref() else {
+            return false;
+        };
+        let full = (composed.frame.width, composed.frame.height) == (frame.width, frame.height);
+        if full {
+            let shown = self.present_animated(revision, frame);
+            if shown {
+                self.playback = None;
+            }
+            return shown;
+        }
+        if self.revision != Some(revision)
+            || frame.rgba.len() != frame.width as usize * frame.height as usize * 4
+        {
+            return false;
+        }
+        if !self.animated {
+            self.static_rgba = Some(composed.frame.rgba.clone());
+            self.animated = true;
+        }
+        self.playback = Some(frame);
+        true
+    }
+
+    /// Pixel size playback frames should have to match the canvas on screen:
+    /// the artboard at the current zoom and `backing`, never above the cache.
+    pub fn playback_size(&self, backing: u32) -> Option<(u32, u32)> {
+        let composed = self.composed.as_ref()?;
+        let natural = self.artboard?;
+        let (w, h) = canvas::artboard_pixels(natural, self.canvas.view.zoom, backing);
+        let size = (w.min(composed.frame.width), h.min(composed.frame.height));
+        canvas::frame_matches(size, natural).then_some(size)
+    }
+
     /// Restores the latest complete static compose after animated presentation.
     pub fn restore_static(&mut self) -> bool {
+        self.playback = None;
         if !self.animated {
             return false;
         }
@@ -202,6 +246,7 @@ impl DocumentView {
         }
         self.animated = false;
         self.static_rgba = None;
+        self.playback = None;
         let name = self.name().unwrap_or("Untitled").to_owned();
         self.status = Some((format!("Composing {name}..."), false));
         match &self.worker {
@@ -273,6 +318,7 @@ impl DocumentView {
                 self.previous = None;
                 self.animated = false;
                 self.static_rgba = None;
+                self.playback = None;
             }
             Err(ComposeError::Cancelled) => return false,
             Err(error) => {
@@ -280,6 +326,7 @@ impl DocumentView {
                 self.previous = None;
                 self.animated = false;
                 self.static_rgba = None;
+                self.playback = None;
                 self.status = Some((format!("{name}: {error}"), true));
             }
         }
@@ -433,7 +480,7 @@ impl DocumentView {
         Some(StagePaint {
             view: self.canvas.view,
             artboard,
-            frame: Some(&shown.frame),
+            frame: Some(self.playback.as_ref().unwrap_or(&shown.frame)),
             selection: self.selected.and_then(bounds),
             hover: self.canvas.hover.and_then(bounds),
             rotation: self.rotation,

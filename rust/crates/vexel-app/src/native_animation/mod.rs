@@ -2,6 +2,8 @@
 
 mod commands;
 mod controller;
+#[cfg(test)]
+mod play_tests;
 mod play_worker;
 mod prepared;
 mod snapshot;

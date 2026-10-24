@@ -4,7 +4,7 @@
 use std::path::Path;
 use std::time::Instant;
 
-use vexel_app::animation::playback::ManualClock;
+use vexel_app::animation::playback::{ManualClock, MonotonicClock};
 use vexel_app::native_animation::NativeAnimationHost;
 use vexel_app::preview::Control;
 use vexel_app::session::AppDocument;
@@ -151,14 +151,64 @@ fn walk_home_animate_playback() {
 #[test]
 #[ignore]
 fn synthetic_animate_playback() {
-    profile_run("synthetic", &synthetic_doc());
+    let doc = synthetic_doc();
+    profile_run("synthetic full 900", &doc);
+    // On-screen size (S2): the same ticks rendered at the stage's pixel size.
+    run("synthetic play 600", &doc, 600);
+}
+
+/// Real-time playback as the UI loop drives it for 4 s at ~8 ms per loop.
+/// `sync` renders on the loop (the old behaviour); `async` posts to the
+/// worker. Prints UI-thread blocked time per loop and the presented fps.
+#[test]
+#[ignore]
+fn synthetic_realtime_playback() {
+    let doc = synthetic_doc();
+    for (mode, play) in [
+        ("sync full 900", (900, 900)),
+        ("async full 900", (900, 900)),
+        ("async play 600", (600, 600)),
+    ] {
+        let mut host = NativeAnimationHost::new(MonotonicClock::new());
+        let first = Instant::now();
+        let _ = host.snapshot(&doc, None);
+        host.mcp_control(&doc, Control::Play, true).unwrap();
+        let mut blocked = vec![];
+        let (mut frames, mut first_frame) = (0u32, None);
+        let start = Instant::now();
+        while start.elapsed().as_secs_f64() < 4.0 {
+            let t = Instant::now();
+            let got = if mode.starts_with("sync") {
+                host.tick(&doc, play).is_some()
+            } else {
+                host.tick_async(&doc, (900, 900), play, true).is_some()
+            };
+            blocked.push(ms(t));
+            if got {
+                frames += 1;
+                first_frame.get_or_insert(ms(first));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(8));
+        }
+        let secs = start.elapsed().as_secs_f64();
+        println!(
+            "{mode}: loops {} ui-blocked p50 {:.2} p95 {:.2} max {:.2} ms | frames {frames} = {:.1} fps | first frame at {:.0} ms",
+            blocked.len(),
+            pct(&mut blocked.clone(), 0.5),
+            pct(&mut blocked.clone(), 0.95),
+            pct(&mut blocked, 1.0),
+            f64::from(frames) / secs,
+            first_frame.unwrap_or(f64::NAN)
+        );
+    }
 }
 
 /// Export output must stay byte-identical across playback optimisations.
 #[test]
 fn synthetic_export_hashes_are_stable() {
     let doc = synthetic_doc();
-    let source = vexel_app::animation::native_export::NativeExportSource::from_document(&doc).unwrap();
+    let source =
+        vexel_app::animation::native_export::NativeExportSource::from_document(&doc).unwrap();
     let mut hashes = vec![];
     for tick in [5u32, 12, 22, 33, 57] {
         let (w, h, rgba) = source
