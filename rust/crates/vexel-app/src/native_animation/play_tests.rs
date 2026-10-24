@@ -11,6 +11,8 @@ use crate::compose::Frame;
 use crate::preview::Control;
 use crate::session::AppDocument;
 
+static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
 fn doc() -> AppDocument {
     let mut svg = String::from(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\" viewBox=\"0 0 64 64\">",
@@ -26,7 +28,7 @@ fn doc() -> AppDocument {
     let path = std::env::temp_dir().join(format!(
         "vexel-play-{}-{}.svg",
         std::process::id(),
-        Instant::now().elapsed().as_nanos()
+        NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     ));
     std::fs::write(&path, svg).unwrap();
     let mut doc = AppDocument::new(64, 64).unwrap();
