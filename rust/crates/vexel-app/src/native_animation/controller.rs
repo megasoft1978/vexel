@@ -417,12 +417,9 @@ fn ease_json(ease: &str) -> String {
     if let Some(p) = crate::native_timeline::bezier::parse(ease) {
         return crate::native_timeline::bezier::json(p);
     }
-    match ease {
-        "step" => "\"step\"".into(),
-        "ease_in" => "\"ease_in\"".into(),
-        "ease_out" => "\"ease_out\"".into(),
-        "ease_in_out" => "\"ease_in_out\"".into(),
-        _ => "\"linear\"".into(),
+    match vexel_timeline::sample::Ease::parse_name(ease.as_bytes()).and_then(|e| e.name()) {
+        Some(name) => format!("\"{name}\""),
+        None => "\"linear\"".into(),
     }
 }
 

@@ -273,3 +273,72 @@ fn sample_x_of(source: &str, tick: u32) -> PropertyValue {
     let view = decode(source.as_bytes(), &context()).unwrap();
     sample_properties(&view, tick).unwrap()[0].value
 }
+
+const NEW_EASES: [&str; 12] = [
+    "ease_in_out_back",
+    "ease_in_cubic",
+    "ease_out_cubic",
+    "ease_in_out_cubic",
+    "ease_in_elastic",
+    "ease_out_elastic",
+    "ease_in_out_elastic",
+    "ease_in_bounce",
+    "ease_out_bounce",
+    "ease_in_out_bounce",
+    "back",
+    "bounce",
+];
+
+#[test]
+fn new_presets_have_exact_endpoints_names_and_finite_values() {
+    for name in NEW_EASES.iter().chain(&["elastic"]) {
+        let ease = Ease::parse_name(name.as_bytes()).unwrap();
+        assert_eq!(ease.apply(0.0), 0.0, "{name}");
+        assert_eq!(ease.apply(1.0), 1.0, "{name}");
+        for i in 0..=200 {
+            let v = ease.apply(f64::from(i) / 200.0);
+            assert!(v.is_finite() && v > -1.5 && v < 2.5, "{name} {i} {v}");
+        }
+        assert_eq!(Ease::parse_name(ease.name().unwrap().as_bytes()), Some(ease));
+    }
+    assert_eq!(Ease::Bezier([0.0; 4]).name(), None);
+}
+
+#[test]
+fn new_presets_known_values() {
+    let at = |n: &str, t: f64| Ease::parse_name(n.as_bytes()).unwrap().apply(t);
+    assert!((at("ease_in_cubic", 0.5) - 0.125).abs() < 1e-12);
+    assert!((at("ease_out_cubic", 0.5) - 0.875).abs() < 1e-12);
+    assert!((at("ease_in_out_cubic", 0.5) - 0.5).abs() < 1e-12);
+    assert!((at("ease_out_bounce", 0.5) - 0.765625).abs() < 1e-12);
+    assert!((at("ease_in_out_bounce", 0.5) - 0.5).abs() < 1e-12);
+    assert!((at("ease_in_out_back", 0.5) - 0.5).abs() < 1e-12);
+    assert!(at("ease_in_out_back", 0.1) < 0.0);
+    assert!(at("ease_out_elastic", 0.2) > 1.0);
+    assert!(at("ease_in_elastic", 0.8) < 0.0);
+    assert!((at("ease_in_out_elastic", 0.5) - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn new_presets_and_bare_bezier_array_decode_and_sample() {
+    for name in NEW_EASES {
+        let src = scalar_track(
+            "linear",
+            &format!(r#"{{"tick":0,"value":0,"ease":"{name}"}},{{"tick":10,"value":10}}"#),
+        );
+        let v = sample_x(&src, 5);
+        assert!(v.is_finite(), "{name}");
+    }
+    let src = scalar_track(
+        "linear",
+        r#"{"tick":0,"value":0,"ease":[0,0,1,1]},{"tick":10,"value":10}"#,
+    );
+    assert!((sample_x(&src, 5) - 5.0).abs() < 1e-6);
+    for bad in [r#"[0,0,1]"#, r#"[0,0,1,1,1]"#, r#"[2,0,1,1]"#, r#"["a",0,1,1]"#] {
+        let src = scalar_track(
+            "linear",
+            &format!(r#"{{"tick":0,"value":0,"ease":{bad}}},{{"tick":10,"value":10}}"#),
+        );
+        assert!(decode(src.as_bytes(), &context()).is_err(), "{bad}");
+    }
+}

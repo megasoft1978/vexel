@@ -194,8 +194,8 @@ element ID, property, `valueType`, interpolation, and initial `value`. Use
 `transform` with `valueType: "trs"` for pivot rotations/translations, and
 `opacity` with `valueType: "scalar"` for blinking. Add later values with
 `native_timeline_set_property_key` (optional `ease`), or pass an optional
-`keys: [{tick, value, interp?}]` (at most 256, same value forms; `interp` takes
-the `ease` names) to `native_timeline_add_property_track` to create the track and
+`keys: [{tick, value, ease?}]` (at most 256, same value forms; `interp` is an
+alias of `ease`) to `native_timeline_add_property_track` to create the track and
 all its keys in one undoable edit. A `trs` value is either
 an array `[tx,ty,rotationDeg,sx,sy,pivotX,pivotY(,skewXDeg)]` or an object with
 optional `translate` (`[x,y]` or `{x,y}`; or `tx`/`ty`), `rotate` (degrees; also
@@ -224,6 +224,31 @@ stroke-opacity stroke-width stroke-dashoffset` (scalar), `fill stroke stop-color
   raised to the previous stop's offset so stops stay ordered; later stops are
   raised too), `stop-opacity`, `stop-color` (rgba; also writes `stop-opacity`).
   Scenes with filters render on the CPU route.
+
+Easing: a key's `ease` shapes the segment from that key to the next, for every
+value type (scalar, rgba, trs, path morph, filter scalars, gradient stops). Names:
+`step`, `linear`, `ease_in`/`ease_out`/`ease_in_out` (quad), the same with
+`_cubic`, `_back`, `_elastic`, `_bounce` suffixes (`ease_in_cubic`,
+`ease_out_bounce`, ...; aliases `back`, `elastic`, `bounce` = the out forms), a
+string `bezier:x1,y1,x2,y2` or an array `[x1,y1,x2,y2]` (x in 0-1, y in -4..4).
+No `ease` keeps the track interpolation. Accepted by
+`native_timeline_add_property_track`, its `keys`, `native_timeline_set_property_key`
+and `native_timeline_tracks_set`.
+
+Noise: `native_timeline_add_property_track` (and `tracks_set` entries) take
+`noise: {amplitude, frequency?, seed?, octaves?}`. It adds seeded smooth noise
+(amplitude in property units, frequency in Hz, default 4, octaves 1-4) to scalar,
+transform2d (e, f) and trs (tx, ty, rotation) tracks: shake, flicker, wind sway,
+hand-drawn boil. It is a pure function of tick and seed, identical across runs and
+exports.
+
+Camera: `native_timeline_set_camera` (`keys: [{tick, x?, y?, zoom?, rotate?,
+ease?}]`, `shake: {amplitude, frequency?, seed?, octaves?, rotate?}`, or
+`clear: true`) replaces the camera in one undoable edit. It is a render-time view
+transform (pan x/y in user units, zoom, roll in degrees about the viewBox centre)
+applied to preview, `render_png` and exports without a wrapper group in the scene.
+Without a camera the output is unchanged. The camera lives in reserved tracks
+`camera_x`, `camera_y`, `camera_zoom`, `camera_rotate` (target `@camera`).
 
 To create many tracks at once use `native_timeline_tracks_set` (`tracks`: 1-256
 entries, each the arguments of `native_timeline_add_property_track` without

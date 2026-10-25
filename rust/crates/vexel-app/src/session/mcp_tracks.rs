@@ -52,6 +52,7 @@ fn add_many(app: &mut AppDocument, tracks: &[NativeTrack]) -> Result<bool, Faile
             interpolation: &t.interpolation,
             value: &t.value,
             name: &t.name,
+            noise: t.noise.as_deref(),
             keys,
         })
         .collect();
@@ -65,8 +66,13 @@ fn add_many(app: &mut AppDocument, tracks: &[NativeTrack]) -> Result<bool, Faile
 /// One track and its keys as a single edit; falls back to the sequential edits
 /// (one per key) when rejected, for their exact error messages.
 pub(super) fn add_one(app: &mut AppDocument, track: &NativeTrack) -> Result<bool, &'static str> {
-    if add_many(app, std::slice::from_ref(track)).is_ok_and(|edited| edited) {
+    let fast = add_many(app, std::slice::from_ref(track));
+    if fast.as_ref().is_ok_and(|edited| *edited) {
         return Ok(true);
+    }
+    if track.noise.is_some() {
+        // The sequential replay below cannot carry `noise`; report the bulk rejection.
+        return fast.map_err(rejection);
     }
     let in_keys = Cell::new(false);
     app.edit_timeline(settings(), EditLimits::default(), |c| {

@@ -63,3 +63,11 @@ fn raw_string(source:&[u8],span:Span)->Option<&[u8]>{
     if raw.len()<2||raw.first()!=Some(&b'"')||raw.last()!=Some(&b'"'){return None;}
     raw.get(1..raw.len()-1)
 }
+
+pub(crate) fn track_noise(view:&TimelineView<'_>,index:usize)->Option<crate::noise::Noise> {
+    let meta=*view.tracks.get(index)?; if meta.drawing {return None;}
+    // Cheap pre-check: tracks without the member skip the field parse on every frame.
+    if !view.source.get(meta.span.start..meta.span.end)?.windows(7).any(|w|w==b"\"noise\"") {return None;}
+    let fields=object_fields(view.source,meta.span,None).ok()?;
+    crate::noise::parse(view.source,field(&fields,b"noise")?.value).ok()
+}

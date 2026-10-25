@@ -15,7 +15,7 @@ fn fresh() -> TimelineEdit {
     TimelineEdit::new(initial().as_bytes(), &context(), EditLimits::default()).unwrap()
 }
 fn track<'a>(id: &'a [u8], keys: &'a [BulkKey<'a>]) -> BulkTrack<'a> {
-    BulkTrack { id, target: b"shape", property: b"opacity", value_type: b"scalar", interpolation: b"linear", value: b"1", name: b"", keys }
+    BulkTrack { id, target: b"shape", property: b"opacity", value_type: b"scalar", interpolation: b"linear", value: b"1", name: b"", noise: None, keys }
 }
 fn key(tick: u32, value: &'static [u8]) -> BulkKey<'static> {
     BulkKey { tick, value, ease: None }
@@ -91,4 +91,31 @@ fn rejects_empty_oversize_and_existing_duplicates() {
     other.add_property_tracks(&ctx, &[track(b"a", &[])]).unwrap();
     let failure = other.add_property_tracks(&ctx, &[track(b"b", &[]), track(b"a", &[])]).unwrap_err();
     assert_eq!((failure.index, failure.failure.error), (Some(1), Error::Duplicate));
+}
+
+#[test]
+fn bulk_noise_and_camera_target() {
+    let ctx = context();
+    let noise: &[u8] = br#"{"amplitude":3,"frequency":2,"seed":9}"#;
+    let mut edit = fresh();
+    edit.add_property_tracks(&ctx, &[BulkTrack { noise: Some(noise), ..track(b"n", &[]) }]).unwrap();
+    assert!(std::str::from_utf8(edit.source()).unwrap().contains(r#""noise":{"amplitude":3,"frequency":2,"seed":9}"#));
+    let cam = BulkTrack { target: b"@camera", property: b"zoom", value: b"1", ..track(b"cam", &[]) };
+    let mut edit = fresh();
+    edit.add_property_tracks(&ctx, &[cam]).unwrap();
+    let bad = BulkTrack { target: b"@camera", property: b"opacity", ..track(b"cam", &[]) };
+    assert!(fresh().add_property_tracks(&ctx, &[bad]).is_err());
+    for text in [
+        &br#"{"amplitude":3},"id":"x""#[..],
+        br#"{"amplitude":-3}"#,
+        br#"{"amplitude":3}  x"#,
+        br#"[1]"#,
+        b"",
+        br#"{"amplitude":3,"seed":1.5}"#,
+    ] {
+        let t = BulkTrack { noise: Some(text), ..track(b"n", &[]) };
+        assert!(fresh().add_property_tracks(&ctx, &[t]).is_err(), "{}", String::from_utf8_lossy(text));
+    }
+    let boolean = BulkTrack { noise: Some(noise), value_type: b"boolean", interpolation: b"step", property: b"visibility", value: b"true", ..track(b"b", &[]) };
+    assert!(fresh().add_property_tracks(&ctx, &[boolean]).is_err());
 }

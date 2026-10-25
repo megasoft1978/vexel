@@ -4,6 +4,7 @@ mod access;
 mod easing;
 mod edit;
 mod json;
+pub mod noise;
 pub mod pathmorph;
 pub mod sample;
 mod schema;
@@ -20,9 +21,9 @@ pub use edit::{BulkFailure, BulkKey, BulkTrack};
 pub use edit::{EditFailure, EditLimits, TimelineEdit, TimelineSourceLease};
 pub use edit::{EmptyTimelineSettings, initialize_empty_timeline};
 pub use json::string_copy;
-pub use sample::{PathBlend, PropertySample, resolve_path, PropertyValue, sample_properties};
+pub use sample::{PathBlend, PropertySample, resolve_path, PropertyValue, sample_properties, sample_properties_keyed};
 pub use schema::{
-    AssetRef, DecodeFailure, DetachedTimeline, Error, ItemView, LoopMode, MAX_ITEMS, MAX_ITEMS_PER_TRACK,
+    AssetRef, CAMERA_TARGET, DecodeFailure, DetachedTimeline, Error, ItemView, LoopMode, MAX_ITEMS, MAX_ITEMS_PER_TRACK,
     MAX_SOURCE_BYTES, MAX_STRING_BYTES, MAX_TRACKS, TimelineContext, TimelineIterator,
     TimelineView, TrackView, classify, classify_cancellable, decode, decode_cancellable,
 };

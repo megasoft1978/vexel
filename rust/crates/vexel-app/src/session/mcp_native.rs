@@ -13,6 +13,7 @@ use crate::session::{AppDocument, McpOutcome};
 use vexel_json::JsonDocument;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
 
+pub(crate) mod mcp_camera;
 mod mcp_tracks;
 
 /// One property track with its keys: an `add_property_track` request, or one
@@ -26,6 +27,8 @@ pub struct NativeTrack {
     pub interpolation: Vec<u8>,
     pub value: Vec<u8>,
     pub name: Vec<u8>,
+    /// Canonical JSON of the seeded `noise` modifier, when set.
+    pub noise: Option<Vec<u8>>,
     pub keys: Vec<PropertyKey>,
 }
 
@@ -59,9 +62,12 @@ pub enum NativeOp {
         interpolation: Vec<u8>,
         value: Vec<u8>,
         name: Vec<u8>,
+        noise: Option<Vec<u8>>,
         /// Extra keys applied in the same edit as the track.
         keys: Vec<PropertyKey>,
     },
+    /// Set or clear the camera tracks in one undoable edit.
+    SetCamera(mcp_camera::CameraSpec),
     /// Many property tracks with their keys in one undoable edit.
     TracksSet(Vec<NativeTrack>),
     SetPropertyKey {
@@ -236,6 +242,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             interpolation,
             value,
             name,
+            noise,
             keys,
         } => {
             let track = NativeTrack {
@@ -246,6 +253,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
                 interpolation,
                 value,
                 name,
+                noise,
                 keys,
             };
             if let Some(message) = property_target_mismatch(app, &track.target_id, &track.property)
@@ -255,6 +263,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             mcp_tracks::add_one(app, &track)?
         }
         NativeOp::TracksSet(tracks) => return mcp_tracks::tracks_set(app, &tracks),
+        NativeOp::SetCamera(spec) => return mcp_camera::set_camera(app, &spec),
         NativeOp::SetPropertyKey {
             track_id,
             tick,
@@ -666,6 +675,12 @@ fn get(app: &AppDocument) -> Result<String, &'static str> {
         opt(&mut out, "property", track.property);
         opt(&mut out, "valueType", track.value_type);
         opt(&mut out, "interpolation", track.interpolation);
+        if let Some(n) = view.track_noise(index) {
+            out.push_str(&format!(
+                ",\"noise\":{{\"amplitude\":{},\"frequency\":{},\"seed\":{},\"octaves\":{}}}",
+                n.amplitude, n.frequency, n.seed, n.octaves
+            ));
+        }
         out.push_str(&format!(",\"visible\":{},\"items\":[", track.visible));
         for item_index in 0..track.item_count {
             let item = view

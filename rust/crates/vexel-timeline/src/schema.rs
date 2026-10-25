@@ -6,6 +6,8 @@ pub const MAX_TRACKS: usize = 256;
 pub const MAX_ITEMS: usize = 1_000_000;
 pub const MAX_ITEMS_PER_TRACK: usize = 100_000;
 pub const MAX_STRING_BYTES: usize = 4096;
+/// Reserved track target for the camera; it names no scene element.
+pub const CAMERA_TARGET: &[u8] = b"@camera";
 pub const MAX_SOURCE_BYTES: usize = vexel_project::MAX_TIMELINE_BYTES;
 const MAX_SCENE_IDS: usize = 1_000_000;
 const MAX_ASSETS: usize = vexel_project::MAX_ASSET_COUNT;
@@ -121,7 +123,7 @@ where F: FnMut() -> bool {
         if ids.iter().any(|prior|prior==&id) { return Err(at(Error::Duplicate,id_field.value.start)); }
         if ids.len()==MAX_TRACKS { return Err(at(Error::Limit,span.start)); }
         ids.try_reserve(1).map_err(|_|at(Error::Limit,span.start))?; ids.push(id);
-        if context.scene_ids.binary_search(&target).is_err() { return Err(at(Error::InvalidReference,target_field.value.start)); }
+        if !(target==CAMERA_TARGET&&!drawing)&&context.scene_ids.binary_search(&target).is_err() { return Err(at(Error::InvalidReference,target_field.value.start)); }
         let name=field(&fields,b"name"); if let Some(n)=name { string(source,n.value)?; }
         let items_field=required(&fields,if drawing {b"cels"} else {b"keys"}).ok_or_else(||at(Error::InvalidSchema,span.start))?;
         if drawing {
@@ -211,9 +213,18 @@ fn validate_property(source:&[u8],fields:&[Field],span:Span)->Result<()> {
     let prop=string(source,prop_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     let kind=string(source,type_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     let interpolation=string(source,interp_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
+    let camera=required(fields,b"target").map(|t|string(source,t.value)).transpose()?.is_some_and(|t|t==CAMERA_TARGET);
+    if let Some(n)=field(fields,b"noise") {
+        crate::noise::parse(source,n.value)?;
+        if ![b"scalar".as_slice(),b"trs",b"transform2d"].contains(&kind.as_slice()) {return Err(at(Error::InvalidValue,n.value.start));}
+    }
     if prop.is_empty() || ![b"step".as_slice(),b"linear",b"cubic"].contains(&interpolation.as_slice()) ||
        ![b"scalar".as_slice(),b"transform2d",b"rgba",b"boolean",b"trs",b"path"].contains(&kind.as_slice()) {
         return Err(at(Error::InvalidValue,span.start));
+    }
+    if camera {
+        if kind!=b"scalar"||![b"x".as_slice(),b"y",b"zoom",b"rotate"].contains(&prop.as_slice()) {return Err(at(Error::InvalidValue,prop_f.value.start));}
+        return Ok(());
     }
     let scalar=[b"x".as_slice(),b"y",b"width",b"height",b"cx",b"cy",b"r",b"rx",b"ry",b"opacity",b"fill-opacity",b"stroke-opacity",b"stroke-width",b"stroke-dashoffset",b"stop-opacity",b"offset",b"stdDeviation",b"dx",b"dy",b"flood-opacity",b"values"].contains(&prop.as_slice())&&kind==b"scalar";
     let match_ok=scalar||([b"fill".as_slice(),b"stroke",b"stop-color"].contains(&prop.as_slice())&&kind==b"rgba")||(prop==b"transform"&&(kind==b"transform2d"||kind==b"trs"))||(prop==b"visibility"&&kind==b"boolean")||(crate::pathmorph::PathKind::of_property(&prop).is_some()&&kind==b"path");
@@ -226,7 +237,7 @@ fn validate_typed_value(source:&[u8],span:Span,kind:&[u8],prop:&[u8],base:&mut O
     if kind==b"scalar" {
         let n=number(source,span)?;
         // Renderer limits: blur deviation 0..=32, offsets within 4096, opacities 0..=1.
-        let ok=match prop {b"stdDeviation"=>(0.0..=32.0).contains(&n),b"dx"|b"dy"=>n.abs()<=4096.0,b"flood-opacity"=>(0.0..=1.0).contains(&n),b"values"=>n.abs()<=1e6,_=>true};
+        let ok=match prop {b"stdDeviation"=>(0.0..=32.0).contains(&n),b"dx"|b"dy"=>n.abs()<=4096.0,b"flood-opacity"=>(0.0..=1.0).contains(&n),b"values"=>n.abs()<=1e6,b"zoom"=>(0.01..=100.0).contains(&n),b"rotate"=>n.abs()<=36000.0,_=>true};
         if !ok {return Err(at(Error::InvalidValue,span.start));}
         return Ok(())
     }
@@ -264,8 +275,12 @@ fn validate_item_fields(fields:&[Field],with_label:&[&[u8]],without_label:&[&[u8
 }
 fn require_track_fields(fields:&[Field],name:bool,drawing:bool,span:Span)->Result<()> {
     if drawing {if name {require_fields(fields,&[b"id",b"kind",b"target",b"name",b"visible",b"cels"],span.start)}else{require_fields(fields,&[b"id",b"kind",b"target",b"visible",b"cels"],span.start)}}
-    else if name {require_fields(fields,&[b"id",b"kind",b"target",b"name",b"visible",b"property",b"value_type",b"interpolation",b"keys"],span.start)}
-    else {require_fields(fields,&[b"id",b"kind",b"target",b"visible",b"property",b"value_type",b"interpolation",b"keys"],span.start)}
+    else {
+        let mut names:Vec<&[u8]>=vec![b"id",b"kind",b"target",b"visible",b"property",b"value_type",b"interpolation",b"keys"];
+        if name {names.push(b"name");}
+        if field(fields,b"noise").is_some() {names.push(b"noise");}
+        require_fields(fields,&names,span.start)
+    }
 }
 fn required<'a>(fields:&'a[Field],key:&[u8])->Option<&'a Field>{field(fields,key)}
 pub(crate) fn field<'a>(fields:&'a[Field],key:&[u8])->Option<&'a Field>{fields.iter().find(|f|f.key==key)}
@@ -289,6 +304,8 @@ fn at(error:Error,offset:usize)->DecodeFailure{DecodeFailure{error,offset,cancel
 // Accessors share the exact source spans captured by this decoder.
 impl<'a> TimelineView<'a> {
     pub fn track_at(&self,index:usize)->Option<TrackView<'a>>{access::track_at(self,index)}
+    /// The validated `noise` modifier of a property track, if any.
+    pub fn track_noise(&self,index:usize)->Option<crate::noise::Noise>{access::track_noise(self,index)}
     pub fn item_at(&self,track:usize,index:usize)->Option<ItemView<'a>>{access::item_at(self,track,index)}
     pub fn item_next(&self,track:usize,it:&mut TimelineIterator)->Option<ItemView<'a>>{access::item_next(self,track,it)}
     pub fn track_count(&self)->usize{self.tracks.len()}

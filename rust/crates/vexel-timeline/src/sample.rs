@@ -4,6 +4,7 @@ use crate::schema::{Error, ItemView, TimelineView, TrackView};
 use vexel_base::Span;
 
 pub use crate::easing::{ease_value, Ease};
+use crate::noise::Noise;
 
 /// Translate/rotate/scale/skew transform with a pivot; components interpolate independently.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -88,6 +89,23 @@ pub fn sample_properties<'a>(
     view: &TimelineView<'a>,
     tick: u32,
 ) -> Result<Vec<PropertySample<'a>>, DecodeFailure> {
+    sample_all(view, tick, true)
+}
+
+/// Like [`sample_properties`] without the `noise` modifier: the keyed values an editor
+/// should copy when it adds a key.
+pub fn sample_properties_keyed<'a>(
+    view: &TimelineView<'a>,
+    tick: u32,
+) -> Result<Vec<PropertySample<'a>>, DecodeFailure> {
+    sample_all(view, tick, false)
+}
+
+fn sample_all<'a>(
+    view: &TimelineView<'a>,
+    tick: u32,
+    noise: bool,
+) -> Result<Vec<PropertySample<'a>>, DecodeFailure> {
     if tick >= view.duration_ticks() {
         return Err(failure(Error::InvalidArgument, 0));
     }
@@ -102,7 +120,7 @@ pub fn sample_properties<'a>(
         if track.kind != b"property" || !track.visible {
             continue;
         }
-        samples.push(sample_track(view, track_index, track, tick)?);
+        samples.push(sample_track(view, track_index, track, tick, noise)?);
     }
     Ok(samples)
 }
@@ -112,6 +130,7 @@ fn sample_track<'a>(
     track_index: usize,
     track: TrackView<'a>,
     tick: u32,
+    noise: bool,
 ) -> Result<PropertySample<'a>, DecodeFailure> {
     let mut cursor = crate::schema::TimelineIterator::default();
     let first = view
@@ -168,6 +187,10 @@ fn sample_track<'a>(
         };
         interpolate(start, end, t, step, lower.source.start)?
     };
+    let value = match view.track_noise(track_index).filter(|_| noise) {
+        Some(noise) => add_noise(value, &noise, tick, view.ticks_per_second()),
+        None => value,
+    };
     Ok(PropertySample {
         track_index,
         target: track.target,
@@ -176,6 +199,26 @@ fn sample_track<'a>(
             .ok_or_else(|| failure(Error::InvalidSchema, 0))?,
         value,
     })
+}
+
+/// Adds seeded noise to numeric components; other value types pass through.
+fn add_noise(value: PropertyValue, noise: &Noise, tick: u32, tps: u32) -> PropertyValue {
+    let n = |channel: u32| noise.offset(tick, tps, channel);
+    match value {
+        PropertyValue::Scalar(v) => PropertyValue::Scalar(v + n(0)),
+        PropertyValue::Transform2d(mut m) => {
+            m[4] += n(0);
+            m[5] += n(1);
+            PropertyValue::Transform2d(m)
+        }
+        PropertyValue::Trs(mut t) => {
+            t.tx += n(0);
+            t.ty += n(1);
+            t.rotation_deg += n(2);
+            PropertyValue::Trs(t)
+        }
+        other => other,
+    }
 }
 
 fn parse_value(

@@ -28,6 +28,8 @@ pub struct BulkTrack<'a> {
     pub interpolation: &'a [u8],
     pub value: &'a [u8],
     pub name: &'a [u8],
+    /// Optional `noise` member as JSON text (see `crate::noise`).
+    pub noise: Option<&'a [u8]>,
     pub keys: &'a [BulkKey<'a>],
 }
 
@@ -127,6 +129,18 @@ fn payload(track: &BulkTrack<'_>, index: usize) -> Result<(Vec<u8>, usize), Bulk
         }
     }
     append(&mut out, b"]", index)?;
+    if let Some(noise) = track.noise {
+        let mut reader = Reader::new(noise, None);
+        let whole = noise.first() == Some(&b'{')
+            && reader.scan(0).is_ok()
+            && reader.cursor == noise.len()
+            && crate::noise::parse(noise, Span { start: 0, end: noise.len() }).is_ok();
+        if !whole {
+            return Err(fail_at(Some(index), Error::InvalidValue, 0));
+        }
+        append(&mut out, b",\"noise\":", index)?;
+        append(&mut out, noise, index)?;
+    }
     if !track.name.is_empty() {
         append(&mut out, b",\"name\":", index)?;
         append(&mut out, &json_string(track.name).map_err(at)?, index)?;
@@ -172,7 +186,7 @@ pub(super) fn add_property_tracks(
         .try_reserve_exact(tracks.len())
         .map_err(|_| fail_at(None, Error::Limit, 0))?;
     for (index, track) in tracks.iter().enumerate() {
-        if !valid_target(context, track.target) {
+        if track.target != crate::CAMERA_TARGET && !valid_target(context, track.target) {
             return Err(fail_at(Some(index), Error::InvalidReference, 0));
         }
         if !spans.is_empty() || index > 0 {

@@ -1,5 +1,5 @@
 //! Optional bulk `keys` of `native_timeline_add_property_track`: each member is
-//! `{tick, value, interp?}`, parsed with the same value forms as
+//! `{tick, value, ease?}`, parsed with the same value forms as
 //! `native_timeline_set_property_key`.
 
 use super::native_args::{ease_at, tick, timeline_value};
@@ -11,7 +11,7 @@ pub(crate) const MAX_BULK_KEYS: usize = 256;
 /// Largest raw `keys` array, in bytes.
 const KEYS_BYTES: usize = 256 * 1024;
 
-const FORM: &str = "an array of at most 256 objects {tick, value, interp?}";
+const FORM: &str = "an array of at most 256 objects {tick, value, ease?}";
 
 pub(super) fn parse(
     doc: &JsonDocument<'_>,
@@ -45,18 +45,18 @@ pub(super) fn parse(
         let Some(member) = member else {
             return Err(bad(
                 &format!("keys[{index}]"),
-                "an object {tick, value, interp?}",
+                "an object {tick, value, ease?}",
             ));
         };
         let mut name = member.first_child;
         while let Some(key) = name {
             let allowed = doc
                 .decoded_string(key)
-                .is_some_and(|k| matches!(k.as_slice(), b"tick" | b"value" | b"interp"));
+                .is_some_and(|k| matches!(k.as_slice(), b"tick" | b"value" | b"interp" | b"ease"));
             if !allowed {
                 return Err(bad(
                     &format!("keys[{index}]"),
-                    "only the members tick, value and interp",
+                    "only the members tick, value, ease and interp",
                 ));
             }
             name = doc
@@ -68,7 +68,10 @@ pub(super) fn parse(
         keys.push(PropertyKey {
             tick: tick(doc, at, tool, "tick").map_err(wrap)?,
             value: timeline_value(doc, at, tool).map_err(wrap)?,
-            ease: ease_at(doc, at, tool, "interp").map_err(wrap)?,
+            ease: match ease_at(doc, at, tool, "ease").map_err(wrap)? {
+                Some(ease) => Some(ease),
+                None => ease_at(doc, at, tool, "interp").map_err(wrap)?,
+            },
         });
         item = doc.token(at).and_then(|t| t.next_sibling);
     }
