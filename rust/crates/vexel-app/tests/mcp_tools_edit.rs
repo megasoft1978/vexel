@@ -99,7 +99,7 @@ fn library_target_links_and_lists_routed_tools() {
     // Twenty-three document, paint, query and timeline-edit tools follow the V1 advanced-animation work.
     // Plus native_timeline_set_duration, element_reparent and batch, plus
     // element_add_fragment and use_add, plus native_timeline_tracks_set and
-    // native_timeline_set_camera, plus audio_add_track, audio_set and audio_list.
+    // native_timeline_set_camera, plus audio_add_track, audio_set, audio_list, rig_create, rig_pose and clip_apply.
     assert_eq!(
         names.len(),
         ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1 + 1 + 1 + 2 + 1 + 1 + 3

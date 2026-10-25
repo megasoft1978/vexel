@@ -4,11 +4,13 @@ mod access;
 pub mod audio;
 pub mod audio_codec;
 pub mod audio_mix;
+pub mod clips;
 mod easing;
 mod edit;
 mod json;
 pub mod noise;
 pub mod pathmorph;
+pub mod rig;
 pub mod sample;
 mod schema;
 

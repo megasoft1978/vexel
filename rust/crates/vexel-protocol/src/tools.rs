@@ -408,6 +408,9 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "audio_add_track",
     "audio_set",
     "audio_list",
+    "rig_create",
+    "rig_pose",
+    "clip_apply",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -438,6 +441,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
         .chain(super::tools_native_bulk::NATIVE_BULK_TOOLS)
         .chain(super::tools_audio::AUDIO_TOOLS)
         .chain(super::tools_structure::STRUCTURE_TOOLS)
+        .chain(super::tools_rig::RIG_TOOLS)
         .chain(super::tools_batch::BATCH_TOOLS)
 }
 

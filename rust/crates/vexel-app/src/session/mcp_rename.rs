@@ -3,6 +3,7 @@
 
 use super::AppDocument;
 use super::mcp::{source, stable_ids};
+use crate::preview::native_timeline::mcp_rig::{RIG_ID, check_rename, retarget};
 use crate::preview::native_timeline::settings;
 use crate::project_session::SessionEditError;
 use vexel_timeline::EditLimits;
@@ -14,10 +15,14 @@ pub(super) fn rename(app: &mut AppDocument, old: &str, new: &str) -> Result<(), 
     if old == new {
         return Ok(());
     }
+    if old == RIG_ID || new == RIG_ID {
+        return Err("attribute_set id: the id vexel-rig belongs to the rig and cannot be renamed");
+    }
     // Check up front so a clash cannot strand retargeted tracks.
     if stable_ids(&source(app)?).iter().any(|id| id == new) {
         return Err("attribute_set id is already used by another element; choose an unused id");
     }
+    check_rename(app, old, new)?;
     // Inside a batch the group is already open and the batch collapses the steps.
     let group = app.begin_group().ok();
     let result = rename_steps(app, old, new);
@@ -48,5 +53,6 @@ fn rename_steps(app: &mut AppDocument, old: &str, new: &str) -> Result<(), &'sta
                 "attribute_set id must be 1-128 characters of A-Z a-z 0-9 _ - . : and unused"
             }
             SessionEditError::History(_) => "project history unavailable",
-        })
+        })?;
+    retarget(app, old, new)
 }

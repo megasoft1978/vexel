@@ -15,6 +15,7 @@ use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, 
 
 pub(crate) mod mcp_camera;
 mod mcp_extend;
+pub(crate) mod mcp_rig;
 mod mcp_tracks;
 
 /// One property track with its keys: an `add_property_track` request, or one

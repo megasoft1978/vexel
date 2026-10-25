@@ -17,6 +17,7 @@ pub enum DocOp {
     Query(ext_query::Op),
     Use(ext_use::Op),
     Audio(crate::session::mcp_audio::AudioOp),
+    Rig(super::native_args::rig::Op),
 }
 
 /// `None` when no family handles `tool`.
@@ -40,6 +41,9 @@ pub(super) fn parse(
     if let Some(parsed) = ext_use::parse(doc, args, tool) {
         return Some(parsed.map(|op| Operation::Doc(DocOp::Use(op))));
     }
+    if let Some(parsed) = super::native_args::rig::parse(doc, args, tool) {
+        return Some(parsed.map(|op| Operation::Doc(DocOp::Rig(op))));
+    }
     ext_query::parse(doc, args, tool)
         .map(|parsed| parsed.map(|op| Operation::Doc(DocOp::Query(op))))
 }
@@ -53,5 +57,6 @@ pub(crate) fn apply(app: &mut AppDocument, op: DocOp) -> Result<McpOutcome, &'st
         DocOp::Use(op) => ext_use::apply(app, op),
         // Audio needs the host's grant policy; `McpHost` routes it.
         DocOp::Audio(_) => Err("audio tools need the MCP host"),
+        DocOp::Rig(op) => super::native_timeline::mcp_rig::apply(app, op),
     }
 }
