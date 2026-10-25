@@ -1,6 +1,6 @@
 {
   "export/apng": {
-    "hash": "fb263ed0186bcf3ac135b70df71f9a4f7eef0f4f8ebabdccf26826c0bd4bdfa5",
+    "hash": "8504067d802bc9fb4e25c1c4dd9a04133fead04bc05fc5218a210bd9859bbe0c",
     "peak_heap_bytes": 127566909
   },
   "journal/200": {
@@ -20,43 +20,43 @@
     "peak_heap_bytes": 1117804
   },
   "open_render/2048/1000": {
-    "hash": "dc898cdcb8ed1a3f072eb76530d878395572bbd3b4b9149c6c5f337d9180a129",
+    "hash": "cc9372b135ecbd940394d1d51972dc12a581239dcf09df8bc5ccc9fe6d465d15",
     "peak_heap_bytes": 58981199
   },
   "open_render/2048/20000": {
-    "hash": "808bbd24cb83ecefd07afad8e989838e04bf73297c241f8a9abc114531e44055",
+    "hash": "f980d0a9757892688352a78edf0290c07a673bca9c93fb46cc05d5e3649a24f2",
     "peak_heap_bytes": 234663774
   },
   "open_render/2048/5000": {
-    "hash": "ad71f1adffdd1e525684ce64c447fb3585166c2319781733daa314edecb9ba06",
+    "hash": "1f7505ae62275191015a145f49efd1b85ccecebb10874147396caf420a54df4c",
     "peak_heap_bytes": 91250559
   },
   "open_render/512/1000": {
-    "hash": "dc6ff02acc9ae7ef749cc6f16cb82360106874593b2e6d467437eccd4bc6ac72",
+    "hash": "003e5c099467a456f2962129649c12b0dc0aeccf22a6875e4454ed1ae2f5a0a9",
     "peak_heap_bytes": 11527059
   },
   "open_render/512/20000": {
-    "hash": "ea81449ba56dfe218b11bd42d2437e72bc856e2a76985ad51bb834f79e8c33ec",
+    "hash": "5bed9e5002f64ba8e589a5f7723c0c3dfd9df78976fc8810c66bfeedd2cd6a21",
     "peak_heap_bytes": 210501696
   },
   "open_render/512/5000": {
-    "hash": "48748337599dbfdb8b21a2ac13fba9ec0eeb5101a24d6537c0ad36aced4900ff",
+    "hash": "c66d917693cf3d5512a41117403685e09619ffdbb5e7562fd23c7d72a0fbf536",
     "peak_heap_bytes": 49423399
   },
   "open_render/900/1000": {
-    "hash": "a11f4eb19f7114a88b28fa6f752c830a57997e118f894ff5654f14ac89621558",
+    "hash": "fd9050e782e9337d52aa9936e20c460aa167184794f527d786356d803ba94689",
     "peak_heap_bytes": 18139207
   },
   "open_render/900/20000": {
-    "hash": "202b9d8b9467d8eaee30de710c79d0933cbbfd8fd126d186de86a3c9eb7d5418",
+    "hash": "d0ef2097e0a848d881860893e04117b35e9d93bdab6a6059dda0c12a1914bdfd",
     "peak_heap_bytes": 212693120
   },
   "open_render/900/5000": {
-    "hash": "58b76b2a9a029fa35934b69b046c933b04c3d608e2b06af1f1be23925916b917",
+    "hash": "a52c6b430e27dc7d852d29c5b12471630dadb12a74c5d31a454fd6f30af26218",
     "peak_heap_bytes": 51614823
   },
   "play/ticks2000": {
-    "hash": "f6f60351250b594462c118916de187b58b5889fbbacd675f099ea8a8a5a1995b",
+    "hash": "3db72a6c2379e7b0d3d918ebab41a71c9c93c7ae88ff5091b3790989eb63774e",
     "peak_heap_bytes": 11317969
   },
   "zoom/100": {

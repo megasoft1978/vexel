@@ -153,16 +153,6 @@ impl Lowering<'_, '_> {
             if s.fill_pattern || s.stroke_pattern || s.stroke.is_some_and(|st| st.crisp_edges) {
                 return None;
             }
-            // Open item: the app's CPU frame leaves out the square-cap corners
-            // of dashed strokes that the exported CPU semantics (and the direct
-            // `render_dashed_shapes` API) paint; until that is resolved such
-            // shapes stay on the CPU so the routes never disagree.
-            if !s.dashes.is_empty()
-                && s.stroke
-                    .is_some_and(|st| st.rgba[3] != 0 && st.cap == Linecap::Square)
-            {
-                return None;
-            }
             let mut edges = Vec::new();
             let mut fill = None;
             if s.filled && !s.edges.is_empty() {

@@ -271,7 +271,12 @@ fn render_core_scissored(
         let patterned = fill_pattern.is_some() || stroke_pattern.is_some();
         let inverse =
             if style.is_some() || patterned { stroke::invert(shape.transform) } else { None };
-        let Some(bounds) = shape_bounds(shape, &view, inverse)? else {
+        let Some(bounds) = shape_bounds(
+            shape,
+            &view,
+            inverse,
+            patterns.get(shape_index).is_some_and(Option::is_some),
+        )? else {
             continue;
         };
         let Some(bounds) = scissor.map_or(Some(bounds), |s| bounds.within(s)) else {

@@ -614,8 +614,7 @@ fn stroked_svg_n(mask: u32, count: usize) -> Vec<u8> {
             x + rng.next() * 15.0,
             y + 5.0 + rng.next() * 25.0,
             joins[i % 3],
-            // Dashed square caps stay on the CPU (see gpu_adapter).
-            caps[(i / 3) % if dash.is_empty() { 3 } else { 2 }],
+            caps[(i / 3) % 3],
         );
     }
     format!(

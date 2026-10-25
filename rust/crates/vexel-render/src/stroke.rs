@@ -379,6 +379,7 @@ pub(crate) fn bounds_padding(
     stroke: &StrokeStyle,
     inverse: Affine,
     closed_whole: bool,
+    dashed: bool,
 ) -> Option<(f64, f64)> {
     let determinant = inverse.a * inverse.d - inverse.b * inverse.c;
     let forward_a = inverse.d / determinant;
@@ -387,7 +388,9 @@ pub(crate) fn bounds_padding(
     let forward_d = inverse.a / determinant;
     let radius = stroke.width * 0.5;
     let join_factor = if stroke.join == Linejoin::Miter { stroke.miter_limit } else { 1.0 };
-    let cap_factor = if !closed_whole && stroke.cap == Linecap::Square { 2f64.sqrt() } else { 1.0 };
+    // Every dash of a closed range carries its own caps, so a dashed
+    // stroke needs the square-cap corner reach even when the range is closed.
+    let cap_factor = if (!closed_whole || dashed) && stroke.cap == Linecap::Square { 2f64.sqrt() } else { 1.0 };
     let extent = radius * join_factor.max(cap_factor);
     let pad_x = extent * forward_a.hypot(forward_b);
     let pad_y = extent * forward_c.hypot(forward_d);

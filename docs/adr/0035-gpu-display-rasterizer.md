@@ -153,10 +153,12 @@ Metal kernel have 0 differing bytes between each other, and at most 0.0004%
 of pixels over 2/255, 0 over 16/255, mean abs error under 1e-6 against the
 CPU (bounds: 0.02%, 0.002%, 0.001).
 
-Open: through the whole app pipeline the CPU frame omits the corner regions
-that square caps add to DASHED strokes (the direct `render_dashed_shapes`
-API and the exported semantics paint them; reproduced only in the app's CPU
-frame). Until resolved the lowering keeps dashed square-cap strokes on the CPU.
+Resolved: the CPU omitted the square-cap corners of dashed strokes on closed
+subpaths because the shape pixel bounds (`bounds_padding`) only added the
+square-cap reach for open ranges; every dash of a closed range has its own
+caps, so dashed strokes now get it too (`dash_closed_caps` test). Dashed
+square-cap strokes lower to the GPU like any other (0 differing pixels in the
+`stroked_frames_match_cpu_within_adr_bounds` scene with all caps dashed).
 
 Release timings, 900 px, 100 stroke-heavy shapes class (`gpu_stroke` test):
 50 shapes GPU 6.7 ms vs CPU 32 ms, 500 shapes 17.8 vs 262 ms, 2000 shapes
