@@ -374,6 +374,38 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Image trace, segment and inpaint
+
+`image_trace`, `image_segment` and `image_inpaint` replace the external
+OpenCV/numpy scripts (ADR-0036 B5). They are native Rust, deterministic and take
+no helper. Inputs are PNG files (not interlaced, at most 16 megapixels and 64 MiB,
+no JPEG) read through the grant policy; outputs are new `.png` files in a granted
+directory and are never overwritten. A bad, truncated or oversize PNG is a typed
+error and changes nothing.
+
+- `image_trace {path, k?, minArea?, tolerance?, region?, seed?, groupId?, idPrefix?}`:
+  seeded k-means++ quantisation to `k` colours (1-64, default 16), exact contour
+  following with holes, Bezier fitting within `tolerance` px (0.25-8, default 1.5),
+  one `<path>` per colour, largest colour first (a near-black colour goes last as
+  line art). Each layer is the union of its colour and all colours above it, so
+  neighbouring layers leave no gaps. `minArea` drops smaller outer contours
+  (default pixels/12000, clamped 30-400). With `groupId` (`root` or an existing
+  `<g>`) the paths are added as `<idPrefix>-0..` in ONE undoable edit, within the
+  4096-element and 4 MiB document limits; without it nothing is edited and
+  `paths:[{fill,d}]` is returned. Coordinates are image pixels.
+- `image_segment {path, seeds, include?, exclude?, tolerance?, fillHoles?, outMask?, trace?}`:
+  a colour model learned around the seeds is flood-grown and refined three
+  rounds; `include` polygons confine the mask, `exclude` polygons forbid areas.
+  Returns `{width,height,area,bbox}`; `outMask` writes a black/white PNG, `trace`
+  returns the outline as path data.
+- `image_inpaint {path, maskPath|polygon, outPath}`: fills masked pixels from their
+  surroundings (fast marching, inverse-distance average) into a new PNG underlay.
+  `maskPath` is white (alpha >= 128) where to fill, as written by `outMask`.
+
+Measured on `ref2/shot3_village.png` (1536x1536, k=24, release): 0.61 s, 24 layers,
+3073 contours, 2.3 MB of path data (under the 4 MiB source limit), mean colour
+error 9.3/255 against the source (flat colours cannot show the painted texture).
+
 ## Skeletal rigs and clips
 
 `rig_create` (`bones`: 1-128 of `{id, pivot?, parent?}`, optional `roles`

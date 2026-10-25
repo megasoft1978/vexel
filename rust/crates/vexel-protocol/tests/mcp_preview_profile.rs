@@ -71,7 +71,7 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     // tools routed by the V1 native MCP slice, plus native_timeline_set_duration,
     // plus element_reparent and batch, plus element_add_fragment and use_add,
     // in declaration order.
-    assert_eq!(doc.token(tools).unwrap().child_count, 65);
+    assert_eq!(doc.token(tools).unwrap().child_count, 68);
     assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",
@@ -229,8 +229,16 @@ fn preview_export_animation_accepts_video_without_fps_or_duration() {
         (6, r#""path":"/tmp/a.mp4","format":"avi""#, false),
         (7, r#""path":"/tmp/a.gif","format":"gif""#, false),
         (8, r#""path":"/tmp/a.mp4","format":"mp4","codec":7"#, false),
-        (9, r#""path":"/tmp/a_####.png","format":"frames","fps":12"#, true),
-        (10, r#""path":"/tmp/a.apng","format":"apng","loops":0,"width":8,"height":8"#, true),
+        (
+            9,
+            r#""path":"/tmp/a_####.png","format":"frames","fps":12"#,
+            true,
+        ),
+        (
+            10,
+            r#""path":"/tmp/a.apng","format":"apng","loops":0,"width":8,"height":8"#,
+            true,
+        ),
     ] {
         let out = call(&mut session, &mut backend, &request(id, args));
         let text = String::from_utf8_lossy(&out);

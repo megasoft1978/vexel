@@ -901,3 +901,19 @@ Not done: local-space layer keys per character group (step 4); the cached
 layer plan already serves 361 of 406 shapes, the rest is paint of moving
 characters. Next lever is rendering tick N+1's static layers while N finishes,
 or fewer moving shapes per tick.
+
+## Native image trace (ADR-0036 B5)
+
+`vexel_app::trace::trace_image` on `/private/tmp/vexel-toon/ref2/shot3_village.png`
+(1536x1536, k=24, tolerance 1.5, minArea 197), release build, one run, Apple Silicon,
+test `trace::tests_village` (`cargo test -p vexel-app --release --lib village -- --nocapture`):
+
+| step | result |
+| --- | --- |
+| quantise + contours + fit + path text | 0.61 s (target < 3 s) |
+| output | 24 layers, 3073 contours, 2,322,058 bytes of path data |
+| fidelity | mean colour error 9.28/255 vs the source (rendered with the app's own renderer) |
+
+Defaults matter: tolerance 1.0 with minArea 30-300 exceeds the 3 MiB output cap on
+this painted art (the layer-union stack repeats shared boundaries), so the tool
+defaults to tolerance 1.5 and minArea = pixels/12000.

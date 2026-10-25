@@ -15,6 +15,8 @@ pub mod segment;
 mod tests;
 #[cfg(test)]
 mod tests_segment;
+#[cfg(test)]
+mod tests_village;
 
 pub use layers::{Layer, TraceOptions, trace, trace_image};
 pub use quant::{NONE, Quantized, quantize};
@@ -47,10 +49,12 @@ impl TraceError {
     pub fn message(self) -> &'static str {
         match self {
             Self::BadImage => "image is empty, inconsistent or larger than 16 megapixels",
-            Self::BadColours => "k must be 1 to 64",
-            Self::TooManyContours => "trace produced too many contours; raise minArea or lower k",
-            Self::OutputTooLarge => "trace output too large; raise tolerance or minArea",
-            Self::BadRegion => "seeds, polygons or mask do not fit the image",
+            Self::BadColours => "image trace k must be 1 to 64",
+            Self::TooManyContours => {
+                "image trace produced too many contours; raise minArea or lower k"
+            }
+            Self::OutputTooLarge => "image trace output too large; raise tolerance or minArea",
+            Self::BadRegion => "image seeds, polygons or mask do not fit the image",
         }
     }
 }

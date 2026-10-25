@@ -67,6 +67,7 @@ pub use gpu_route::{
 pub use launch::{Launch, parse_launch, parse_launch_with_home};
 pub use layer_cache::{DEFAULT_BUDGET as LAYER_BUDGET, LayerStats};
 pub use open::{OpenError, open_path};
+pub(crate) use png::decode as decode_png;
 pub use pointer::PointMap;
 pub use present::{DocumentView, blit_document, fill, status_text};
 pub(crate) use render_scene::render_scene;

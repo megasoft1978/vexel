@@ -113,7 +113,10 @@ fn validate_op(
     if BATCH_FORBIDDEN.contains(&name.as_str()) {
         return Err(fail("tool is not allowed in a batch"));
     }
-    if doc.token(arguments).is_none_or(|t| t.kind != JsonType::Object) {
+    if doc
+        .token(arguments)
+        .is_none_or(|t| t.kind != JsonType::Object)
+    {
         return Err(fail("'arguments' must be an object"));
     }
     if let (Some(own), Some(shared)) = (
@@ -195,7 +198,10 @@ mod tests {
     fn audio_generate_is_charged_heavily() {
         let src = br#"{"name":"audio_generate","arguments":{}}"#;
         let doc = JsonDocument::parse(src).unwrap();
-        assert_eq!(request_weight(&doc, "tools/call", Some(doc.root())), GENERATE_WEIGHT);
+        assert_eq!(
+            request_weight(&doc, "tools/call", Some(doc.root())),
+            GENERATE_WEIGHT
+        );
         assert_eq!(request_weight(&doc, "tools/list", Some(doc.root())), 1);
     }
     use crate::validate_tool_arguments;
@@ -220,7 +226,10 @@ mod tests {
         assert_eq!(tool.name, "batch");
         assert_eq!(tool.required, "documentId,ops");
         assert!(tool.properties.contains(r#""minItems":1,"maxItems":256"#));
-        assert!(tool.properties.contains(r#""atomic":{"type":"boolean","default":true}"#));
+        assert!(
+            tool.properties
+                .contains(r#""atomic":{"type":"boolean","default":true}"#)
+        );
         assert!(tool.properties.contains(r#""additionalProperties":false"#));
     }
 
@@ -316,8 +325,12 @@ mod tests {
             "batch op 0: missing required key 'arguments'"
         );
         let no_tool = r#"{"documentId":"doc-1","ops":[{"arguments":{}}]}"#;
-        assert_eq!(batch_op_message(no_tool), "batch op 0: missing required key 'tool'");
-        let extra_key = r#"{"documentId":"doc-1","ops":[{"tool":"tree_get","arguments":{},"id":1}]}"#;
+        assert_eq!(
+            batch_op_message(no_tool),
+            "batch op 0: missing required key 'tool'"
+        );
+        let extra_key =
+            r#"{"documentId":"doc-1","ops":[{"tool":"tree_get","arguments":{},"id":1}]}"#;
         assert!(batch_op_message(extra_key).starts_with("batch op 0: unexpected key 'id'"));
         let not_object = r#"{"documentId":"doc-1","ops":["tree_get"]}"#;
         assert!(batch_op_message(not_object).starts_with("batch op 0: must be an object"));
@@ -344,7 +357,9 @@ mod tests {
             Err(ToolValidationError::MissingRequired)
         );
         assert_eq!(
-            validate(r#"{"documentId":"doc-1","atomic":"yes","ops":[{"tool":"tree_get","arguments":{}}]}"#),
+            validate(
+                r#"{"documentId":"doc-1","atomic":"yes","ops":[{"tool":"tree_get","arguments":{}}]}"#
+            ),
             Err(ToolValidationError::WrongType("atomic"))
         );
     }

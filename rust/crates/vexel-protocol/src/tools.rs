@@ -413,6 +413,9 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "rig_create",
     "rig_pose",
     "clip_apply",
+    "image_trace",
+    "image_segment",
+    "image_inpaint",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -445,6 +448,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
         .chain(super::tools_structure::STRUCTURE_TOOLS)
         .chain(super::tools_rig::RIG_TOOLS)
         .chain(super::tools_batch::BATCH_TOOLS)
+        .chain(super::tools_image::IMAGE_TOOLS)
 }
 
 pub fn tool_schemas() -> Result<Vec<u8>, ProtocolError> {
