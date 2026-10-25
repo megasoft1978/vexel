@@ -8,7 +8,8 @@ use crate::session::mcp_audio_gen::{EnvSource, EnvSpec, GenSpec, MAX_PARAMS, Par
 use vexel_json::JsonDocument;
 use vexel_timeline::audio::AudioKind;
 
-const PARAM_FORM: &str = "an object of at most 24 members with letters/digits keys and string, number or boolean values";
+const PARAM_FORM: &str =
+    "an object of at most 24 members with letters/digits keys and string, number or boolean values";
 
 fn params(
     doc: &JsonDocument<'_>,

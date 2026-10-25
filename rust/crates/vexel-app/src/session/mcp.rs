@@ -81,7 +81,11 @@ impl McpHost {
 
     /// Uses `helper` as the audio generation helper (default: found next to
     /// the binary or via `VEXEL_AUDIO_HELPER`); `timeout` shortens the limits.
-    pub fn set_audio_helper(&mut self, helper: std::path::PathBuf, timeout: Option<std::time::Duration>) {
+    pub fn set_audio_helper(
+        &mut self,
+        helper: std::path::PathBuf,
+        timeout: Option<std::time::Duration>,
+    ) {
         self.audio_gen.configure(helper, timeout);
     }
 

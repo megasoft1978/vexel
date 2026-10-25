@@ -8,11 +8,11 @@
 //! killed Vexel leaves no orphan.
 
 use std::fs;
-use std::os::unix::fs::MetadataExt;
-use std::sync::OnceLock;
 use std::io::{BufRead, BufReader, Read, Write};
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
+use std::sync::OnceLock;
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
 
@@ -74,7 +74,9 @@ pub fn check_trusted(path: &Path) -> Result<(), &'static str> {
         return Err("audio helper refused: it is owned by another user");
     }
     if meta.mode() & 0o022 != 0 {
-        return Err("audio helper refused: it is writable by group or others; run chmod go-w on it");
+        return Err(
+            "audio helper refused: it is writable by group or others; run chmod go-w on it",
+        );
     }
     Ok(())
 }
@@ -92,12 +94,17 @@ fn locate_with(explicit: Option<std::ffi::OsString>) -> Result<PathBuf, HelperFa
     if let Some(value) = explicit {
         candidates.push(PathBuf::from(value));
     } else {
-        if let Some(dir) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
+        if let Some(dir) = std::env::current_exe()
+            .ok()
+            .and_then(|e| e.parent().map(Path::to_path_buf))
+        {
             candidates.push(dir.join("vexel-audio"));
             candidates.push(dir.join("../Resources/vexel-audio"));
         }
         #[cfg(debug_assertions)]
-        candidates.push(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../tools/vexel-audio/vexel-audio"));
+        candidates.push(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../tools/vexel-audio/vexel-audio"),
+        );
     }
     let mut refused = None;
     for candidate in candidates {
@@ -232,7 +239,8 @@ mod tests {
     use std::os::unix::fs::{PermissionsExt, symlink};
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("vexel-helper-trust-{}-{name}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("vexel-helper-trust-{}-{name}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         dir
@@ -260,8 +268,14 @@ mod tests {
             let path = script(&dir, mode);
             fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
             let err = locate_with(Some(path.clone().into())).unwrap_err();
-            assert!(matches!(err, HelperFailure::Untrusted(m) if m.contains("writable")), "{mode:o}: {err:?}");
-            assert!(matches!(Helper::spawn(&path), Err(HelperFailure::Untrusted(_))));
+            assert!(
+                matches!(err, HelperFailure::Untrusted(m) if m.contains("writable")),
+                "{mode:o}: {err:?}"
+            );
+            assert!(matches!(
+                Helper::spawn(&path),
+                Err(HelperFailure::Untrusted(_))
+            ));
         }
         fs::remove_dir_all(dir).unwrap();
     }
@@ -273,15 +287,24 @@ mod tests {
         let link = dir.join("link");
         symlink(&real, &link).unwrap();
         let err = locate_with(Some(link.clone().into())).unwrap_err();
-        assert!(matches!(err, HelperFailure::Untrusted(m) if m.contains("symbolic link")), "{err:?}");
-        assert!(matches!(Helper::spawn(&link), Err(HelperFailure::Untrusted(_))));
+        assert!(
+            matches!(err, HelperFailure::Untrusted(m) if m.contains("symbolic link")),
+            "{err:?}"
+        );
+        assert!(matches!(
+            Helper::spawn(&link),
+            Err(HelperFailure::Untrusted(_))
+        ));
         fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn missing_env_path_and_directories_are_refused() {
         let dir = scratch("missing");
-        assert_eq!(locate_with(Some(dir.join("nope").into())), Err(HelperFailure::NotFound));
+        assert_eq!(
+            locate_with(Some(dir.join("nope").into())),
+            Err(HelperFailure::NotFound)
+        );
         assert!(check_trusted(&dir).is_err());
         fs::remove_dir_all(dir).unwrap();
     }

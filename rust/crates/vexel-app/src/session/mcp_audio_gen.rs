@@ -123,7 +123,9 @@ fn failure_message(failure: HelperFailure) -> &'static str {
     match failure {
         HelperFailure::NotFound => NO_HELPER,
         HelperFailure::Untrusted(message) => message,
-        HelperFailure::Spawn => "audio helper could not be started; check that python3 is installed and the helper is executable",
+        HelperFailure::Spawn => {
+            "audio helper could not be started; check that python3 is installed and the helper is executable"
+        }
         HelperFailure::Timeout => TIMEOUT,
         HelperFailure::Crashed => CRASHED,
         HelperFailure::Malformed => MALFORMED,
@@ -203,7 +205,9 @@ impl AudioGen {
                 return Err(OUTSIDE);
             }
         }
-        if self.requests >= self.max_requests.unwrap_or(MAX_REQUESTS) || self.bytes >= MAX_TOTAL_BYTES {
+        if self.requests >= self.max_requests.unwrap_or(MAX_REQUESTS)
+            || self.bytes >= MAX_TOTAL_BYTES
+        {
             return Err(BUDGET);
         }
         let existed = target.exists();
@@ -339,9 +343,7 @@ fn granted_file(
             .map_err(|_| "audio paths must be absolute unless the document is saved")?
             .join(input)
     };
-    let canonical = policy
-        .resolve_existing(&requested)
-        .map_err(|_| NOT_FOUND)?;
+    let canonical = policy.resolve_existing(&requested).map_err(|_| NOT_FOUND)?;
     if policy.path_allowed(&canonical) {
         Ok(canonical)
     } else {

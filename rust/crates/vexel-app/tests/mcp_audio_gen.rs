@@ -123,7 +123,8 @@ fn saved(dir: &Dir, helper: PathBuf) -> Rig {
     )
     .ok();
     fs::create_dir_all(dir.file("audio")).unwrap();
-    rig.host.set_audio_helper(helper, Some(Duration::from_millis(1500)));
+    rig.host
+        .set_audio_helper(helper, Some(Duration::from_millis(1500)));
     rig
 }
 
@@ -162,7 +163,10 @@ fn generates_a_file_and_adds_one_undoable_track() {
     }
     assert!(dir.file("audio/blip.wav").is_file());
     let list = rig.doc_tool("audio_list", "").ok().to_owned();
-    assert!(list.contains(r#""startTick":6"#) && list.contains(r#""gainDb":-4"#), "{list}");
+    assert!(
+        list.contains(r#""startTick":6"#) && list.contains(r#""gainDb":-4"#),
+        "{list}"
+    );
     rig.doc_tool("native_timeline_undo", "").ok();
     assert!(rig.doc_tool("audio_list", "").ok().contains(r#""count":0"#));
     // No temporary files are left behind.
@@ -188,12 +192,20 @@ fn user_text_travels_only_as_json_and_consent_is_forwarded() {
     );
     reply.ok();
     let req = fs::read_to_string(dir.file("audio/v.wav.req")).unwrap();
-    assert!(req.contains(r#""consent":true"#) && req.contains(r#""kind":"voice""#), "{req}");
-    assert!(req.contains(r#""speed":1.1"#) && req.contains(r#""flag":true"#), "{req}");
+    assert!(
+        req.contains(r#""consent":true"#) && req.contains(r#""kind":"voice""#),
+        "{req}"
+    );
+    assert!(
+        req.contains(r#""speed":1.1"#) && req.contains(r#""flag":true"#),
+        "{req}"
+    );
     assert!(req.contains(r#"\"; touch /tmp/vexel-pwned;"#), "{req}");
     assert!(!PathBuf::from("/tmp/vexel-pwned").exists());
     assert!(!PathBuf::from("/tmp/vexel-pwned2").exists());
-    let again = generate(&mut rig, &dir, "echo", "audio/w.wav", "").ok().to_owned();
+    let again = generate(&mut rig, &dir, "echo", "audio/w.wav", "")
+        .ok()
+        .to_owned();
     assert!(again.contains(r#""ok":true"#));
     let req = fs::read_to_string(dir.file("audio/w.wav.req")).unwrap();
     assert!(req.contains(r#""consent":false"#), "{req}");
@@ -206,7 +218,10 @@ fn helper_environment_is_scrubbed() {
     generate(&mut rig, &dir, "echo", "audio/e.wav", "").ok();
     let env = fs::read_to_string(dir.file("audio/e.wav.env")).unwrap();
     for name in ["USER", "SHELL", "LOGNAME", "TERM", "PWD"] {
-        assert!(!env.contains(&format!("\"{name}\"")), "{name} leaked: {env}");
+        assert!(
+            !env.contains(&format!("\"{name}\"")),
+            "{name} leaked: {env}"
+        );
     }
     assert!(env.contains("PATH"), "{env}");
 }
@@ -215,10 +230,14 @@ fn helper_environment_is_scrubbed() {
 fn timeout_kills_the_helper() {
     let dir = Dir::new();
     let mut rig = saved(&dir, fake());
-    rig.host.set_audio_helper(fake(), Some(Duration::from_millis(400)));
+    rig.host
+        .set_audio_helper(fake(), Some(Duration::from_millis(400)));
     let reply = generate(&mut rig, &dir, "hang", "audio/h.wav", "");
     assert!(reply.error().contains("timed out"), "{}", reply.body);
-    assert!(gone(pid_of(&dir, "audio/h.wav")), "helper survived the timeout");
+    assert!(
+        gone(pid_of(&dir, "audio/h.wav")),
+        "helper survived the timeout"
+    );
     assert!(rig.host.audio_helper_pid().is_none());
     assert!(!dir.file("audio/h.wav").exists());
 }
@@ -230,7 +249,11 @@ fn crash_is_reported_and_the_helper_restarts() {
     generate(&mut rig, &dir, "ok", "audio/a.wav", "").ok();
     let first = rig.host.audio_helper_pid().unwrap();
     let reply = generate(&mut rig, &dir, "crash", "audio/c.wav", "");
-    assert!(reply.error().contains("exited unexpectedly"), "{}", reply.body);
+    assert!(
+        reply.error().contains("exited unexpectedly"),
+        "{}",
+        reply.body
+    );
     generate(&mut rig, &dir, "ok", "audio/b.wav", "").ok();
     let second = rig.host.audio_helper_pid().unwrap();
     assert_ne!(first, second);
@@ -275,7 +298,10 @@ fn helper_errors_are_typed() {
     let mut rig = saved(&dir, fake());
     let reply = generate(&mut rig, &dir, "model", "audio/m.wav", "");
     let message = reply.error();
-    assert!(message.contains("model_missing") && message.contains("--download-model"), "{message}");
+    assert!(
+        message.contains("model_missing") && message.contains("--download-model"),
+        "{message}"
+    );
     assert!(message.contains("consent=true"), "{message}");
     let reply = generate(&mut rig, &dir, "badparams", "audio/p.wav", "");
     assert!(reply.error().contains("whoosh"), "{}", reply.body);
@@ -287,7 +313,11 @@ fn paths_are_confined_to_the_grant_and_the_document() {
     let other = Dir::new();
     let mut rig = saved(&dir, fake());
     let elsewhere = generate(&mut rig, &other, "ok", "x.wav", "");
-    assert!(elsewhere.error().contains("not granted"), "{}", elsewhere.body);
+    assert!(
+        elsewhere.error().contains("not granted"),
+        "{}",
+        elsewhere.body
+    );
     let not_wav = generate(&mut rig, &dir, "ok", "audio/x.mp3", "");
     assert!(not_wav.error().contains(".wav"), "{}", not_wav.body);
     let traversal = rig.doc_tool(
@@ -301,12 +331,26 @@ fn paths_are_confined_to_the_grant_and_the_document() {
     // Granted but outside the document directory: fine alone, refused with addTrack.
     let wide = Dir::new();
     let mut rig2 = Rig::new(policy_for(&[&dir.0, &wide.0]));
-    rig2.host.set_audio_helper(fake(), Some(Duration::from_millis(1500)));
-    rig2.doc_tool("save_as", &format!(r#""path":{}"#, jstr(&dir.text("film.vexel"))))
-        .ok();
+    rig2.host
+        .set_audio_helper(fake(), Some(Duration::from_millis(1500)));
+    rig2.doc_tool(
+        "save_as",
+        &format!(r#""path":{}"#, jstr(&dir.text("film.vexel"))),
+    )
+    .ok();
     generate(&mut rig2, &wide, "ok", "free.wav", "").ok();
-    let with_track = generate(&mut rig2, &wide, "ok", "tied.wav", r#","addTrack":{"trackId":"t"}"#);
-    assert!(with_track.error().contains("inside the document"), "{}", with_track.body);
+    let with_track = generate(
+        &mut rig2,
+        &wide,
+        "ok",
+        "tied.wav",
+        r#","addTrack":{"trackId":"t"}"#,
+    );
+    assert!(
+        with_track.error().contains("inside the document"),
+        "{}",
+        with_track.body
+    );
     assert!(!wide.file("tied.wav").exists());
     assert!(fs::read_dir(other.file("")).unwrap().next().is_none());
 }
@@ -315,8 +359,21 @@ fn paths_are_confined_to_the_grant_and_the_document() {
 fn failed_add_removes_the_new_file() {
     let dir = Dir::new();
     let mut rig = saved(&dir, fake());
-    generate(&mut rig, &dir, "ok", "audio/one.wav", r#","addTrack":{"trackId":"dup"}"#).ok();
-    let reply = generate(&mut rig, &dir, "ok", "audio/two.wav", r#","addTrack":{"trackId":"dup"}"#);
+    generate(
+        &mut rig,
+        &dir,
+        "ok",
+        "audio/one.wav",
+        r#","addTrack":{"trackId":"dup"}"#,
+    )
+    .ok();
+    let reply = generate(
+        &mut rig,
+        &dir,
+        "ok",
+        "audio/two.wav",
+        r#","addTrack":{"trackId":"dup"}"#,
+    );
     assert!(reply.error().contains("already exists"), "{}", reply.body);
     assert!(!dir.file("audio/two.wav").exists());
     assert!(dir.file("audio/one.wav").exists());
@@ -376,7 +433,10 @@ fn envelope_is_deterministic_and_per_tick() {
     let a = rig.doc_tool("audio_envelope", &args).ok().to_owned();
     let b = rig.doc_tool("audio_envelope", &args).ok().to_owned();
     assert_eq!(a, b);
-    assert!(a.contains(r#""tickRate":24"#) && a.contains(r#""ticks":48"#), "{a}");
+    assert!(
+        a.contains(r#""tickRate":24"#) && a.contains(r#""ticks":48"#),
+        "{a}"
+    );
     assert!(a.contains(r#""durationMs":2000"#), "{a}");
     let values: Vec<f64> = a
         .split(r#""rms":["#)
@@ -388,30 +448,61 @@ fn envelope_is_deterministic_and_per_tick() {
         .collect();
     assert_eq!(values.len(), 48);
     assert!(values[..24].iter().all(|v| *v > 0.95), "{values:?}");
-    assert!(values[24..].iter().all(|v| (*v - 0.25).abs() < 0.05), "{values:?}");
+    assert!(
+        values[24..].iter().all(|v| (*v - 0.25).abs() < 0.05),
+        "{values:?}"
+    );
     // ticks limits the count; a track envelope starts at the track's startTick.
-    let few = rig.doc_tool("audio_envelope", &format!("{args},\"ticks\":5")).ok().to_owned();
+    let few = rig
+        .doc_tool("audio_envelope", &format!("{args},\"ticks\":5"))
+        .ok()
+        .to_owned();
     assert!(few.contains(r#""ticks":5"#), "{few}");
     rig.doc_tool(
         "audio_add_track",
         r#""trackId":"line","kind":"voice","path":"audio/line.wav","startTick":7,"trimInMs":1000"#,
     )
     .ok();
-    let track = rig.doc_tool("audio_envelope", r#""trackId":"line""#).ok().to_owned();
-    assert!(track.contains(r#""startTick":7"#) && track.contains(r#""ticks":24"#), "{track}");
+    let track = rig
+        .doc_tool("audio_envelope", r#""trackId":"line""#)
+        .ok()
+        .to_owned();
+    assert!(
+        track.contains(r#""startTick":7"#) && track.contains(r#""ticks":24"#),
+        "{track}"
+    );
     // Argument and path errors are typed and change nothing.
     assert!(rig.doc_tool("audio_envelope", "").is_error);
-    assert!(rig.doc_tool("audio_envelope", &format!("{args},\"trackId\":\"line\"")).is_error);
-    assert!(rig.doc_tool("audio_envelope", &format!("{args},\"ticks\":0")).is_error);
-    assert!(rig.doc_tool("audio_envelope", r#""trackId":"nope""#).is_error);
+    assert!(
+        rig.doc_tool("audio_envelope", &format!("{args},\"trackId\":\"line\""))
+            .is_error
+    );
+    assert!(
+        rig.doc_tool("audio_envelope", &format!("{args},\"ticks\":0"))
+            .is_error
+    );
+    assert!(
+        rig.doc_tool("audio_envelope", r#""trackId":"nope""#)
+            .is_error
+    );
     let other = Dir::new();
     fs::write(other.file("x.wav"), tone(1.0, 24_000, 1.0)).unwrap();
-    let outside = rig.doc_tool("audio_envelope", &format!(r#""path":{}"#, jstr(&other.text("x.wav"))));
-    assert!(outside.error().contains("not granted") || outside.error().contains("not found"), "{}", outside.body);
+    let outside = rig.doc_tool(
+        "audio_envelope",
+        &format!(r#""path":{}"#, jstr(&other.text("x.wav"))),
+    );
+    assert!(
+        outside.error().contains("not granted") || outside.error().contains("not found"),
+        "{}",
+        outside.body
+    );
 }
 
 fn real_helper() -> PathBuf {
-    PathBuf::from(format!("{}/../../../tools/vexel-audio/vexel-audio", env!("CARGO_MANIFEST_DIR")))
+    PathBuf::from(format!(
+        "{}/../../../tools/vexel-audio/vexel-audio",
+        env!("CARGO_MANIFEST_DIR")
+    ))
 }
 
 #[test]
@@ -420,15 +511,31 @@ fn real_helper_selftest_and_sfx() {
         eprintln!("skipped: python3 with numpy is not installed");
         return;
     }
-    let out = Command::new(real_helper()).arg("--selftest").output().unwrap();
-    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let out = Command::new(real_helper())
+        .arg("--selftest")
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let dir = Dir::new();
     let mut rig = saved(&dir, real_helper());
     rig.host.set_audio_helper(real_helper(), None);
-    let a = generate(&mut rig, &dir, "chime", "audio/chime.wav", r#","addTrack":{"trackId":"chime"}"#)
-        .ok()
-        .to_owned();
-    assert!(a.contains(r#""durationMs":1000"#) && a.contains(r#""sampleRate":48000"#), "{a}");
+    let a = generate(
+        &mut rig,
+        &dir,
+        "chime",
+        "audio/chime.wav",
+        r#","addTrack":{"trackId":"chime"}"#,
+    )
+    .ok()
+    .to_owned();
+    assert!(
+        a.contains(r#""durationMs":1000"#) && a.contains(r#""sampleRate":48000"#),
+        "{a}"
+    );
     // Deterministic: the same preset and seed give identical bytes.
     generate(&mut rig, &dir, "chime", "audio/chime2.wav", "").ok();
     assert_eq!(
@@ -468,7 +575,10 @@ fn real_helper_selftest_and_sfx() {
         ),
     );
     assert!(voice.error().contains("model_missing"), "{}", voice.body);
-    assert!(!cache.file("hub").exists(), "nothing may be downloaded without consent");
+    assert!(
+        !cache.file("hub").exists(),
+        "nothing may be downloaded without consent"
+    );
     assert!(!dir.file("audio/v.wav").exists());
 }
 
@@ -477,7 +587,8 @@ fn real_helper_selftest_and_sfx() {
 fn real_kokoro_voice() {
     let dir = Dir::new();
     let mut rig = saved(&dir, real_helper());
-    rig.host.set_audio_helper(real_helper(), Some(Duration::from_secs(120)));
+    rig.host
+        .set_audio_helper(real_helper(), Some(Duration::from_secs(120)));
     let reply = rig
         .doc_tool(
             "audio_generate",
@@ -489,6 +600,9 @@ fn real_kokoro_voice() {
         .ok()
         .to_owned();
     assert!(reply.contains(r#""ok":true"#), "{reply}");
-    let env = rig.doc_tool("audio_envelope", r#""trackId":"hello""#).ok().to_owned();
+    let env = rig
+        .doc_tool("audio_envelope", r#""trackId":"hello""#)
+        .ok()
+        .to_owned();
     assert!(env.contains(r#""peakRms""#), "{env}");
 }
