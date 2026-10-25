@@ -1,6 +1,6 @@
 //! Capability classification: can the GPU route draw this scene, and within
 //! the layout budgets? The supported set grows lane by lane; today it is solid,
-//! linear and radial fills on a full-canvas content rectangle, no strokes,
+//! linear and radial fills (any content rectangle, as letterboxed frames), no strokes,
 //! groups or clips.
 
 use crate::error::{Capability, UnsupportedReason as Reason};
@@ -98,9 +98,6 @@ fn check_canvas(scene: &GpuScene) -> Result<(), Reason> {
     let r = scene.content_rect;
     if r.iter().any(|v| !v.is_finite()) {
         return Err(Reason::InvalidScene);
-    }
-    if r[0] > 0.0 || r[1] > 0.0 || r[2] < f64::from(scene.width) || r[3] < f64::from(scene.height) {
-        return Err(Reason::Letterbox);
     }
     Ok(())
 }
@@ -256,9 +253,11 @@ mod tests {
         );
         let mut letterbox = GpuScene::new(64, 64);
         letterbox.content_rect = [8.0, 0.0, 56.0, 64.0];
+        assert_eq!(classify(&letterbox), Capability::Supported);
+        letterbox.content_rect[0] = f64::NAN;
         assert_eq!(
             classify(&letterbox),
-            Capability::Unsupported(Reason::Letterbox)
+            Capability::Unsupported(Reason::InvalidScene)
         );
         let nan = fill(vec![GpuSegment {
             x0: f64::NAN,

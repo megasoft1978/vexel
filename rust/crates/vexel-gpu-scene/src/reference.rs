@@ -47,6 +47,10 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                     if spans.is_empty() {
                         continue;
                     }
+                    let sample_row = (y_px0 * 4 + sr) as u32;
+                    if sample_row < e.header.content_y0 || sample_row >= e.header.content_y1 {
+                        continue;
+                    }
                     let sy = sr % 4;
                     let row_px = y_px0 + sr / 4;
                     if row_px >= y_end {
@@ -54,6 +58,11 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                     }
                     for col in x_px0..x_end {
                         for sx in 0..4 {
+                            let sample_col = (col * 4 + sx) as u32;
+                            if sample_col < e.header.content_x0 || sample_col >= e.header.content_x1
+                            {
+                                continue;
+                            }
                             let px = ((col * 4 + sx) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
                             if covers(&spans, px, py, shape.fill_rule == FILL_EVENODD) {
                                 masks[(row_px - y_px0) * tile_px + (col - x_px0)] |=

@@ -6,7 +6,7 @@
 #define VEXEL_GPU_LAYOUT_H
 
 #define VX_LAYOUT_MAGIC 0x56584C31
-#define VX_LAYOUT_VERSION 1
+#define VX_LAYOUT_VERSION 2
 #define VX_TILE_SIZE 16
 #define VX_SAMPLES_PER_AXIS 4
 #define VX_SAMPLE_COUNT 16
@@ -48,6 +48,10 @@ struct GpuSceneHeader {
     uint background_rgba;
     uint reserved0;
     uint reserved1;
+    uint content_x0;
+    uint content_y0;
+    uint content_x1;
+    uint content_y1;
 };
 
 struct GpuShape {

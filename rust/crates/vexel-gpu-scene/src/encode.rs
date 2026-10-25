@@ -50,6 +50,8 @@ pub fn encode(scene: &GpuScene) -> Result<Encoded, GpuError> {
     analyze(scene).map_err(GpuError::Encode)?;
     let tiles_x = scene.width.div_ceil(TILE_SIZE);
     let tiles_y = scene.height.div_ceil(TILE_SIZE);
+    let [sx0, sx1] = sample_range(scene.content_rect[0], scene.content_rect[2], scene.width);
+    let [sy0, sy1] = sample_range(scene.content_rect[1], scene.content_rect[3], scene.height);
     let mut out = Encoded::default();
     let mut boxes: Vec<FixedBox> = Vec::new();
     for node in &scene.nodes {
@@ -137,10 +139,28 @@ pub fn encode(scene: &GpuScene) -> Result<Encoded, GpuError> {
         background_rgba: pack_rgba(scene.background),
         reserved0: 0,
         reserved1: 0,
+        content_x0: sx0,
+        content_y0: sy0,
+        content_x1: sx1,
+        content_y1: sy1,
     };
     out.tiles = tiles;
     out.tile_list = tile_list;
     Ok(out)
+}
+
+/// Sample-index range `[lo, hi)` along one axis of `size` pixels that lies in
+/// the content interval `[start, end)`: the CPU keeps a sample at
+/// `(index + 0.5) / 4` when `start <= sample < end`. Exact in `f64`.
+fn sample_range(start: f64, end: f64, size: u32) -> [u32; 2] {
+    let max = f64::from(size * layout::SAMPLES_PER_AXIS);
+    let index = |v: f64| {
+        (v * f64::from(layout::SAMPLES_PER_AXIS) - 0.5)
+            .ceil()
+            .clamp(0.0, max) as u32
+    };
+    let lo = index(start);
+    [lo, index(end).max(lo)]
 }
 
 /// The CPU sampler paints nothing for fewer than 2 or more than 256 stops,
@@ -300,11 +320,40 @@ mod tests {
     #[test]
     fn unsupported_scene_does_not_encode() {
         let mut scene = GpuScene::new(16, 16);
-        scene.content_rect = [1.0, 0.0, 16.0, 16.0];
+        scene.nodes.push(GpuNode::Group(crate::input::GpuGroup {
+            opacity: 0.5,
+            clips: Vec::new(),
+            children: Vec::new(),
+        }));
         assert_eq!(
             encode(&scene).unwrap_err(),
-            GpuError::Encode(UnsupportedReason::Letterbox)
+            GpuError::Encode(UnsupportedReason::Groups)
         );
+    }
+
+    #[test]
+    fn content_rect_becomes_sample_range() {
+        let mut scene = GpuScene::new(16, 16);
+        let h = encode(&scene).unwrap().header;
+        assert_eq!(
+            (h.content_x0, h.content_y0, h.content_x1, h.content_y1),
+            (0, 0, 64, 64)
+        );
+        // Sample k is at (k + 0.5) / 4: x >= 2.0 keeps k >= 8 (2.125) and
+        // x < 10.1 keeps k < 40 (39 -> 9.875, 40 -> 10.125).
+        scene.content_rect = [2.0, 1.0, 10.1, 100.0];
+        let h = encode(&scene).unwrap().header;
+        assert_eq!(
+            (h.content_x0, h.content_y0, h.content_x1, h.content_y1),
+            (8, 4, 40, 64)
+        );
+        // Exactly on a sample: 2.125 includes sample 8 as a start, excludes it as an end.
+        scene.content_rect = [2.125, 0.0, 2.125, 16.0];
+        let h = encode(&scene).unwrap().header;
+        assert_eq!((h.content_x0, h.content_x1), (8, 8));
+        scene.content_rect = [5.0, 0.0, 1.0, 16.0];
+        let h = encode(&scene).unwrap().header;
+        assert_eq!(h.content_x1, h.content_x0);
     }
 
     #[test]

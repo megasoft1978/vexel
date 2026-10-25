@@ -26,7 +26,8 @@ pub enum UnsupportedReason {
     Groups,
     /// Clipped shape; supported by a later lane.
     Clips,
-    /// Content rectangle smaller than the canvas (meet letterboxing).
+    /// Unused since layout version 2 (the header carries the content
+    /// rectangle); kept for compatibility.
     Letterbox,
     /// Non-finite or out-of-range coordinates, matrices or canvas size.
     InvalidScene,

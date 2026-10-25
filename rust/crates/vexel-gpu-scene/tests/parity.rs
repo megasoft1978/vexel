@@ -263,8 +263,29 @@ fn identity() -> Affine {
     }
 }
 
-/// The CPU rasterizer through its public API.
+/// The CPU rasterizer through its public API, identity view.
 fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
+    let vb = ViewBox {
+        x: 0.0,
+        y: 0.0,
+        width: f64::from(w),
+        height: f64::from(h),
+    };
+    cpu_render_view(specs, w, h, vb, (0.0, 0.0), 1.0)
+}
+
+/// The CPU rasterizer with an explicit view box. `specs` are in device space;
+/// they are lowered to user space with the (known, power-of-two) `offset` and
+/// `scale` of `ViewMap::from_viewbox(vb, w, h, None)` so the CPU maps them back
+/// exactly.
+fn cpu_render_view(
+    specs: &[Spec],
+    w: u32,
+    h: u32,
+    vb: ViewBox,
+    offset: (f64, f64),
+    scale: f64,
+) -> Vec<u8> {
     let base = Paint {
         kind: PaintKind::Linear,
         spread: Spread::Pad,
@@ -285,10 +306,10 @@ fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
             spec_edges(spec)
                 .iter()
                 .map(|s| FlatEdge {
-                    x0: s.x0,
-                    y0: s.y0,
-                    x1: s.x1,
-                    y1: s.y1,
+                    x0: (s.x0 - offset.0) / scale,
+                    y0: (s.y0 - offset.1) / scale,
+                    x1: (s.x1 - offset.0) / scale,
+                    y1: (s.y1 - offset.1) / scale,
                 })
                 .collect(),
         );
@@ -344,12 +365,6 @@ fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
             stroke_gradient: None,
         })
         .collect();
-    let vb = ViewBox {
-        x: 0.0,
-        y: 0.0,
-        width: f64::from(w),
-        height: f64::from(h),
-    };
     let view = ViewMap::from_viewbox(vb, w, h, None).unwrap();
     let mut tile = Tile::from_owned_rgba(w, h, vec![0; w as usize * h as usize * 4]).unwrap();
     render_shapes(&shapes, view, &mut tile, &|| false).unwrap();
@@ -403,12 +418,15 @@ const QUANTISED_8: Bounds = (0.003, 0.0002, 0.0002);
 
 fn check(name: &str, specs: &[Spec], w: u32, h: u32, bounds: Bounds) {
     let scene = scene_for(specs, w, h);
-    assert!(vexel_gpu_scene::classify(&scene).is_supported());
-    let encoded = encode(&scene).unwrap();
-    let m = compare(
-        &reference::render_straight(&encoded),
-        &cpu_render(specs, w, h),
-    );
+    let cpu = cpu_render(specs, w, h);
+    check_against(name, specs, &scene, &cpu, bounds);
+}
+
+fn check_against(name: &str, specs: &[Spec], scene: &GpuScene, cpu: &[u8], bounds: Bounds) {
+    let (w, h) = (scene.width, scene.height);
+    assert!(vexel_gpu_scene::classify(scene).is_supported());
+    let encoded = encode(scene).unwrap();
+    let m = compare(&reference::render_straight(&encoded), cpu);
     println!(
         "{name}: {w}x{h} shapes={} kept={} >2/255={:.5}% >16/255={:.5}% mae={:.6} max={}",
         specs.len(),
@@ -471,5 +489,53 @@ fn unsnapped_scenes_meet_adr_bounds() {
     for (seed, count, w, h) in [(11, 40, 200, 136), (12, 120, 333, 250), (13, 300, 512, 384)] {
         let s = specs(seed, count, f64::from(w), f64::from(h));
         check(&format!("unsnapped seed {seed}"), &s, w, h, ADR);
+    }
+}
+
+/// Meet letterboxing: the CPU excludes samples outside the `ViewMap` content
+/// rectangle; the header's content range must reproduce that exactly. Scale 2,
+/// so the content rectangle is half the canvas in one axis, centred.
+#[test]
+fn letterboxed_frames_match_cpu() {
+    for (seed, count, w, h, tall) in [
+        (41, 120, 256, 192, false),
+        (42, 160, 300, 200, true),
+        (43, 200, 512, 384, false),
+    ] {
+        let (fw, fh) = (f64::from(w), f64::from(h));
+        let (vb, offset) = if tall {
+            // Pillarbox: content width fw / 2, centred horizontally.
+            (
+                ViewBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: fw / 4.0,
+                    height: fh / 2.0,
+                },
+                (fw / 4.0, 0.0),
+            )
+        } else {
+            (
+                ViewBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: fw / 2.0,
+                    height: fh / 4.0,
+                },
+                (0.0, fh / 4.0),
+            )
+        };
+        // Solid only: gradient coordinates live in user space on the CPU.
+        let mut s = snapped(specs(seed, count, fw, fh));
+        s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));
+        let mut scene = scene_for(&s, w, h);
+        scene.content_rect = [
+            offset.0,
+            offset.1,
+            offset.0 + vb.width * 2.0,
+            offset.1 + vb.height * 2.0,
+        ];
+        let cpu = cpu_render_view(&s, w, h, vb, offset, 2.0);
+        check_against(&format!("letterbox seed {seed}"), &s, &scene, &cpu, ADR);
     }
 }

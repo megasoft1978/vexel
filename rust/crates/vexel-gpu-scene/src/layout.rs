@@ -27,7 +27,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 1;
+pub const LAYOUT_VERSION: u32 = 2;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -58,7 +58,7 @@ pub const SPREAD_PAD: u32 = 0;
 pub const SPREAD_REFLECT: u32 = 1;
 pub const SPREAD_REPEAT: u32 = 2;
 
-/// Scene header, 64 bytes.
+/// Scene header, 80 bytes.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GpuSceneHeader {
@@ -79,6 +79,16 @@ pub struct GpuSceneHeader {
     pub background_rgba: u32,
     pub reserved0: u32,
     pub reserved1: u32,
+    /// Content rectangle (the CPU `ViewMap` content rectangle, meet
+    /// letterboxing) as a half-open range of sample indices, where sample
+    /// column `c * SAMPLES_PER_AXIS + sx` is at x = (index + 0.5) / 4 px:
+    /// a sample is drawn only when `content_x0 <= column < content_x1` and
+    /// `content_y0 <= row < content_y1`. Exactly the CPU test
+    /// `offset <= sample < offset + size`. Full canvas: `0, 0, 4w, 4h`.
+    pub content_x0: u32,
+    pub content_y0: u32,
+    pub content_x1: u32,
+    pub content_y1: u32,
 }
 
 /// One shape record, 64 bytes.
@@ -181,7 +191,7 @@ mod tests {
     fn sizes_and_alignments() {
         assert_eq!(
             (size_of::<GpuSceneHeader>(), align_of::<GpuSceneHeader>()),
-            (64, 4)
+            (80, 4)
         );
         assert_eq!((size_of::<GpuShape>(), align_of::<GpuShape>()), (64, 4));
         assert_eq!((size_of::<GpuEdge>(), align_of::<GpuEdge>()), (16, 4));
@@ -251,7 +261,11 @@ mod tests {
                 flags,
                 background_rgba,
                 reserved0,
-                reserved1
+                reserved1,
+                content_x0,
+                content_y0,
+                content_x1,
+                content_y1
             ]
         );
         s!(

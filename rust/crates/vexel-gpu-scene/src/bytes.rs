@@ -15,7 +15,7 @@ fn f(out: &mut Vec<u8>, v: f32) {
 }
 
 pub fn header_bytes(h: &GpuSceneHeader) -> Vec<u8> {
-    let mut o = Vec::with_capacity(64);
+    let mut o = Vec::with_capacity(80);
     for v in [
         h.magic,
         h.version,
@@ -33,6 +33,10 @@ pub fn header_bytes(h: &GpuSceneHeader) -> Vec<u8> {
         h.background_rgba,
         h.reserved0,
         h.reserved1,
+        h.content_x0,
+        h.content_y0,
+        h.content_x1,
+        h.content_y1,
     ] {
         u(&mut o, v);
     }
@@ -163,7 +167,7 @@ mod tests {
         );
         let e = encode(&scene).unwrap();
         let b = e.buffers();
-        assert_eq!(b[0].len(), 64);
+        assert_eq!(b[0].len(), 80);
         assert_eq!(b[1].len(), 64);
         assert_eq!(b[2].len(), 16 * e.edges.len());
         assert_eq!(b[3].len(), 8 * e.tiles.len());
