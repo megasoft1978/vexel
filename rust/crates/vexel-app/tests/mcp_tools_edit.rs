@@ -199,7 +199,7 @@ fn attribute_set_rejections() {
         ("fill", format!("#{long}"), GENERIC),
         // opacity is accepted now (widened attribute_set); out of range is not.
         ("opacity", "2".into(), "unsupported attribute"),
-        ("id", "other".into(), "unsupported attribute"),
+        ("id", "bad id".into(), "unsupported attribute"),
         ("stroke-width", "257".into(), GENERIC),
         ("stroke-width", "-1".into(), GENERIC),
         ("stroke-width", "NaN".into(), GENERIC),
@@ -355,8 +355,11 @@ fn element_add_line_and_path_use_stable_ids() {
 fn element_add_line_and_path_rejections() {
     let mut rig = rig();
     rig.add_rect(10, 10, "#111111");
-    let big_d = format!("M 0 0 {}", "L 1 1 ".repeat(700));
-    assert!(big_d.len() > 4096);
+    let big_d = format!(
+        "M 0 0 {}",
+        "L 1 1 ".repeat(vexel_v1_document::MAX_PATH_DATA_BYTES / 6 + 1)
+    );
+    assert!(big_d.len() > vexel_v1_document::MAX_PATH_DATA_BYTES);
     let lines: Vec<String> = vec![
         r##""x1":"NaN","y1":"1","x2":"5","y2":"5","stroke":"#ff0000""##.into(),
         r##""x1":"inf","y1":"1","x2":"5","y2":"5","stroke":"#ff0000""##.into(),
@@ -399,7 +402,7 @@ fn element_add_line_and_path_rejections() {
         (r#""d":"M 0 0 L 5 5","stroke-width":"-3""#.into(), GENERIC),
         (
             r#""d":"M 0 0 L 5 5","x":"1""#.into(),
-            r#"element_add path does not accept attribute \"x\"; allowed: d, fill, stroke, stroke-width"#,
+            r#"element_add path does not accept attribute \"x\"; allowed: d, fill, stroke, stroke-width, stroke-linecap, stroke-linejoin, fill-rule"#,
         ),
         (r#""fill":"none""#.into(), GENERIC),
     ];

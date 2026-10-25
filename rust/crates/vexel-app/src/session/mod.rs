@@ -18,6 +18,7 @@ mod mcp_batch;
 mod mcp_extras;
 mod mcp_frames;
 pub(crate) mod mcp_png;
+mod mcp_rename;
 mod mcp_tools;
 mod mcp_video;
 mod native_animation;

@@ -386,6 +386,10 @@ pub(crate) fn animation_list_json(
     json.push_str("]}");
     Ok(json)
 }
+/// Largest coordinate magnitude of a shape edge (the document layer's bound);
+/// shapes may extend past the 512x512 canvas.
+const SHAPE_COORDINATE_LIMIT: f64 = 1_000_000.0;
+
 pub(crate) fn validate_shape(shape: Shape) -> Result<(), &'static str> {
     let (l, t, r, b) = match shape {
         Shape::Rect {
@@ -399,14 +403,15 @@ pub(crate) fn validate_shape(shape: Shape) -> Result<(), &'static str> {
     };
     if shape_rgb(shape) > 0x00ff_ffff
         || ![l, t, r, b].into_iter().all(f64::is_finite)
-        || l < 0.0
-        || t < 0.0
-        || r > 512.0
-        || b > 512.0
+        || [l, t, r, b]
+            .into_iter()
+            .any(|v| v.abs() > SHAPE_COORDINATE_LIMIT)
         || r <= l
         || b <= t
     {
-        return Err("shape geometry must be finite, non-degenerate, and inside 512x512");
+        return Err(
+            "shape geometry must be finite, non-degenerate, and within 1000000 of the origin",
+        );
     }
     Ok(())
 }
@@ -480,19 +485,6 @@ fn rasterize_with_opacity(shapes: &[Shape], opacity: &[f64]) -> Result<Vec<u8>, 
     pixels.resize(512 * 512 * 4, 255);
     for (shape_index, s) in shapes.iter().enumerate() {
         validate_shape(*s)?;
-        let (l, t, r, b) = match *s {
-            Shape::Rect {
-                x,
-                y,
-                width,
-                height,
-                ..
-            } => (x, y, x + width, y + height),
-            Shape::Ellipse { cx, cy, rx, ry, .. } => (cx - rx, cy - ry, cx + rx, cy + ry),
-        };
-        if l < 0.0 || t < 0.0 || r > 512.0 || b > 512.0 {
-            return Err("animated geometry is outside preview bounds");
-        }
         let rgb = shape_rgb(*s);
         let color = [(rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8];
         let (l, t, r, b) = match *s {

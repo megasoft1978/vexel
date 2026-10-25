@@ -56,8 +56,8 @@ const ATTRIBUTE_NAMES: &[&str] = &[
 const BAD_ARGS: &str = "invalid preview tool arguments";
 /// Longest accepted `path` argument in bytes (matches the access policy cap).
 const PATH_LIMIT: usize = 1023;
-/// Longest accepted SVG path data in bytes.
-pub(crate) const PATH_DATA_LIMIT: usize = 4096;
+/// Longest accepted SVG path data in bytes (the document layer's bound).
+pub(crate) const PATH_DATA_LIMIT: usize = vexel_v1_document::MAX_PATH_DATA_BYTES;
 const ID_LIMIT: usize = 128;
 const COORDINATE_LIMIT: f64 = 100_000.0;
 const MAX_STROKE_WIDTH: f64 = 256.0;
@@ -115,6 +115,7 @@ pub(super) fn attribute_set(
         "fill" if is_hex(&value) => AttributeChange::Fill(value),
         "stroke" if is_hex(&value) => AttributeChange::Stroke(value),
         "stroke-width" => AttributeChange::StrokeWidth(width(&value)?),
+        "id" if super::add_extras::explicit_id(&value) => AttributeChange::Rename(value),
         "transform" => {
             let (dx, dy) = translate(&value).ok_or("unsupported attribute")?;
             AttributeChange::Translate(dx, dy)
@@ -128,7 +129,7 @@ pub(super) fn attribute_set(
 
 pub(super) fn line(doc: &JsonDocument<'_>, attrs: usize) -> Result<Operation, &'static str> {
     let num = |key: &[u8]| number_field(doc, attrs, key);
-    let stroke = string_field(doc, attrs, b"stroke").ok_or(BAD_ARGS)?;
+    let stroke = super::color::expand_hex(&string_field(doc, attrs, b"stroke").ok_or(BAD_ARGS)?);
     parse_color(&stroke)?;
     Ok(Operation::AddLine {
         x1: num(b"x1")?,
@@ -153,7 +154,7 @@ pub(super) fn path(doc: &JsonDocument<'_>, attrs: usize) -> Result<Operation, &'
     })
 }
 
-/// `#rrggbb` or `none`; absent means `none`.
+/// `#rrggbb`, short `#rgb` or `none`; absent means `none`.
 fn optional_paint(
     doc: &JsonDocument<'_>,
     attrs: usize,
@@ -162,7 +163,7 @@ fn optional_paint(
     if doc.object_get(attrs, key).is_none() {
         return Ok("none".to_owned());
     }
-    let value = string_field(doc, attrs, key).ok_or(BAD_ARGS)?;
+    let value = super::color::expand_hex(&string_field(doc, attrs, key).ok_or(BAD_ARGS)?);
     if value != "none" {
         parse_color(&value)?;
     }
@@ -234,7 +235,12 @@ pub(super) fn element_add(
         }
         _ => operation,
     };
-    Ok(match super::add_extras::parse(doc, args)? {
+    let attrs = doc.object_get(args, b"attributes");
+    let presentation = match attrs {
+        Some(attrs) => super::add_extras::path_presentation(doc, attrs)?,
+        None => Vec::new(),
+    };
+    Ok(match super::add_extras::parse(doc, args, presentation)? {
         Some(extras) => Operation::AddWith {
             extras: Box::new(extras),
             operation: Box::new(operation),
@@ -295,7 +301,10 @@ fn element_add_shape(
         _ => {}
     }
     let num = |k: &[u8]| number_field(doc, attrs, k);
-    if string_field(doc, attrs, b"fill").as_deref() == Some("none") {
+    // A gradient paint stands in for the fill colour.
+    let gradient_only =
+        doc.object_get(attrs, b"fill").is_none() && doc.object_get(args, b"gradientId").is_some();
+    if gradient_only || string_field(doc, attrs, b"fill").as_deref() == Some("none") {
         let ellipse = template == "ellipse";
         let (x0, y0, x1, y1) = if ellipse {
             let (cx, cy, rx, ry) = (num(b"cx")?, num(b"cy")?, num(b"rx")?, num(b"ry")?);

@@ -17,6 +17,7 @@ mod recovery_snapshot;
 mod recovery_store;
 #[cfg(test)]
 mod recovery_tests;
+mod retarget;
 mod svg_asset;
 #[cfg(test)]
 mod svg_asset_tests;

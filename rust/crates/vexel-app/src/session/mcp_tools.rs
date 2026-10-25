@@ -194,6 +194,10 @@ pub(super) fn attribute_set(
                 .ok_or("invalid preview tool arguments")?;
             app.edit(|doc| doc.set_stroke(id, &colour, *width))
         }
+        AttributeChange::Rename(new) => {
+            super::mcp_rename::rename(app, id, new)?;
+            return Ok(done("attribute_set", Some(new), app));
+        }
         AttributeChange::Translate(dx, dy) => app.edit(|doc| doc.translate(id, *dx, *dy)),
         AttributeChange::Generic { name, value } => {
             app.edit(|doc| doc.set_attribute(id, name, value))

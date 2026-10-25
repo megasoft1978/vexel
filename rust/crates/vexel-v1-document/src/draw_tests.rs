@@ -238,7 +238,7 @@ fn path_data_size_and_segment_limits_are_enforced() {
         validate_path_data(&over_segments),
         Err(V1DocumentError::InvalidPathData)
     );
-    let huge = format!("M 0 0 {}", "L 1 1 ".repeat(2000));
+    let huge = format!("M 0 0 {}", "L 1 1 ".repeat(MAX_PATH_DATA_BYTES / 6 + 1));
     assert!(huge.len() > MAX_PATH_DATA_BYTES);
     assert_eq!(
         validate_path_data(&huge),

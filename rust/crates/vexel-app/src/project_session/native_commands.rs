@@ -237,7 +237,7 @@ fn copy_scene_ids(source: &[Vec<u8>]) -> Result<Vec<Vec<u8>>, ProjectTimelineErr
     Ok(ids)
 }
 
-fn copy_assets(
+pub(super) fn copy_assets(
     source: &[OwnedProjectAsset],
 ) -> Result<Vec<OwnedProjectAsset>, ProjectTimelineError> {
     let mut assets = Vec::new();

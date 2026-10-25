@@ -30,4 +30,20 @@ impl AppDocument {
         }
         Ok(changed)
     }
+
+    /// Points native tracks that target `old` at `new` (one journal
+    /// transition), ahead of renaming the element. `false`: none did.
+    pub fn retarget_timeline(
+        &mut self,
+        settings: EmptyTimelineSettings,
+        limits: EditLimits,
+        old: &[u8],
+        new: &[u8],
+    ) -> Result<bool, NativeCommandError<()>> {
+        let changed = self.session.retarget_timeline(settings, limits, old, new)?;
+        if changed {
+            self.state_revision += 1;
+        }
+        Ok(changed)
+    }
 }

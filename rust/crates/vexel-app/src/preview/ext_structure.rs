@@ -7,7 +7,7 @@ use vexel_json::JsonDocument;
 /// One validated request of this tool family.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Op {
-    /// 1..=64 sibling ids wrapped in one group.
+    /// 1..=1024 sibling ids wrapped in one group.
     Group(Vec<String>),
     Ungroup(String),
     Duplicate(String),
@@ -24,7 +24,7 @@ pub enum Op {
 }
 
 /// Most ids one `element_group` call may wrap (the document layer's cap).
-const MAX_GROUP_IDS: usize = 64;
+const MAX_GROUP_IDS: usize = vexel_v1_document::MAX_GROUP_IDS;
 
 fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
     PreviewArgumentError::Actionable(format!(
@@ -113,7 +113,7 @@ pub(super) fn parse(
     Some(operation)
 }
 
-/// `elementId` (one id) or `elementIds` (1..=64 ids), not both.
+/// `elementId` (one id) or `elementIds` (1..=1024 ids), not both.
 fn group_ids(
     doc: &JsonDocument<'_>,
     args: usize,
@@ -122,7 +122,7 @@ fn group_ids(
     let Some(list) = doc.object_get(args, b"elementIds") else {
         return Ok(vec![string(doc, args, "elementId", tool)?]);
     };
-    let form = "elementId (one id) or elementIds (1-64 non-empty id strings), not both";
+    let form = "elementId (one id) or elementIds (1-1024 non-empty id strings), not both";
     let token = doc.token(list).filter(|t| t.kind == JsonType::Array);
     if doc.object_get(args, b"elementId").is_some()
         || token.is_none_or(|t| !(1..=MAX_GROUP_IDS).contains(&t.child_count))

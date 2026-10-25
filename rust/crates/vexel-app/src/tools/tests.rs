@@ -367,7 +367,7 @@ fn document_errors_surface_as_typed_tool_errors_and_leave_no_gesture() {
     let mut c = controller(Tool::Rectangle);
     c.pointer(PointerInput::Down { x: 10.0, y: 10.0 }, &mut doc, &Wide)
         .unwrap();
-    let result = c.pointer(PointerInput::Up { x: 500.0, y: 50.0 }, &mut doc, &Wide);
+    let result = c.pointer(PointerInput::Up { x: 2.0e6, y: 50.0 }, &mut doc, &Wide);
     assert_eq!(
         result,
         Err(super::ToolError::Document(V1DocumentError::InvalidGeometry))

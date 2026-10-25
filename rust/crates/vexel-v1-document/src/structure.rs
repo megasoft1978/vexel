@@ -3,6 +3,9 @@
 use crate::{ElementKind, V1Document, V1DocumentError, path_data};
 use vexel_document_edit::{SourceSpan, document_view_first_child, document_view_next_sibling};
 
+/// Most sibling ids one `group` call wraps.
+pub const MAX_GROUP_IDS: usize = 1024;
+
 /// Sibling z-order movement.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Reorder {
@@ -107,9 +110,9 @@ impl V1Document {
         Ok(bounds)
     }
 
-    /// Groups 1..=64 sibling elements, preserving their document order.
+    /// Groups 1..=1024 sibling elements, preserving their document order.
     pub fn group(&mut self, ids: &[String]) -> Result<String, V1DocumentError> {
-        if ids.is_empty() || ids.len() > 64 {
+        if ids.is_empty() || ids.len() > MAX_GROUP_IDS {
             return Err(V1DocumentError::Unsupported);
         }
         let model = self.editor.try_model()?;

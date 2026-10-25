@@ -65,6 +65,9 @@ pub(super) fn apply(
     let Some(extras) = extras else {
         return Ok(());
     };
+    for (name, value) in &extras.presentation {
+        doc.set_attribute(id, name, value)?;
+    }
     if let Some(opacity) = extras.opacity {
         doc.set_attribute(id, "opacity", &format!("{opacity}"))?;
     }

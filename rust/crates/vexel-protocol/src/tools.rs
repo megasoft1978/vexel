@@ -4,7 +4,15 @@ use vexel_json::{JsonBuffer, JsonDocument, JsonType, MAX_BYTES};
 const RECT_KEYS: &[&[u8]] = &[b"x", b"y", b"width", b"height", b"fill"];
 const ELLIPSE_KEYS: &[&[u8]] = &[b"cx", b"cy", b"rx", b"ry", b"fill"];
 const LINE_KEYS: &[&[u8]] = &[b"x1", b"y1", b"x2", b"y2", b"stroke", b"stroke-width"];
-const PATH_KEYS: &[&[u8]] = &[b"d", b"fill", b"stroke", b"stroke-width"];
+const PATH_KEYS: &[&[u8]] = &[
+    b"d",
+    b"fill",
+    b"stroke",
+    b"stroke-width",
+    b"stroke-linecap",
+    b"stroke-linejoin",
+    b"fill-rule",
+];
 
 pub fn element_add_keys(template: &str) -> Option<&'static [&'static [u8]]> {
     match template {
@@ -85,7 +93,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "attribute_set",
-        description: "Set an existing XML attribute through the undoable edit engine.",
+        description: "Set an existing XML attribute through the undoable edit engine. name \"id\" renames any element (groups included): value is the new id (1-64 characters [A-Za-z0-9_.-], starting with a letter or underscore, unused), href=\"#id\" and url(#id) references and native timeline tracks that target it follow, in one undo step.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}",
         required: "documentId,elementId,name,value",
         fields: "documentId:string;elementId:string;name:string;value:string",
@@ -141,8 +149,8 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "element_group",
-        description: "Wrap an element in an SVG group, or wrap several sibling elements (same parent) in one group with elementIds (1-64 ids; give elementId or elementIds, not both). The group keeps their document order.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"elementIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":64,\"items\":{\"type\":\"string\"}}}",
+        description: "Wrap an element in an SVG group, or wrap several sibling elements (same parent) in one group with elementIds (1-1024 ids; give elementId or elementIds, not both). The group keeps their document order.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"elementIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":1024,\"items\":{\"type\":\"string\"}}}",
         required: "documentId",
         fields: "documentId:string;elementId:string;elementIds:array",
     },

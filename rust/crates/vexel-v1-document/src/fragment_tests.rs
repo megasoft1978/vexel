@@ -194,3 +194,21 @@ fn fragments_outside_the_allow_list_are_refused() {
     )
     .unwrap();
 }
+
+#[test]
+fn use_transform_scales_about_the_instance_origin_and_offsets_in_parent_space() {
+    let mut doc = doc();
+    let spec = UseSpec {
+        x: 40.0,
+        y: 30.0,
+        // Scale 0.5 about the origin.
+        transform: Some([0.5, 0.0, 0.0, 0.5, 0.0, 0.0]),
+        ..UseSpec::default()
+    };
+    doc.add_use("root", Some("s1"), "star", &spec).unwrap();
+    let text = String::from_utf8(doc.source().unwrap()).unwrap();
+    assert!(
+        text.contains(r##"<use id="s1" href="#star" transform="matrix(0.5 0 0 0.5 40 30)"/>"##),
+        "{text}"
+    );
+}

@@ -192,13 +192,14 @@ fn renders(app: &AppDocument) -> bool {
 fn guarded<R>(
     app: &mut AppDocument,
     edit: impl FnOnce(&mut AppDocument) -> Result<R, &'static str>,
-    refused: &'static str,
+    refused: impl FnOnce(&AppDocument) -> &'static str,
 ) -> Result<R, &'static str> {
     let was = renders(app);
     let result = edit(app)?;
     if was && !renders(app) {
+        let reason = refused(app);
         app.undo().map_err(|_| "project history unavailable")?;
-        return Err(refused);
+        return Err(reason);
     }
     Ok(result)
 }
@@ -215,7 +216,10 @@ pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'stati
                     app.edit(|doc| doc.add_fragment(&parent, xml.as_bytes()))
                         .map_err(|e| history(e, fragment_error))
                 },
-                "element_add_fragment: the renderer does not support this construct (feTurbulence, mix-blend-mode...); edit undone. See docs/mcp.md",
+                |app| {
+                    let source = app.source_bytes().unwrap_or_default();
+                    super::fragment_refs::diagnose(&source, xml.as_bytes())
+                },
             )?;
             let list = ids
                 .iter()

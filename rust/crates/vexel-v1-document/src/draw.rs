@@ -16,7 +16,7 @@ pub(crate) const MAX_HIT_DEPTH: usize = 64;
 
 pub const HIT_TOLERANCE: f64 = 2.0;
 const MAX_STROKE_WIDTH: f64 = 256.0;
-const MAX_COORDINATE: f64 = 1_000_000.0;
+pub(crate) const MAX_COORDINATE: f64 = 1_000_000.0;
 
 /// Shape category of a source element, as understood by the editing tools.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
