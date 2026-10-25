@@ -285,14 +285,10 @@ impl V1Document {
         {
             return Err(V1DocumentError::InvalidGeometry);
         }
-        if start_x < 0.0
-            || start_y < 0.0
-            || end_x < 0.0
-            || end_y < 0.0
-            || start_x > f64::from(self.width)
-            || end_x > f64::from(self.width)
-            || start_y > f64::from(self.height)
-            || end_y > f64::from(self.height)
+        // Shapes may extend past the canvas; only the coordinate bound applies.
+        if [start_x, start_y, end_x, end_y]
+            .into_iter()
+            .any(|v| v.abs() > draw::MAX_COORDINATE)
             || start_x == end_x
             || start_y == end_y
         {
@@ -392,14 +388,10 @@ impl V1Document {
         {
             return Err(V1DocumentError::InvalidGeometry);
         }
-        if start_x < 0.0
-            || start_y < 0.0
-            || end_x < 0.0
-            || end_y < 0.0
-            || start_x > f64::from(self.width)
-            || end_x > f64::from(self.width)
-            || start_y > f64::from(self.height)
-            || end_y > f64::from(self.height)
+        // Shapes may extend past the canvas; only the coordinate bound applies.
+        if [start_x, start_y, end_x, end_y]
+            .into_iter()
+            .any(|v| v.abs() > draw::MAX_COORDINATE)
             || start_x == end_x
             || start_y == end_y
         {

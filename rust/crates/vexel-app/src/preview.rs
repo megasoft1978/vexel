@@ -7,6 +7,7 @@ pub(crate) mod add_extras;
 mod animation;
 mod args;
 pub mod batch;
+mod color;
 mod doc_ops;
 mod errors;
 mod ext_attr;
@@ -777,15 +778,7 @@ fn number_field(doc: &JsonDocument<'_>, obj: usize, key: &[u8]) -> Result<f64, &
         .filter(|n: &f64| n.is_finite())
         .ok_or("invalid preview tool arguments")
 }
-fn parse_color(value: &str) -> Result<u32, &'static str> {
-    if value.len() != 7
-        || !value.starts_with('#')
-        || !value.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit)
-    {
-        return Err("invalid preview fill color");
-    }
-    u32::from_str_radix(&value[1..], 16).map_err(|_| "invalid preview fill color")
-}
+use color::parse_color;
 
 #[cfg(test)]
 #[path = "preview_tests.rs"]

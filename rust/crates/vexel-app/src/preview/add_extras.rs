@@ -14,6 +14,8 @@ pub struct AddExtras {
     pub transform: Option<TransformSpec>,
     /// Gradient id and whether it paints the stroke instead of the fill.
     pub gradient: Option<(String, bool)>,
+    /// Presentation attributes of a `path` template (`stroke-linecap`...).
+    pub presentation: Vec<(&'static str, String)>,
 }
 
 fn invalid(key: &str, form: &str) -> PreviewArgumentError {
@@ -94,6 +96,7 @@ pub(super) fn transform(
 pub(super) fn parse(
     doc: &JsonDocument<'_>,
     args: usize,
+    presentation: Vec<(&'static str, String)>,
 ) -> Result<Option<AddExtras>, PreviewArgumentError> {
     let id_form = "1-128 characters from A-Z a-z 0-9 _ - . starting with a letter or _";
     let id = text(doc, args, "id", id_form)?;
@@ -129,6 +132,38 @@ pub(super) fn parse(
         opacity,
         transform,
         gradient: gradient.map(|id| (id, stroke)),
+        presentation,
     };
     Ok((extras != AddExtras::default()).then_some(extras))
+}
+
+/// Enumerated presentation members of a `path` template's `attributes`.
+const PRESENTATION: [(&str, &[&str]); 3] = [
+    ("stroke-linecap", &["butt", "round", "square"]),
+    ("stroke-linejoin", &["miter", "round", "bevel"]),
+    ("fill-rule", &["nonzero", "evenodd"]),
+];
+
+pub(super) fn path_presentation(
+    doc: &JsonDocument<'_>,
+    attrs: usize,
+) -> Result<Vec<(&'static str, String)>, PreviewArgumentError> {
+    let mut out = Vec::new();
+    for (name, allowed) in PRESENTATION {
+        let Some(token) = doc.object_get(attrs, name.as_bytes()) else {
+            continue;
+        };
+        let value = doc
+            .decoded_string(token)
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .filter(|value| allowed.contains(&value.as_str()))
+            .ok_or_else(|| {
+                PreviewArgumentError::Actionable(format!(
+                    "element_add attribute {name} must be one of {}",
+                    allowed.join(", ")
+                ))
+            })?;
+        out.push((name, value));
+    }
+    Ok(out)
 }

@@ -33,7 +33,7 @@ fn invalid_operation_does_not_change_source_or_history() {
     let source = s.source().unwrap();
     assert!(
         s.stage(&Operation::Add(Shape::Rect {
-            x: 510.,
+            x: 999_999.,
             y: 1.,
             width: 5.,
             height: 2.,
@@ -135,7 +135,7 @@ fn rejects_invalid_shapes_and_caps_scene() {
             rgb: 0,
         },
         Shape::Ellipse {
-            cx: 511.,
+            cx: 999_999.,
             cy: 2.,
             rx: 2.,
             ry: 1.,
@@ -143,6 +143,25 @@ fn rejects_invalid_shapes_and_caps_scene() {
         },
     ] {
         assert!(validate_shape(s).is_err())
+    }
+    // Shapes may extend past (or lie outside) the 512x512 canvas.
+    for s in [
+        Shape::Rect {
+            x: -100.,
+            y: -50.,
+            width: 2000.,
+            height: 900.,
+            rgb: 0,
+        },
+        Shape::Ellipse {
+            cx: 511.,
+            cy: 2.,
+            rx: 2.,
+            ry: 1.,
+            rgb: 0,
+        },
+    ] {
+        assert!(validate_shape(s).is_ok())
     }
     let mut state = PreviewState::new().unwrap();
     for _ in 0..SCENE_LIMIT {

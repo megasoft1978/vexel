@@ -4,7 +4,15 @@ use vexel_json::{JsonBuffer, JsonDocument, JsonType, MAX_BYTES};
 const RECT_KEYS: &[&[u8]] = &[b"x", b"y", b"width", b"height", b"fill"];
 const ELLIPSE_KEYS: &[&[u8]] = &[b"cx", b"cy", b"rx", b"ry", b"fill"];
 const LINE_KEYS: &[&[u8]] = &[b"x1", b"y1", b"x2", b"y2", b"stroke", b"stroke-width"];
-const PATH_KEYS: &[&[u8]] = &[b"d", b"fill", b"stroke", b"stroke-width"];
+const PATH_KEYS: &[&[u8]] = &[
+    b"d",
+    b"fill",
+    b"stroke",
+    b"stroke-width",
+    b"stroke-linecap",
+    b"stroke-linejoin",
+    b"fill-rule",
+];
 
 pub fn element_add_keys(template: &str) -> Option<&'static [&'static [u8]]> {
     match template {

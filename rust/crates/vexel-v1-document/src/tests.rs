@@ -70,7 +70,7 @@ fn invalid_inputs_do_not_change_source_history_or_dirty_state() {
         (
             0.0,
             0.0,
-            101.0,
+            1_000_001.0,
             1.0,
             "#ffffff",
             V1DocumentError::InvalidGeometry,
@@ -224,7 +224,7 @@ fn invalid_ellipse_inputs_are_atomic() {
         (
             0.0,
             0.0,
-            101.0,
+            1_000_001.0,
             1.0,
             "#ffffff",
             V1DocumentError::InvalidGeometry,
