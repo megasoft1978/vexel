@@ -241,3 +241,36 @@ fn region_offsets_the_output() {
     .unwrap();
     assert_eq!(layers.last().unwrap().d, "M30 30L50 30L50 50L30 50Z");
 }
+
+fn ring_mask(w: usize, outer: usize, hole: usize) -> Vec<bool> {
+    let o = (w - outer) / 2;
+    let h = (w - hole) / 2;
+    let mut m = vec![false; w * w];
+    for y in 0..w {
+        for x in 0..w {
+            let in_outer = (o..o + outer).contains(&x) && (o..o + outer).contains(&y);
+            let in_hole = (h..h + hole).contains(&x) && (h..h + hole).contains(&y);
+            m[y * w + x] = in_outer && !in_hole;
+        }
+    }
+    m
+}
+
+#[test]
+fn hole_of_a_dropped_outer_loop_is_dropped_too() {
+    let m = ring_mask(40, 20, 16); // outer 400 px, hole 256 px
+    let opts = TraceOptions {
+        min_area: 401,
+        hole_area: 200,
+        ..TraceOptions::default()
+    };
+    let (d, n) = trace(&m, 40, 40, &opts).unwrap();
+    assert_eq!((n, d.as_str()), (0, ""), "lone hole would render solid");
+    // Kept outer loop keeps its hole.
+    let opts = TraceOptions {
+        min_area: 300,
+        hole_area: 200,
+        ..TraceOptions::default()
+    };
+    assert_eq!(trace(&m, 40, 40, &opts).unwrap().1, 2);
+}

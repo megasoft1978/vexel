@@ -113,6 +113,62 @@ fn emit(lp: &Loop, opts: &TraceOptions, origin: (i32, i32), out: &mut String) ->
     true
 }
 
+/// Outer loops (index, bbox) sorted by ascending area.
+fn outer_index(loops: &[Loop]) -> Vec<(usize, [i32; 4])> {
+    let mut v: Vec<(usize, [i32; 4])> = loops
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.area > 0)
+        .map(|(i, l)| (i, bbox(&l.points)))
+        .collect();
+    v.sort_by_key(|&(i, _)| loops[i].area);
+    v
+}
+
+fn bbox(p: &[(i32, i32)]) -> [i32; 4] {
+    p.iter()
+        .fold([i32::MAX, i32::MAX, i32::MIN, i32::MIN], |b, &(x, y)| {
+            [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+        })
+}
+
+/// Smallest outer loop whose polygon contains the hole (tested at the
+/// midpoint of its first edge, which no other loop's edge can share).
+fn innermost_outer(loops: &[Loop], outers: &[(usize, [i32; 4])], hole: &Loop) -> Option<usize> {
+    let (a, b) = (*hole.points.first()?, *hole.points.get(1)?);
+    // Doubled coordinates keep the midpoint integral.
+    let m = (a.0 + b.0, a.1 + b.1);
+    outers
+        .iter()
+        .filter(|(i, bb)| {
+            loops[*i].area > -hole.area
+                && 2 * bb[0] <= m.0
+                && m.0 <= 2 * bb[2]
+                && 2 * bb[1] <= m.1
+                && m.1 <= 2 * bb[3]
+        })
+        .find(|(i, _)| contains(&loops[*i].points, m))
+        .map(|&(i, _)| i)
+}
+
+/// Even-odd point-in-polygon; `p` is in doubled coordinates.
+fn contains(poly: &[(i32, i32)], p: (i32, i32)) -> bool {
+    let mut inside = false;
+    let n = poly.len();
+    for i in 0..n {
+        let (a, b) = (poly[i], poly[(i + 1) % n]);
+        let (ay, by) = (2 * i64::from(a.1), 2 * i64::from(b.1));
+        if (ay > i64::from(p.1)) != (by > i64::from(p.1)) {
+            let (ax, bx) = (2 * i64::from(a.0), 2 * i64::from(b.0));
+            let cross = (bx - ax) * (i64::from(p.1) - ay) - (i64::from(p.0) - ax) * (by - ay);
+            if (cross > 0) == (by > ay) {
+                inside = !inside;
+            }
+        }
+    }
+    inside
+}
+
 fn trace_into(
     mask: &[bool],
     w: usize,
@@ -128,11 +184,16 @@ fn trace_into(
     let outer_min = i64::from(opts.min_area);
     let mut d = String::new();
     let mut count = 0;
+    let outers = outer_index(&loops);
     for lp in &loops {
         let keep = if lp.area > 0 {
             lp.area >= outer_min
         } else {
+            // A hole survives only inside its innermost outer loop, and only
+            // if that loop is itself kept; a lone anticlockwise contour
+            // would render solid under the nonzero rule.
             -lp.area >= hole_min
+                && innermost_outer(&loops, &outers, lp).is_some_and(|o| loops[o].area >= outer_min)
         };
         if !keep {
             continue;
