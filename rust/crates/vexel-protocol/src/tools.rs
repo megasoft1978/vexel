@@ -149,8 +149,8 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "element_group",
-        description: "Wrap an element in an SVG group, or wrap several sibling elements (same parent) in one group with elementIds (1-64 ids; give elementId or elementIds, not both). The group keeps their document order.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"elementIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":64,\"items\":{\"type\":\"string\"}}}",
+        description: "Wrap an element in an SVG group, or wrap several sibling elements (same parent) in one group with elementIds (1-1024 ids; give elementId or elementIds, not both). The group keeps their document order.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"elementIds\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":1024,\"items\":{\"type\":\"string\"}}}",
         required: "documentId",
         fields: "documentId:string;elementId:string;elementIds:array",
     },

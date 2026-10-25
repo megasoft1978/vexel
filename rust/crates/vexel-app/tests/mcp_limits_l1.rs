@@ -158,3 +158,135 @@ fn gradient_ellipse_needs_no_fill_colour() {
         .is_error
     );
 }
+
+#[test]
+fn element_group_wraps_up_to_1024_ids_and_rejects_more() {
+    let mut rig = rig();
+    // Batches of 205 adds keep under the per-minute request limit.
+    let ids: Vec<String> = (0..1025).map(|i| format!("g{i}")).collect();
+    for chunk in ids.chunks(205) {
+        let ops: Vec<String> = chunk
+            .iter()
+            .map(|id| {
+                format!(
+                    r##"{{"tool":"element_add","arguments":{{"documentId":"preview-document","parentId":"root","id":"{id}","template":"rect","attributes":{{"x":"1","y":"1","width":"4","height":"4","fill":"#112233"}}}}}}"##
+                )
+            })
+            .collect();
+        rig.doc_tool("batch", &format!(r#""ops":[{}]"#, ops.join(",")))
+            .ok();
+    }
+    let ids: Vec<String> = ids.iter().map(|id| format!("\"{id}\"")).collect();
+    let over = format!("M 0 0 {}", "L 1 1 ".repeat(45_000));
+    assert!(over.len() > vexel_v1_document::MAX_PATH_DATA_BYTES);
+    let reply = add(
+        &mut rig,
+        "path",
+        &format!(r##""d":"{over}","stroke":"#000""##),
+        "",
+    );
+    assert!(reply.is_error, "oversize path rejected");
+    let segments = format!(
+        "M 0 0 {}",
+        "L 1 1 ".repeat(vexel_v1_document::MAX_PATH_SEGMENTS + 1)
+    );
+    assert!(segments.len() <= vexel_v1_document::MAX_PATH_DATA_BYTES);
+    assert!(
+        add(
+            &mut rig,
+            "path",
+            &format!(r##""d":"{segments}","stroke":"#000""##),
+            ""
+        )
+        .is_error
+    );
+}
+
+#[test]
+fn path_presentation_attributes_and_short_hex() {
+    let mut rig = rig();
+    add(
+        &mut rig,
+        "path",
+        r##""d":"M 5 5 L 50 50","stroke":"#fa0","fill":"#000","stroke-width":"4","stroke-linecap":"round","stroke-linejoin":"bevel","fill-rule":"evenodd""##,
+        "",
+    )
+    .ok();
+    let svg = svg(&mut rig);
+    for want in [
+        r##"stroke="#ffaa00""##.to_owned(),
+        r##"fill="#000000""##.to_owned(),
+        r#"stroke-linecap="round""#.to_owned(),
+        r#"stroke-linejoin="bevel""#.to_owned(),
+        r#"fill-rule="evenodd""#.to_owned(),
+    ] {
+        assert!(svg.contains(&want), "{want} in {svg}");
+    }
+    let bad = add(
+        &mut rig,
+        "path",
+        r##""d":"M 5 5 L 50 50","stroke":"#000","stroke-linecap":"wavy""##,
+        "",
+    );
+    assert!(
+        bad.is_error && bad.body.contains("stroke-linecap"),
+        "{}",
+        bad.body
+    );
+}
+
+#[test]
+fn gradient_ellipse_needs_no_fill_colour() {
+    let mut rig = rig();
+    let body = rig
+        .doc_tool(
+            "gradient_add",
+            r#""kind":"radial","stops":"0:#ff0000:1,1:#0000ff:1""#,
+        )
+        .ok()
+        .to_owned();
+    let id = body
+        .split("\"gradientId\":\"")
+        .nth(1)
+        .unwrap()
+        .split('"')
+        .next()
+        .unwrap();
+    add(
+        &mut rig,
+        "ellipse",
+        r#""cx":"100","cy":"100","rx":"50","ry":"30""#,
+        &format!(r#","gradientId":"{id}""#),
+    )
+    .ok();
+    assert!(svg(&mut rig).contains(&format!("url(#{id})")));
+    // Without a gradient the fill stays required.
+    assert!(
+        add(
+            &mut rig,
+            "ellipse",
+            r#""cx":"1","cy":"1","rx":"5","ry":"5""#,
+            ""
+        )
+        .is_error
+    );
+}
+
+#[test]
+fn element_group_wraps_up_to_1024_ids_and_rejects_more() {
+    let mut rig = rig();
+    let ids: Vec<String> = (0..1025)
+        .map(|i| format!("\"{}\"", rig.add_rect(i % 400, 5, "#112233")))
+        .collect();
+    let over = rig.doc_tool(
+        "element_group",
+        &format!(r#""elementIds":[{}]"#, ids.join(",")),
+    );
+    assert!(over.is_error, "1025 ids rejected");
+    assert!(over.body.contains("1-1024"), "{}", over.body);
+    let ok = rig.doc_tool(
+        "element_group",
+        &format!(r#""elementIds":[{}]"#, ids[..1024].join(",")),
+    );
+    assert!(ok.ok().contains("elementId"));
+}
