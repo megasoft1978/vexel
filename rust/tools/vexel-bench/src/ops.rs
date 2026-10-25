@@ -126,7 +126,7 @@ pub fn frame_hash(frame: &Frame) -> String {
     h.finish_hex()
 }
 
-fn compose_bytes(bytes: &[u8], w: u32, h: u32) -> Result<Frame, Failure> {
+pub(crate) fn compose_bytes(bytes: &[u8], w: u32, h: u32) -> Result<Frame, Failure> {
     match compose_document(bytes, w, h, &|| false) {
         Ok(composed) => Ok(composed.frame),
         Err(ComposeError::LimitRender) => Err(Failure::Skip(format!(
@@ -140,7 +140,7 @@ fn compose(doc: &AppDocument, size: u32) -> Result<Frame, Failure> {
     compose_bytes(&doc.source_bytes()?, size, size)
 }
 
-fn open(path: &Path) -> Result<AppDocument, Failure> {
+pub(crate) fn open(path: &Path) -> Result<AppDocument, Failure> {
     let mut doc = AppDocument::new(512, 512)?;
     doc.open_path(path)?;
     Ok(doc)
