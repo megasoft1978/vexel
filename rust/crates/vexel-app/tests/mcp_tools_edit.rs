@@ -102,7 +102,7 @@ fn library_target_links_and_lists_routed_tools() {
     // native_timeline_set_camera, plus audio_add_track, audio_set, audio_list, rig_create, rig_pose and clip_apply.
     assert_eq!(
         names.len(),
-        ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1 + 1 + 1 + 2 + 1 + 1 + 3
+        ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1 + 1 + 1 + 2 + 1 + 1 + 3 + 3
     );
     assert!(names.iter().any(|n| n == "render_png"));
 }
