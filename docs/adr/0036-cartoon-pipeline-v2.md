@@ -14,6 +14,15 @@ and effects, and fast iteration. Speed is a top-level requirement, not a follow-
   peak RSS 0.8-1.3 GB; preview tick 64 ms (shot 1) vs 40 ms target.
 - Pipeline needed ~10 external scripts (trace, segment, inpaint, rig, mix, mux).
 
+## Definition of done
+All must hold:
+1. Speed: tick p50 at 900 px <= 25 ms on shot1 and <= 35 ms on s4 (s3, s9 <= 30), measured at machine load < 8 and recorded in docs/PERF.md; flush of 200 tracks <= 2 s; s4 peak RSS <= 600 MB.
+2. Motion: rig, pose and clip tools, viseme lip-sync, easing, noise, camera and effect presets exist in MCP with tests.
+3. Audio: timeline audio tracks, export mux, local voice/sfx/music generation through a helper process, envelope-driven lip-sync, all via MCP.
+4. Authoring: document import, scene_apply, native trace and segment; no external scripts except Codex reference art.
+5. Ember Call v2 (nine shots, shot 5 restored) is built through MCP and the helper only, with at least 5x fewer calls than v1, and the owner reviews the cut.
+6. Gates: debug workspace sweep green, release tests for render/decode/path green, CI green on main, no orphan processes, no weakened tests or goldens.
+
 ## Workstreams
 
 ### A. Motion engine (more fluid, more effect)
