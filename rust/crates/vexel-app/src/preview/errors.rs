@@ -61,6 +61,8 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
 const DOC_TOOL_PREFIXES: &[&str] = &[
     "element_group",
     "element_add_fragment",
+    "document_import",
+    "scene_apply",
     "use_",
     "element_ungroup",
     "element_duplicate",

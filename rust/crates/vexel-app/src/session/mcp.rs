@@ -224,6 +224,10 @@ impl McpHost {
                 AudioOp::Envelope(spec) => super::mcp_audio_gen::envelope(app, &self.policy, *spec),
                 op => super::mcp_audio::apply(app, &self.policy, op),
             },
+            Operation::Doc(crate::preview::DocOp::Import(op)) => self.import(app, op),
+            Operation::Doc(crate::preview::DocOp::Scene(scene)) => {
+                self.scene_apply(app, *scene, driver)
+            }
             Operation::Doc(op) => crate::preview::apply_doc(app, op),
             Operation::ExportSvg => export_svg(app),
             Operation::RenderPng {

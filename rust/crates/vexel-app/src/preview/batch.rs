@@ -1,7 +1,7 @@
 //! Parsing of the preview `batch` tool: every entry is parsed with the same
 //! `parse_operation` a single call uses, before any of them is applied.
 
-use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, parse_operation_in};
+use super::{DocOp, JsonDocument, JsonType, Operation, PreviewArgumentError, parse_operation_in};
 
 /// One parsed batch entry; `tool` is kept for the per-operation result.
 #[derive(Clone, Debug, PartialEq)]
@@ -35,6 +35,7 @@ fn allowed(operation: &Operation) -> bool {
             | Operation::ExportVideo(_)
             | Operation::ExportFrames(_)
             | Operation::RenderPng { .. }
+            | Operation::Doc(DocOp::Import(_) | DocOp::Scene(_))
     )
 }
 

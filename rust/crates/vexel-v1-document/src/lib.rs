@@ -12,6 +12,7 @@ mod fragment;
 #[cfg(test)]
 mod fragment_bypass_tests;
 mod fragment_check;
+mod import;
 mod paint_defs;
 mod path_data;
 mod query;
@@ -24,6 +25,7 @@ mod transform;
 
 pub use draw::{ElementKind, HIT_TOLERANCE};
 pub use fragment::{MAX_FRAGMENT_BYTES, UseSpec, fragment_ids};
+pub use import::{MAX_IMPORT_BYTES, PreparedImport, prepare_import, valid_prefix};
 pub use paint_defs::{GradientStop, GradientUnits, Spread};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
 pub use query::{ElementInfo, Query, TreeEntry, TreeNode};

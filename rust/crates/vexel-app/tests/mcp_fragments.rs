@@ -434,8 +434,8 @@ fn live_preview_lists_the_fragment_and_use_tools() {
     let tools = rig().list_tools();
     assert_eq!(
         tools.len(),
-        65,
-        "53 earlier tools + element_add_fragment + use_add + native_timeline_tracks_set + native_timeline_set_camera + audio_add_track + audio_set + audio_list + audio_generate + audio_envelope + rig_create + rig_pose + clip_apply"
+        67,
+        "53 earlier tools + element_add_fragment + use_add + native_timeline_tracks_set + native_timeline_set_camera + audio_add_track + audio_set + audio_list + audio_generate + audio_envelope + rig_create + rig_pose + clip_apply + document_import + scene_apply"
     );
     for name in ["element_add_fragment", "use_add"] {
         assert!(tools.iter().any(|t| t == name), "{name}");
