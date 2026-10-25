@@ -2,6 +2,7 @@
 //! query) onto the live `AppDocument`. Each family lives in its own module.
 
 mod audio_args;
+mod audio_gen_args;
 mod ext_use;
 mod fragment_refs;
 

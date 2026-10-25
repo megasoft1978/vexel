@@ -408,6 +408,8 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "audio_add_track",
     "audio_set",
     "audio_list",
+    "audio_generate",
+    "audio_envelope",
     "rig_create",
     "rig_pose",
     "clip_apply",

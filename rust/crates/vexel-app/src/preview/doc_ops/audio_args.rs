@@ -7,13 +7,13 @@ use crate::session::mcp_audio::{AudioOp, DuckSpec, NewTrack, SetTrack};
 use vexel_json::JsonDocument;
 use vexel_timeline::audio::AudioKind;
 
-fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
+pub(super) fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
     PreviewArgumentError::Actionable(format!(
         "{tool} argument {argument} is missing or invalid; use {form}"
     ))
 }
 
-fn text(
+pub(super) fn text(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -36,7 +36,7 @@ fn text(
         })
 }
 
-fn required_text(
+pub(super) fn required_text(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -46,7 +46,7 @@ fn required_text(
     text(doc, args, tool, key, max)?.ok_or_else(|| invalid(tool, key, "a string"))
 }
 
-fn uint(
+pub(super) fn uint(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -61,7 +61,7 @@ fn uint(
         .ok_or_else(|| invalid(tool, key, "a non-negative integer"))
 }
 
-fn float(
+pub(super) fn float(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -75,7 +75,7 @@ fn float(
         .ok_or_else(|| invalid(tool, key, "a finite number"))
 }
 
-fn flag(
+pub(super) fn flag(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -91,7 +91,7 @@ fn flag(
     }
 }
 
-fn duck(
+pub(super) fn duck(
     doc: &JsonDocument<'_>,
     args: usize,
     tool: &str,
@@ -120,6 +120,9 @@ pub(super) fn parse(
     args: usize,
     tool: &str,
 ) -> Option<Result<AudioOp, PreviewArgumentError>> {
+    if let Some(parsed) = super::audio_gen_args::parse(doc, args, tool) {
+        return Some(parsed);
+    }
     if !matches!(tool, "audio_add_track" | "audio_set" | "audio_list") {
         return None;
     }
