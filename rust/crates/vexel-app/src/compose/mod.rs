@@ -21,6 +21,7 @@ mod png;
 mod pointer;
 mod present;
 mod render_scene;
+mod route_policy;
 mod shapes;
 #[cfg(target_os = "macos")]
 mod text;
@@ -217,7 +218,12 @@ fn compose_owned(
         Some(cache) => match gpu_route::try_render(&scene, view, aspect, &mut tile, cache) {
             Some(drawn) => drawn,
             None => {
-                diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache, with_ids)?
+                let started = std::time::Instant::now();
+                let drawn = diff::render_scene_diff(
+                    &scene, view, aspect, &mut tile, cancel, cache, with_ids,
+                )?;
+                gpu_route::record_cpu_tick(started.elapsed().as_secs_f64() * 1000.0);
+                drawn
             }
         },
         None => render_scene(&scene, view, aspect, &mut tile, false, cancel)?,
