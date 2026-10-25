@@ -10,6 +10,7 @@ mod tools_native_bulk;
 mod tools_native_edit;
 mod tools_paint;
 mod tools_face;
+mod tools_fx;
 mod tools_rig;
 mod tools_structure;
 

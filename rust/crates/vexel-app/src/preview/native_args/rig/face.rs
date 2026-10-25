@@ -430,6 +430,7 @@ pub(super) fn parse(
         "lip_sync" => lip_sync(doc, args, tool),
         "eyes_set" => eyes_set(doc, args, tool),
         "blink" => blink(doc, args, tool),
+        "effect_apply" => super::fx::parse(doc, args, tool),
         _ => return None,
     })
 }

@@ -23,6 +23,7 @@ pub enum FaceOp {
     Lip(Box<LipSync>),
     Eyes(Vec<Eye>),
     Blink(Box<Blink>),
+    Fx(Box<super::mcp_fx_spec::FxSpec>),
 }
 
 /// `Operation::Doc` dispatch: face tools get the policy, the rest go on to
@@ -48,6 +49,7 @@ fn apply(
         FaceOp::Lip(spec) => mcp_lipsync::apply(app, policy, *spec),
         FaceOp::Eyes(eyes) => mcp_eyes::eyes_set(app, eyes),
         FaceOp::Blink(spec) => mcp_eyes::blink(app, *spec),
+        FaceOp::Fx(spec) => super::mcp_fx::effect_apply(app, *spec),
     }
 }
 

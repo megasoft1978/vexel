@@ -77,6 +77,7 @@ const DOC_TOOL_PREFIXES: &[&str] = &[
     "lip_sync",
     "eyes_set",
     "blink",
+    "effect_apply",
     "text_",
     "attribute_",
 ];

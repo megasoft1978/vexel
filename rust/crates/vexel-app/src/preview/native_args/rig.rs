@@ -5,6 +5,7 @@ use super::super::add_extras::number;
 use super::super::ext_structure::document;
 use super::{JsonDocument, JsonType, PreviewArgumentError};
 mod face;
+mod fx;
 
 use vexel_timeline::clips::{Clip, ClipMode, ClipParams};
 use vexel_timeline::rig::{LocalPose, MAX_BONES, MAX_COORD, Role, valid_bone_id};

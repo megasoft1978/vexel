@@ -5,7 +5,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 ## Current state 2026-10-21 (docs)
 
 - Changes since `v1.0.0-alpha`: see [CHANGELOG.md](CHANGELOG.md).
-- Live-preview MCP: 69 tools (`batch`, native timeline, skeletal rigs `rig_create`/`rig_pose`/`clip_apply`, faces `mouth_set`/`lip_sync`/`eyes_set`/`blink`, audio tracks `audio_add_track`/`audio_set`/`audio_list`
+- Live-preview MCP: 70 tools (`batch`, native timeline, skeletal rigs `rig_create`/`rig_pose`/`clip_apply`, faces `mouth_set`/`lip_sync`/`eyes_set`/`blink`, audio tracks `audio_add_track`/`audio_set`/`audio_list`
   mixed and muxed as AAC into mp4/mov, `audio_generate` (voice/sfx/music through the optional `tools/vexel-audio` helper) and `audio_envelope`, `export_animation` gif/mp4/mov/apng/frames, `render_png`). Tool reference: [docs/mcp.md](docs/mcp.md).
 - Export: GIF, APNG, PNG frame sequence, MP4/MOV (H.264 or HEVC), HEVC with alpha (mov).
 - SVG: Q/T/S path commands and internal DOCTYPE general entities (hard limits) landed.
