@@ -267,36 +267,145 @@ pub(super) fn color_matrix(
     row_bytes: usize,
 ) -> bool {
     let matrix = matrix_for(primitive);
+    // `unit(b)` for every byte, and the previous pixel's result: flat-colour
+    // art repeats pixels, and the same input always gives the same output.
+    let units: Vec<f64> = (0..=255u8).map(unit).collect();
+    let mut last: Option<([u8; 4], [u8; 4])> = None;
     for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
         if control() {
             return false;
         }
         for (source, destination) in rows_in.chunks_exact(4).zip(rows_out.chunks_exact_mut(4)) {
+            let key = [source[0], source[1], source[2], source[3]];
+            if let Some((seen, result)) = last {
+                if seen == key {
+                    destination.copy_from_slice(&result);
+                    continue;
+                }
+            }
             let rgba = [
-                unit(source[0]),
-                unit(source[1]),
-                unit(source[2]),
-                unit(source[3]),
+                units[usize::from(source[0])],
+                units[usize::from(source[1])],
+                units[usize::from(source[2])],
+                units[usize::from(source[3])],
             ];
             if primitive.mode == 3 {
                 destination[..3].fill(0);
                 destination[3] = quantize(clamp01(
                     LUMINANCE[0] * rgba[0] + LUMINANCE[1] * rgba[1] + LUMINANCE[2] * rgba[2],
                 ));
-                continue;
-            }
-            if source[3] == 0 {
+            } else if source[3] == 0 {
                 destination.fill(0);
-                continue;
-            }
-            for row in 0..4 {
-                let mut value = matrix[row * 5 + 4];
-                for (column, sample) in rgba.iter().enumerate() {
-                    value += matrix[row * 5 + column] * sample;
+            } else {
+                for row in 0..4 {
+                    let mut value = matrix[row * 5 + 4];
+                    for (column, sample) in rgba.iter().enumerate() {
+                        value += matrix[row * 5 + column] * sample;
+                    }
+                    destination[row] = quantize(clamp01(value));
                 }
-                destination[row] = quantize(clamp01(value));
             }
+            last = Some((
+                key,
+                [
+                    destination[0],
+                    destination[1],
+                    destination[2],
+                    destination[3],
+                ],
+            ));
         }
     }
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use vexel_scene::FilterInput;
+
+    fn primitive(mode: u8) -> FilterPrimitive {
+        FilterPrimitive {
+            kind: FilterKind::ColorMatrix,
+            input: FilterInput::Graphic,
+            input2: FilterInput::Graphic,
+            merge_inputs: [FilterInput::Graphic; 8],
+            merge_count: 0,
+            mode,
+            rgba: [0; 4],
+            values: [
+                0.3, 0.6, 0.1, 0.0, 0.05, 0.2, 0.5, 0.3, 0.0, -0.1, 0.1, 0.4, 0.9, 0.0, 0.2, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+            ],
+            source_offset: 0,
+        }
+    }
+
+    /// 12x8 layer built from runs of identical pixels, alternating pairs and
+    /// alpha-0 pixels, so the last-pixel memo is hit and missed.
+    fn runs_image() -> Vec<u8> {
+        let palette: [[u8; 4]; 6] = [
+            [10, 200, 30, 255],
+            [0, 0, 0, 0],
+            [255, 128, 1, 0],
+            [77, 77, 77, 128],
+            [1, 2, 3, 255],
+            [200, 10, 90, 37],
+        ];
+        let mut out = Vec::new();
+        for i in 0..96usize {
+            let pixel = match i % 6 {
+                0..=2 => palette[(i / 12) % 6],
+                3 => palette[1],
+                4 => palette[4],
+                _ => palette[(i / 3) % 6],
+            };
+            out.extend_from_slice(&pixel);
+        }
+        out
+    }
+
+    /// Per-pixel reference: no memo, no byte lookup table.
+    fn reference(primitive: &FilterPrimitive, input: &[u8]) -> Vec<u8> {
+        let matrix = matrix_for(primitive);
+        let mut out = Vec::with_capacity(input.len());
+        for source in input.chunks_exact(4) {
+            let rgba: [f64; 4] = std::array::from_fn(|c| unit(source[c]));
+            if primitive.mode == 3 {
+                out.extend_from_slice(&[0, 0, 0]);
+                out.push(quantize(clamp01(
+                    LUMINANCE[0] * rgba[0] + LUMINANCE[1] * rgba[1] + LUMINANCE[2] * rgba[2],
+                )));
+            } else if source[3] == 0 {
+                out.extend_from_slice(&[0; 4]);
+            } else {
+                for row in 0..4 {
+                    let mut value = matrix[row * 5 + 4];
+                    for (column, sample) in rgba.iter().enumerate() {
+                        value += matrix[row * 5 + column] * sample;
+                    }
+                    out.push(quantize(clamp01(value)));
+                }
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn color_matrix_matches_a_per_pixel_reference_on_runs() {
+        let input = runs_image();
+        let row_bytes = 12 * 4;
+        for mode in [0u8, 3] {
+            let primitive = primitive(mode);
+            let mut output = vec![0u8; input.len()];
+            assert!(color_matrix(
+                &primitive,
+                &input,
+                &mut output,
+                &|| false,
+                row_bytes
+            ));
+            assert_eq!(output, reference(&primitive, &input), "mode {mode}");
+        }
+    }
 }

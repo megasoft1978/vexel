@@ -92,11 +92,48 @@ fn separable(mode: u8, cb: i64, cs: i64) -> i64 {
 
 /// Composites straight RGBA8 `source` (alpha already scaled by the group
 /// opacity) over `destination` with blend `mode` (0 = normal).
+///
+/// Three exact shortcuts skip the two 64-bit divisions per channel of the
+/// general formula: a transparent backdrop (the result is the source), an
+/// opaque source and an opaque backdrop (the formula's divisor becomes the
+/// constant 255^2 resp. 2*255^2). Each is the general expression with the
+/// alpha substituted and the common factor 255 cancelled, so results are
+/// bit-identical (see `shortcuts_match_the_general_formula`).
 pub fn blend_pixel(mode: u8, destination: &mut [u8], source: [u8; 4]) {
     let (a_s, a_b) = (i64::from(source[3]), i64::from(destination[3]));
     if a_s == 0 {
         return;
     }
+    if a_b == 0 {
+        destination[..3].copy_from_slice(&source[..3]);
+        destination[3] = source[3];
+        return;
+    }
+    if mode != PLUS_LIGHTER {
+        if a_b == 255 {
+            for c in 0..3 {
+                let (cs, cb) = (i64::from(source[c]), i64::from(destination[c]));
+                let y = a_s * separable(mode, cb, cs) + 255 * (255 - a_s) * cb;
+                destination[c] = ((2 * y + S) / (2 * S)).min(255) as u8;
+            }
+            destination[3] = 255;
+            return;
+        }
+        if a_s == 255 {
+            for c in 0..3 {
+                let (cs, cb) = (i64::from(source[c]), i64::from(destination[c]));
+                let mixed = (255 - a_b) * cs * 255 + a_b * separable(mode, cb, cs);
+                destination[c] = ((2 * mixed + S) / (2 * S)).min(255) as u8;
+            }
+            destination[3] = 255;
+            return;
+        }
+    }
+    blend_general(mode, destination, source);
+}
+
+fn blend_general(mode: u8, destination: &mut [u8], source: [u8; 4]) {
+    let (a_s, a_b) = (i64::from(source[3]), i64::from(destination[3]));
     if mode == PLUS_LIGHTER {
         let alpha = (a_s + a_b).min(255);
         for c in 0..3 {
@@ -186,6 +223,31 @@ mod tests {
             let co = asq * cr + (1.0 - asq) * abq * cbq;
             assert!((f64::from(dst[0]) - co / ao * 255.0).abs() <= 1.0, "mode {mode}");
             assert!((f64::from(dst[3]) - ao * 255.0).abs() <= 1.0, "alpha mode {mode}");
+        }
+    }
+
+    #[test]
+    fn shortcuts_match_the_general_formula() {
+        let steps = [0u8, 1, 2, 17, 64, 100, 127, 128, 129, 200, 253, 254, 255];
+        let alphas = [0u8, 1, 3, 77, 128, 200, 254, 255];
+        for mode in 0..=12u8 {
+            for &cs in &steps {
+                for &cb in &steps {
+                    for &a_s in &alphas {
+                        for &a_b in &alphas {
+                            let src = [cs, cb, 255 - cs, a_s];
+                            let dst = [cb, cs, cb / 2, a_b];
+                            let mut fast = dst;
+                            blend_pixel(mode, &mut fast, src);
+                            let mut slow = dst;
+                            if a_s != 0 {
+                                blend_general(mode, &mut slow, src);
+                            }
+                            assert_eq!(fast, slow, "mode {mode} src {src:?} dst {dst:?}");
+                        }
+                    }
+                }
+            }
         }
     }
 

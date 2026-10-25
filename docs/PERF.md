@@ -781,3 +781,45 @@ Tick p50, 900 px, release, shared machine (load average 7-12, noisy):
 
 Remaining on shot1 (35 ms render): animated blur 9 ms, blend composites,
 painting moving characters; decode 13 ms (s4: 106 ms, path-cache misses).
+
+## Playback decode and composite (lane l5-decode)
+
+Same bench and scenes as above (tick p50, 900 px, release, load average 7-12,
+median of 2-3 runs; decode / render are the `c.decode` / `c.render` phases).
+
+| scene | before (tick = decode + render) | after |
+|---|---|---|
+| shot1 | 50 = 12 + 35 | 40.7 = 12 + 26.7 |
+| s3 | 48 = 25 + 20 | 45.5 = 24 + 19.5 |
+| s4 | 129 = 106 + 20 | 64 = 43 + 20 |
+| s9 | 55 = 16 + 34 | 52.4 = 16 + 33 |
+
+- s4 path cache: not a key problem (the key has no transform). The s4 working
+  set is 1136 paths = 31 MiB per tick against a 24 MiB cap with a 16 MiB
+  low-water mark; cyclic LRU evicted each entry just before its reuse, so
+  110k lookups in 96 ticks all missed (counted). Cap is now 128 MiB (low
+  water 96). A hit still replays the parse's work charges. Remaining misses
+  are tolerance-window misses while the camera zooms (~28 per tick).
+  `cache_holds_a_cartoon_shot_working_set` guards it; `cache_stays_bounded`
+  now inserts 6000 entries so it still reaches the eviction path.
+- `CancelControl::charge` polled the cancel closure on every charge (millions
+  per large decode); now every 64th charge. Checkpoints still poll.
+- Blur (`filter/blur.rs`): row-wise accumulation, per-tap weight precomputed,
+  taps of transparent pixels skipped (adding `+0.0` is exact). Summation order
+  per pixel is unchanged, so output is byte-identical
+  (`row_wise_blur_is_byte_identical_to_the_per_pixel_formulation` compares
+  against the old formulation). shot1 `r.filter` 9.6 -> 2.1 ms.
+- `blend_pixel`: exact shortcuts for transparent backdrop, opaque backdrop and
+  opaque source (`shortcuts_match_the_general_formula`, all modes).
+- `color_matrix`: byte-to-unit table and repeated-pixel memo (s9 r.filter
+  8.4 -> 8.05 ms).
+
+Not done: element-level incremental decode. The decoder is a resumable
+session over a freshly lexed token stream feeding a scene builder whose
+validation (`scene_from`, `segment_valid`, ~30% of s4 decode) is a security
+check, so reusing subtrees means splicing builder tables, not a local cache.
+Profile of s4 decode after the fixes: lexing ~23%, traversal ~57%, scene
+validation/freeze ~20%; work-charge calls (`charge` through two dyn layers)
+are ~19% of samples and the next target (batching charges changes where a
+limit trips, so it needs a limits review). Painting of moving shapes
+(`render_parallel`) was not changed.

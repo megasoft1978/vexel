@@ -29,8 +29,11 @@ use vexel_geometry::{Affine, Edge, affine_map_point};
 use vexel_svg_path::{ParseOptions, PathDocument};
 
 /// Total cache budget (owned bytes) and the level eviction drains down to.
-const CAP_BYTES: usize = 24 * 1024 * 1024;
-const LOW_WATER: usize = 16 * 1024 * 1024;
+/// Sized above the working set of a dense cartoon shot (about 31 MiB on the
+/// heaviest): a cyclic access pattern larger than the cap would evict every
+/// entry just before its reuse and miss on each tick.
+const CAP_BYTES: usize = 128 * 1024 * 1024;
+const LOW_WATER: usize = 96 * 1024 * 1024;
 /// Shortest `d` worth caching: parse cost scales with length, and the many
 /// short paths of dense scenes would only duplicate memory for little gain.
 const MIN_D_BYTES: usize = 512;
