@@ -3,8 +3,10 @@
 mod common;
 mod face_support;
 
-use common::{Rig, no_grants};
-use face_support::{build, shapes};
+use common::{Dir, Rig, no_grants, policy_for};
+use face_support::{Face, build, shapes};
+use std::fs;
+use vexel_timeline::audio_codec::encode_wav16;
 
 fn source(rig: &Rig) -> String {
     String::from_utf8(rig.app.source_bytes().unwrap()).unwrap()
@@ -113,4 +115,182 @@ fn a_forged_mouth_element_is_not_trusted() {
     let reply = rig.doc_tool("mouth_set", &shapes(&face));
     assert!(reply.is_error, "{}", reply.body);
     assert_eq!(rig.state(), state);
+}
+
+/// 2 s at 24 kHz: silence, a loud 440 Hz burst from 0.5 s to 1.25 s, silence.
+fn burst() -> Vec<u8> {
+    let rate = 24_000u32;
+    let samples: Vec<i16> = (0..2 * rate as usize)
+        .map(|i| {
+            if (rate as usize / 2..rate as usize * 5 / 4).contains(&i) {
+                ((i as f64 * 440.0 * std::f64::consts::TAU / f64::from(rate)).sin() * 20_000.0)
+                    as i16
+            } else {
+                0
+            }
+        })
+        .collect();
+    encode_wav16(rate, 1, &samples)
+}
+
+fn jstr(s: &str) -> String {
+    format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
+}
+
+/// A face with its mouth set and a native timeline (48 ticks at 24/s).
+fn talking(dir: &Dir) -> (Rig, Face) {
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let face = build(&mut rig);
+    rig.doc_tool(
+        "native_timeline_add_property_track",
+        &format!(
+            r#""trackId":"fade","targetId":"{}","property":"opacity","valueType":"scalar","interpolation":"linear","value":1"#,
+            face.character
+        ),
+    )
+    .ok();
+    rig.doc_tool("mouth_set", &shapes(&face)).ok();
+    fs::write(dir.file("burst.wav"), burst()).unwrap();
+    (rig, face)
+}
+
+fn png(rig: &mut Rig, dir: &Dir, name: &str, time: &str) -> Vec<u8> {
+    let path = dir.text(name);
+    rig.doc_tool("render_png", &format!(r#""path":"{path}","time":{time}"#))
+        .ok();
+    fs::read(dir.file(name)).unwrap()
+}
+
+#[test]
+fn lip_sync_opens_the_mouth_inside_the_burst_only() {
+    let dir = Dir::new();
+    let (mut rig, face) = talking(&dir);
+    let before = rig.state();
+    let args = format!(
+        r#""character":"{}","source":{{"path":{}}},"seed":3"#,
+        face.character,
+        jstr(&dir.text("burst.wav"))
+    );
+    let reply = rig.doc_tool("lip_sync", &args).ok().to_owned();
+    assert!(
+        reply.contains("\"tracks\":3") && reply.contains("\"droppedTicks\":0"),
+        "{reply}"
+    );
+    let quiet = png(&mut rig, &dir, "quiet.png", "0.1");
+    let loud = png(&mut rig, &dir, "loud.png", "0.9");
+    let after = png(&mut rig, &dir, "after.png", "1.75");
+    assert_ne!(quiet, loud, "the mouth opens inside the burst");
+    assert_eq!(quiet, after, "and closes again after it");
+    assert_eq!(
+        loud,
+        png(&mut rig, &dir, "loud2.png", "0.9"),
+        "deterministic"
+    );
+    let tl = rig.doc_tool("native_timeline_get", "").ok().to_owned();
+    assert!(
+        tl.contains(&format!("lip_{}", face.rest)) && tl.contains("\"visibility\""),
+        "{tl}"
+    );
+    // Running again replaces the lip tracks instead of failing.
+    rig.doc_tool("lip_sync", &args).ok();
+    let again = rig.doc_tool("native_timeline_get", "").ok().to_owned();
+    assert_eq!(again.matches("lip_").count(), tl.matches("lip_").count());
+    // One undo per call; two undos leave only the mouth set.
+    rig.doc_tool("native_timeline_undo", "").ok();
+    rig.doc_tool("native_timeline_undo", "").ok();
+    let bare = rig.doc_tool("native_timeline_get", "").ok().to_owned();
+    assert!(!bare.contains("lip_"), "{bare}");
+    assert_ne!(before.source, rig.state().source, "the mouth set stays");
+}
+
+#[test]
+fn lip_sync_takes_a_given_envelope_and_text_hints() {
+    let dir = Dir::new();
+    let (mut rig, face) = talking(&dir);
+    let c = &face.character;
+    let envelope = "0,0,0,0.9,0.9,0.9,0.9,0.9,0.9,0,0,0";
+    let reply = rig
+        .doc_tool(
+            "lip_sync",
+            &format!(
+                r#""character":"{c}","source":{{"envelope":[{envelope}]}},"startTick":4,"text":["oh"],"smoothing":0"#
+            ),
+        )
+        .ok()
+        .to_owned();
+    assert!(reply.contains("\"startTick\":4"), "{reply}");
+    let mouthless = png(&mut rig, &dir, "m0.png", "0.05");
+    let speaking = png(&mut rig, &dir, "m1.png", "0.4");
+    assert_ne!(mouthless, speaking);
+    // Ticks past the duration are dropped, not an error.
+    let reply = rig
+        .doc_tool(
+            "lip_sync",
+            &format!(r#""character":"{c}","source":{{"envelope":[{envelope}]}},"startTick":44"#),
+        )
+        .ok()
+        .to_owned();
+    assert!(reply.contains("\"droppedTicks\":8"), "{reply}");
+}
+
+#[test]
+fn lip_sync_rejects_bad_input_without_changes() {
+    let dir = Dir::new();
+    let (mut rig, face) = talking(&dir);
+    let c = &face.character;
+    let wav = jstr(&dir.text("burst.wav"));
+    let many = vec!["0.5"; 100_001].join(",");
+    let words = vec!["\"ha\""; 257].join(",");
+    let cases = [
+        format!(r#""character":"nobody","source":{{"envelope":[0.5]}}"#),
+        format!(r#""character":"{c}""#),
+        format!(r#""character":"{c}","source":{{}}"#),
+        format!(r#""character":"{c}","source":{{"path":{wav},"trackId":"x"}}"#),
+        format!(r#""character":"{c}","source":{{"trackId":"missing"}}"#),
+        format!(r#""character":"{c}","source":{{"path":"/etc/hosts"}}"#),
+        format!(r#""character":"{c}","source":{{"path":"nope.wav"}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":[]}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":[2]}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":["x"]}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":[1e999]}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"startTick":48"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"ticks":5"#),
+        format!(r#""character":"{c}","source":{{"path":{wav}}},"ticks":0"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"smoothing":9"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"seed":-1"#),
+        format!(
+            r#""character":"{c}","source":{{"envelope":[0.5]}},"mapping":{{"close":0.9,"mid":0.2}}"#
+        ),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"mapping":{{"loud":1}}"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"text":[3]"#),
+        format!(r#""character":"{c}","source":{{"envelope":[0.5]}},"text":[{words}]"#),
+    ];
+    let state = rig.state();
+    for args in &cases {
+        let reply = rig.doc_tool("lip_sync", args);
+        let short: String = args.chars().take(90).collect();
+        assert!(reply.is_error, "{short}: {}", reply.body);
+    }
+    // An oversized envelope is refused by the parser or the tool, never run.
+    let huge = format!(
+        r#"{{"jsonrpc":"2.0","id":900,"method":"tools/call","params":{{"name":"lip_sync","arguments":{{"documentId":"preview-document","character":"{c}","source":{{"envelope":[{many}]}}}}}}}}"#
+    );
+    let out = rig.line(&huge);
+    assert!(
+        out.contains("\"error\"") || out.contains("\"isError\":true"),
+        "{}",
+        &out[..out.len().min(200)]
+    );
+    assert_eq!(rig.state(), state, "rejected calls changed nothing");
+    // A character without a mouth set is a clear error.
+    let mut bare = Rig::new(no_grants());
+    let other = build(&mut bare);
+    let reply = bare.doc_tool(
+        "lip_sync",
+        &format!(
+            r#""character":"{}","source":{{"envelope":[0.5]}}"#,
+            other.character
+        ),
+    );
+    assert!(reply.error().contains("mouth_set"), "{}", reply.body);
 }

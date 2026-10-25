@@ -13,7 +13,7 @@ pub(crate) const MOUTHS_ID: &str = "vexel-mouths";
 /// Most characters with a mouth set in one document.
 pub(crate) const MAX_CHARACTERS: usize = 32;
 const TAG: &[u8] = b"<desc id=\"vexel-mouths\"";
-const NO_MOUTHS: &str = "no mouth set for this character; call mouth_set first";
+const NO_MOUTHS: &str = "lip_sync: no mouth set for this character; call mouth_set first";
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mouth {
@@ -94,9 +94,11 @@ fn stored(app: &AppDocument) -> Result<Vec<Mouth>, &'static str> {
     if super::mcp_rig::find(&source, TAG).is_none() {
         return Ok(Vec::new());
     }
-    let text =
-        desc_text(&source, TAG).ok_or("the mouth sets stored in the document are invalid")?;
-    from_json(text).ok_or("the mouth sets stored in the document are invalid")
+    let text = desc_text(&source, TAG).ok_or(
+        "mouth_set: the mouth sets stored in the document are invalid; call mouth_set again",
+    )?;
+    from_json(text)
+        .ok_or("mouth_set: the mouth sets stored in the document are invalid; call mouth_set again")
 }
 
 /// The stored set of `character`.

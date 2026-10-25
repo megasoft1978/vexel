@@ -414,6 +414,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "rig_pose",
     "clip_apply",
     "mouth_set",
+    "lip_sync",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]

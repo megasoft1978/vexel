@@ -73,6 +73,10 @@ const DOC_TOOL_PREFIXES: &[&str] = &[
     "gradient_",
     "clip_",
     "rig_",
+    "mouth_set",
+    "lip_sync",
+    "eyes_set",
+    "blink",
     "text_",
     "attribute_",
 ];

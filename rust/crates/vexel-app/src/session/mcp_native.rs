@@ -16,6 +16,7 @@ use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, 
 pub(crate) mod mcp_camera;
 mod mcp_extend;
 pub(crate) mod mcp_face;
+pub(crate) mod mcp_lipsync;
 pub(crate) mod mcp_mouth;
 pub(crate) mod mcp_rig;
 mod mcp_tracks;

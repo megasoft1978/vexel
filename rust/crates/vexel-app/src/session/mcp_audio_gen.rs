@@ -364,18 +364,28 @@ fn granted_file(
     }
 }
 
-pub(super) fn envelope(
+/// A computed envelope with the timeline facts it was taken against.
+pub(crate) struct EnvData {
+    pub tps: u32,
+    /// Tick the source starts at (the track's `startTick`, else 0).
+    pub start_tick: u32,
+    pub millis: u64,
+    pub env: audio_envelope::Envelope,
+}
+
+pub(crate) fn envelope_of(
     app: &AppDocument,
     policy: &AccessPolicy,
-    spec: EnvSpec,
-) -> Result<McpOutcome, &'static str> {
+    source: &EnvSource,
+    ticks: Option<u32>,
+) -> Result<EnvData, &'static str> {
     let tps = ticks_per_second(app).ok_or(NO_TIMELINE)?;
-    let limit = match spec.ticks {
+    let limit = match ticks {
         Some(t) if t == 0 || t as usize > MAX_TICKS => return Err(ENVELOPE_LIMIT),
         Some(t) => Some(t as usize),
         None => None,
     };
-    let (mut pcm, start_ms, start_tick) = match &spec.source {
+    let (mut pcm, start_ms, start_tick) = match source {
         EnvSource::Path(input) => {
             let path = granted_file(app, policy, input)?;
             let bytes = read_file(&path)?;
@@ -403,11 +413,28 @@ pub(super) fn envelope(
         ENVELOPE_LIMIT
     })?;
     let millis = pcm.frames() as u64 * 1000 / u64::from(pcm.rate.max(1));
-    let values: Vec<String> = env.rms.iter().map(|v| format!("{v:.3}")).collect();
+    Ok(EnvData {
+        tps,
+        start_tick,
+        millis,
+        env,
+    })
+}
+
+pub(super) fn envelope(
+    app: &AppDocument,
+    policy: &AccessPolicy,
+    spec: EnvSpec,
+) -> Result<McpOutcome, &'static str> {
+    let data = envelope_of(app, policy, &spec.source, spec.ticks)?;
+    let values: Vec<String> = data.env.rms.iter().map(|v| format!("{v:.3}")).collect();
     Ok(McpOutcome::Reply(format!(
-        "{{\"tickRate\":{tps},\"startTick\":{start_tick},\"ticks\":{},\"durationMs\":{millis},\"peakRms\":{:.4},\"rms\":[{}]}}",
-        env.rms.len(),
-        env.peak_rms,
+        "{{\"tickRate\":{},\"startTick\":{},\"ticks\":{},\"durationMs\":{},\"peakRms\":{:.4},\"rms\":[{}]}}",
+        data.tps,
+        data.start_tick,
+        data.env.rms.len(),
+        data.millis,
+        data.env.peak_rms,
         values.join(",")
     )))
 }
