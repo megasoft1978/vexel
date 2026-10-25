@@ -31,7 +31,7 @@ use super::render_scene::{Drawn, geo};
 use super::shapes::{Entry, prepare};
 use std::cell::{Cell, RefCell};
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use vexel_gpu_scene::policy::{ENV_SWITCH, FallbackLatch, env_enables_gpu};
 use vexel_gpu_scene::run::{ComputeBackend, GpuRasterizer, Output, RenderError};
 use vexel_gpu_scene::{Capability, GpuError, GpuScene, UnsupportedReason, classify};
@@ -40,9 +40,9 @@ use vexel_render::{PreserveAspect, ViewBox};
 use vexel_scene::{PaintKind, SceneView, ViewportRead};
 
 static OPTED_IN: AtomicBool = AtomicBool::new(false);
-/// 0 = follow opt-in, 1 = forced off, 2 = forced on without the cost and cache
+/// Per thread, so a test forcing the route never changes what other threads
+/// (workers of concurrent tests) do. 0 = follow opt-in, 1 = forced off, 2 = forced on without the cost and cache
 /// heuristics (tests), 3 = on with the shell's heuristics (benches).
-static OVERRIDE: AtomicU8 = AtomicU8::new(0);
 static FRAMES: AtomicU64 = AtomicU64::new(0);
 static SESSION: Mutex<Session> = Mutex::new(Session::new());
 
@@ -70,10 +70,11 @@ pub enum Decision {
 const MIN_GPU_WORK: f64 = 2.0e6;
 
 fn forced() -> bool {
-    OVERRIDE.load(Ordering::SeqCst) == 2
+    OVERRIDE.with(Cell::get) == 2
 }
 
 thread_local! {
+    static OVERRIDE: Cell<u8> = const { Cell::new(0) };
     static LAST_WORK: Cell<f64> = const { Cell::new(0.0) };
     static LAST: Cell<Decision> = const { Cell::new(Decision::None) };
 }
@@ -88,6 +89,7 @@ pub fn last_decision() -> Decision {
 }
 
 /// Work estimate of the last lowered scene on this thread.
+#[cfg(test)]
 pub fn last_work() -> f64 {
     LAST_WORK.with(Cell::get)
 }
@@ -100,20 +102,19 @@ pub fn gpu_frames() -> u64 {
 /// The shell's policy with the route on, for benches (`VEXEL_GPU=0` and the
 /// latch still apply).
 pub fn set_gpu_display_policy() {
-    OVERRIDE.store(3, Ordering::SeqCst);
+    OVERRIDE.with(|o| o.set(3));
 }
 
 /// Forces the route on or off (`None`: follow the shell's opt-in). Forced on
 /// skips the cost and cache heuristics so tests see every eligible frame.
 pub fn set_gpu_display(force: Option<bool>) {
-    OVERRIDE.store(
-        match force {
+    OVERRIDE.with(|o| {
+        o.set(match force {
             None => 0,
             Some(false) => 1,
             Some(true) => 2,
-        },
-        Ordering::SeqCst,
-    );
+        });
+    });
 }
 
 /// What a shell status line shows: `VEXEL_GPU: on|off|latched`.
@@ -144,7 +145,7 @@ fn env_on() -> bool {
 }
 
 fn active() -> bool {
-    let wanted = match OVERRIDE.load(Ordering::SeqCst) {
+    let wanted = match OVERRIDE.with(Cell::get) {
         1 => false,
         2 | 3 => true,
         _ => OPTED_IN.load(Ordering::SeqCst),
