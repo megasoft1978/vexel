@@ -195,6 +195,9 @@ impl McpHost {
             }),
             Operation::Batch(batch) => self.batch(app, batch, driver),
             Operation::Native(op) => crate::preview::native_timeline::apply(app, op),
+            Operation::Doc(crate::preview::DocOp::Audio(op)) => {
+                super::mcp_audio::apply(app, &self.policy, op)
+            }
             Operation::Doc(op) => crate::preview::apply_doc(app, op),
             Operation::ExportSvg => export_svg(app),
             Operation::RenderPng {

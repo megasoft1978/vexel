@@ -10,7 +10,7 @@ use super::mcp::McpOutcome;
 use super::mcp_png::quoted;
 use crate::animation::native_export::NativeExportSource;
 use crate::animation::native_export_message::{Tool, render_failure};
-use crate::animation::native_export_video::{NativeVideoError, NativeVideoRequest};
+use crate::animation::native_export_video::{NativeAudio, NativeVideoError, NativeVideoRequest};
 use crate::preview::VideoExport;
 use std::ffi::OsStr;
 use std::fs;
@@ -18,6 +18,7 @@ use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::{AtomicU32, Ordering};
 use vexel_mcp_access::{AccessError, AccessPolicy};
 use vexel_platform_apple::{VideoCodec, VideoError};
+use vexel_timeline::audio_mix::MixError;
 
 const NO_TIMELINE: &str = "export mp4 and mov need a native timeline; add a track with native_timeline_add_property_track first";
 const BAD_EXTENSION: &str = "export path extension must match the format (.mp4 or .mov)";
@@ -47,6 +48,13 @@ fn video_error(error: NativeVideoError) -> &'static str {
         NativeVideoError::Export(e) => render_failure(Tool::ExportGif, &e),
         NativeVideoError::BadSize { .. } => BAD_SIZE,
         NativeVideoError::BadLoops => "export loops must be at least 1",
+        NativeVideoError::Audio(MixError::Audio(_)) => {
+            "export audio source is invalid or unsupported; check audio_list (WAV, AIFF or CAF PCM, mono or stereo, at most 10 minutes and 256 MiB)"
+        }
+        NativeVideoError::Audio(MixError::Source) => {
+            "export audio track's file is missing or outside the document directory; fix it with audio_list and audio_set"
+        }
+        NativeVideoError::Audio(_) => "export audio mixdown failed (longer than 10 minutes?)",
         NativeVideoError::Video(VideoError::Invalid(_)) => {
             "export video request was rejected by the encoder"
         }
@@ -75,17 +83,27 @@ pub(super) fn export_video(
         std::process::id(),
         COUNTER.fetch_add(1, Ordering::Relaxed)
     ));
-    let result = native.export_video(&NativeVideoRequest {
-        path: temp.clone(),
-        codec: request.codec,
-        size: request.size,
-        background: request.background,
-        alpha: request.alpha,
-        bit_rate: request.bit_rate,
-        quality: request.quality,
-        fps: request.fps,
-        loops: request.loops,
+    let tracks = super::mcp_audio::tracks_of(app);
+    let mut load = |track: &_| super::mcp_audio::load_track(app, policy, track);
+    let audio = (!tracks.is_empty()).then(|| NativeAudio {
+        tracks: &tracks,
+        load: &mut load,
+        scratch_wav: temp.with_extension("audio.wav"),
     });
+    let result = native.export_video_with_audio(
+        &NativeVideoRequest {
+            path: temp.clone(),
+            codec: request.codec,
+            size: request.size,
+            background: request.background,
+            alpha: request.alpha,
+            bit_rate: request.bit_rate,
+            quality: request.quality,
+            fps: request.fps,
+            loops: request.loops,
+        },
+        audio,
+    );
     let video = match result {
         Ok(video) => video,
         Err(error) => {

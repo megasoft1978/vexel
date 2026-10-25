@@ -6,9 +6,13 @@ use super::native_export::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
 use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use vexel_platform_apple::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
+use vexel_timeline::audio::AudioTrack;
+use vexel_timeline::audio_codec::{self, Pcm};
+use vexel_timeline::audio_mix::{MixError, frames_for_ticks, mixdown};
 
 /// Most frames one video export may contain; longer loops keep every
 /// `stride`-th tick (the same rule the GIF export uses).
@@ -69,6 +73,41 @@ pub(crate) fn quality_bit_rate(quality: f64, pixels: u64, fps: f64) -> u32 {
         .clamp(10_000.0, f64::from(u32::MAX)) as u32
 }
 
+/// Audio to mux into a video: the tracks, how to load a track's decoded
+/// samples, and a scratch WAV path (removed before returning).
+pub struct NativeAudio<'a> {
+    pub tracks: &'a [AudioTrack],
+    pub load: &'a mut dyn FnMut(&AudioTrack) -> Result<Pcm, MixError>,
+    pub scratch_wav: PathBuf,
+}
+
+static SCRATCH_SEQ: AtomicU64 = AtomicU64::new(0);
+
+/// A unique sibling of `base` (pid + counter) so a predictable name is never
+/// reused or pre-created by another party.
+fn unique_scratch_path(base: &Path) -> PathBuf {
+    let seq = SCRATCH_SEQ.fetch_add(1, Ordering::Relaxed);
+    let stem = base.file_stem().and_then(|s| s.to_str()).unwrap_or("audio");
+    base.with_file_name(format!("{stem}.{}.{seq}.wav", std::process::id()))
+}
+
+/// Creates a new 0600 file (fails if it exists, never follows a planted path).
+fn write_scratch(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)?;
+    let written = file.write_all(bytes);
+    if written.is_err() {
+        drop(file);
+        let _ = std::fs::remove_file(path);
+    }
+    written
+}
+
 /// A finished video and what it contains.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NativeVideo {
@@ -92,6 +131,8 @@ pub enum NativeVideoError {
     Video(VideoError),
     /// `loops` is zero.
     BadLoops,
+    /// The audio mixdown failed.
+    Audio(MixError),
 }
 
 impl From<NativeExportError> for NativeVideoError {
@@ -114,6 +155,17 @@ impl NativeExportSource {
     /// Renders the loop ticks and encodes them as H.264/HEVC. Frame `i` is
     /// shown at `i * stride` ticks, so durations are exact at any tick rate.
     pub fn export_video(&self, req: &NativeVideoRequest) -> Result<NativeVideo, NativeVideoError> {
+        self.export_video_with_audio(req, None)
+    }
+
+    /// [`NativeExportSource::export_video`] plus an AAC track mixed from
+    /// `audio` for the video's whole length; `None` leaves the output as
+    /// without audio support.
+    pub fn export_video_with_audio(
+        &self,
+        req: &NativeVideoRequest,
+        audio: Option<NativeAudio<'_>>,
+    ) -> Result<NativeVideo, NativeVideoError> {
         let view = self
             .timeline()
             .view()
@@ -150,7 +202,6 @@ impl NativeExportSource {
             });
         }
         let geometry = svg_geometry(&viewport, width, height);
-        let assets = self.drawing_assets();
         let quality = quality_level(req.quality.unwrap_or(DEFAULT_QUALITY));
         let fps = f64::from(tps) / stride as f64;
         let level = req.quality.unwrap_or(DEFAULT_QUALITY);
@@ -161,17 +212,64 @@ impl NativeExportSource {
             (level < 1.0)
                 .then(|| quality_bit_rate(level, u64::from(width) * u64::from(height), fps))
         });
-        let mut writer = VideoWriter::create(VideoSpec {
+        let video_ticks = ticks.len() as u64 * stride;
+        let scratch = match audio {
+            Some(audio) if !audio.tracks.is_empty() => {
+                let frames = frames_for_ticks(video_ticks, tps);
+                let mixed = mixdown(audio.tracks, tps, frames, audio.load)
+                    .map_err(NativeVideoError::Audio)?;
+                let wav = audio_codec::encode_wav16(48_000, 2, &mixed);
+                let unique = unique_scratch_path(&audio.scratch_wav);
+                write_scratch(&unique, &wav)
+                    .map_err(|_| NativeVideoError::Audio(MixError::Alloc))?;
+                Some(unique)
+            }
+            _ => None,
+        };
+        let created = VideoWriter::create_with_audio(
+            VideoSpec {
+                path: req.path.clone(),
+                width,
+                height,
+                codec: req.codec,
+                timescale: tps as i32,
+                background: req.background,
+                alpha: req.alpha,
+                bit_rate,
+                quality: Some(quality),
+            },
+            scratch.as_deref(),
+        );
+        let result = created.map_err(NativeVideoError::from).and_then(|writer| {
+            self.append_frames(writer, &ticks, &view, width, height, geometry, stride)
+        });
+        if let Some(wav) = &scratch {
+            let _ = std::fs::remove_file(wav);
+        }
+        result.map(|(frames, ticks_per_frame)| NativeVideo {
             path: req.path.clone(),
+            frames,
             width,
             height,
-            codec: req.codec,
-            timescale: tps as i32,
-            background: req.background,
-            alpha: req.alpha,
-            bit_rate,
-            quality: Some(quality),
-        })?;
+            ticks_per_frame,
+            ticks_per_second: tps,
+        })
+    }
+}
+
+impl NativeExportSource {
+    #[allow(clippy::too_many_arguments)]
+    fn append_frames(
+        &self,
+        mut writer: VideoWriter,
+        ticks: &[u32],
+        view: &vexel_timeline::TimelineView<'_>,
+        width: u32,
+        height: u32,
+        geometry: super::native_drawing::SvgGeometry,
+        stride: u64,
+    ) -> Result<(usize, u32), NativeVideoError> {
+        let assets = self.drawing_assets();
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
         render_ordered(
             ticks.len(),
@@ -179,7 +277,7 @@ impl NativeExportSource {
             |i| {
                 render_native_frame(
                     self.svg_source(),
-                    &view,
+                    view,
                     &assets,
                     ticks[i],
                     width,
@@ -194,13 +292,6 @@ impl NativeExportSource {
             OrderedError::Consume(e) => NativeVideoError::Video(e),
         })?;
         writer.finish_at(ticks.len() as i64 * i64::from(ticks_per_frame))?;
-        Ok(NativeVideo {
-            path: req.path.clone(),
-            frames: ticks.len(),
-            width,
-            height,
-            ticks_per_frame,
-            ticks_per_second: tps,
-        })
+        Ok((ticks.len(), ticks_per_frame))
     }
 }

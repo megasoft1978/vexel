@@ -3,7 +3,9 @@
 
 use std::path::Path;
 
-use objc2_av_foundation::{AVAssetReader, AVAssetReaderTrackOutput, AVMediaTypeVideo, AVURLAsset};
+use objc2_av_foundation::{
+    AVAssetReader, AVAssetReaderTrackOutput, AVMediaTypeAudio, AVMediaTypeVideo, AVURLAsset,
+};
 use objc2_core_foundation::CGSize;
 use objc2_core_video::{
     CVPixelBufferGetBaseAddress, CVPixelBufferGetBytesPerRow, CVPixelBufferGetHeight,
@@ -83,6 +85,21 @@ pub fn decode(path: &Path) -> Result<Decoded, String> {
             natural_size: (width, height),
             frames,
         })
+    }
+}
+
+/// Number of audio tracks in `path` and the first one's duration in seconds.
+#[allow(deprecated)] // sync track load is fine for a test-only reader
+pub fn audio_tracks(path: &Path) -> Result<(usize, f64), String> {
+    // SAFETY: retained locals used on this thread.
+    unsafe {
+        let url = NSURL::fileURLWithPath(&NSString::from_str(path.to_str().ok_or("path")?));
+        let asset = AVURLAsset::URLAssetWithURL_options(&url, None);
+        let tracks = asset.tracksWithMediaType(AVMediaTypeAudio.ok_or("media type")?);
+        let seconds = tracks
+            .firstObject()
+            .map_or(0.0, |track| track.timeRange().duration.seconds());
+        Ok((tracks.count(), seconds))
     }
 }
 
@@ -271,5 +288,77 @@ mod tests {
         };
         assert!(VideoWriter::create(spec(63, 64)).is_err());
         assert!(VideoWriter::create(spec(8192, 64)).is_err());
+    }
+
+    fn sine_wav(seconds: f64) -> Vec<u8> {
+        let frames = (seconds * 48_000.0) as usize;
+        let mut pcm = Vec::with_capacity(frames * 4);
+        for i in 0..frames {
+            let v = ((i as f64 * 440.0 * std::f64::consts::TAU / 48_000.0).sin() * 12_000.0) as i16;
+            pcm.extend_from_slice(&v.to_le_bytes());
+            pcm.extend_from_slice(&v.to_le_bytes());
+        }
+        let mut out = Vec::new();
+        out.extend_from_slice(b"RIFF");
+        out.extend_from_slice(&(36 + pcm.len() as u32).to_le_bytes());
+        out.extend_from_slice(b"WAVEfmt ");
+        out.extend_from_slice(&16u32.to_le_bytes());
+        out.extend_from_slice(&[1, 0, 2, 0]);
+        out.extend_from_slice(&48_000u32.to_le_bytes());
+        out.extend_from_slice(&192_000u32.to_le_bytes());
+        out.extend_from_slice(&[4, 0, 16, 0]);
+        out.extend_from_slice(b"data");
+        out.extend_from_slice(&(pcm.len() as u32).to_le_bytes());
+        out.extend_from_slice(&pcm);
+        out
+    }
+
+    #[test]
+    fn audio_track_is_muxed_for_mp4_and_mov() {
+        let wav = scratch("tone.wav");
+        std::fs::write(&wav, sine_wav(2.0)).unwrap();
+        for name in ["with-audio.mp4", "with-audio.mov"] {
+            let path = scratch(name);
+            let mut w = VideoWriter::create_with_audio(
+                VideoSpec {
+                    path: path.clone(),
+                    width: SIZE as u32,
+                    height: SIZE as u32,
+                    codec: VideoCodec::H264,
+                    timescale: TS,
+                    background: [255, 255, 255],
+                    alpha: false,
+                    bit_rate: None,
+                    quality: Some(1.0),
+                },
+                Some(&wav),
+            )
+            .expect("create");
+            for i in 0..N * 2 {
+                w.append(&gradient(i % N), i as i64 * STEP).expect("append");
+            }
+            w.finish_at(N as i64 * 2 * STEP).expect("finish");
+            let (count, seconds) = audio_tracks(&path).expect("audio info");
+            assert_eq!(count, 1, "{name}");
+            assert!((seconds - 2.0).abs() < 0.15, "{name}: {seconds}");
+            let video = decode(&path).expect("decode");
+            assert_eq!(video.frames.len(), N * 2);
+        }
+        let plain = scratch("no-audio.mp4");
+        let mut w = VideoWriter::create(VideoSpec {
+            path: plain.clone(),
+            width: SIZE as u32,
+            height: SIZE as u32,
+            codec: VideoCodec::H264,
+            timescale: TS,
+            background: [255, 255, 255],
+            alpha: false,
+            bit_rate: None,
+            quality: Some(1.0),
+        })
+        .unwrap();
+        w.append(&gradient(0), 0).unwrap();
+        w.finish_at(STEP).unwrap();
+        assert_eq!(audio_tracks(&plain).unwrap().0, 0);
     }
 }

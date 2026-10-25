@@ -36,6 +36,8 @@ use objc2_core_video::{
 };
 use objc2_foundation::{NSDictionary, NSNumber, NSString, NSURL};
 
+use crate::video_audio::AudioFeed;
+
 /// Largest accepted frame edge in pixels.
 pub const MAX_VIDEO_DIMENSION: u32 = 4096;
 const IO_TIMEOUT: Duration = Duration::from_secs(60);
@@ -98,6 +100,7 @@ pub struct VideoWriter {
     timescale: i32,
     last: Option<i64>,
     previous: Option<i64>,
+    audio: Option<AudioFeed>,
 }
 
 fn cf_as_ns(s: &CFString) -> &NSString {
@@ -124,6 +127,12 @@ fn native(context: &str, writer: &AVAssetWriter) -> VideoError {
 impl VideoWriter {
     /// Creates the output file and starts the writing session at time zero.
     pub fn create(spec: VideoSpec) -> Result<Self, VideoError> {
+        Self::create_with_audio(spec, None)
+    }
+
+    /// Like [`VideoWriter::create`], plus an AAC track encoded from `audio`,
+    /// a 48 kHz stereo PCM16 WAV file starting at time zero.
+    pub fn create_with_audio(spec: VideoSpec, audio: Option<&Path>) -> Result<Self, VideoError> {
         let (w, h) = (spec.width, spec.height);
         if w == 0 || h == 0 || w > MAX_VIDEO_DIMENSION || h > MAX_VIDEO_DIMENSION {
             return Err(VideoError::Invalid(format!(
@@ -242,6 +251,10 @@ impl VideoWriter {
                 return Err(VideoError::Native("writer rejected video input".into()));
             }
             writer.addInput(&input);
+            let audio = audio.map(AudioFeed::open).transpose()?;
+            if let Some(feed) = &audio {
+                feed.add_to(&writer)?;
+            }
             if !writer.startWriting() {
                 return Err(native("startWriting", &writer));
             }
@@ -254,6 +267,7 @@ impl VideoWriter {
                 spec,
                 last: None,
                 previous: None,
+                audio,
             })
         }
     }
@@ -284,6 +298,9 @@ impl VideoWriter {
             if unsafe { self.writer.status() } == AVAssetWriterStatus::Failed {
                 return Err(native("append", &self.writer));
             }
+            if let Some(feed) = &mut self.audio {
+                feed.pump()?;
+            }
             if start.elapsed() > IO_TIMEOUT {
                 return Err(VideoError::Timeout("waiting for encoder input"));
             }
@@ -301,6 +318,9 @@ impl VideoWriter {
         }
         self.previous = self.last;
         self.last = Some(pts);
+        if let Some(feed) = &mut self.audio {
+            feed.pump()?;
+        }
         Ok(())
     }
 
@@ -315,7 +335,7 @@ impl VideoWriter {
     }
 
     /// Finishes with an explicit end time in ticks (the last frame's end).
-    pub fn finish_at(self, end_ticks: i64) -> Result<(), VideoError> {
+    pub fn finish_at(mut self, end_ticks: i64) -> Result<(), VideoError> {
         let Some(last) = self.last else {
             return Err(VideoError::Invalid("no frames appended".into()));
         };
@@ -324,6 +344,13 @@ impl VideoWriter {
                 "end time must follow last frame".into(),
             ));
         }
+        if let Some(feed) = &mut self.audio {
+            // SAFETY: live input; no more video follows.
+            unsafe { self.input.markAsFinished() };
+            // SAFETY: property read on a live writer.
+            let failed = || unsafe { self.writer.status() } == AVAssetWriterStatus::Failed;
+            feed.drain(&failed)?;
+        }
         let (tx, rx) = mpsc::channel::<()>();
         let block = RcBlock::new(move || {
             let _ = tx.send(());
@@ -331,7 +358,9 @@ impl VideoWriter {
         // SAFETY: the completion block only sends on a channel and may run on
         // any queue; the writer stays alive until the channel fires or times out.
         unsafe {
-            self.input.markAsFinished();
+            if self.audio.is_none() {
+                self.input.markAsFinished();
+            }
             self.writer
                 .endSessionAtSourceTime(CMTime::new(end_ticks, self.timescale));
             self.writer.finishWritingWithCompletionHandler(&block);

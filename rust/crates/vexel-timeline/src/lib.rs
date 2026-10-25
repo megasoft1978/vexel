@@ -1,6 +1,9 @@
 #![forbid(unsafe_code)]
 //! Bounded, source preserving decoder for the native animation timeline format.
 mod access;
+pub mod audio;
+pub mod audio_codec;
+pub mod audio_mix;
 mod easing;
 mod edit;
 mod json;
@@ -9,6 +12,8 @@ pub mod pathmorph;
 pub mod sample;
 mod schema;
 
+#[cfg(test)]
+mod audio_tests;
 #[cfg(test)]
 mod path_track_tests;
 #[cfg(test)]

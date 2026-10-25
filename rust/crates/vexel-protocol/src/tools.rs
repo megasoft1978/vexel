@@ -405,6 +405,9 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "batch",
     "native_timeline_tracks_set",
     "native_timeline_set_camera",
+    "audio_add_track",
+    "audio_set",
+    "audio_list",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -433,6 +436,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
         .iter()
         .chain(super::tools_native_edit::NATIVE_EDIT_TOOLS)
         .chain(super::tools_native_bulk::NATIVE_BULK_TOOLS)
+        .chain(super::tools_audio::AUDIO_TOOLS)
         .chain(super::tools_structure::STRUCTURE_TOOLS)
         .chain(super::tools_batch::BATCH_TOOLS)
 }
