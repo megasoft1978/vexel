@@ -286,12 +286,13 @@ fn pattern_pixel_size_rounds_up_and_enforces_limits() {
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(pattern_pixel_size(1024.0, 1.0, 4.0), Ok((4096, 4)));
-    // Area limit 1048576 with both axes under 4096: 2000 x 600 = 1_200_000.
+    // Area limit 8388608 with both axes within 4096: 4096 x 2052 = 8_404_992.
     assert_eq!(
-        pattern_pixel_size(500.0, 150.0, 4.0),
+        pattern_pixel_size(1024.0, 513.0, 4.0),
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(pattern_pixel_size(256.0, 256.0, 4.0), Ok((1024, 1024)));
+    assert_eq!(pattern_pixel_size(1024.0, 512.0, 4.0), Ok((4096, 2048)));
     assert_eq!(
         pattern_pixel_size(70000.0, 1.0, 0.001),
         Err(RenderError::LimitExceeded)
@@ -308,9 +309,9 @@ fn over_axis_and_over_pixel_tiles_are_limit_exceeded() {
         render_pattern_tile(spec(1, 4097, 4.0, 4.0), &[], NEVER).map(|_| ()),
         Err(RenderError::LimitExceeded)
     );
-    // 2000 x 600 is within both axes but over 1048576 pixels.
+    // 4096 x 2049 is within both axes but over 8388608 pixels.
     assert_eq!(
-        render_pattern_tile(spec(2000, 600, 4.0, 4.0), &[], NEVER).map(|_| ()),
+        render_pattern_tile(spec(4096, 2049, 4.0, 4.0), &[], NEVER).map(|_| ()),
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(

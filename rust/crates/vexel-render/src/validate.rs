@@ -144,6 +144,7 @@ mod limit03_tests {
     #[test]
     fn limit03_solid_ring_steps_admit_4m_and_refuse_the_next() {
         // A closed ring of E edges costs E segments plus E joins: 2E steps.
+        // MAX_EDGES (2,000,000) now binds before MAX_STROKE_STEPS (6,000,000) for solid rings.
         assert_eq!(ring_steps(2_000_000), Ok(4_000_000));
         assert_eq!(ring_steps(2_000_001), Err(RenderError::LimitExceeded));
     }

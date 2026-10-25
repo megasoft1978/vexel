@@ -19,8 +19,9 @@ use vexel_scene::{Paint, PaintKind, Pattern, PatternId, Shape};
 
 /// Most pattern tiles rendered or referenced at once (C `SHAPE_PATTERN_MAX_INSTANCES`).
 pub const PATTERN_MAX_INSTANCES: usize = 1024;
-/// Largest tile area in pixels (C `SHAPE_PATTERN_MAX_PIXELS`).
-pub const PATTERN_MAX_PIXELS: usize = 1_048_576;
+/// Largest tile area in pixels (C `SHAPE_PATTERN_MAX_PIXELS` was 1,048,576; raised to
+/// 8,388,608 = 4096 x 2048, 32 MiB of RGBA, for 2550 x 2550 embedded images).
+pub const PATTERN_MAX_PIXELS: usize = 8_388_608;
 /// Largest tile width or height in pixels (C `SHAPE_PATTERN_MAX_AXIS`).
 pub const PATTERN_MAX_AXIS: u32 = 4096;
 /// Largest tile extent in user units (C check `tile_width > 65536.0`).

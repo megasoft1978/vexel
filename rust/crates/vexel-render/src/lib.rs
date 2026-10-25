@@ -76,7 +76,9 @@ pub const MAX_SHAPES: usize = MAX_EDGES;
 pub const MAX_SUBPATHS: usize = MAX_EDGES;
 /// Stroke primitive build steps (C `RASTER_DASH_CACHE_MAX_STEPS`). WO-RUST-LIMITS-03
 /// raised 1,000,000 to 4,000,000: the corpus needs 1.25M to 2.9M (measured).
-pub const MAX_STROKE_STEPS: usize = 4_000_000;
+/// Raised again to 6,000,000 (france-osm-mapnik needs just over 4M; render 1.6 s, the
+/// 192 MiB byte budget below still bounds memory).
+pub const MAX_STROKE_STEPS: usize = 6_000_000;
 /// Stroke primitive byte budget (C `RASTER_DASH_CACHE_BYTE_LIMIT`). WO-RUST-LIMITS-03
 /// raised 16 MiB to 192 MiB: the corpus needs up to 129.5 MB (measured).
 pub const MAX_STROKE_BYTES: usize = 192 * 1024 * 1024;

@@ -1,8 +1,8 @@
 //! WO-RUST-LIMITS-03 stroke-job pins. Each subpath is an open pair of edges, of which
 //! one (128 units long) is stroked with dash [64, 64]; the range costs exactly 5 build
 //! steps (2 for the pattern, 1 for the edge, 2 for the two dashes; measured in
-//! dash/tests.rs). So 800,000 subpaths (4,000,000 steps) is the largest job accepted at
-//! MAX_STROKE_STEPS = 4,000,000 and 800,001 subpaths (4,000,005 steps) is refused.
+//! dash/tests.rs). So 1,200,000 subpaths (6,000,000 steps) is the largest job accepted at
+//! MAX_STROKE_STEPS = 6,000,000 and 1,200,001 subpaths (6,000,005 steps) is refused.
 //! The 128-unit user space is mapped onto a 1x1 tile so the raster sweep stays cheap.
 mod common;
 use common::*;
@@ -13,7 +13,7 @@ use vexel_render::{
     DashedShape, FlatEdge, Linecap, Linejoin, RenderError, ViewBox, ViewMap, render_dashed_shapes,
 };
 
-const LARGEST_ACCEPTED_RANGES: usize = 800_000;
+const LARGEST_ACCEPTED_RANGES: usize = 1_200_000;
 
 struct Job {
     edges: Vec<FlatEdge>,
@@ -48,7 +48,7 @@ fn render(job: &Job, control: &dyn Fn() -> bool) -> Result<(), RenderError> {
 }
 
 #[test]
-fn limit03_dash_job_admits_800000_ranges_and_refuses_800001() {
+fn limit03_dash_job_admits_1200000_ranges_and_refuses_1200001() {
     assert!(render(&job(LARGEST_ACCEPTED_RANGES), NEVER).is_ok());
     assert_eq!(
         render(&job(LARGEST_ACCEPTED_RANGES + 1), NEVER),
