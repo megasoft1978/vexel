@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b0b3a"/>
+      <stop offset="0.55" stop-color="#6a1b6e"/>
+      <stop offset="1" stop-color="#ff6a3d"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff35c"/>
+      <stop offset="1" stop-color="#ff2f8e"/>
+    </linearGradient>
+    <!-- Glow: blur the bright shapes, then screen the blurred copy over the scene. -->
+    <filter id="glow" x="-0.3" y="-0.3" width="1.6" height="1.6">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <!-- Film grain: fractal noise, grey from the red channel, opaque. -->
+    <filter id="grain" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="5"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/>
+    </filter>
+    <!-- Clouds: low-frequency turbulence tinted white, alpha from the noise. -->
+    <filter id="clouds" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="4" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.85  0 0 0 0 0.95  0 0 0 2.2 -0.95"/>
+    </filter>
+  </defs>
+
+  <rect width="640" height="360" fill="url(#sky)"/>
+  <g opacity="0.55" filter="url(#clouds)"><rect y="20" width="640" height="150" fill="#fff"/></g>
+  <circle cx="320" cy="170" r="92" fill="url(#sun)"/>
+  <path d="M0 360V230L90 170L170 232L250 188L340 250L430 180L520 238L590 200L640 226V360Z" fill="#14082b"/>
+  <path d="M0 360V285L120 262L260 290L400 258L540 288L640 270V360Z" fill="#0b0418"/>
+
+  <!-- Neon ring and bars: sharp copy plus a blurred screen-blended halo. -->
+  <g style="mix-blend-mode:screen" filter="url(#glow)">
+    <circle cx="320" cy="170" r="92" fill="none" stroke="#2cf6ff" stroke-width="7"/>
+    <rect x="60" y="300" width="520" height="8" fill="#ff2f8e"/>
+  </g>
+  <circle cx="320" cy="170" r="92" fill="none" stroke="#bffcff" stroke-width="2.5"/>
+  <rect x="60" y="302" width="520" height="4" fill="#ffd1ea"/>
+
+  <!-- Outlined title: stroke below the fill (paint-order), round joins. -->
+  <text x="320" y="98" text-anchor="middle" font-family="Impact, Arial Black, Helvetica" font-weight="bold"
+        font-size="64" fill="#ffe94d" stroke="#2a0a5e" stroke-width="10" stroke-linejoin="round"
+        paint-order="stroke">TURBO CITY</text>
+  <text x="320" y="338" text-anchor="middle" font-family="Helvetica" font-weight="bold" font-size="22"
+        fill="#ffffff" stroke="#ff2f8e" stroke-width="3" stroke-linejoin="round"
+        paint-order="stroke">BLEND MODES</text>
+
+  <!-- Blend swatches: multiply, overlay, difference, plus-lighter over the sky. -->
+  <g>
+    <circle cx="70" cy="60" r="34" fill="#ff3b3b"/>
+    <circle cx="100" cy="60" r="34" fill="#3b7bff" style="mix-blend-mode:multiply"/>
+    <circle cx="540" cy="60" r="34" fill="#ffcc33"/>
+    <circle cx="570" cy="60" r="34" fill="#33ccff" style="mix-blend-mode:difference"/>
+    <circle cx="70" cy="240" r="30" fill="#7a3bff"/>
+    <circle cx="96" cy="240" r="30" fill="#ffffff" opacity="0.8" style="mix-blend-mode:overlay"/>
+    <circle cx="544" cy="240" r="30" fill="#ff5a1f"/>
+    <circle cx="570" cy="240" r="30" fill="#2a7a55" style="mix-blend-mode:plus-lighter"/>
+  </g>
+
+  <!-- Grain over everything. -->
+  <g filter="url(#grain)" style="mix-blend-mode:soft-light" opacity="0.5"><rect width="640" height="360" fill="#fff"/></g>
+</svg>

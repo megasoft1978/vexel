@@ -12,7 +12,7 @@
 
 use super::clips::ClipStore;
 use super::diff::{Rect, device_rect};
-use super::layers::{Geo, composite_tile, composite_tile_in, mask_layer};
+use super::layers::{Geo, composite_tile, composite_tile_blend, composite_tile_in, mask_layer};
 use super::shapes::{Entry, OwnedShape, Prepared, prepare};
 use std::cell::{OnceCell, RefCell};
 use vexel_raster::Tile;
@@ -375,9 +375,8 @@ impl Renderer<'_> {
         if !group.opacity.is_finite() || !(0.0..=1.0).contains(&group.opacity) {
             return Err(RenderError::InvalidGeometry);
         }
-        // Blend modes and isolation are not modelled by the renderer.
-        if group.blend_mode != 0 {
-            return Err(RenderError::Unsupported(UnsupportedKind::OpacityGroup));
+        if group.blend_mode > vexel_scene::MAX_BLEND_MODE {
+            return Err(RenderError::InvalidGeometry);
         }
         let children =
             group.shapes.first..group.shapes.end().ok_or(RenderError::InvalidGeometry)?;
@@ -386,7 +385,10 @@ impl Renderer<'_> {
         {
             return Ok(());
         }
-        let layered = group.opacity != 1.0 || group.filter.is_some() || group.mask.is_some();
+        let layered = group.opacity != 1.0
+            || group.filter.is_some()
+            || group.mask.is_some()
+            || group.blend_mode != 0;
         if !layered {
             return self.range(scene, children, Some(index), dest, depth + 1, false);
         }
@@ -435,9 +437,20 @@ impl Renderer<'_> {
         let region = (group.filter.is_none() && group.mask.is_none())
             .then(|| union_of(scene.bounds, children_range));
         let rects = self.composite_rects(region);
-        match &rects {
-            Some(rects) => composite_tile_in(dest, &layer, group.opacity, rects, self.cancel)?,
-            None => composite_tile(dest, &layer, group.opacity, self.cancel)?,
+        if group.blend_mode != 0 {
+            composite_tile_blend(
+                dest,
+                &layer,
+                group.opacity,
+                group.blend_mode,
+                rects.as_deref(),
+                self.cancel,
+            )?;
+        } else {
+            match &rects {
+                Some(rects) => composite_tile_in(dest, &layer, group.opacity, rects, self.cancel)?,
+                None => composite_tile(dest, &layer, group.opacity, self.cancel)?,
+            }
         }
         // Without filter or mask the layer only received composites inside the
         // rectangles just composited.

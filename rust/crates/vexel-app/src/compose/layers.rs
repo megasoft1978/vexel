@@ -141,6 +141,41 @@ pub(crate) fn composite_tile_in(
     Ok(())
 }
 
+/// [`composite_tile`] with a `mix-blend-mode` (W3C Compositing, integer maths
+/// in `vexel_render::blend`), limited to `rects` when given.
+pub(crate) fn composite_tile_blend(
+    destination: &mut Tile,
+    source: &Tile,
+    opacity: f64,
+    mode: u8,
+    rects: Option<&[super::diff::Rect]>,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    let table = alpha_table(opacity);
+    let width = source.width() as usize;
+    let height = source.height() as usize;
+    let full = [super::diff::Rect { x0: 0, y0: 0, x1: width as u32, y1: height as u32 }];
+    for rect in rects.unwrap_or(&full) {
+        for y in rect.y0 as usize..rect.y1 as usize {
+            if control() {
+                return Err(RenderError::Cancelled);
+            }
+            let range = (y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4;
+            let src_row = &source.rgba()[range.clone()];
+            for (dst, src) in destination.rgba_mut()[range]
+                .chunks_exact_mut(4)
+                .zip(src_row.chunks_exact(4))
+            {
+                let alpha = table[usize::from(src[3])];
+                if alpha != 0 {
+                    vexel_render::blend::blend_pixel(mode, dst, [src[0], src[1], src[2], alpha]);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// C `linear_luminance`: sRGB to linear light, Rec. 709 weights.
 fn linear_luminance(rgba: &[u8]) -> f64 {
     let linear = |byte: u8| {

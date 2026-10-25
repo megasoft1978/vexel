@@ -286,20 +286,37 @@ pub(crate) fn decode(
                         control,
                     )?;
                 }
-                let mut colors = Vec::new();
-                colors
-                    .try_reserve_exact(path.edges.len())
-                    .map_err(|_| fail(ErrorKind::OutOfMemory, offset))?;
-                colors.resize(path.edges.len(), style.fill);
-                builder.append_shape(
-                    request.scene,
-                    ShapeInput {
-                        shape,
-                        path,
-                        edge_colors: colors,
-                    },
-                    control,
-                )?;
+                // `paint-order: stroke` (the outlined-title idiom) is published
+                // as two shapes, stroke first, so every renderer sees plain
+                // fill-over-stroke order and no paint-order shape.
+                let split = style.stroke.paint_order == 1
+                    && shape.filled
+                    && style.stroke.rgba[3] != 0;
+                shape.stroke.paint_order = 0;
+                let mut pieces = Vec::new();
+                if split {
+                    let mut outline = shape.clone();
+                    outline.filled = false;
+                    pieces.push((outline, path.clone()));
+                    shape.stroke.rgba[3] = 0;
+                }
+                pieces.push((shape, path));
+                for (shape, path) in pieces {
+                    let mut colors = Vec::new();
+                    colors
+                        .try_reserve_exact(path.edges.len())
+                        .map_err(|_| fail(ErrorKind::OutOfMemory, offset))?;
+                    colors.resize(path.edges.len(), style.fill);
+                    builder.append_shape(
+                        request.scene,
+                        ShapeInput {
+                            shape,
+                            path,
+                            edge_colors: colors,
+                        },
+                        control,
+                    )?;
+                }
             }
         }
         let next_x = start_x + advance + spaces as f64 * values.word_spacing;

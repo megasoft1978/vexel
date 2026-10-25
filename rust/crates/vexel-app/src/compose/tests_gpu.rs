@@ -15,7 +15,7 @@ use vexel_gpu_scene::{GpuError, GpuPaint, GpuScene, GpuSegment};
 /// The route switches are process globals: tests that flip them take turns.
 static SERIAL: Mutex<()> = Mutex::new(());
 
-fn serial() -> std::sync::MutexGuard<'static, ()> {
+pub(super) fn serial() -> std::sync::MutexGuard<'static, ()> {
     SERIAL.lock().unwrap_or_else(|p| p.into_inner())
 }
 
@@ -105,16 +105,16 @@ fn scene_svg_scaled(seed: u64, count: usize, w: u32, h: u32, kinds: &str, scale:
     svg.into_bytes()
 }
 
-fn frame(bytes: &[u8], w: u32, h: u32, cache: &mut DiffCache) -> Frame {
+pub(super) fn frame(bytes: &[u8], w: u32, h: u32, cache: &mut DiffCache) -> Frame {
     compose_frame_cached(Arc::new(bytes.to_vec()), w, h, cache).unwrap()
 }
 
-fn cpu_frame(bytes: &[u8], w: u32, h: u32) -> Frame {
+pub(super) fn cpu_frame(bytes: &[u8], w: u32, h: u32) -> Frame {
     compose_frame_owned(Arc::new(bytes.to_vec()), w, h).unwrap()
 }
 
 /// Run `f` with the route forced on and the global state restored after.
-fn with_gpu<T>(on: Option<bool>, f: impl FnOnce() -> T) -> T {
+pub(super) fn with_gpu<T>(on: Option<bool>, f: impl FnOnce() -> T) -> T {
     set_gpu_display(on);
     let out = f();
     set_gpu_display(None);
