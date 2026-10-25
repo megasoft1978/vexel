@@ -9,7 +9,8 @@
 //! `GpuSceneHeader`, `GpuShape[shape_count]` (z-ordered, z == index),
 //! `GpuEdge[edge_count]`, `GpuTile[tiles_x * tiles_y]` (row-major),
 //! `GpuTileEntry[tile_entry_count]` tile lists (ascending z per tile),
-//! `GpuGradient[gradient_count]`, `GpuStop[stop_count]`, `GpuClip[clip_count]`.
+//! `GpuGradient[gradient_count]`, `GpuStop[stop_count]`,
+//! `GpuClip[clip_count]` (child records, see [`GpuClip`]).
 //!
 //! Strokes are expanded to filled polygons on the CPU (non-zero union), so a
 //! shape is always an edge list plus a fill rule. `stroke_width` is
@@ -31,7 +32,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 4;
+pub const LAYOUT_VERSION: u32 = 5;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -56,6 +57,7 @@ pub const MAX_STOPS: u32 = 262_144;
 pub const MAX_GROUP_DEPTH: u32 = 4;
 /// Longest clip chain per shape; the CPU limit is 256, longer is CPU only.
 pub const MAX_CLIP_CHAIN: u32 = 4;
+/// Most [`GpuClip`] child records in a scene.
 pub const MAX_CLIP_RECORDS: u32 = 65_536;
 
 pub const PAINT_SOLID: u32 = 0;
@@ -120,7 +122,8 @@ pub struct GpuShape {
     pub edge_count: u32,
     /// Index into the gradient array, or `u32::MAX` for solid.
     pub gradient_index: u32,
-    /// Range into the clip array, `clip_count <= MAX_CLIP_CHAIN`.
+    /// First [`GpuClip`] record of the clip chain (see [`GpuClip`]); the
+    /// number of chain links is `clip_count <= MAX_CLIP_CHAIN`.
     pub clip_start: u32,
     pub clip_count: u32,
     /// Opacity-group nesting depth, `<= MAX_GROUP_DEPTH`.
@@ -179,14 +182,28 @@ pub struct GpuStop {
     pub rgba: [f32; 4],
 }
 
-/// Clip record, 16 bytes: a filled edge range with a rule.
+/// Clip child record, 16 bytes: one filled shape with its own rule.
+///
+/// A shape's clip is a chain of `GpuShape::clip_count` links, stored as
+/// consecutive child records from `GpuShape::clip_start`. A link is the UNION
+/// of its children: its first child has `union_size >= 1` (the number of
+/// consecutive child records in the link, itself included), the others have
+/// `union_size == 0`. A sample is clipped in when it is inside the union of
+/// every link (INTERSECTION along the chain). The kernel walks
+/// `i = clip_start; repeat clip_count times { size = clip[i].union_size;
+/// children i..i+size; i += size }`. Chains may be shared between shapes.
+///
+/// Child edges are NOT per tile: `edge_start` / `edge_count` index the same
+/// edge array as the tile pools (after them, so `header.edge_count` covers
+/// both) with canvas-space coordinates; the kernel subtracts the tile origin.
+/// A clip lane that profiles badly may add per-tile clip ranges later.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GpuClip {
     pub edge_start: u32,
     pub edge_count: u32,
     pub fill_rule: u32,
-    pub reserved0: u32,
+    pub union_size: u32,
 }
 
 /// Convert device pixels to [`GpuEdge`] fixed point; `None` if not finite or
@@ -233,6 +250,8 @@ mod tests {
         assert_eq!(offset_of!(GpuShape, edge_start), 40);
         assert_eq!(offset_of!(GpuShape, group_depth), 60);
         assert_eq!(offset_of!(GpuGradient, spread), 24);
+        assert_eq!(offset_of!(GpuClip, union_size), 12);
+        assert_eq!(offset_of!(GpuSceneHeader, content_x0), 64);
     }
 
     #[test]
@@ -339,7 +358,7 @@ mod tests {
         s!(
             GpuClip,
             "GpuClip",
-            [edge_start, edge_count, fill_rule, reserved0]
+            [edge_start, edge_count, fill_rule, union_size]
         );
         m
     }

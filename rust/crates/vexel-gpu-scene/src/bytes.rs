@@ -124,7 +124,7 @@ pub fn stop_bytes(stops: &[GpuStop]) -> Vec<u8> {
 pub fn clip_bytes(clips: &[GpuClip]) -> Vec<u8> {
     let mut o = Vec::with_capacity(clips.len() * 16);
     for c in clips {
-        for v in [c.edge_start, c.edge_count, c.fill_rule, c.reserved0] {
+        for v in [c.edge_start, c.edge_count, c.fill_rule, c.union_size] {
             u(&mut o, v);
         }
     }
