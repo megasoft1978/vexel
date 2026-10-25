@@ -7,6 +7,7 @@
 #pragma clang fp contract(off)
 
 #define VX_EDGE_CHUNK 256
+#define VX_PRIM_CHUNK 64
 #define VX_SAMPLE_UNIT (1 << (VX_EDGE_FIXED_SHIFT - 2))
 
 struct VxMode {
@@ -59,6 +60,62 @@ static inline void vx_close(
             layer[open - 1u] = vx_source_over(layer[open - 1u], src);
         }
     }
+}
+
+// vexel-render stroke.rs within(): squared distance against the squared radius.
+static inline bool vx_within(float dx, float dy, float r) {
+    return dx * dx + dy * dy <= r * r;
+}
+
+// vexel-render stroke_join.rs in_triangle (boundary inclusive).
+static inline bool vx_in_triangle(float2 p, float2 a, float2 b, float2 c) {
+    float d1 = (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
+    float d2 = (p.x - c.x) * (b.y - c.y) - (b.x - c.x) * (p.y - c.y);
+    float d3 = (p.x - a.x) * (c.y - a.y) - (c.x - a.x) * (p.y - a.y);
+    bool neg = d1 < 0.0f || d2 < 0.0f || d3 < 0.0f;
+    bool pos = d1 > 0.0f || d2 > 0.0f || d3 > 0.0f;
+    return !(neg && pos);
+}
+
+// Stroke primitive hit at local offset (px, py) from the tile base; mirrors
+// reference.rs prim_hit.
+static inline bool vx_prim_hit(threadgroup const GpuStrokePrim& q, float r, float px, float py) {
+    uint k = q.kind;
+    if ((k & VX_PRIM_JOIN) != 0u) {
+        if (!(px >= q.w[8] && px <= q.w[10] && py >= q.w[9] && py <= q.w[11])) {
+            return false;
+        }
+        float2 v = float2(q.w[0], q.w[1]);
+        float2 p1 = float2(q.w[2], q.w[3]);
+        float2 m = float2(q.w[4], q.w[5]);
+        float2 p2 = float2(q.w[6], q.w[7]);
+        float2 at = float2(px, py);
+        uint jk = k & 255u;
+        if (jk == VX_JOIN_ROUND) {
+            return vx_within(px - v.x, py - v.y, r);
+        }
+        if (jk == VX_JOIN_MITER) {
+            return vx_in_triangle(at, v, p1, m) || vx_in_triangle(at, v, m, p2);
+        }
+        return vx_in_triangle(at, v, p1, p2);
+    }
+    float ax = q.w[6];
+    float ay = q.w[7];
+    if ((k & VX_SEG_DOT) != 0u) {
+        float dx = px - ax;
+        float dy = py - ay;
+        if ((k & (VX_SEG_ROUND_A | VX_SEG_ROUND_B)) != 0u) {
+            return vx_within(dx, dy, r);
+        }
+        return (k & VX_SEG_DOT_SQUARE) != 0u && fabs(dx) <= r && fabs(dy) <= r;
+    }
+    float qx = px - q.w[0];
+    float qy = py - q.w[1];
+    float along = qx * q.w[2] + qy * q.w[3];
+    float across = fabs(qx * q.w[3] - qy * q.w[2]);
+    return (along >= q.w[4] && along <= q.w[5] && across <= r)
+        || ((k & VX_SEG_ROUND_A) != 0u && vx_within(px - ax, py - ay, r))
+        || ((k & VX_SEG_ROUND_B) != 0u && vx_within(px - q.w[8], py - q.w[9], r));
 }
 
 static inline float vx_spread(float t, uint mode) {
@@ -157,13 +214,15 @@ kernel void vx_raster(
     device const GpuGradient* gradients [[buffer(5)]],
     device const GpuStop* stops [[buffer(6)]],
     device const GpuGroup* groups [[buffer(7)]],
-    constant VxMode& mode [[buffer(8)]],
-    device uint* out [[buffer(9)]],
+    device const GpuStrokePrim* prims [[buffer(8)]],
+    constant VxMode& mode [[buffer(9)]],
+    device uint* out [[buffer(10)]],
     uint2 tg [[threadgroup_position_in_grid]],
     uint2 lid [[thread_position_in_threadgroup]],
     uint lin [[thread_index_in_threadgroup]])
 {
     threadgroup GpuEdge chunk[VX_EDGE_CHUNK];
+    threadgroup GpuStrokePrim pchunk[VX_PRIM_CHUNK];
     uint x = tg.x * VX_TILE_SIZE + lid.x;
     uint y = tg.y * VX_TILE_SIZE + lid.y;
     bool inside = x < h.width && y < h.height;
@@ -234,6 +293,34 @@ kernel void vx_raster(
                 }
             }
         }
+        // Stroke coverage: one bit per sample, set on the first primitive hit.
+        uint smask = 0u;
+        if ((shape.flags & VX_SHAPE_STROKE) != 0u && entry.prim_count > 0u) {
+            float r = shape.stroke_width;
+            float lxs[VX_SAMPLE_COUNT];
+            float lys[VX_SAMPLE_COUNT];
+            for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
+                float dx = float(lid.x) + VX_SAMPLE_LOCATIONS[s & 3u];
+                float dy = float(lid.y) + VX_SAMPLE_LOCATIONS[s >> 2];
+                lxs[s] = shape.stroke_m[0] * dx + shape.stroke_m[2] * dy;
+                lys[s] = shape.stroke_m[1] * dx + shape.stroke_m[3] * dy;
+            }
+            for (uint base = 0; base < entry.prim_count; base += VX_PRIM_CHUNK) {
+                uint n = min(uint(VX_PRIM_CHUNK), entry.prim_count - base);
+                threadgroup_barrier(mem_flags::mem_threadgroup);
+                if (lin < n) {
+                    pchunk[lin] = prims[entry.prim_start + base + lin];
+                }
+                threadgroup_barrier(mem_flags::mem_threadgroup);
+                for (uint i = 0; i < n; i++) {
+                    for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
+                        if (((smask >> s) & 1u) == 0u && vx_prim_hit(pchunk[i], r, lxs[s], lys[s])) {
+                            smask |= 1u << s;
+                        }
+                    }
+                }
+            }
+        }
         if (!inside) {
             continue;
         }
@@ -241,21 +328,30 @@ kernel void vx_raster(
         uint alpha_sum = 0u;
         uint3 acc = uint3(0u);
         for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
-            bool covered = evenodd ? ((parity >> s) & 1u) != 0u : wind[s] != 0;
-            if (!covered || ((inside_mask >> s) & 1u) == 0u) {
+            if (((inside_mask >> s) & 1u) == 0u) {
                 continue;
             }
-            uint4 color;
-            if (shape.paint_kind == VX_PAINT_SOLID) {
-                color = vx_unpack(shape.color_rgba);
-            } else {
-                float fx = float(x) + VX_SAMPLE_LOCATIONS[s & 3u];
-                float fy = float(y) + VX_SAMPLE_LOCATIONS[s >> 2];
-                if (!vx_gradient(gradients[shape.gradient_index], shape.paint_kind, stops, fx, fy, color)) {
+            bool covered = evenodd ? ((parity >> s) & 1u) != 0u : wind[s] != 0;
+            bool stroked = ((smask >> s) & 1u) != 0u;
+            uint4 sample = uint4(0u);
+            for (uint pass = 0; pass < 2u; pass++) {
+                uint kind = pass == 0u ? shape.paint_kind : shape.stroke_paint_kind;
+                if (!(pass == 0u ? covered : stroked)) {
                     continue;
                 }
+                uint4 color;
+                if (kind == VX_PAINT_SOLID) {
+                    color = vx_unpack(pass == 0u ? shape.color_rgba : shape.stroke_color_rgba);
+                } else {
+                    float fx = float(x) + VX_SAMPLE_LOCATIONS[s & 3u];
+                    float fy = float(y) + VX_SAMPLE_LOCATIONS[s >> 2];
+                    uint gi = pass == 0u ? shape.gradient_index : shape.stroke_gradient_index;
+                    if (!vx_gradient(gradients[gi], kind, stops, fx, fy, color)) {
+                        continue;
+                    }
+                }
+                sample = vx_source_over(sample, color);
             }
-            uint4 sample = vx_source_over(uint4(0u), color);
             alpha_sum += sample.w;
             acc += sample.xyz * sample.w;
         }

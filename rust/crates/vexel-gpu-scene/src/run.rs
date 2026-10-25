@@ -9,8 +9,8 @@
 use std::time::{Duration, Instant};
 
 use crate::bytes::{
-    edge_bytes, gradient_bytes, group_bytes, header_bytes, list_bytes, shape_bytes, stop_bytes,
-    tile_bytes,
+    edge_bytes, gradient_bytes, group_bytes, header_bytes, list_bytes, prim_bytes, shape_bytes,
+    stop_bytes, tile_bytes,
 };
 use crate::classify::classify;
 use crate::encode::{Encoded, Encoder};
@@ -145,6 +145,7 @@ impl<B: ComputeBackend> GpuRasterizer<B> {
             padded(gradient_bytes(&e.gradients)),
             padded(stop_bytes(&e.stops)),
             padded(group_bytes(&e.groups)),
+            padded(prim_bytes(&e.prims)),
         ];
         let mut inputs: Vec<&[u8]> = buffers.iter().map(Vec::as_slice).collect();
         inputs.push(&mode);
