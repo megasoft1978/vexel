@@ -1,5 +1,7 @@
 //! The path cache returns exactly what a fresh parse would, including source
 //! provenance rebased to the requesting element, and stays within its bound.
+use std::sync::Mutex;
+
 use vexel_base::Span;
 use vexel_geometry::Affine;
 use vexel_svg_decode::{element_geometry, path_cache::cached_bytes, source::attribute};
@@ -75,8 +77,12 @@ fn transform_is_part_of_the_key() {
     assert_ne!(a.edges, b.edges);
 }
 
+/// The cache is process-global: the two tests that size it run one at a time.
+static GUARD: Mutex<()> = Mutex::new(());
+
 #[test]
 fn cache_stays_bounded() {
+    let _guard = GUARD.lock().unwrap_or_else(|e| e.into_inner());
     let t = Affine {
         a: 1.0,
         b: 0.0,
@@ -85,6 +91,7 @@ fn cache_stays_bounded() {
         e: 0.0,
         f: 0.0,
     };
+    let before = cached_bytes();
     // About 32 KiB per entry: enough to pass the cap and force eviction.
     for i in 0..6000 {
         let d: String = (0..200).map(|k| format!("L{} {} ", i + k, k * 3)).collect();
@@ -92,12 +99,19 @@ fn cache_stays_bounded() {
         geometry_of(&src, t);
     }
     assert!(cached_bytes() <= 128 * 1024 * 1024);
+    // 6000 entries of at least 31 KiB would exceed this, so eviction ran.
+    assert!(
+        cached_bytes() < 6000 * 31 * 1024,
+        "eviction must run (before {before}, after {})",
+        cached_bytes()
+    );
 }
 
 /// A dense shot re-parses about 1100 paths (31 MiB) per tick; a cache smaller
 /// than that working set evicts each entry just before its reuse.
 #[test]
 fn cache_holds_a_cartoon_shot_working_set() {
+    let _guard = GUARD.lock().unwrap_or_else(|e| e.into_inner());
     let t = Affine {
         a: 1.0,
         b: 0.0,
@@ -117,7 +131,15 @@ fn cache_holds_a_cartoon_shot_working_set() {
     for src in &sources {
         geometry_of(src, t);
     }
-    assert!(cached_bytes() >= 40 * 1024 * 1024, "{}", cached_bytes());
+    let filled = cached_bytes();
+    assert!(filled >= 40 * 1024 * 1024, "{filled}");
+    // Second pass: every shot path must still be cached, so nothing is added
+    // or evicted.
+    for src in &sources {
+        let (got, fresh) = geometry_of(src, t);
+        assert_eq!(got, fresh);
+    }
+    assert_eq!(cached_bytes(), filled, "working set was evicted");
 }
 
 // ---- accounting: a hit is charged exactly like the parse it replaces ----
