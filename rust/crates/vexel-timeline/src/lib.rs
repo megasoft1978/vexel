@@ -5,6 +5,7 @@ pub mod audio;
 pub mod audio_codec;
 pub mod audio_envelope;
 pub mod audio_mix;
+pub mod blink;
 pub mod clips;
 mod easing;
 mod edit;

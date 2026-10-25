@@ -399,6 +399,45 @@ leg_l/leg_r for walk; torso for idle/jump; head for talk_body/blink_bob; arm_r
 for wave) and writes them through the same path. A loop ends on its first pose.
 Example: `{"clip":"walk","start":0,"duration":48,"loops":2}`.
 
+## Faces: mouths, lip-sync, eyes, blinks
+
+`mouth_set` (`character` = a `<g>` group id, `shapes` = viseme -> `<g>` group id
+inside the character) defines a character's mouth shapes. Visemes (at most 12):
+`rest` (required), `A`, `E`, `I`, `O`, `U`, `MBP`, `FV`, `L`, `WQ`, `CDGK`, `TH`;
+a missing viseme falls back to the nearest shape given, then `rest`. The table
+is stored as `<desc id="vexel-mouths">{json}</desc>` under the root (same
+exactly-one-match and tag checks as the rig; at most 32 characters), so it
+saves, reopens and undoes with the file, and `attribute_set` id renames of the
+character or a shape group retarget it. Calling again replaces that character.
+
+`lip_sync` (`character`, `source` = exactly one of `{trackId}`, `{path}` or
+`{envelope:[0-1 loudness per tick]}`, `startTick?`, `ticks?`, `mapping?`
+`{close,mid,wide}` thresholds (defaults 0.08/0.35/0.65), `smoothing?` 0-8,
+`seed?`, `text?` list of up to 256 words) derives a viseme per tick from the
+`audio_envelope` loudness and writes one step `visibility` track per mouth
+group (`lip_<group>`; earlier lip tracks of those groups are replaced) in ONE
+undoable edit. Below `close` the mouth is at rest; wider openings pick O/U,
+E/O/I or A/E with a deterministic, integer-hashed variation seeded by `seed`
+that holds a vowel 6 ticks, so the mouth does not flap; a voiced run after
+silence opens on `MBP`. With `text`, words are spoken in turn, one per voiced
+run (a/e/i/o/u, b/m/p MBP, f/v FV, l L, w/q WQ, th TH, other consonants CDGK).
+Ticks past the timeline duration are dropped (`droppedTicks`); at most 16384
+keys. A hidden parent hides its children, as in SVG.
+
+`eyes_set` (`eyes`: 1-8 of `{eye, pupils}`) wraps the sibling pupil/iris groups
+in a group clipped by a generated `clipPath` taken from the eye shape (a rect
+clips to its rectangle, anything else to the inscribed ellipse), so pupil
+motion never leaves the eye. Neither the eye nor the pupils' parent may sit
+inside a transformed group. One undoable edit.
+
+`blink` generates blink tracks in ONE undoable edit: `lids` (`{id, pivot?,
+closedScale?}` groups squashed in scale-y about the pivot), `swap`
+(`{open:[ids], closed:[ids]}` visibility swap) and/or `gaze` (`{pupils, keys:
+[{tick,x,y}]}` translations). Timing is `at` (1-256 start ticks) or `random`
+(`{seed?, start?, end?, minGap?, maxGap?}`, deterministic from the seed), with
+`duration` 2-48 ticks (default 4, closed at the half). Tracks are `blink_*` and
+`gaze_*`; running again replaces them.
+
 ## Fragments and `<use>` instances
 
 `element_add_fragment` (`parentId` is `"root"` or any element id, `xml` is one

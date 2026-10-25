@@ -91,7 +91,8 @@ impl Default for Config {
     }
 }
 
-fn mix(seed: u32, x: u32) -> u32 {
+/// Integer hash of `x` under `seed` (shared by the face generators).
+pub fn mix(seed: u32, x: u32) -> u32 {
     let mut h = seed ^ x.wrapping_mul(0x9E37_79B1);
     h ^= h >> 15;
     h = h.wrapping_mul(0x85EB_CA77);

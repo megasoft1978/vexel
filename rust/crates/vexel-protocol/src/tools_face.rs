@@ -16,4 +16,18 @@ pub(crate) const FACE_TOOLS: &[ToolSchema] = &[
         required: "documentId,character,source",
         fields: "documentId:string;character:string;source:object;startTick:integer;ticks:integer;mapping:object;smoothing:integer;seed:integer;text:array",
     },
+    ToolSchema {
+        name: "eyes_set",
+        description: "Keep pupils inside their eyes in ONE undoable edit. eyes: 1-8 of {eye, pupils}: eye is the id of the eye-shape element (ellipse, circle, rect, path or group; its bounds define the outline: a rect clips to a rectangle, anything else to the inscribed ellipse), pupils are 1-8 sibling <g> groups (pupil, iris, highlight). The pupils are wrapped in a new group that carries a generated clipPath, so any later pupil motion (blink gaze keys, rig poses, transforms) stays inside the eye. Neither the eye nor the pupils' parent may sit inside a transformed group. Returns each eye's wrapper groupId and clipId. Example: {\"eyes\":[{\"eye\":\"eye_l\",\"pupils\":[\"pupil_l\",\"shine_l\"]}]}.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"eyes\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":8,\"items\":{\"type\":\"object\",\"properties\":{\"eye\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"pupils\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":8,\"items\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}},\"required\":[\"eye\",\"pupils\"],\"additionalProperties\":false}}}",
+        required: "documentId,eyes",
+        fields: "documentId:string;eyes:array",
+    },
+    ToolSchema {
+        name: "blink",
+        description: "Generate blink and gaze animation in ONE undoable edit (tracks are replaced when a blink runs again). Give lids, swap and/or gaze. lids: 1-16 of {id, pivot?, closedScale?}: a <g> group squashed vertically (scale-y to closedScale, default 0.1) about pivot ([x,y] or \"center\", default the group's bounds centre) and back, as a trs track blink_<id>. swap: {open: [ids shown between blinks], closed: [ids shown during a blink]} as step visibility tracks. gaze: {pupils: [ids], keys: [{tick, x, y}]} translates each pupil group to (x,y) at each tick (linear, tracks gaze_<id>; put the pupils under eyes_set so they stay in the eye). When (required with lids or swap): exactly one of at (1-256 blink start ticks, each at least duration after the previous) or random {seed?, start?, end?, minGap?, maxGap?} (deterministic from seed: gaps of minGap..maxGap ticks, default 24..96, between start and end, default the timeline duration). duration is the ticks a blink lasts (2-48, default 4): the eye is closed at the half. All ticks must be below the timeline duration.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"lids\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":16},\"swap\":{\"type\":\"object\"},\"gaze\":{\"type\":\"object\"},\"at\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}},\"random\":{\"type\":\"object\"},\"duration\":{\"type\":\"integer\",\"minimum\":2,\"maximum\":48}}",
+        required: "documentId",
+        fields: "documentId:string;lids:array;swap:object;gaze:object;at:array;random:object;duration:integer",
+    },
 ];

@@ -4,7 +4,7 @@ mod common;
 mod face_support;
 
 use common::{Dir, Rig, no_grants, policy_for};
-use face_support::{Face, build, shapes};
+use face_support::{Eyes, Face, build, build_eyes, shapes};
 use std::fs;
 use vexel_timeline::audio_codec::encode_wav16;
 
@@ -293,4 +293,221 @@ fn lip_sync_rejects_bad_input_without_changes() {
         ),
     );
     assert!(reply.error().contains("mouth_set"), "{}", reply.body);
+}
+
+fn timeline(rig: &mut Rig) -> String {
+    rig.doc_tool("native_timeline_get", "").ok().to_owned()
+}
+
+fn timeline_for(rig: &mut Rig, anchor: &str) {
+    rig.doc_tool(
+        "native_timeline_add_property_track",
+        &format!(
+            r#""trackId":"anchor","targetId":"{anchor}","property":"opacity","valueType":"scalar","interpolation":"linear","value":1"#
+        ),
+    )
+    .ok();
+}
+
+fn eyes_rig(pupil: bool) -> (Dir, Rig, Eyes) {
+    let dir = Dir::new();
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let eyes = build_eyes(&mut rig, pupil);
+    timeline_for(&mut rig, &eyes.open);
+    (dir, rig, eyes)
+}
+
+const FAR: &str =
+    r#""gaze":{"pupils":["P"],"keys":[{"tick":0,"x":0,"y":0},{"tick":6,"x":300,"y":0}]}"#;
+
+#[test]
+fn eyes_set_keeps_a_wandering_pupil_inside_the_eye() {
+    let (dir, mut clipped, eyes) = eyes_rig(true);
+    let state = clipped.state();
+    let reply = clipped
+        .doc_tool(
+            "eyes_set",
+            &format!(
+                r#""eyes":[{{"eye":"{}","pupils":["{}"]}}]"#,
+                eyes.eye, eyes.pupil
+            ),
+        )
+        .ok()
+        .to_owned();
+    assert!(
+        reply.contains("clipId") && reply.contains("groupId"),
+        "{reply}"
+    );
+    assert!(
+        source(&clipped).contains("clip-path=\"url(#vexel-clip-"),
+        "{}",
+        source(&clipped)
+    );
+    clipped
+        .doc_tool(
+            "blink",
+            &FAR.replace('P', &eyes.pupil)
+                .replace("\"gaze\"", "\"gaze\""),
+        )
+        .ok();
+    let held = png(&mut clipped, &dir, "held.png", "0.25");
+    // One undo reverts the gaze tracks, the next the clip wrapper.
+    clipped.doc_tool("native_timeline_undo", "").ok();
+    clipped.doc_tool("undo", "").ok();
+    assert_eq!(clipped.state().source, state.source);
+
+    // Reference: the same scene with no pupil at all.
+    let (rdir, mut without, _) = eyes_rig(false);
+    let nothing = png(&mut without, &rdir, "none.png", "0.25");
+    assert_eq!(held, nothing, "a pupil outside the eye is clipped away");
+
+    // Without eyes_set the wandering pupil shows.
+    let (udir, mut free, ueyes) = eyes_rig(true);
+    free.doc_tool("blink", &FAR.replace('P', &ueyes.pupil)).ok();
+    let shown = png(&mut free, &udir, "free.png", "0.25");
+    assert_ne!(shown, nothing);
+}
+
+#[test]
+fn eyes_set_rejects_bad_input_without_changes() {
+    let (_dir, mut rig, e) = eyes_rig(true);
+    let (eye, pupil, lid) = (&e.eye, &e.pupil, &e.lid);
+    let many: Vec<String> = (0..9)
+        .map(|_| format!(r#"{{"eye":"{eye}","pupils":["{pupil}"]}}"#))
+        .collect();
+    let cases = [
+        r#""eyes":[]"#.to_owned(),
+        format!(r#""eyes":[{}]"#, many.join(",")),
+        format!(r#""eyes":[{{"eye":"nope","pupils":["{pupil}"]}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":["nope"]}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":[]}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":["{eye}"]}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}"}}]"#),
+        format!(r#""eyes":[{{"pupils":["{pupil}"]}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":["{pupil}"],"x":1}}]"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":[5]}}]"#),
+        format!(r#""eyes":{{"eye":"{eye}"}}"#),
+        format!(r#""eyes":[{{"eye":"{eye}","pupils":["{pupil}","{lid}","{pupil}"]}}]"#),
+    ];
+    let state = rig.state();
+    for args in &cases {
+        let reply = rig.doc_tool("eyes_set", args);
+        let short: String = args.chars().take(80).collect();
+        assert!(reply.is_error, "{short}: {}", reply.body);
+    }
+    assert_eq!(rig.state(), state, "rejected calls changed nothing");
+}
+
+#[test]
+fn blink_squashes_a_lid_and_is_deterministic_from_the_seed() {
+    let (dir, mut rig, e) = eyes_rig(true);
+    let lid = &e.lid;
+    let before = rig.state();
+    let rest = png(&mut rig, &dir, "rest.png", "0.1");
+    let reply = rig
+        .doc_tool(
+            "blink",
+            &format!(r#""lids":[{{"id":"{lid}","closedScale":0.1}}],"at":[10],"duration":4"#),
+        )
+        .ok()
+        .to_owned();
+    assert!(
+        reply.contains("\"blinks\":1") && reply.contains("\"tracks\":1"),
+        "{reply}"
+    );
+    let closed = png(&mut rig, &dir, "closed.png", "0.5");
+    assert_ne!(rest, closed, "the lid squashes at the blink peak");
+    assert_eq!(rest, png(&mut rig, &dir, "after.png", "0.9"), "and reopens");
+    // Running again replaces the track; one undo then restores the start.
+    rig.doc_tool(
+        "blink",
+        &format!(r#""lids":[{{"id":"{lid}"}}],"at":[10],"duration":4"#),
+    )
+    .ok();
+    // The anchor track plus one blink track, not two.
+    assert_eq!(
+        timeline(&mut rig).matches("\"kind\":\"property\"").count(),
+        2
+    );
+    rig.doc_tool("native_timeline_undo", "").ok();
+    rig.doc_tool("native_timeline_undo", "").ok();
+    assert_eq!(rig.state().source, before.source);
+
+    let random = |rig: &mut Rig, seed: u32| {
+        rig.doc_tool(
+            "blink",
+            &format!(
+                r#""lids":[{{"id":"{lid}"}}],"random":{{"seed":{seed},"minGap":3,"maxGap":9}},"duration":2"#
+            ),
+        )
+        .ok();
+        timeline(rig)
+    };
+    let a = random(&mut rig, 11);
+    assert_eq!(a, random(&mut rig, 11), "same seed, same blinks");
+    assert_ne!(a, random(&mut rig, 12), "another seed, other blinks");
+}
+
+#[test]
+fn blink_swaps_eye_pictures() {
+    let (dir, mut rig, e) = eyes_rig(true);
+    let reply = rig
+        .doc_tool(
+            "blink",
+            &format!(
+                r#""swap":{{"open":["{}"],"closed":["{}"]}},"at":[10],"duration":4"#,
+                e.open, e.closed
+            ),
+        )
+        .ok()
+        .to_owned();
+    assert!(reply.contains("\"tracks\":2"), "{reply}");
+    let wide = png(&mut rig, &dir, "wide.png", "0.1");
+    let shut = png(&mut rig, &dir, "shut.png", "0.5");
+    assert_ne!(wide, shut);
+    assert_eq!(wide, png(&mut rig, &dir, "wide2.png", "0.9"));
+}
+
+#[test]
+fn blink_rejects_bad_input_without_changes() {
+    let (_dir, mut rig, e) = eyes_rig(true);
+    let lid = &e.lid;
+    let ok_lid = format!(r#""lids":[{{"id":"{lid}"}}]"#);
+    let many: Vec<String> = (0..257).map(|i| (i * 5).to_string()).collect();
+    let cases = [
+        r#""at":[1]"#.to_owned(),
+        format!(r#"{ok_lid}"#),
+        format!(r#"{ok_lid},"at":[]"#),
+        format!(r#"{ok_lid},"at":[10],"random":{{}}"#),
+        format!(r#"{ok_lid},"at":[10,11],"duration":4"#),
+        format!(r#"{ok_lid},"at":[48],"duration":4"#),
+        format!(r#"{ok_lid},"at":[-1]"#),
+        format!(r#"{ok_lid},"at":["x"]"#),
+        format!(r#"{ok_lid},"at":[{}]"#, many.join(",")),
+        format!(r#"{ok_lid},"at":[10],"duration":1"#),
+        format!(r#"{ok_lid},"at":[10],"duration":49"#),
+        format!(r#"{ok_lid},"random":{{"minGap":9,"maxGap":3}}"#),
+        format!(r#"{ok_lid},"random":{{"minGap":0}}"#),
+        format!(r#"{ok_lid},"random":{{"bogus":1}}"#),
+        format!(r#""lids":[{{"id":"nope"}}],"at":[10]"#),
+        format!(r#""lids":[{{"id":"{lid}","closedScale":0}}],"at":[10]"#),
+        format!(r#""lids":[{{"id":"{lid}","closedScale":2}}],"at":[10]"#),
+        format!(r#""lids":[{{"id":"{lid}","pivot":"left"}}],"at":[10]"#),
+        format!(r#""lids":[{{"id":"{lid}","extra":1}}],"at":[10]"#),
+        format!(r#""lids":[],"at":[10]"#),
+        format!(r#""swap":{{"open":["nope"]}},"at":[10]"#),
+        format!(r#""swap":{{"shut":["{lid}"]}},"at":[10]"#),
+        format!(r#""gaze":{{"pupils":["{lid}"],"keys":[]}}"#),
+        format!(r#""gaze":{{"pupils":["{lid}"],"keys":[{{"tick":1,"x":1e9,"y":0}}]}}"#),
+        format!(r#""gaze":{{"pupils":["{lid}"],"keys":[{{"tick":99,"x":1,"y":0}}]}}"#),
+        format!(r#""gaze":{{"pupils":["{lid}"],"keys":[{{"tick":1,"x":1}}]}}"#),
+        format!(r#""gaze":{{"keys":[{{"tick":1,"x":1,"y":1}}]}}"#),
+    ];
+    let state = rig.state();
+    for args in &cases {
+        let reply = rig.doc_tool("blink", args);
+        let short: String = args.chars().take(80).collect();
+        assert!(reply.is_error, "{short}: {}", reply.body);
+    }
+    assert_eq!(rig.state(), state, "rejected calls changed nothing");
 }

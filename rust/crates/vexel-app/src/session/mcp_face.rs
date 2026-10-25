@@ -2,6 +2,7 @@
 //! type, its routing (lip-sync reads audio, so it needs the host's grant
 //! policy) and the shared writer for generated property tracks.
 
+use super::mcp_eyes::{self, Blink, Eye};
 use super::mcp_lipsync::{self, LipSync};
 use super::mcp_mouth::{self, Mouth};
 use super::settings;
@@ -20,6 +21,8 @@ pub(crate) const MAX_KEYS: usize = 16_384;
 pub enum FaceOp {
     Mouth(Mouth),
     Lip(Box<LipSync>),
+    Eyes(Vec<Eye>),
+    Blink(Box<Blink>),
 }
 
 /// `Operation::Doc` dispatch: face tools get the policy, the rest go on to
@@ -43,6 +46,8 @@ fn apply(
     match op {
         FaceOp::Mouth(spec) => mcp_mouth::apply(app, spec),
         FaceOp::Lip(spec) => mcp_lipsync::apply(app, policy, *spec),
+        FaceOp::Eyes(eyes) => mcp_eyes::eyes_set(app, eyes),
+        FaceOp::Blink(spec) => mcp_eyes::blink(app, *spec),
     }
 }
 
