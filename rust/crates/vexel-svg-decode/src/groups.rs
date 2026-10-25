@@ -30,13 +30,7 @@ impl<'src> Decoder<'src, '_> {
             .value(Property::Mask)
             .filter(|v| !v.bytes.eq_ignore_ascii_case(b"none"));
         let blend = if let Some(v) = style.value(Property::MixBlendMode) {
-            [
-                b"normal".as_slice(),
-                b"multiply",
-                b"screen",
-                b"darken",
-                b"lighten",
-            ]
+            BLEND_MODE_NAMES
             .iter()
             .position(|n| *n == v.bytes)
             .ok_or(Diagnostic {

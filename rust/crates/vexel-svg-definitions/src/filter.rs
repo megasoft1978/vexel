@@ -270,12 +270,7 @@ fn parse_primitive(
         b"feMerge" => FilterKind::Merge,
         b"feColorMatrix" => FilterKind::ColorMatrix,
         b"feDropShadow" => FilterKind::DropShadow,
-        b"feTurbulence" => {
-            return Err(Diagnostic {
-                kind: ErrorKind::UnsupportedFeTurbulence,
-                offset: t.name.offset,
-            });
-        }
+        b"feTurbulence" => FilterKind::Turbulence,
         b"feDisplacementMap" => {
             return Err(Diagnostic {
                 kind: ErrorKind::UnsupportedFeDisplacementMap,
@@ -388,6 +383,13 @@ fn parse_primitive(
                 b"screen" => 2,
                 b"darken" => 3,
                 b"lighten" => 4,
+                b"overlay" => 5,
+                b"color-dodge" => 6,
+                b"color-burn" => 7,
+                b"hard-light" => 8,
+                b"soft-light" => 9,
+                b"difference" => 10,
+                b"exclusion" => 11,
                 _ => return Err(unsupported(s.offset)),
             };
         }
@@ -449,6 +451,9 @@ fn parse_primitive(
         } else if p.mode == 1 {
             p.values[0] = 1.;
         }
+    }
+    if kind == FilterKind::Turbulence {
+        parse_turbulence(source, tokens, element, &mut p)?;
     }
     if kind == FilterKind::Merge {
         let mut used = 0;
@@ -522,4 +527,53 @@ fn is_element(k: TokenKind) -> bool {
 }
 fn eq(source: &[u8], span: XmlSpan, bytes: &[u8]) -> bool {
     span_bytes(source, span) == Some(bytes)
+}
+
+/// `feTurbulence` attributes: `baseFrequency` (one or two non-negative
+/// numbers, default 0), `numOctaves` (integer 0..=10, default 1), `seed`
+/// (rounded half up, default 0), `type` and `stitchTiles`.
+fn parse_turbulence(
+    source: &[u8],
+    tokens: &[XmlToken],
+    element: usize,
+    p: &mut FilterPrimitive,
+) -> Result<()> {
+    if let Some(s) = attr(source, tokens, element, b"baseFrequency") {
+        let vals = number_list(source, s, 2).map_err(|_| number(s.offset))?;
+        if vals.is_empty() || vals.len() > 2 || vals.iter().any(|v| !v.is_finite() || *v < 0.) {
+            return Err(number(s.offset));
+        }
+        p.values[0] = vals[0];
+        p.values[1] = *vals.get(1).unwrap_or(&vals[0]);
+    }
+    p.values[2] = 1.;
+    if let Some(s) = attr(source, tokens, element, b"numOctaves") {
+        let v = parse_number(source, s, 1.).map_err(|_| number(s.offset))?;
+        if !(0.0..=10.0).contains(&v) || v.fract() != 0. {
+            return Err(number(s.offset));
+        }
+        p.values[2] = v;
+    }
+    if let Some(s) = attr(source, tokens, element, b"seed") {
+        let v = parse_number(source, s, 0.).map_err(|_| number(s.offset))?;
+        if !v.is_finite() || v.abs() > 2_147_483_647. {
+            return Err(number(s.offset));
+        }
+        p.values[3] = (v + 0.5).floor();
+    }
+    if let Some(s) = attr(source, tokens, element, b"type") {
+        match span_bytes(source, s).unwrap_or_default() {
+            b"turbulence" => p.mode |= 1,
+            b"fractalNoise" => {}
+            _ => return Err(unsupported(s.offset)),
+        }
+    }
+    if let Some(s) = attr(source, tokens, element, b"stitchTiles") {
+        match span_bytes(source, s).unwrap_or_default() {
+            b"stitch" => p.mode |= 2,
+            b"noStitch" => {}
+            _ => return Err(unsupported(s.offset)),
+        }
+    }
+    Ok(())
 }

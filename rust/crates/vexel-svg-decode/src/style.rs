@@ -304,13 +304,7 @@ pub fn parse_style(
         isolation: false,
     };
     if let Some(v) = paint.value(Property::MixBlendMode) {
-        out.blend_mode = [
-            b"normal".as_slice(),
-            b"multiply",
-            b"screen",
-            b"darken",
-            b"lighten",
-        ]
+        out.blend_mode = vexel_scene::BLEND_MODE_NAMES
         .iter()
         .position(|n| *n == v.bytes)
         .ok_or_else(|| error(ErrorKind::Unsupported, v.span))? as u8;

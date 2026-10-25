@@ -2,7 +2,8 @@
 //!
 //! A pure pixel port of the C `raster_shape_filter_apply` (`shape_filter.c`):
 //! the primitives `feGaussianBlur`, `feOffset`, `feFlood`, `feBlend`,
-//! `feComposite`, `feMerge`, `feColorMatrix` and `feDropShadow`, evaluated in
+//! `feComposite`, `feMerge`, `feColorMatrix`, `feDropShadow` and
+//! `feTurbulence` (SVG 1.1 reference noise, see [`turbulence`]), evaluated in
 //! linear RGB (the C always sets `color-interpolation-filters: linearRGB`),
 //! clipped to the filter region afterwards. Creating the layer and
 //! compositing the result into the parent is the group machinery, not this
@@ -17,6 +18,7 @@
 mod blur;
 mod color;
 mod region;
+mod turbulence;
 
 use crate::{RenderError, ViewMap};
 use color::{composite_pixel, linear_table, source_over, srgb_table};
@@ -234,6 +236,17 @@ pub fn apply_filter_chain(
                     return Err(RenderError::Cancelled);
                 }
             }
+            FilterKind::Turbulence => {
+                let params = turbulence::Params {
+                    base: [primitive.values[0], primitive.values[1]],
+                    octaves: primitive.values[2] as u32,
+                    seed: primitive.values[3] as i64,
+                    turbulence: primitive.mode & 1 != 0,
+                    stitch: primitive.mode & 2 != 0,
+                    tile: region::user_region(view, filter, bounds),
+                };
+                turbulence::render(&params, view, output);
+            }
             FilterKind::DropShadow => blur::drop_shadow(
                 primitive,
                 input,
@@ -297,6 +310,7 @@ fn check_work(chain: &[FilterPrimitive], pixels: usize) -> Result<(), RenderErro
                 (2.0 * rx + 1.0) as usize + (2.0 * ry + 1.0) as usize
             }
             FilterKind::Merge => usize::from(primitive.merge_count),
+            FilterKind::Turbulence => (primitive.values[2] as usize).max(1),
             _ => 1,
         };
         total = pixels

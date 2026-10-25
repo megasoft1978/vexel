@@ -291,7 +291,7 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
         (
             "turbulence.svg",
             svg(
-                "<defs><filter id='f'><feTurbulence baseFrequency='0.1'/></filter></defs>\
+                "<defs><filter id='f'><feDisplacementMap scale='3'/></filter></defs>\
                  <rect width='30' height='30' filter='url(#f)'/>",
             ),
             "unsupported in V1: filter",
