@@ -278,3 +278,83 @@ fn showcase_file_renders() {
             .any(|p| p[0] > 200 && p[1] > 200 && p[2] < 160)
     );
 }
+
+fn rename(rig: &mut Rig, from: &str, to: &str) {
+    rig.doc_tool(
+        "attribute_set",
+        &format!(r#""elementId":"{from}","name":"id","value":"{to}""#),
+    )
+    .ok();
+}
+
+#[test]
+fn remove_leaves_user_elements_named_like_the_prefix() {
+    let (mut rig, hero) = scene();
+    rename(&mut rig, &hero, "fx-mine");
+    let before = source(&rig);
+    let state = rig.state();
+    let reply = rig.doc_tool(
+        "effect_apply",
+        r#""preset":"vignette","idPrefix":"fx-mine","remove":true"#,
+    );
+    assert!(reply.is_error, "{}", reply.body);
+    assert_eq!(rig.state(), state);
+    assert_eq!(source(&rig), before);
+    // A user group `<prefix>-scene` is not ungrouped either.
+    rename(&mut rig, "fx-mine", "fx-mine-scene");
+    let reply = rig.doc_tool(
+        "effect_apply",
+        r#""preset":"glow","idPrefix":"fx-mine","remove":true"#,
+    );
+    assert!(reply.is_error, "{}", reply.body);
+    assert!(source(&rig).contains(r#"id="fx-mine-scene""#));
+}
+
+#[test]
+fn remove_matches_the_exact_generated_tracks_only() {
+    let (mut rig, hero) = scene();
+    let target = format!(r#","target":"{hero}""#);
+    for prefix in ["fx-x", "fx-x-1"] {
+        rig.doc_tool(
+            "effect_apply",
+            &format!(r#""preset":"vignette"{target},"idPrefix":"{prefix}""#),
+        )
+        .ok();
+    }
+    // A user track that merely shares the prefix survives too.
+    rig.doc_tool(
+        "native_timeline_add_property_track",
+        &format!(
+            r#""trackId":"fx-x-mine","targetId":"{hero}","property":"opacity","valueType":"scalar","interpolation":"linear","value":1"#
+        ),
+    )
+    .ok();
+    rig.doc_tool(
+        "effect_apply",
+        r#""preset":"vignette","idPrefix":"fx-x","remove":true"#,
+    )
+    .ok();
+    let tl = timeline(&mut rig);
+    assert!(!tl.contains("fx-x-edge"), "{tl}");
+    assert!(tl.contains("fx-x-1-edge"), "{tl}");
+    assert!(tl.contains("fx-x-mine"), "{tl}");
+    let src = source(&rig);
+    assert!(!src.contains(r#"id="fx-x""#) && src.contains(r#"id="fx-x-1""#));
+}
+
+#[test]
+fn reserved_prefixes_are_refused_for_add_and_remove() {
+    let (mut rig, _) = scene();
+    rig.doc_tool("effect_apply", r#""preset":"vignette""#).ok();
+    let state = rig.state();
+    for call in [
+        r#""preset":"vignette","idPrefix":"vexel-rig","remove":true"#,
+        r#""preset":"vignette","idPrefix":"vexel-mouths","remove":true"#,
+        r#""preset":"vignette","idPrefix":"vexel-x","remove":true"#,
+        r#""preset":"vignette","idPrefix":"vexel-rig""#,
+    ] {
+        let reply = rig.doc_tool("effect_apply", call);
+        assert!(reply.is_error, "accepted {call}: {}", reply.body);
+        assert_eq!(rig.state(), state, "{call}");
+    }
+}

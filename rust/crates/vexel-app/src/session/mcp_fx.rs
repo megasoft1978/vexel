@@ -27,7 +27,9 @@ const NON_CONTENT: &[&str] = &[
 ];
 
 fn valid_prefix(p: &str) -> bool {
+    // `vexel-` ids are reserved (rig, mouth groups); never generate or remove them.
     (1..=48).contains(&p.len())
+        && !p.starts_with("vexel-")
         && p.bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
 }
@@ -40,13 +42,61 @@ fn renders(app: &AppDocument) -> bool {
     })
 }
 
+/// Track-id suffixes (after `{prefix}-`) the presets generate. The single source
+/// for both add-side collision checks and remove, so they cannot drift.
+const FIXED_SUFFIXES: &[&str] = &[
+    "opacity", "radius", "ro-x", "ro-y", "bo-x", "bo-y", "smear", "window", "flash", "edge",
+    "dot-r", "jitter", "roll",
+];
+
+fn digits(s: &str) -> bool {
+    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())
+}
+
+/// True when `id` is exactly a track id some preset generates under `prefix`.
+fn generated_track(prefix: &str, id: &[u8]) -> bool {
+    let Some(rest) = std::str::from_utf8(id)
+        .ok()
+        .and_then(|id| id.strip_prefix(prefix))
+        .and_then(|r| r.strip_prefix('-'))
+    else {
+        return false;
+    };
+    if FIXED_SUFFIXES.contains(&rest) {
+        return true;
+    }
+    // `c{k}-move` (copies) and `{tag}{k}-vis` (cycled frames).
+    if let Some(k) = rest.strip_suffix("-move").and_then(|r| r.strip_prefix('c')) {
+        return digits(k);
+    }
+    rest.strip_suffix("-vis").is_some_and(|r| {
+        let n = r.trim_start_matches(|c: char| c.is_ascii_alphabetic());
+        n.len() < r.len() && digits(n)
+    })
+}
+
 fn track_ids<'a>(tracks: &'a [(Vec<u8>, Vec<u8>)], prefix: &str) -> Vec<&'a Vec<u8>> {
-    let head = format!("{prefix}-");
     tracks
         .iter()
-        .filter(|(id, _)| id.starts_with(head.as_bytes()))
+        .filter(|(id, _)| generated_track(prefix, id))
         .map(|(id, _)| id)
         .collect()
+}
+
+/// True when some generated track targets the prefix root or one of its
+/// children, which proves this call family created the `{prefix}` elements.
+fn owns_elements(tracks: &[(Vec<u8>, Vec<u8>)], prefix: &str) -> bool {
+    let head = format!("{prefix}-");
+    tracks.iter().any(|(id, target)| {
+        generated_track(prefix, id)
+            && (target.as_slice() == prefix.as_bytes() || target.starts_with(head.as_bytes()))
+    })
+}
+
+fn is_group(app: &AppDocument, id: &str) -> bool {
+    app.document()
+        .element_get(id)
+        .is_ok_and(|info| info.tag == "g")
 }
 
 pub(crate) fn effect_apply(app: &mut AppDocument, spec: FxSpec) -> Result<McpOutcome, Fail> {
@@ -292,7 +342,9 @@ fn remove(app: &mut AppDocument, prefix: &str) -> Result<String, Fail> {
         .cloned()
         .collect();
     let scene = format!("{prefix}-scene");
-    let (has_root, has_scene) = (exists(app, prefix), exists(app, &scene));
+    let owned = owns_elements(&timeline.tracks, prefix);
+    let has_root = owned && is_group(app, prefix);
+    let has_scene = owned && is_group(app, &scene);
     if stale.is_empty() && !has_root && !has_scene {
         return Err("effect_apply: nothing was generated under that idPrefix");
     }
