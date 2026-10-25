@@ -133,7 +133,10 @@ operations. The native timeline surface includes `native_timeline_get`,
 reorder operations, alongside drawing asset/cel tools. The timeline defaults
 to 48 ticks at 24 ticks per second (ticks 0-47); `native_timeline_set_duration`
 (`durationTicks`, optional `ticksPerSecond`) lengthens or shortens it, capped at
-3600 seconds and never below the last key/cel tick plus one. Exact arguments are
+3600 seconds and never below the last key/cel tick plus one. Property keys need no
+prior `set_duration`: `add_property_track` keys, `set_property_key` and
+`tracks_set` keys past the end lengthen the timeline to that tick plus one in the
+same edit (same caps; beyond them the edit is rejected). Exact arguments are
 published by MCP tool schemas. Timeline edits use shared project history.
 Native GIF export is synchronous; loops over 120 frames are stride-sampled,
 with frame delay multiplied by the stride.
@@ -153,7 +156,7 @@ given to earlier `element_add` calls (`id`). Success replies
 `atomic:true` the first failure rolls the whole batch back and replies
 `{"ok":false,"failedIndex","error","results":[...applied so far...]}`; with
 `atomic:false` the batch continues past failures, each result carries `ok` and
-`error`, and the reply has `ok:false` and `failedCount` when any failed. Nested
+`error`, and the reply has `ok:false` and `failedCount` when any failed. `native_timeline_set_camera` is allowed in a batch like any timeline edit. Nested
 `batch`, file (`document_open`, `document_close`, `save`, `save_as`), export,
 `render_png`, `undo`/`redo` and playback tools are rejected. A batch costs
 `1 + ops/8` of the per-minute request budget. 100 `element_add` calls take about
