@@ -3,6 +3,10 @@
 //! Layers are straight (non-premultiplied) RGBA8. All maths is `f64` with the
 //! same operation order as the C so that results round identically.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::ScopedJoinHandle;
+use std::time::Duration;
+
 use vexel_scene::{FilterKind, FilterPrimitive};
 
 pub(super) fn clamp01(value: f64) -> f64 {
@@ -299,18 +303,58 @@ pub(super) fn color_matrix(
         return true;
     }
     // Pixels are independent, so bands give the bytes of the serial loop.
-    // `control` is not shareable across threads: it is polled around the call.
+    // `control` is not shareable across threads: the calling thread polls it
+    // while the bands run and raises `cancel`, which bands check per row.
     if control() {
         return false;
     }
     let band = rows.div_ceil(threads) * row_bytes;
     let (matrix, units) = (&matrix, &units);
+    let cancel = AtomicBool::new(false);
+    let mut cancelled = false;
     std::thread::scope(|scope| {
-        for (rows_in, rows_out) in input.chunks(band).zip(output.chunks_mut(band)) {
-            scope.spawn(move || matrix_pixels(primitive, matrix, units, rows_in, rows_out));
+        let handles: Vec<_> = input
+            .chunks(band)
+            .zip(output.chunks_mut(band))
+            .map(|(rows_in, rows_out)| {
+                let cancel = &cancel;
+                scope.spawn(move || {
+                    matrix_band(
+                        primitive, matrix, units, row_bytes, rows_in, rows_out, cancel,
+                    )
+                })
+            })
+            .collect();
+        while !handles.iter().all(ScopedJoinHandle::is_finished) {
+            if !cancelled && control() {
+                cancelled = true;
+                cancel.store(true, Ordering::Relaxed);
+            }
+            std::thread::sleep(BAND_POLL);
         }
     });
-    !control()
+    !cancelled && !control()
+}
+
+/// How often the caller polls `control` while bands run.
+const BAND_POLL: Duration = Duration::from_micros(500);
+
+/// One thread band, row by row, stopping early once `cancel` is raised.
+fn matrix_band(
+    primitive: &FilterPrimitive,
+    matrix: &[f64; 20],
+    units: &[f64],
+    row_bytes: usize,
+    input: &[u8],
+    output: &mut [u8],
+    cancel: &AtomicBool,
+) {
+    for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
+        if cancel.load(Ordering::Relaxed) {
+            return;
+        }
+        matrix_pixels(primitive, matrix, units, rows_in, rows_out);
+    }
 }
 
 /// Bands never get fewer rows than this (thread spawn cost).
@@ -491,6 +535,27 @@ mod tests {
             &input,
             &mut output,
             &|| true,
+            12 * 4
+        ));
+    }
+
+    #[test]
+    fn banded_color_matrix_stops_when_control_cancels_midway() {
+        // Only the first poll reports "keep going"; every later one cancels,
+        // so the bands are cancelled while they run (or right after).
+        let tile = runs_image();
+        let input: Vec<u8> = (0..1003 / 8 + 1)
+            .flat_map(|_| tile.clone())
+            .take(12 * 4 * 1003)
+            .collect();
+        let polls = std::sync::atomic::AtomicUsize::new(0);
+        let control = || polls.fetch_add(1, std::sync::atomic::Ordering::Relaxed) >= 1;
+        let mut output = vec![0u8; input.len()];
+        assert!(!color_matrix(
+            &primitive(0),
+            &input,
+            &mut output,
+            &control,
             12 * 4
         ));
     }
