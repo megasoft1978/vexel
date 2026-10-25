@@ -113,8 +113,8 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "element_add_fragment",
-        description: "Add one validated XML element fragment as a child of an element.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\"},\"xml\":{\"type\":\"string\",\"maxLength\":65536}}",
+        description: "Add one validated XML element fragment (at most 1 MiB) as a child of an element.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\"},\"xml\":{\"type\":\"string\",\"maxLength\":1048576}}",
         required: "documentId,parentId,xml",
         fields: "documentId:string;parentId:string;xml:string",
     },

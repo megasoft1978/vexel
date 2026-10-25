@@ -5,7 +5,7 @@ use crate::{ElementKind, V1Document, V1DocumentError, validate_stable_id};
 use vexel_document_edit::{DocumentHandle, encode_attribute};
 
 /// Longest fragment the generic insert accepts.
-pub const MAX_FRAGMENT_BYTES: usize = 64 * 1024;
+pub const MAX_FRAGMENT_BYTES: usize = 1024 * 1024;
 
 /// Ids declared inside a standalone XML fragment, in source order.
 pub fn fragment_ids(xml: &[u8]) -> Result<Vec<String>, V1DocumentError> {

@@ -292,7 +292,8 @@ impl Editor {
         if span.offset > self.byte_len || span.length > self.byte_len - span.offset {
             return Err(EditError::InvalidOperation);
         }
-        if span.length > MAX_FRAGMENT_BYTES || replacement.len() > MAX_FRAGMENT_BYTES {
+        if span.length > crate::XML_FRAGMENT_LIMIT || replacement.len() > crate::XML_FRAGMENT_LIMIT
+        {
             return Err(EditError::Limit);
         }
         self.apply_validated(

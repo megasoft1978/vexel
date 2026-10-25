@@ -224,7 +224,7 @@ fn xml_region_raw_source_boundaries_names_and_error_priority() {
                 offset: 0,
                 length: 0
             },
-            &vec![b'x'; MAX_FRAGMENT_BYTES + 1]
+            &vec![b'x'; XML_FRAGMENT_LIMIT + 1]
         ),
         Err(EditError::Limit)
     );
@@ -496,9 +496,9 @@ fn fragment_and_template_caps_include_generated_id_and_parent_wrapper() {
     let prefix = b"<path data='";
     let suffix = b"'/>";
     let mut large = prefix.to_vec();
-    large.extend(vec![b'x'; MAX_FRAGMENT_BYTES - prefix.len() - suffix.len()]);
+    large.extend(vec![b'x'; XML_FRAGMENT_LIMIT - prefix.len() - suffix.len()]);
     large.extend_from_slice(suffix);
-    assert_eq!(large.len(), MAX_FRAGMENT_BYTES);
+    assert_eq!(large.len(), XML_FRAGMENT_LIMIT);
     assert_eq!(
         edit.insert_xml_fragment(root, &large),
         Err(EditError::Limit)

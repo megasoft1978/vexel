@@ -280,7 +280,7 @@ rendering can also return an MCP image content block.
 ## Fragments and `<use>` instances
 
 `element_add_fragment` (`parentId` is `"root"` or any element id, `xml` is one
-element of at most 64 KiB) inserts arbitrary allowed markup as the last child in
+element of at most 1 MiB) inserts arbitrary allowed markup as the last child in
 one undoable edit and returns `elementIds`. Allowed elements: shapes, `g`,
 `defs`, `symbol`, `use`, `mask`, `clipPath`, `filter` and `fe*` primitives,
 gradients, `stop`, `pattern`, `marker`, `text`, `tspan`, `image`, `title`,

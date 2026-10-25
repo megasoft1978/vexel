@@ -12,7 +12,7 @@ use vexel_json::JsonDocument;
 use vexel_v1_document::{UseSpec, V1DocumentError, fragment_ids};
 
 /// Longest `xml` accepted (matches the tool schema).
-const XML_LIMIT: usize = 65536;
+const XML_LIMIT: usize = 1024 * 1024;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Op {
@@ -73,7 +73,13 @@ pub(in crate::preview) fn parse(
                 .and_then(|t| doc.decoded_string(t))
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .filter(|xml| !xml.is_empty() && xml.len() <= XML_LIMIT)
-                .ok_or_else(|| invalid(tool, "xml", "one XML element of at most 65536 bytes"))?;
+                .ok_or_else(|| {
+                    invalid(
+                        tool,
+                        "xml",
+                        "one XML element of at most 1048576 bytes (1 MiB)",
+                    )
+                })?;
             Ok(Op::Fragment {
                 parent: string(doc, args, "parentId", tool)?,
                 xml,
@@ -145,7 +151,9 @@ fn fragment_error(error: V1DocumentError) -> &'static str {
         V1DocumentError::UseCycle => {
             "element_add_fragment: the fragment creates a <use> reference cycle"
         }
-        _ => "element_add_fragment: xml must be one well-formed element of at most 65536 bytes",
+        _ => {
+            "element_add_fragment: xml must be one well-formed element of at most 1048576 bytes (1 MiB)"
+        }
     }
 }
 

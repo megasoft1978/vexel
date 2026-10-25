@@ -131,3 +131,46 @@ fn group_bounds_and_translate_cover_children_and_hit_returns_child() {
     roundtrip(&mut d, |d| d.translate("g", 5.0, 7.0).unwrap());
     assert_eq!(d.geometry_bounds("g").unwrap(), (15.0, 27.0, 37.0, 50.0));
 }
+
+#[test]
+fn reorder_works_on_groups_created_by_add_fragment() {
+    let mut d = doc("<rect id='a'/>");
+    d.add_fragment(
+        "root",
+        br#"<g id="fg"><rect id="fg-1" width="5" height="5"/><circle id="fg-2" r="2"/></g>"#,
+    )
+    .unwrap();
+    d.add_fragment("root", br#"<g id="fh"><rect id="fh-1"/></g>"#)
+        .unwrap();
+    roundtrip(&mut d, |d| d.reorder_relative("fh", "a", true).unwrap());
+    roundtrip(&mut d, |d| d.reorder_relative("a", "fg", false).unwrap());
+    roundtrip(&mut d, |d| d.reorder("fg", Reorder::Back).unwrap());
+    roundtrip(&mut d, |d| {
+        d.reorder_relative("fg-2", "fg-1", true).unwrap()
+    });
+}
+
+#[test]
+fn reorder_ignores_whitespace_and_comments_between_siblings() {
+    let mut d = doc(
+        "\n  <rect id='a'/>\n  <!-- c -->\n  <g id='b'><rect id='b1'/></g>\n  <circle id='c'/>\n",
+    );
+    d.add_fragment("root", b"<g id=\"fg\">\n  <rect id=\"fg-1\"/>\n</g>")
+        .unwrap();
+    for (id, target, before) in [("fg", "a", true), ("a", "fg", false), ("b", "c", false)] {
+        d.reorder_relative(id, target, before).unwrap();
+        eprintln!("{id}->{target} {before}: {}", source(&d));
+        d.undo().unwrap();
+    }
+}
+
+#[test]
+fn reorder_moves_spans_larger_than_64_kib() {
+    let mut d = doc("");
+    for id in ["a", "b"] {
+        let pad = "x".repeat(100 * 1024);
+        let xml = format!("<g id=\"{id}\"><title>{pad}</title></g>");
+        d.add_fragment("root", xml.as_bytes()).unwrap();
+    }
+    roundtrip(&mut d, |d| d.reorder_relative("b", "a", true).unwrap());
+}
