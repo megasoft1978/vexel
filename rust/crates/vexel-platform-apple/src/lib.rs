@@ -15,6 +15,8 @@ mod text_layout;
 #[cfg(all(any(test, feature = "test-support"), target_os = "macos"))]
 pub mod video_reader;
 #[cfg(target_os = "macos")]
+mod video_audio;
+#[cfg(target_os = "macos")]
 mod video_writer;
 
 #[cfg(target_os = "macos")]
