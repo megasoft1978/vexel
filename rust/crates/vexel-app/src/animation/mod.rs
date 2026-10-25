@@ -18,6 +18,7 @@ pub mod native_export_message;
 pub mod native_export_video;
 pub mod native_frame;
 pub mod native_properties;
+mod native_stop_offsets;
 pub mod native_stage;
 pub mod playback;
 pub mod present;

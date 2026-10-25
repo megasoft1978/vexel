@@ -4,6 +4,7 @@ mod access;
 mod easing;
 mod edit;
 mod json;
+pub mod pathmorph;
 pub mod sample;
 mod schema;
 
@@ -16,7 +17,7 @@ pub use edit::{
 pub use edit::{EditFailure, EditLimits, TimelineEdit, TimelineSourceLease};
 pub use edit::{EmptyTimelineSettings, initialize_empty_timeline};
 pub use json::string_copy;
-pub use sample::{PropertySample, PropertyValue, sample_properties};
+pub use sample::{PathBlend, PropertySample, resolve_path, PropertyValue, sample_properties};
 pub use schema::{
     AssetRef, DecodeFailure, DetachedTimeline, Error, ItemView, LoopMode, MAX_ITEMS, MAX_ITEMS_PER_TRACK,
     MAX_SOURCE_BYTES, MAX_STRING_BYTES, MAX_TRACKS, TimelineContext, TimelineIterator,

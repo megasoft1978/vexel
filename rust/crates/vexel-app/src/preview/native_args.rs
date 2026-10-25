@@ -77,13 +77,17 @@ pub(super) fn tick(
 }
 
 fn value(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Vec<u8>, PreviewArgumentError> {
-    let form = "a JSON number, true/false, or an array of numbers (at most 4096 bytes)";
+    let form = "a JSON number, true/false, an array of numbers or (path morph) a path data string (at most 4096 bytes)";
     doc.object_get(args, b"value")
         .filter(|token| {
             doc.token(*token).is_some_and(|value| {
                 matches!(
                     value.kind,
-                    JsonType::Number | JsonType::True | JsonType::False | JsonType::Array
+                    JsonType::Number
+                        | JsonType::True
+                        | JsonType::False
+                        | JsonType::Array
+                        | JsonType::String
                 )
             })
         })
@@ -221,7 +225,7 @@ fn parse_one(
                 "valueType",
                 1,
                 32,
-                "one of `scalar`, `rgba`, `transform2d`, `trs` or `boolean`",
+                "one of `scalar`, `rgba`, `transform2d`, `trs`, `boolean` or `path`",
             )?,
             interpolation: string(
                 doc,

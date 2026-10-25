@@ -6,7 +6,8 @@
 
 use std::collections::HashMap;
 use std::ops::Range;
-use vexel_timeline::{PropertyValue, TimelineView, sample_properties};
+use vexel_timeline::pathmorph::PathKind;
+use vexel_timeline::{PropertyValue, TimelineView, resolve_path, sample_properties};
 use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
 
 const MAX_ID_BYTES: usize = 256;
@@ -26,19 +27,19 @@ pub enum NativePropertyError {
 }
 
 #[derive(Debug, Clone)]
-struct Element {
-    opening: XmlSpan,
-    kind: TokenKind,
-    tag: XmlSpan,
-    id: Option<Vec<u8>>,
-    attributes: Vec<Attribute>,
+pub(super) struct Element {
+    pub(super) opening: XmlSpan,
+    pub(super) kind: TokenKind,
+    pub(super) tag: XmlSpan,
+    pub(super) id: Option<Vec<u8>>,
+    pub(super) attributes: Vec<Attribute>,
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Attribute {
-    name: XmlSpan,
-    value: XmlSpan,
-    quote: u8,
+pub(super) struct Attribute {
+    pub(super) name: XmlSpan,
+    pub(super) value: XmlSpan,
+    pub(super) quote: u8,
 }
 
 /// Element table of one SVG source, built once per document revision so a
@@ -46,7 +47,7 @@ struct Attribute {
 /// the source and scanning every element.
 #[derive(Debug, Clone)]
 pub struct SourceIndex {
-    elements: Vec<Element>,
+    pub(super) elements: Vec<Element>,
     by_id: HashMap<Vec<u8>, Vec<usize>>,
 }
 
@@ -112,6 +113,13 @@ fn apply_with_index(
     for sample in samples {
         let target = decode_json_string(sample.target)?;
         let property = decode_json_string(sample.property)?;
+        if let PropertyValue::Path(blend) = sample.value {
+            let kind = PathKind::of_property(&property).ok_or(NativePropertyError::UnsupportedProperty)?;
+            let text = resolve_path(timeline.source(), kind, blend)
+                .map_err(|_| NativePropertyError::InvalidValue)?;
+            push_write(&mut writes, &target, &property, text)?;
+            continue;
+        }
         let (value_type, values) = match sample.value {
             PropertyValue::Scalar(value) => (b"scalar".as_slice(), vec![value]),
             PropertyValue::Transform2d(values) => (b"transform2d".as_slice(), values.to_vec()),
@@ -120,6 +128,7 @@ fn apply_with_index(
             PropertyValue::Boolean(value) => {
                 (b"boolean".as_slice(), vec![if value { 1.0 } else { 0.0 }])
             }
+            PropertyValue::Path(_) => return Err(NativePropertyError::InvalidValue),
         };
         append_writes(&mut writes, target, &property, value_type, &values)?;
     }
@@ -132,17 +141,18 @@ fn apply_with_index(
             &built
         }
     };
-    let mut patches = Vec::new();
+    let mut resolved = Vec::new();
     for write in writes {
         let matches = index
             .by_id
             .get(write.target.as_slice())
             .map_or(&[][..], Vec::as_slice);
-        let element = match matches {
+        let at = match matches {
             [] => return Err(NativePropertyError::MissingTarget),
-            [one] => &index.elements[*one],
+            [one] => *one,
             _ => return Err(NativePropertyError::DuplicateTarget),
         };
+        let element = &index.elements[at];
         let tag = element
             .tag
             .slice(source)
@@ -150,53 +160,81 @@ fn apply_with_index(
         if !property_fits_tag(tag, write.name) {
             return Err(NativePropertyError::PropertyNotOnElement);
         }
-        let existing = element
-            .attributes
-            .iter()
-            .find(|attribute| attribute.name.slice(source) == Some(write.name));
-        if let Some(attribute) = existing {
-            let quote_at = attribute
-                .value
-                .offset
-                .checked_sub(1)
-                .ok_or(NativePropertyError::InvalidSvg)?;
-            let quote = attribute.quote;
-            if source.get(quote_at) != Some(&quote) {
-                return Err(NativePropertyError::InvalidSvg);
-            }
-            let encoded = escape_attribute(&write.value, quote)?;
-            patches.push(Patch {
-                range: attribute.value.offset..attribute.value.offset + attribute.value.length,
-                replacement: encoded,
-            });
-        } else {
-            let opening_end = element
-                .opening
-                .offset
-                .checked_add(element.opening.length)
-                .ok_or(NativePropertyError::InvalidSvg)?;
-            let insert_at = match element.kind {
-                TokenKind::EmptyElement => opening_end.checked_sub(2),
-                TokenKind::StartElement => opening_end.checked_sub(1),
-                _ => None,
-            }
-            .ok_or(NativePropertyError::InvalidSvg)?;
-            let mut insertion = Vec::new();
-            insertion
-                .try_reserve(write.name.len() + write.value.len() + 5)
-                .map_err(|_| NativePropertyError::Allocation)?;
-            insertion.push(b' ');
-            insertion.extend_from_slice(write.name);
-            insertion.extend_from_slice(b"=\"");
-            insertion.extend_from_slice(&escape_attribute(&write.value, b'"')?);
-            insertion.push(b'"');
-            patches.push(Patch {
-                range: insert_at..insert_at,
-                replacement: insertion,
-            });
+        if write.name == b"values" && !matrix_values_scalar(source, element) {
+            return Err(NativePropertyError::PropertyNotOnElement);
         }
+        resolved.push((at, write.name, write.value));
+    }
+    if resolved.iter().any(|(_, name, _)| *name == b"offset") {
+        super::native_stop_offsets::keep_monotonic(source, index, &mut resolved)?;
+    }
+    let mut patches = Vec::new();
+    for (at, name, value) in &resolved {
+        patches.push(attribute_patch(source, &index.elements[*at], name, value)?);
     }
     apply_patches(source, patches)
+}
+
+/// `values` of a feColorMatrix is a single number only for hueRotate and
+/// saturate.
+fn matrix_values_scalar(source: &[u8], element: &Element) -> bool {
+    element
+        .attributes
+        .iter()
+        .find(|attribute| attribute.name.slice(source) == Some(b"type".as_slice()))
+        .and_then(|attribute| attribute.value.slice(source))
+        .is_some_and(|value| value == b"hueRotate" || value == b"saturate")
+}
+
+fn attribute_patch(
+    source: &[u8],
+    element: &Element,
+    name: &[u8],
+    value: &[u8],
+) -> Result<Patch, NativePropertyError> {
+    let existing = element
+        .attributes
+        .iter()
+        .find(|attribute| attribute.name.slice(source) == Some(name));
+    if let Some(attribute) = existing {
+        let quote_at = attribute
+            .value
+            .offset
+            .checked_sub(1)
+            .ok_or(NativePropertyError::InvalidSvg)?;
+        let quote = attribute.quote;
+        if source.get(quote_at) != Some(&quote) {
+            return Err(NativePropertyError::InvalidSvg);
+        }
+        return Ok(Patch {
+            range: attribute.value.offset..attribute.value.offset + attribute.value.length,
+            replacement: escape_attribute(value, quote)?,
+        });
+    }
+    let opening_end = element
+        .opening
+        .offset
+        .checked_add(element.opening.length)
+        .ok_or(NativePropertyError::InvalidSvg)?;
+    let insert_at = match element.kind {
+        TokenKind::EmptyElement => opening_end.checked_sub(2),
+        TokenKind::StartElement => opening_end.checked_sub(1),
+        _ => None,
+    }
+    .ok_or(NativePropertyError::InvalidSvg)?;
+    let mut insertion = Vec::new();
+    insertion
+        .try_reserve(name.len() + value.len() + 5)
+        .map_err(|_| NativePropertyError::Allocation)?;
+    insertion.push(b' ');
+    insertion.extend_from_slice(name);
+    insertion.extend_from_slice(b"=\"");
+    insertion.extend_from_slice(&escape_attribute(value, b'"')?);
+    insertion.push(b'"');
+    Ok(Patch {
+        range: insert_at..insert_at,
+        replacement: insertion,
+    })
 }
 
 fn append_writes(
@@ -245,6 +283,10 @@ fn append_writes(
             value.push(b')');
             (b"transform".as_slice(), value)
         }
+        (b"offset" | b"stop-opacity" | b"flood-opacity", b"scalar") => (
+            property,
+            number_text(values[0].clamp(0.0, 1.0)),
+        ),
         (name, b"scalar") if scalar_property(name) => (name, number_text(values[0])),
         _ => return Err(NativePropertyError::UnsupportedProperty),
     };
@@ -273,6 +315,13 @@ fn push_write(
         b"stroke-width" => b"stroke-width",
         b"stroke-dashoffset" => b"stroke-dashoffset",
         b"offset" => b"offset",
+        b"d" => b"d",
+        b"points" => b"points",
+        b"stdDeviation" => b"stdDeviation",
+        b"dx" => b"dx",
+        b"dy" => b"dy",
+        b"flood-opacity" => b"flood-opacity",
+        b"values" => b"values",
         b"stop-color" => b"stop-color",
         b"stop-opacity" => b"stop-opacity",
         b"fill" => b"fill",
@@ -308,6 +357,18 @@ fn push_write(
 /// Only element types known to lack the attribute are rejected; every other
 /// combination is passed through to the renderer.
 pub fn property_fits_tag(tag: &[u8], name: &[u8]) -> bool {
+    let only: Option<&[&[u8]]> = match name {
+        b"d" => Some(&[b"path"]),
+        b"points" => Some(&[b"polygon", b"polyline"]),
+        b"stdDeviation" => Some(&[b"feGaussianBlur", b"feDropShadow"]),
+        b"dx" | b"dy" => Some(&[b"feOffset", b"feDropShadow"]),
+        b"flood-opacity" => Some(&[b"feFlood", b"feDropShadow"]),
+        b"values" => Some(&[b"feColorMatrix"]),
+        _ => None,
+    };
+    if let Some(tags) = only {
+        return tags.contains(&tag);
+    }
     let geometry: &[&[u8]] = match tag {
         b"path" | b"line" | b"polyline" | b"polygon" | b"g" | b"a" | b"switch" => &[],
         b"circle" => &[b"cx", b"cy", b"r"],
@@ -351,6 +412,11 @@ fn scalar_property(name: &[u8]) -> bool {
             | b"stroke-dashoffset"
             | b"offset"
             | b"stop-opacity"
+            | b"stdDeviation"
+            | b"dx"
+            | b"dy"
+            | b"flood-opacity"
+            | b"values"
     )
 }
 

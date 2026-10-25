@@ -81,7 +81,7 @@ pub fn render_failure(tool: Tool, error: &NativeExportError) -> &'static str {
         "property_not_on_element" => "a native property track sets a geometry attribute (x, y, width, height, cx, cy, r, rx or ry) that its target element type does not have, for example cy on a path; remove the track (native_timeline_remove_track) or animate position with a transform track",
         "missing_target" => "a native timeline track targets an element id that is not in the document; remove the track or re-add the element",
         "duplicate_target" => "a native timeline track target id is used by more than one element",
-        "unsupported_property" => "a native timeline track animates a property that is not supported; use x, y, width, height, cx, cy, r, rx, ry, opacity, fill-opacity, stroke-opacity, stroke-width, stroke-dashoffset, fill, stroke, stop-color, visibility or transform",
+        "unsupported_property" => "a native timeline track animates a property that is not supported; use x, y, width, height, cx, cy, r, rx, ry, opacity, fill-opacity, stroke-opacity, stroke-width, stroke-dashoffset, stdDeviation, dx, dy, flood-opacity, values, offset, stop-opacity, d, points, fill, stroke, stop-color, visibility or transform",
         "property_value" => "a native timeline track has a value that cannot be applied (for example a colour channel outside 0 to 1)",
         "filter" => "the scene uses an SVG filter, which is not supported",
         "mask" => "the scene uses an SVG mask, which is not supported",

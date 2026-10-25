@@ -34,8 +34,38 @@ impl Trs {
     }
 }
 
+/// Blend of two path keys by source span; resolved with [`resolve_path`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PathBlend {
+    pub from: Span,
+    pub to: Span,
+    pub t: f64,
+}
+
+/// Attribute text of a path blend: the lower key verbatim when `t` is zero,
+/// else the per-coordinate blend of both keys normalised to absolute commands.
+pub fn resolve_path(
+    source: &[u8],
+    kind: crate::pathmorph::PathKind,
+    blend: PathBlend,
+) -> Result<Vec<u8>, DecodeFailure> {
+    let text = |span: Span| {
+        crate::schema::string(source, span)
+    };
+    let from = text(blend.from)?;
+    if blend.t == 0.0 {
+        return Ok(from);
+    }
+    let bad = |_| failure(Error::InvalidValue, blend.from.start);
+    let a = crate::pathmorph::parse(kind, &from).map_err(bad)?;
+    let b = crate::pathmorph::parse(kind, &text(blend.to)?).map_err(bad)?;
+    crate::pathmorph::compare(&a, &b).map_err(bad)?;
+    Ok(crate::pathmorph::format(kind, &crate::pathmorph::lerp(&a, &b, blend.t)))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PropertyValue {
+    Path(PathBlend),
     Trs(Trs),
     Scalar(f64),
     Transform2d([f64; 6]),
@@ -170,6 +200,13 @@ fn parse_value(
         b"transform2d" => Ok(PropertyValue::Transform2d(numbers::<6>(view, item)?)),
         b"rgba" => Ok(PropertyValue::Rgba(numbers::<4>(view, item)?)),
         b"trs" => parse_trs(view, item),
+        b"path" => {
+            let value = item
+                .value_json
+                .ok_or_else(|| failure(Error::InvalidSchema, span.start))?;
+            let key = value_span(view, value)?;
+            Ok(PropertyValue::Path(PathBlend { from: key, to: key, t: 0.0 }))
+        }
         _ => Err(failure(Error::InvalidValue, span.start)),
     }
 }
@@ -266,6 +303,9 @@ fn interpolate(
     }
     let mix = |a: f64, b: f64| a + (b - a) * t;
     match (start, end) {
+        (PropertyValue::Path(a), PropertyValue::Path(b)) => {
+            Ok(PropertyValue::Path(PathBlend { from: a.from, to: b.from, t }))
+        }
         (PropertyValue::Scalar(a), PropertyValue::Scalar(b)) => {
             Ok(PropertyValue::Scalar(mix(a, b)))
         }

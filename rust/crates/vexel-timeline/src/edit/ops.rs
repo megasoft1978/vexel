@@ -150,7 +150,13 @@ fn value_json(raw: &[u8]) -> Result<(), EditFailure> {
     if raw.is_empty() {
         return Err(at(Error::InvalidArgument, 0));
     }
-    if raw.len() > VALUE_JSON_LIMIT {
+    // Path morph keys are JSON strings of up to MAX_STRING_BYTES.
+    let limit = if raw[0] == b'"' {
+        crate::MAX_STRING_BYTES + 64
+    } else {
+        VALUE_JSON_LIMIT
+    };
+    if raw.len() > limit {
         return Err(at(Error::Limit, 0));
     }
     // Syntax and typed-value errors are reported after splicing, with offsets

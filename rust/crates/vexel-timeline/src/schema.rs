@@ -134,6 +134,8 @@ where F: FnMut() -> bool {
         if item_spans.is_empty() { return Err(at(Error::InvalidValue,items_field.value.start)); }
         let type_val=field(&fields,b"value_type").map(|f|string(source,f.value)).transpose()?.unwrap_or_default();
         let mut previous=0u32;
+        let prop_name=field(&fields,b"property").map(|f|string(source,f.value)).transpose()?.unwrap_or_default();
+        let mut base_shape=None;
         for (index,item_span) in item_spans.iter().enumerate() {
             let item_fields=object_fields(source,*item_span,Some(&mut poll_cancel))?;
             if drawing {
@@ -158,7 +160,7 @@ where F: FnMut() -> bool {
                 if !context.assets.iter().any(|a|a.name==asset_name&&a.media_type==b"image/svg+xml") { return Err(at(Error::InvalidReference,item_span.start)); }
             } else {
                 let value=required(&item_fields,b"value").ok_or_else(||at(Error::InvalidSchema,item_span.start))?.value;
-                validate_typed_value(source,value,&type_val,&mut poll_cancel)?;
+                validate_typed_value(source,value,&type_val,&prop_name,&mut base_shape,&mut poll_cancel)?;
                 if (index==0 && tick!=0)||(index>0&&tick<=previous) { return Err(at(Error::Duplicate,item_span.start)); }
                 previous=tick;
             }
@@ -210,18 +212,34 @@ fn validate_property(source:&[u8],fields:&[Field],span:Span)->Result<()> {
     let kind=string(source,type_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     let interpolation=string(source,interp_f.value).map_err(|_|at(Error::InvalidValue,span.start))?;
     if prop.is_empty() || ![b"step".as_slice(),b"linear",b"cubic"].contains(&interpolation.as_slice()) ||
-       ![b"scalar".as_slice(),b"transform2d",b"rgba",b"boolean",b"trs"].contains(&kind.as_slice()) {
+       ![b"scalar".as_slice(),b"transform2d",b"rgba",b"boolean",b"trs",b"path"].contains(&kind.as_slice()) {
         return Err(at(Error::InvalidValue,span.start));
     }
-    let scalar=[b"x".as_slice(),b"y",b"width",b"height",b"cx",b"cy",b"r",b"rx",b"ry",b"opacity",b"fill-opacity",b"stroke-opacity",b"stroke-width",b"stroke-dashoffset",b"stop-opacity",b"offset"].contains(&prop.as_slice())&&kind==b"scalar";
-    let match_ok=scalar||([b"fill".as_slice(),b"stroke",b"stop-color"].contains(&prop.as_slice())&&kind==b"rgba")||(prop==b"transform"&&(kind==b"transform2d"||kind==b"trs"))||(prop==b"visibility"&&kind==b"boolean");
+    let scalar=[b"x".as_slice(),b"y",b"width",b"height",b"cx",b"cy",b"r",b"rx",b"ry",b"opacity",b"fill-opacity",b"stroke-opacity",b"stroke-width",b"stroke-dashoffset",b"stop-opacity",b"offset",b"stdDeviation",b"dx",b"dy",b"flood-opacity",b"values"].contains(&prop.as_slice())&&kind==b"scalar";
+    let match_ok=scalar||([b"fill".as_slice(),b"stroke",b"stop-color"].contains(&prop.as_slice())&&kind==b"rgba")||(prop==b"transform"&&(kind==b"transform2d"||kind==b"trs"))||(prop==b"visibility"&&kind==b"boolean")||(crate::pathmorph::PathKind::of_property(&prop).is_some()&&kind==b"path");
     if !match_ok {return Err(at(Error::InvalidValue,prop_f.value.start));}
     if kind==b"boolean"&&interpolation!=b"step" {return Err(at(Error::InvalidValue,interp_f.value.start));}
     Ok(())
 }
-fn validate_typed_value(source:&[u8],span:Span,kind:&[u8],cancel:&mut dyn FnMut()->bool)->Result<()> {
+fn validate_typed_value(source:&[u8],span:Span,kind:&[u8],prop:&[u8],base:&mut Option<crate::pathmorph::Shape>,cancel:&mut dyn FnMut()->bool)->Result<()> {
     if kind==b"boolean" {boolean(source,span).map(|_|())?;return Ok(())}
-    if kind==b"scalar" {number(source,span).map(|_|())?;return Ok(())}
+    if kind==b"scalar" {
+        let n=number(source,span)?;
+        // Renderer limits: blur deviation 0..=32, offsets within 4096, opacities 0..=1.
+        let ok=match prop {b"stdDeviation"=>(0.0..=32.0).contains(&n),b"dx"|b"dy"=>n.abs()<=4096.0,b"flood-opacity"=>(0.0..=1.0).contains(&n),b"values"=>n.abs()<=1e6,_=>true};
+        if !ok {return Err(at(Error::InvalidValue,span.start));}
+        return Ok(())
+    }
+    if kind==b"path" {
+        let text=string(source,span).map_err(|_|at(Error::InvalidValue,span.start))?;
+        let path_kind=crate::pathmorph::PathKind::of_property(prop).ok_or_else(||at(Error::InvalidValue,span.start))?;
+        let shape=crate::pathmorph::parse(path_kind,&text).map_err(|_|at(Error::InvalidValue,span.start))?;
+        match base {
+            Some(first)=>crate::pathmorph::compare(first,&shape).map_err(|_|at(Error::InvalidValue,span.start))?,
+            None=>*base=Some(shape),
+        }
+        return Ok(())
+    }
     if kind==b"trs" {
         let fields=object_fields(source,span,Some(cancel)).map_err(|error|if error.canceled{error}else{at(Error::InvalidValue,span.start)})?;
         const REQUIRED:[&[u8];7]=[b"tx",b"ty",b"rotation_deg",b"sx",b"sy",b"pivot_x",b"pivot_y"];

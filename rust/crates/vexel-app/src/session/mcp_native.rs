@@ -400,9 +400,18 @@ fn property_target_mismatch(
 ) -> Option<&'static str> {
     let source = app.source_bytes().ok()?;
     let tag = element_tag(&source, target_id)?;
-    (!property_fits_tag(&tag, property)).then_some(
-        "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry",
-    )
+    if property_fits_tag(&tag, property) {
+        return None;
+    }
+    Some(match property {
+        b"d" => "native_timeline_add_property_track property d morphs path data and needs a <path> target (polygon and polyline use points)",
+        b"points" => "native_timeline_add_property_track property points needs a <polygon> or <polyline> target (paths use d)",
+        b"stdDeviation" => "native_timeline_add_property_track property stdDeviation needs the id of a feGaussianBlur or feDropShadow filter primitive",
+        b"dx" | b"dy" => "native_timeline_add_property_track properties dx and dy need the id of a feOffset or feDropShadow filter primitive",
+        b"flood-opacity" => "native_timeline_add_property_track property flood-opacity needs the id of a feFlood or feDropShadow filter primitive",
+        b"values" => "native_timeline_add_property_track property values needs the id of a feColorMatrix filter primitive",
+        _ => "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry",
+    })
 }
 
 fn known_target(app: &AppDocument, id: &[u8]) -> bool {
@@ -469,7 +478,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_add_property_track trackId already exists; use a unique 1-128 character ID of ASCII letters, digits, `_` or `-`"
         }
         ("add_property_track", _) => {
-            "native_timeline_add_property_track rejected: trackId must be ASCII letters, digits, `_` or `-`; property/valueType pairs are x,y,width,height,cx,cy,r,rx,ry,opacity,fill-opacity,stroke-opacity,stroke-width,stroke-dashoffset with scalar; fill or stroke with rgba (4 numbers 0-1); transform with transform2d (6 numbers); visibility with boolean (interpolation step); interpolation is step, linear or cubic"
+            "native_timeline_add_property_track rejected: trackId must be ASCII letters, digits, `_` or `-`; property/valueType pairs are x,y,width,height,cx,cy,r,rx,ry,opacity,fill-opacity,stroke-opacity,stroke-width,stroke-dashoffset, stdDeviation (0-32), dx, dy, flood-opacity, values (hueRotate or saturate feColorMatrix), offset, stop-opacity with scalar; d or points with path (identical command structure in every key, arcs unsupported); fill, stroke or stop-color with rgba (4 numbers 0-1); transform with transform2d (6 numbers); visibility with boolean (interpolation step); interpolation is step, linear or cubic"
         }
         ("set_property_key", TimelineError::InvalidReference) => {
             "native_timeline_set_property_key trackId is not an existing track"
@@ -478,7 +487,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_set_property_key trackId must be a property track (drawing tracks use set_cel)"
         }
         ("set_property_key", _) => {
-            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration) and value must match the track valueType"
+            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration) and value must match the track valueType (a d or points track needs the same path commands as its base path, arcs unsupported)"
         }
         ("remove_key", TimelineError::InvalidReference) => {
             "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key"

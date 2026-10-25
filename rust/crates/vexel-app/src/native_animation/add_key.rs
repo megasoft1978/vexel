@@ -114,10 +114,19 @@ impl NativeAnimationController {
             .iter()
             .find(|sample| sample.track_index == index)
             .ok_or(NativeAnimationError::InvalidAction)?;
-        Ok(Resolved::Key {
-            track_id: id,
-            value: value_json(&sample.value),
-        })
+        let value = match sample.value {
+            PropertyValue::Path(blend) => {
+                let kind = track
+                    .property
+                    .and_then(|property| vexel_timeline::pathmorph::PathKind::of_property(property))
+                    .ok_or(NativeAnimationError::InvalidAction)?;
+                let text = vexel_timeline::resolve_path(view.source(), kind, blend)
+                    .map_err(|_| NativeAnimationError::InvalidAction)?;
+                format!("\"{}\"", String::from_utf8_lossy(&text))
+            }
+            ref other => value_json(other),
+        };
+        Ok(Resolved::Key { track_id: id, value })
     }
 }
 
@@ -132,6 +141,7 @@ fn value_json(value: &PropertyValue) -> String {
         PropertyValue::Boolean(v) => v.to_string(),
         PropertyValue::Rgba(v) => list(v),
         PropertyValue::Transform2d(v) => list(v),
+        PropertyValue::Path(_) => String::new(),
         PropertyValue::Trs(t) => format!(
             "{{\"tx\":{},\"ty\":{},\"rotation_deg\":{},\"sx\":{},\"sy\":{},\"pivot_x\":{},\"pivot_y\":{},\"skew_x_deg\":{}}}",
             t.tx, t.ty, t.rotation_deg, t.sx, t.sy, t.pivot_x, t.pivot_y, t.skew_x_deg
