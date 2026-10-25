@@ -131,6 +131,26 @@ is audible). `audio_set` changes any of these (`trimOutMs: 0` and
 `clearDuck: true` clear), moves a clip with `startTick`, or deletes it with
 `remove: true`.
 
+`audio_generate` makes a clip with the optional local helper (`tools/vexel-audio`,
+see [docs/audio.md](docs/audio.md)) and, with `addTrack: {trackId, startTick,
+gainDb, ...}`, adds it as a track in the same undoable edit. `kind` is `voice`
+(Kokoro speech, optional effect chain), `sfx` (presets `whoosh`, `hum`, `launch`,
+`chime`, `siren`, `wind`, `comet`, `hoverbike`) or `music` (seamless loop from
+`mood`, `key`, `tempo`, `bars`, `seed`); `params` carries the per-kind options.
+`outPath` is a `.wav` in a granted directory (inside the document directory with
+`addTrack`). Voice without the model fails with `model_missing` and the install
+steps; the model is downloaded only when the call passes `consent: true`, which
+the agent must only do after the user agreed. A call costs 30 of the per-minute
+request budget; limits are 120 s (voice) or 60 s (sfx, music) per request, clips
+up to 120 s and 32 MiB, 128 requests per session. The helper is killed on timeout
+and when Vexel exits, and restarted after a crash. When it is missing the call
+returns a normal error result.
+
+`audio_envelope` returns the loudness per timeline tick of `path` or `trackId`
+(`{tickRate, startTick, ticks, durationMs, peakRms, rms:[0..1,...]}`, loudest tick
+scaled to 1, optional `ticks` limit up to 100000) for lip-sync. It is computed in
+Rust, deterministic, and needs no helper.
+
 Sources are WAV, AIFF/AIFC or CAF PCM (16/24/32-bit integer or 32-bit float, mono
 or stereo, 8-192 kHz), at most 10 minutes and 256 MiB. The document must be saved
 first: `path` is relative to the saved document's directory (an absolute path

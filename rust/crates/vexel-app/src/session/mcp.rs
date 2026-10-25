@@ -6,6 +6,7 @@
 //! is saved, undone and re-rendered like any other edit. Element ids are read
 //! from the document source, so opened documents work too.
 
+use super::mcp_audio::AudioOp;
 use super::mcp_tools::{attribute_set, delete, export_svg};
 use super::{AppDocument, McpGrants};
 use crate::animation::driver::Driver;
@@ -51,6 +52,8 @@ pub struct McpHost {
     /// The one grant policy of this process: every path tool and the GIF
     /// export job use it. Fixed at construction.
     policy: AccessPolicy,
+    /// Optional audio helper process, its budget and test knobs.
+    pub(super) audio_gen: super::mcp_audio_gen::AudioGen,
 }
 
 impl Default for McpHost {
@@ -72,7 +75,28 @@ impl McpHost {
             parent: None,
             extras: None,
             policy,
+            audio_gen: Default::default(),
         }
+    }
+
+    /// Uses `helper` as the audio generation helper (default: found next to
+    /// the binary or via `VEXEL_AUDIO_HELPER`); `timeout` shortens the limits.
+    pub fn set_audio_helper(
+        &mut self,
+        helper: std::path::PathBuf,
+        timeout: Option<std::time::Duration>,
+    ) {
+        self.audio_gen.configure(helper, timeout);
+    }
+
+    /// Lowers the per-session audio generation request budget.
+    pub fn limit_audio_requests(&mut self, max: u32) {
+        self.audio_gen.limit_requests(max);
+    }
+
+    /// Pid of the running audio helper, if one was started.
+    pub fn audio_helper_pid(&self) -> Option<u32> {
+        self.audio_gen.helper_pid()
     }
 
     /// The grant policy used by path tools; hand a clone to `ExportJob::spawn`.
@@ -195,9 +219,11 @@ impl McpHost {
             }),
             Operation::Batch(batch) => self.batch(app, batch, driver),
             Operation::Native(op) => crate::preview::native_timeline::apply(app, op),
-            Operation::Doc(crate::preview::DocOp::Audio(op)) => {
-                super::mcp_audio::apply(app, &self.policy, op)
-            }
+            Operation::Doc(crate::preview::DocOp::Audio(op)) => match op {
+                AudioOp::Generate(spec) => self.audio_gen.generate(app, &self.policy, *spec),
+                AudioOp::Envelope(spec) => super::mcp_audio_gen::envelope(app, &self.policy, *spec),
+                op => super::mcp_audio::apply(app, &self.policy, op),
+            },
             Operation::Doc(op) => crate::preview::apply_doc(app, op),
             Operation::ExportSvg => export_svg(app),
             Operation::RenderPng {

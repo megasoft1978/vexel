@@ -3,6 +3,7 @@
 mod access;
 pub mod audio;
 pub mod audio_codec;
+pub mod audio_envelope;
 pub mod audio_mix;
 pub mod clips;
 mod easing;

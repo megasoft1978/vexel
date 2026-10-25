@@ -11,10 +11,12 @@
 //! document only through [`AppDocument::edit`] / [`AppDocument::apply`]; this
 //! module depends on neither.
 
+mod audio_helper;
 mod grants;
 mod hooks;
 mod mcp;
 pub(crate) mod mcp_audio;
+pub mod mcp_audio_gen;
 mod mcp_batch;
 mod mcp_extras;
 mod mcp_frames;

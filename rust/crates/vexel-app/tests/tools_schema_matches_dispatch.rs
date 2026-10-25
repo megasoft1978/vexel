@@ -83,5 +83,5 @@ fn tools_schema_matches_dispatch() {
         checked += 1;
         item = doc.token(tool).unwrap().next_sibling;
     }
-    assert_eq!(checked, 63, "preview tools/list changed size");
+    assert_eq!(checked, 65, "preview tools/list changed size");
 }

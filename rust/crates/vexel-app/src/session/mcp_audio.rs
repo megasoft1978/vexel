@@ -11,7 +11,6 @@ use crate::preview::native_timeline::settings;
 use crate::project_session::{NativeCommandError, ProjectTimelineError};
 use crate::session::AppDocument;
 use std::ffi::OsStr;
-use std::fs::File;
 use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::OpenOptionsExt;
@@ -65,6 +64,8 @@ pub enum AudioOp {
     Add(Box<NewTrack>),
     Set(Box<SetTrack>),
     List,
+    Generate(Box<super::mcp_audio_gen::GenSpec>),
+    Envelope(Box<super::mcp_audio_gen::EnvSpec>),
 }
 
 const NEEDS_SAVE: &str = "audio paths are relative to the document; save it with save_as first";
@@ -86,7 +87,7 @@ impl SourceError {
     }
 }
 
-fn document_dir(app: &AppDocument) -> Result<PathBuf, &'static str> {
+pub(super) fn document_dir(app: &AppDocument) -> Result<PathBuf, &'static str> {
     let path = app.path().ok_or(NEEDS_SAVE)?;
     let parent = Path::new(OsStr::from_bytes(path))
         .parent()
@@ -158,6 +159,11 @@ fn read_bounded(path: &Path) -> Result<Vec<u8>, SourceError> {
     Ok(bytes)
 }
 
+/// Reads a regular file for the generation tools (same checks as tracks).
+pub(super) fn read_file(path: &Path) -> Result<Vec<u8>, &'static str> {
+    read_bounded(path).map_err(|e| e.message())
+}
+
 /// Decodes a stored track's source for the export mixdown.
 pub(crate) fn load_track(
     app: &AppDocument,
@@ -198,7 +204,7 @@ fn commit(app: &mut AppDocument, tracks: &[AudioTrack]) -> Result<(), &'static s
     })
 }
 
-fn json_string(text: &str) -> String {
+pub(crate) fn json_string(text: &str) -> String {
     let mut out = String::from("\"");
     for c in text.chars() {
         match c {
@@ -294,6 +300,9 @@ pub(crate) fn apply(
                 info.rate,
                 info.channels
             )))
+        }
+        AudioOp::Generate(_) | AudioOp::Envelope(_) => {
+            Err("audio_generate and audio_envelope need the MCP host")
         }
         AudioOp::Set(set) => {
             let index = tracks

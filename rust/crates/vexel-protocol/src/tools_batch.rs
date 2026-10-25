@@ -156,8 +156,11 @@ fn validate_op(
 }
 
 /// Rate-limit weight of one request. A `batch` call costs 1 + ops/8 and a
-/// `native_timeline_tracks_set` call 1 + tracks/8; every other request costs 1.
+/// `native_timeline_tracks_set` call 1 + tracks/8; an `audio_generate` call
+/// costs [`GENERATE_WEIGHT`] (it starts a model run); every other request costs 1.
 /// `params` is the request's `params` token.
+pub(crate) const GENERATE_WEIGHT: u32 = 30;
+
 pub(crate) fn request_weight(doc: &JsonDocument<'_>, method: &str, params: Option<usize>) -> u32 {
     let Some(params) = params.filter(|_| method == "tools/call") else {
         return 1;
@@ -165,6 +168,9 @@ pub(crate) fn request_weight(doc: &JsonDocument<'_>, method: &str, params: Optio
     let Some(name) = doc.object_get(params, b"name") else {
         return 1;
     };
+    if doc.string_equals(name, b"audio_generate") {
+        return GENERATE_WEIGHT;
+    }
     let member: &[u8] = if doc.string_equals(name, b"batch") {
         b"ops"
     } else if doc.string_equals(name, b"native_timeline_tracks_set") {
@@ -184,6 +190,14 @@ pub(crate) fn request_weight(doc: &JsonDocument<'_>, method: &str, params: Optio
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn audio_generate_is_charged_heavily() {
+        let src = br#"{"name":"audio_generate","arguments":{}}"#;
+        let doc = JsonDocument::parse(src).unwrap();
+        assert_eq!(request_weight(&doc, "tools/call", Some(doc.root())), GENERATE_WEIGHT);
+        assert_eq!(request_weight(&doc, "tools/list", Some(doc.root())), 1);
+    }
     use crate::validate_tool_arguments;
 
     fn ops_json(count: usize, tool: &str) -> String {
