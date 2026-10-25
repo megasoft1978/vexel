@@ -10,6 +10,7 @@
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::MetadataExt;
+use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::OnceLock;
@@ -47,6 +48,7 @@ enum Line {
 
 pub struct Helper {
     child: Child,
+    group_killed: bool,
     stdin: ChildStdin,
     replies: Receiver<Line>,
 }
@@ -59,8 +61,39 @@ fn current_uid() -> Option<u32> {
     })
 }
 
+fn check_owner_mode(
+    meta: &fs::Metadata,
+    owner_msg: &'static str,
+    mode_msg: &'static str,
+) -> Result<(), &'static str> {
+    let owner = meta.uid();
+    if owner != 0 && Some(owner) != current_uid() {
+        return Err(owner_msg);
+    }
+    if meta.mode() & 0o022 != 0 {
+        return Err(mode_msg);
+    }
+    Ok(())
+}
+
+/// A directory owned by root or the current user with no group/world write
+/// bit (so a sticky world-writable directory such as /tmp is refused too).
+fn check_dir(path: &Path) -> Result<(), &'static str> {
+    let meta = fs::metadata(path).map_err(|_| "audio helper refused: directory unreadable")?;
+    if !meta.is_dir() {
+        return Err("audio helper refused: parent is not a directory");
+    }
+    check_owner_mode(
+        &meta,
+        "audio helper refused: its directory is owned by another user",
+        "audio helper refused: its directory is writable by group or others; run chmod go-w on it",
+    )
+}
+
 /// Accepts `path` only as a regular file (not a symlink) owned by the
-/// current user or root and not writable by group or others.
+/// current user or root and not writable by group or others, inside a
+/// directory with the same property, and whose sibling `vexel_audio` python
+/// package (loaded into the helper) is equally locked down.
 pub fn check_trusted(path: &Path) -> Result<(), &'static str> {
     let meta = fs::symlink_metadata(path).map_err(|_| "audio helper not found")?;
     if meta.file_type().is_symlink() {
@@ -69,14 +102,45 @@ pub fn check_trusted(path: &Path) -> Result<(), &'static str> {
     if !meta.is_file() {
         return Err("audio helper refused: it is not a regular file");
     }
-    let owner = meta.uid();
-    if owner != 0 && Some(owner) != current_uid() {
-        return Err("audio helper refused: it is owned by another user");
+    check_owner_mode(
+        &meta,
+        "audio helper refused: it is owned by another user",
+        "audio helper refused: it is writable by group or others; run chmod go-w on it",
+    )?;
+    let parent = match path.parent() {
+        Some(p) if !p.as_os_str().is_empty() => p,
+        _ => Path::new("."),
+    };
+    check_dir(parent)?;
+    let package = parent.join("vexel_audio");
+    if fs::symlink_metadata(&package).is_ok() {
+        check_package(&package)?;
     }
-    if meta.mode() & 0o022 != 0 {
-        return Err(
-            "audio helper refused: it is writable by group or others; run chmod go-w on it",
-        );
+    Ok(())
+}
+
+fn check_package(dir: &Path) -> Result<(), &'static str> {
+    let meta = fs::symlink_metadata(dir).map_err(|_| "audio helper package unreadable")?;
+    if meta.file_type().is_symlink() {
+        return Err("audio helper refused: its python package is a symbolic link");
+    }
+    check_dir(dir)?;
+    for entry in fs::read_dir(dir).map_err(|_| "audio helper package unreadable")? {
+        let entry = entry.map_err(|_| "audio helper package unreadable")?;
+        let meta =
+            fs::symlink_metadata(entry.path()).map_err(|_| "audio helper package unreadable")?;
+        if meta.file_type().is_symlink() {
+            return Err("audio helper refused: its python package contains a symbolic link");
+        }
+        if meta.is_dir() {
+            check_dir(&entry.path())?;
+        } else {
+            check_owner_mode(
+                &meta,
+                "audio helper refused: a package file is owned by another user",
+                "audio helper refused: a package file is writable by group or others",
+            )?;
+        }
     }
     Ok(())
 }
@@ -140,20 +204,31 @@ fn read_lines(source: impl Read, out: mpsc::SyncSender<Line>) {
 
 impl Helper {
     pub fn spawn(path: &Path) -> Result<Self, HelperFailure> {
+        Self::spawn_with_env(path, std::env::vars_os())
+    }
+
+    fn spawn_with_env(
+        path: &Path,
+        vars: impl IntoIterator<Item = (std::ffi::OsString, std::ffi::OsString)>,
+    ) -> Result<Self, HelperFailure> {
         check_trusted(path).map_err(HelperFailure::Untrusted)?;
         let mut command = Command::new(path);
         command.env_clear();
-        for (key, value) in std::env::vars_os() {
+        for (key, value) in vars {
             let name = key.to_string_lossy();
             let keep = matches!(name.as_ref(), "PATH" | "HOME")
                 || name.starts_with("VEXEL_")
-                || name.starts_with("HF_")
+                || (name.starts_with("HF_") && name != "HF_ENDPOINT")
                 || name.starts_with("MLX");
             if keep {
                 command.env(&key, &value);
             }
         }
+        // Offline always; only an explicit, consented download action lifts it.
+        command.env("HF_HUB_OFFLINE", "1");
+        command.env("TRANSFORMERS_OFFLINE", "1");
         let mut child = command
+            .process_group(0)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
@@ -171,6 +246,7 @@ impl Helper {
         std::thread::spawn(move || read_lines(stdout, tx));
         Ok(Self {
             child,
+            group_killed: false,
             stdin,
             replies,
         })
@@ -186,6 +262,16 @@ impl Helper {
     }
 
     pub fn kill(&mut self) {
+        // The child leads its own process group; take down anything it forked.
+        if !self.group_killed {
+            self.group_killed = true;
+            let _ = Command::new("/bin/kill")
+                .args(["-KILL", "--", &format!("-{}", self.child.id())])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status();
+        }
         let _ = self.child.kill();
         let _ = self.child.wait();
     }
@@ -243,6 +329,7 @@ mod tests {
             std::env::temp_dir().join(format!("vexel-helper-trust-{}-{name}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
         dir
     }
 
@@ -306,6 +393,114 @@ mod tests {
             Err(HelperFailure::NotFound)
         );
         assert!(check_trusted(&dir).is_err());
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    const FAKE: &str = "#!/bin/sh
+while read line; do
+  case \"$line\" in
+    env) echo \"{\\\"hf\\\":\\\"$HF_HUB_OFFLINE\\\",\\\"tf\\\":\\\"$TRANSFORMERS_OFFLINE\\\",\\\"ep\\\":\\\"$HF_ENDPOINT\\\",\\\"cache\\\":\\\"$HF_HOME\\\"}\" ;;
+    slow) sleep 60 & echo \"$$ $!\" > \"$VEXEL_TEST_PIDS\"; wait ;;
+  esac
+done
+";
+
+    fn fake(dir: &Path) -> PathBuf {
+        let path = dir.join("vexel-audio");
+        fs::write(&path, FAKE).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        path
+    }
+
+    fn os(s: &str) -> std::ffi::OsString {
+        s.into()
+    }
+
+    #[test]
+    fn offline_is_forced_and_endpoint_dropped() {
+        let dir = scratch("offline");
+        let path = fake(&dir);
+        let vars = vec![
+            (os("HF_HUB_OFFLINE"), os("0")),
+            (os("TRANSFORMERS_OFFLINE"), os("0")),
+            (os("HF_ENDPOINT"), os("https://evil.example")),
+            (os("HF_HOME"), os("/x/cache")),
+        ];
+        let mut helper = Helper::spawn_with_env(&path, vars).unwrap();
+        let reply = helper.request("env", Duration::from_secs(5)).unwrap();
+        let text = String::from_utf8(reply).unwrap();
+        assert!(text.contains("\"hf\":\"1\""), "{text}");
+        assert!(text.contains("\"tf\":\"1\""), "{text}");
+        assert!(text.contains("\"ep\":\"\""), "{text}");
+        assert!(text.contains("\"cache\":\"/x/cache\""), "{text}");
+        drop(helper);
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    fn gone(pid: &str) -> bool {
+        !Command::new("/bin/kill")
+            .args(["-0", pid])
+            .stderr(Stdio::null())
+            .status()
+            .unwrap()
+            .success()
+    }
+
+    #[test]
+    fn kill_during_slow_request_leaves_no_process() {
+        let dir = scratch("orphan");
+        let path = fake(&dir);
+        let pids = dir.join("pids");
+        let vars = vec![(os("VEXEL_TEST_PIDS"), pids.clone().into_os_string())];
+        let mut helper = Helper::spawn_with_env(&path, vars).unwrap();
+        assert_eq!(
+            helper.request("slow", Duration::from_secs(2)),
+            Err(HelperFailure::Timeout)
+        );
+        let text = fs::read_to_string(&pids).unwrap();
+        let ids: Vec<&str> = text.split_whitespace().collect();
+        assert_eq!(ids.len(), 2, "{text}");
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !ids.iter().all(|id| gone(id)) {
+            assert!(Instant::now() < deadline, "process survived: {text}");
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn group_writable_parent_dir_is_refused() {
+        let dir = scratch("parent");
+        let path = script(&dir, 0o755);
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o775)).unwrap();
+        let err = check_trusted(&path).unwrap_err();
+        assert!(err.contains("directory"), "{err}");
+        assert!(matches!(
+            Helper::spawn(&path),
+            Err(HelperFailure::Untrusted(_))
+        ));
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn group_writable_package_is_refused() {
+        let dir = scratch("package");
+        let path = script(&dir, 0o755);
+        let pkg = dir.join("vexel_audio");
+        fs::create_dir(&pkg).unwrap();
+        fs::set_permissions(&pkg, fs::Permissions::from_mode(0o755)).unwrap();
+        let module = pkg.join("voice.py");
+        fs::write(&module, "x = 1\n").unwrap();
+        fs::set_permissions(&module, fs::Permissions::from_mode(0o644)).unwrap();
+        assert_eq!(check_trusted(&path), Ok(()));
+        fs::set_permissions(&module, fs::Permissions::from_mode(0o664)).unwrap();
+        let err = check_trusted(&path).unwrap_err();
+        assert!(err.contains("package file"), "{err}");
+        fs::set_permissions(&module, fs::Permissions::from_mode(0o644)).unwrap();
+        fs::set_permissions(&pkg, fs::Permissions::from_mode(0o775)).unwrap();
+        assert!(check_trusted(&path).is_err());
+        fs::set_permissions(&pkg, fs::Permissions::from_mode(0o755)).unwrap();
         fs::remove_dir_all(dir).unwrap();
     }
 }
