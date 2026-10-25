@@ -6,7 +6,7 @@
 #define VEXEL_GPU_LAYOUT_H
 
 #define VX_LAYOUT_MAGIC 0x56584C31
-#define VX_LAYOUT_VERSION 3
+#define VX_LAYOUT_VERSION 4
 #define VX_TILE_SIZE 16
 #define VX_SAMPLES_PER_AXIS 4
 #define VX_SAMPLE_COUNT 16
@@ -81,6 +81,12 @@ struct GpuEdge {
 struct GpuTile {
     uint list_start;
     uint list_count;
+};
+
+struct GpuTileEntry {
+    uint shape;
+    uint edge_start;
+    uint edge_count;
 };
 
 struct GpuGradient {

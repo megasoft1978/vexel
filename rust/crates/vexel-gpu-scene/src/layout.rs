@@ -8,26 +8,30 @@
 //! Scene buffers, all indexed by `u32`:
 //! `GpuSceneHeader`, `GpuShape[shape_count]` (z-ordered, z == index),
 //! `GpuEdge[edge_count]`, `GpuTile[tiles_x * tiles_y]` (row-major),
-//! `u32[tile_entry_count]` tile lists (shape indices, ascending z),
+//! `GpuTileEntry[tile_entry_count]` tile lists (ascending z per tile),
 //! `GpuGradient[gradient_count]`, `GpuStop[stop_count]`, `GpuClip[clip_count]`.
 //!
 //! Strokes are expanded to filled polygons on the CPU (non-zero union), so a
 //! shape is always an edge list plus a fill rule. `stroke_width` is
 //! informational (0 for fills).
 //!
-//! Edge coordinates are device-pixel positions relative to the owning
-//! tile's origin, fixed point with [`EDGE_FIXED_SHIFT`] fractional bits,
-//! y-ascending not required (direction is the sign of `y1 - y0`). Edges are
-//! split at tile boundaries by the encoder; an edge left of a tile is kept
-//! (it contributes winding to every sample), an edge right of it is dropped.
-//! A shape's edges are stored per tile: for a tile, the shape's `edge_start`
-//! and `edge_count` are rebased by the tile list entry order in the encoder
-//! (the encoder's contract, not part of this layout).
+//! Edge coordinates are fixed point with [`EDGE_FIXED_SHIFT`] fractional
+//! bits, relative to the origin of the tile whose entry owns them (exact
+//! integer translation), y-ascending not required (direction is the sign of
+//! `y1 - y0`). A sample at `(px, py)` counts an edge with `y0 <= py < y1` or
+//! `y1 <= py < y0` whose crossing is strictly right of `px`; up adds +1, down
+//! -1. Each [`GpuTileEntry`] owns its own edge range: the encoder keeps the
+//! edges that straddle the tile verbatim, drops those entirely left of it,
+//! and collapses those entirely right of it into vertical unit edges on the
+//! tile's right border (`x == TILE_SIZE << EDGE_FIXED_SHIFT`), so the kernel's
+//! work is proportional to the edges actually in the tile. A shape's own
+//! `edge_start` / `edge_count` are informational (source edge count; start is
+//! 0): the kernel only reads tile entries.
 
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 3;
+pub const LAYOUT_VERSION: u32 = 4;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -44,6 +48,7 @@ pub const MAX_COORDINATE: u32 = 262_144;
 
 pub const MAX_SHAPES: u32 = 262_144;
 pub const MAX_EDGES: u32 = 4_194_304;
+/// Maximum number of [`GpuTileEntry`] records.
 pub const MAX_TILE_LIST: u32 = 8_388_608;
 pub const MAX_GRADIENTS: u32 = 65_536;
 pub const MAX_STOPS: u32 = 262_144;
@@ -132,12 +137,22 @@ pub struct GpuEdge {
     pub y1: i32,
 }
 
-/// Per-tile list header, 8 bytes: a range into the `u32` tile list.
+/// Per-tile list header, 8 bytes: a range into the [`GpuTileEntry`] list.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GpuTile {
     pub list_start: u32,
     pub list_count: u32,
+}
+
+/// Tile list entry, 12 bytes: one shape in one tile with that tile's edges
+/// (a range of the edge array, tile-local coordinates, see module docs).
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct GpuTileEntry {
+    pub shape: u32,
+    pub edge_start: u32,
+    pub edge_count: u32,
 }
 
 /// Gradient record, 48 bytes.
@@ -201,6 +216,10 @@ mod tests {
         assert_eq!((size_of::<GpuEdge>(), align_of::<GpuEdge>()), (16, 4));
         assert_eq!((size_of::<GpuTile>(), align_of::<GpuTile>()), (8, 4));
         assert_eq!(
+            (size_of::<GpuTileEntry>(), align_of::<GpuTileEntry>()),
+            (12, 4)
+        );
+        assert_eq!(
             (size_of::<GpuGradient>(), align_of::<GpuGradient>()),
             (48, 4)
         );
@@ -228,6 +247,7 @@ mod tests {
     fn limits_fit_u32_indices() {
         assert!(u64::from(MAX_SHAPES) * size_of::<GpuShape>() as u64 <= 1 << 28);
         assert!(u64::from(MAX_EDGES) * size_of::<GpuEdge>() as u64 <= 1 << 27);
+        assert!(u64::from(MAX_TILE_LIST) * size_of::<GpuTileEntry>() as u64 <= 1 << 27);
         assert!(MAX_CLIP_CHAIN <= 4 && MAX_GROUP_DEPTH == 4);
     }
 
@@ -297,6 +317,11 @@ mod tests {
         );
         s!(GpuEdge, "GpuEdge", [x0, y0, x1, y1]);
         s!(GpuTile, "GpuTile", [list_start, list_count]);
+        s!(
+            GpuTileEntry,
+            "GpuTileEntry",
+            [shape, edge_start, edge_count]
+        );
         s!(
             GpuGradient,
             "GpuGradient",

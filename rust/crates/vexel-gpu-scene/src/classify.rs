@@ -14,9 +14,12 @@ pub const MAX_CANVAS_AXIS: u32 = 16_384;
 /// the layout (the CPU accepts 1e6). Larger coordinates classify as
 /// `Unsupported(InvalidScene)` and the scene renders on the CPU.
 pub const MAX_COORDINATE: f64 = crate::layout::MAX_COORDINATE as f64;
-/// Budget for the sum over shapes of `edges * covered tiles`: the number of
-/// edge visits a kernel makes per frame. Not part of the frozen layout.
-pub const MAX_EDGE_TILE_WORK: u64 = 1 << 29;
+/// Budget for the estimated per-tile edge pool: for every edge the tiles its
+/// own bounding box covers (the copies a tile entry keeps verbatim), plus one
+/// tile entry's worth for the collapsed right-hand carry. The encoder enforces
+/// the hard limit ([`MAX_EDGES`]) and reports `Encode(TooManyEdges)` if the
+/// real pool still overflows. Not part of the frozen layout.
+pub const MAX_EDGE_TILE_WORK: u64 = MAX_EDGES as u64;
 /// Longest gradient stop list the CPU sampler accepts.
 pub const MAX_GRADIENT_STOPS: usize = 256;
 
@@ -79,7 +82,13 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
         };
         let tiles = tile_count(bounds, tiles_x, tiles_y);
         stats.tile_entries += tiles;
-        stats.edge_tile_work += tiles * shape.edges.len() as u64;
+        // Cheap bound first; per-edge precision only once it would not fit.
+        let bound = shape.edges.len() as u64 * tiles + tiles;
+        stats.edge_tile_work += if stats.edge_tile_work + bound <= MAX_EDGE_TILE_WORK {
+            bound
+        } else {
+            edge_tile_copies(shape, tiles_x, tiles_y) + tiles
+        };
         if stats.tile_entries > u64::from(MAX_TILE_LIST) {
             return Err(Reason::TooManyTileEntries);
         }
@@ -130,12 +139,34 @@ fn shape_bounds(shape: &GpuShape) -> Result<Option<[f64; 4]>, Reason> {
     Ok(Some(bounds))
 }
 
+/// Sum over the edges of the tiles each edge's own box touches.
+fn edge_tile_copies(shape: &GpuShape, tiles_x: u64, tiles_y: u64) -> u64 {
+    shape
+        .edges
+        .iter()
+        .filter(|e| e.y0 != e.y1)
+        .map(|e| {
+            tile_count(
+                [
+                    e.x0.min(e.x1),
+                    e.y0.min(e.y1),
+                    e.x0.max(e.x1),
+                    e.y0.max(e.y1),
+                ],
+                tiles_x,
+                tiles_y,
+            )
+        })
+        .sum()
+}
+
 /// Tiles of the canvas grid touched by device-space `bounds`.
 fn tile_count(bounds: [f64; 4], tiles_x: u64, tiles_y: u64) -> u64 {
-    let tile = f64::from(TILE_SIZE);
+    // Multiplying by 1/16 is exact (power of two) and cheaper than dividing.
+    const INV_TILE: f64 = 1.0 / TILE_SIZE as f64;
     let span = |lo: f64, hi: f64, count: u64| -> u64 {
-        let first = (lo / tile).floor().max(0.0);
-        let last = (hi / tile).floor().min(count as f64 - 1.0);
+        let first = (lo * INV_TILE).floor().max(0.0);
+        let last = (hi * INV_TILE).floor().min(count as f64 - 1.0);
         if last < first {
             0
         } else {
@@ -308,10 +339,12 @@ mod tests {
         for _ in 0..9 {
             scene.push_fill(big.clone(), false, GpuPaint::Solid([0, 0, 0, 255]));
         }
-        // 1024 x 1024 tiles = 1,048,576 entries per shape; 9 > 8,388,608.
+        // 1024 x 1024 tiles = 1,048,576 entries per shape, each needing at
+        // least one edge: the 4,194,304 edge pool is exceeded by the 5th shape
+        // (a tile entry always holds an edge, so it binds before the list).
         assert_eq!(
             classify(&scene),
-            Capability::Unsupported(Reason::TooManyTileEntries)
+            Capability::Unsupported(Reason::TooManyEdges)
         );
         // Shape count.
         let mut many = GpuScene::new(16, 16);
