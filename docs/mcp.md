@@ -202,7 +202,30 @@ optional `translate` (`[x,y]` or `{x,y}`; or `tx`/`ty`), `rotate` (degrees; also
 `rotation`), `scale` (number, `[x,y]` or `{x,y}`; or `sx`/`sy`), `pivot`
 (`[x,y]` or `{x,y}`; or `pivotX`/`pivotY`) and `skewX` (degrees); omitted parts
 are identity. Unknown or mistyped members are rejected naming the field
-(`value.rotate`). Then refine keys and
+(`value.rotate`). 
+Animatable properties: `x y width height cx cy r rx ry opacity fill-opacity
+stroke-opacity stroke-width stroke-dashoffset` (scalar), `fill stroke stop-color`
+(rgba), `transform` (trs or transform2d), `visibility` (boolean, step), and:
+
+- `d` of a `<path>` and `points` of a `<polygon>`/`<polyline>` with
+  `valueType: "path"`; values are path data strings. Every key must have the
+  same commands as the first key after normalising to absolute `M L C Q Z`
+  (relative commands, `H V S T` are accepted; arcs are not). Blending is
+  per coordinate with the track easing; a key tick renders its string verbatim.
+  A key with a different structure is rejected and nothing changes. Example:
+  `{"trackId":"squash","targetId":"blob","property":"d","valueType":"path","interpolation":"linear","value":"M0 0 C 10 0 20 10 20 20 Z","keys":[{"tick":12,"value":"M0 0 C 20 0 30 10 30 20 Z"}]}`.
+- Filter primitives, `targetId` = the primitive element's own `id` (give each
+  `feGaussianBlur`, `feOffset`, ... an `id`), scalar: `stdDeviation`
+  (`feGaussianBlur`/`feDropShadow`, 0-32), `dx` and `dy` (`feOffset`/
+  `feDropShadow`, within 4096), `flood-opacity` (`feFlood`/`feDropShadow`,
+  0-1), `values` (`feColorMatrix` with `type` `hueRotate` degrees or `saturate`
+  0-1, one number). Values outside the renderer limits are rejected.
+- Gradient stops, `targetId` = the `<stop>` id: `offset` (clamped to 0-1 and
+  raised to the previous stop's offset so stops stay ordered; later stops are
+  raised too), `stop-opacity`, `stop-color` (rgba; also writes `stop-opacity`).
+  Scenes with filters render on the CPU route.
+
+Then refine keys and
 tracks with the corresponding `native_timeline_move_key`, `remove_key`,
 `duplicate_track`, `rename_track`, `set_interpolation`, and `reorder_track`
 tools. Inspect with `element_get`, `element_query`, `tree_get`, and

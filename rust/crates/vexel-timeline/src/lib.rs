@@ -9,6 +9,8 @@ pub mod sample;
 mod schema;
 
 #[cfg(test)]
+mod path_track_tests;
+#[cfg(test)]
 mod sample_tests;
 
 pub use edit::{

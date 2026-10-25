@@ -64,6 +64,30 @@ ADR-0020. Implementations must add focused tests for the specified semantics,
 but verification is deferred until the currently planned implementation wave
 is complete.
 
+## Addendum: path morph, filter parameters and gradient stops
+
+Property tracks may also animate attributes the text patch already rewrites:
+
+- `d` (path) and `points` (polygon, polyline) with `value_type` `path`: JSON
+  string keys. Each key is normalised to absolute `M/L/C/Q/Z` (arcs are
+  unsupported). Keys must share the first key's command kinds; the decoder
+  rejects a mismatch as `invalid_value` at the offending key. Sampling blends
+  every coordinate with the track easing (step keeps the lower key). A sample
+  at a key tick (or before the first key) writes that key's string unchanged;
+  other ticks write the blended normalised data. The sample carries source
+  spans, so sampling allocates nothing and stays `Copy`.
+- Filter primitive scalars `stdDeviation` (0-32), `dx`, `dy` (within 4096),
+  `flood-opacity` (0-1) and `values` (single number of a `hueRotate` or
+  `saturate` `feColorMatrix`), addressed by the primitive element's `id`.
+- Gradient `stop` `offset`, `stop-opacity`, `stop-color`, addressed by the
+  stop's `id`. Written offsets are clamped to 0-1 and made non-decreasing in
+  document order across the contiguous stops of the gradient, because the
+  renderer rejects decreasing offsets.
+
+Frames still come from the text-patched snapshot, so playback, export, GPU
+fallback (filters are already CPU only) and differential rendering equal a full
+render of the patched source. Existing tracks and schema version are unchanged.
+
 ## Provenance
 
 The behavior above is transcribed from the project's own preserved
