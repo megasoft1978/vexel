@@ -6,11 +6,15 @@
 
 mod contour;
 mod fit;
+pub mod inpaint;
 mod layers;
 mod quant;
+pub mod segment;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_segment;
 
 pub use layers::{Layer, TraceOptions, trace, trace_image};
 pub use quant::{NONE, Quantized, quantize};
