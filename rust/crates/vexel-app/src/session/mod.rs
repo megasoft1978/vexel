@@ -20,6 +20,7 @@ pub mod mcp_audio_gen;
 mod mcp_batch;
 mod mcp_extras;
 mod mcp_frames;
+pub(crate) mod mcp_image;
 pub(crate) mod mcp_png;
 mod mcp_rename;
 mod mcp_tools;

@@ -5,6 +5,7 @@ mod audio_args;
 mod audio_gen_args;
 mod ext_use;
 mod fragment_refs;
+mod image_args;
 
 use super::{Operation, PreviewArgumentError, ext_attr, ext_paint, ext_query, ext_structure};
 use crate::session::{AppDocument, McpOutcome};
@@ -19,6 +20,7 @@ pub enum DocOp {
     Use(ext_use::Op),
     Audio(crate::session::mcp_audio::AudioOp),
     Rig(super::native_args::rig::Op),
+    Image(crate::session::mcp_image::ImageOp),
 }
 
 /// `None` when no family handles `tool`.
@@ -29,6 +31,9 @@ pub(super) fn parse(
 ) -> Option<Result<Operation, PreviewArgumentError>> {
     if let Some(parsed) = audio_args::parse(doc, args, tool) {
         return Some(parsed.map(|op| Operation::Doc(DocOp::Audio(op))));
+    }
+    if let Some(parsed) = image_args::parse(doc, args, tool) {
+        return Some(parsed.map(|op| Operation::Doc(DocOp::Image(op))));
     }
     if let Some(parsed) = ext_structure::parse(doc, args, tool) {
         return Some(parsed.map(|op| Operation::Doc(DocOp::Structure(op))));
@@ -58,6 +63,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: DocOp) -> Result<McpOutcome, &'st
         DocOp::Use(op) => ext_use::apply(app, op),
         // Audio needs the host's grant policy; `McpHost` routes it.
         DocOp::Audio(_) => Err("audio tools need the MCP host"),
+        DocOp::Image(_) => Err("image tools need the MCP host"),
         DocOp::Rig(op) => super::native_timeline::mcp_rig::apply(app, op),
     }
 }
