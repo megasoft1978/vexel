@@ -142,7 +142,8 @@ fn create(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Op, Preview
     let mut roles = Vec::new();
     if let Some(at) = doc.object_get(args, b"roles") {
         let form = "an object mapping head, torso, arm_l, arm_r, leg_l, leg_r or tail to a bone id";
-        let fields = members(doc, at, Role::ALL.len()).ok_or_else(|| invalid(tool, "roles", form))?;
+        let fields =
+            members(doc, at, Role::ALL.len()).ok_or_else(|| invalid(tool, "roles", form))?;
         for (name, value) in fields {
             let role = Role::parse(&name).ok_or_else(|| invalid(tool, "roles", form))?;
             let id = id_at(doc, value).ok_or_else(|| invalid(tool, "roles", form))?;
@@ -174,7 +175,9 @@ fn ranged(doc: &JsonDocument<'_>, at: usize, limit: f64) -> Option<f64> {
 }
 
 fn pair(doc: &JsonDocument<'_>, at: usize, limit: f64) -> Option<[f64; 2]> {
-    let item = doc.token(at).filter(|t| t.kind == JsonType::Array && t.child_count == 2)?;
+    let item = doc
+        .token(at)
+        .filter(|t| t.kind == JsonType::Array && t.child_count == 2)?;
     let _ = item;
     Some([
         ranged(doc, doc.array_get(at, 0)?, limit)?,
@@ -184,13 +187,19 @@ fn pair(doc: &JsonDocument<'_>, at: usize, limit: f64) -> Option<[f64; 2]> {
 
 const POSE_FORM: &str = "{rotate?: degrees, translate?: [x,y], scale?: number or [x,y]}";
 
-fn local_pose(doc: &JsonDocument<'_>, at: usize, tool: &str) -> Result<LocalPose, PreviewArgumentError> {
+fn local_pose(
+    doc: &JsonDocument<'_>,
+    at: usize,
+    tool: &str,
+) -> Result<LocalPose, PreviewArgumentError> {
     let bad = |what: &str| invalid(tool, &format!("poses[].bones.{what}"), POSE_FORM);
     let mut pose = LocalPose::REST;
     for (name, value) in members(doc, at, 3).ok_or_else(|| bad("(pose)"))? {
         match name.as_str() {
             "rotate" => pose.rotate = ranged(doc, value, 36_000.0).ok_or_else(|| bad("rotate"))?,
-            "translate" => pose.translate = pair(doc, value, 1.0e6).ok_or_else(|| bad("translate"))?,
+            "translate" => {
+                pose.translate = pair(doc, value, 1.0e6).ok_or_else(|| bad("translate"))?
+            }
             "scale" => {
                 pose.scale = match ranged(doc, value, 1.0e4) {
                     Some(v) => [v, v],
@@ -223,7 +232,9 @@ fn pose(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Op, PreviewAr
                 "tick" => tick = Some(uint32(doc, value).ok_or_else(|| bad("tick"))?),
                 "ease" => {}
                 "bones" => {
-                    for (id, pose_at) in members(doc, value, MAX_BONES).ok_or_else(|| bad("bones"))? {
+                    for (id, pose_at) in
+                        members(doc, value, MAX_BONES).ok_or_else(|| bad("bones"))?
+                    {
                         if !valid_bone_id(&id) {
                             return Err(bad("bones (a bone id)"));
                         }
@@ -252,7 +263,11 @@ fn pose(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Op, PreviewAr
             .ok_or_else(|| invalid(tool, "interpolation", "step, linear or cubic"))?,
     };
     let noise = super::noise::noise_arg(doc, args, tool).map_err(plain)?;
-    Ok(Op::Pose(Pose { poses, interpolation, noise }))
+    Ok(Op::Pose(Pose {
+        poses,
+        interpolation,
+        noise,
+    }))
 }
 
 fn clip(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Op, PreviewArgumentError> {

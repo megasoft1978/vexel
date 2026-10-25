@@ -66,7 +66,10 @@ fn from_json(text: &[u8]) -> Option<Rig> {
         return None;
     }
     let list = doc.object_get(root, b"bones")?;
-    let count = doc.token(list).filter(|t| t.kind == JsonType::Array)?.child_count;
+    let count = doc
+        .token(list)
+        .filter(|t| t.kind == JsonType::Array)?
+        .child_count;
     if count == 0 || count > MAX_BONES {
         return None;
     }
@@ -112,7 +115,9 @@ fn from_json(text: &[u8]) -> Option<Rig> {
 
 /// The document's rig, if any.
 pub(crate) fn load(app: &AppDocument) -> Result<Rig, &'static str> {
-    let source = app.source_bytes().map_err(|_| "project history unavailable")?;
+    let source = app
+        .source_bytes()
+        .map_err(|_| "project history unavailable")?;
     let text = stored_text(&source).ok_or(NO_RIG)?;
     from_json(text).ok_or(BAD_RIG)
 }
@@ -121,7 +126,9 @@ fn rig_error(error: RigError) -> &'static str {
     match error {
         RigError::Empty => "rig_create: bones must not be empty",
         RigError::TooMany => "rig_create: at most 128 bones",
-        RigError::BadId => "rig_create: bone ids use letters, digits, _ and - (rename the group first)",
+        RigError::BadId => {
+            "rig_create: bone ids use letters, digits, _ and - (rename the group first)"
+        }
         RigError::Duplicate => "rig_create: duplicate bone id",
         RigError::UnknownParent => "rig_create: parent is not a bone of this rig",
         RigError::Cycle => "rig_create: the parent chain has a cycle",
@@ -176,7 +183,9 @@ fn create(app: &mut AppDocument, spec: Create) -> Result<McpOutcome, &'static st
                     .position(|b| b.id == *id)
                     .ok_or("rig_create: parent is not a bone of this rig")?;
                 if !inside(app, &bone.id, id) {
-                    return Err("rig_create: a bone's group must lie inside its parent bone's group");
+                    return Err(
+                        "rig_create: a bone's group must lie inside its parent bone's group",
+                    );
                 }
                 Some(at)
             }
@@ -286,14 +295,19 @@ fn write(
         let candidate = app
             .native_timeline_candidate(settings(), limits)
             .map_err(|_| "native timeline unavailable")?;
-        let view = candidate.view().map_err(|_| "unsupported native timeline")?;
+        let view = candidate
+            .view()
+            .map_err(|_| "unsupported native timeline")?;
         let ids: Vec<Vec<u8>> = (0..view.track_count())
             .filter_map(|i| view.track_at(i))
             .map(|t| t.id.to_vec())
             .collect();
         (ids, view.duration_ticks())
     };
-    if merged.values().any(|keys| keys.keys().any(|t| *t >= duration)) {
+    if merged
+        .values()
+        .any(|keys| keys.keys().any(|t| *t >= duration))
+    {
         return Err(tool.pick(
             "rig_pose: every tick must be below the timeline duration (lengthen it with native_timeline_set_duration)",
             "clip_apply: start + duration must be below the timeline duration (lengthen it with native_timeline_set_duration)",
@@ -372,7 +386,9 @@ fn write(
         for (id, tick, value, ease) in &extend {
             current = Some(match current {
                 None => c.set_property_key_with_ease(id, *tick, value, ease.as_deref())?,
-                Some(prior) => prior.set_property_key_with_ease(id, *tick, value, ease.as_deref())?,
+                Some(prior) => {
+                    prior.set_property_key_with_ease(id, *tick, value, ease.as_deref())?
+                }
             });
         }
         current.ok_or(crate::project_session::ProjectTimelineError::Limit)
@@ -403,7 +419,14 @@ fn pose(app: &mut AppDocument, spec: Pose) -> Result<McpOutcome, &'static str> {
             }
         }
     }
-    let (tracks, keys) = write(app, &rig, items, &spec.interpolation, spec.noise.as_deref(), Tool::Pose)?;
+    let (tracks, keys) = write(
+        app,
+        &rig,
+        items,
+        &spec.interpolation,
+        spec.noise.as_deref(),
+        Tool::Pose,
+    )?;
     Ok(McpOutcome::Reply(format!(
         "{{\"ok\":true,\"operation\":\"rig_pose\",\"tracks\":{tracks},\"keys\":{keys}}}"
     )))
@@ -467,8 +490,16 @@ mod tests {
     fn json_round_trips() {
         let rig = Rig::new(
             vec![
-                Bone { id: "body".into(), pivot: [1.5, -2.0], parent: None },
-                Bone { id: "arm".into(), pivot: [0.0, 4.0], parent: Some(0) },
+                Bone {
+                    id: "body".into(),
+                    pivot: [1.5, -2.0],
+                    parent: None,
+                },
+                Bone {
+                    id: "arm".into(),
+                    pivot: [0.0, 4.0],
+                    parent: Some(0),
+                },
             ],
             vec![(Role::Torso, 0), (Role::ArmR, 1)],
         )

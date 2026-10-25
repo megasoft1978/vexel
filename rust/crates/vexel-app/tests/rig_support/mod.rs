@@ -43,7 +43,14 @@ pub fn build(rig: &mut Rig) -> Stick {
         )
         .ok();
     }
-    Stick { torso, head, arm_l, arm_r, leg_l, leg_r }
+    Stick {
+        torso,
+        head,
+        arm_l,
+        arm_r,
+        leg_l,
+        leg_r,
+    }
 }
 
 /// `bones` and `roles` members for `rig_create`.
