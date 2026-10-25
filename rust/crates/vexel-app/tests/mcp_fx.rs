@@ -6,6 +6,7 @@ mod common;
 
 use common::{Rig, element_id, no_grants};
 use vexel_app::animation::native_export::NativeExportSource;
+use vexel_app::session::AppDocument;
 
 /// White page with a red "hero" group and a blue shape, 512x512.
 fn scene() -> (Rig, String) {
@@ -356,5 +357,36 @@ fn reserved_prefixes_are_refused_for_add_and_remove() {
         let reply = rig.doc_tool("effect_apply", call);
         assert!(reply.is_error, "accepted {call}: {}", reply.body);
         assert_eq!(rig.state(), state, "{call}");
+    }
+}
+
+#[test]
+fn full_frame_filter_effects_succeed_or_fail_cleanly_at_1080p() {
+    for (preset, extra) in [
+        ("glow", r#""radius":20"#),
+        ("chromatic_split", r#""amount":20"#),
+        ("motion_blur_dir", r#""amount":40,"copies":5"#),
+    ] {
+        let app = AppDocument::new(1920, 1080).unwrap();
+        let mut rig = Rig::with_document(app, no_grants());
+        rig.doc_tool(
+            "element_add",
+            r##""parentId":"root","template":"rect","attributes":{"x":"0","y":"0","width":"1920","height":"1080","fill":"#808080"}"##,
+        )
+        .ok();
+        let before = source(&rig);
+        let state = rig.state();
+        let reply = rig.doc_tool("effect_apply", &format!(r#""preset":"{preset}",{extra}"#));
+        if reply.is_error {
+            assert_eq!(
+                rig.state(),
+                state,
+                "{preset}: failed but changed the document"
+            );
+        } else {
+            assert!(source(&rig).contains("fx-"), "{preset}");
+            rig.doc_tool("undo", "").ok();
+            assert_eq!(source(&rig), before, "{preset}: undo not identical");
+        }
     }
 }

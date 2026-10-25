@@ -34,10 +34,14 @@ fn valid_prefix(p: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
 }
 
+/// Renders frame zero at the document's real size (capped at 1920x1080) so
+/// region and megapixel limits that only bite on large scenes are caught.
 fn renders(app: &AppDocument) -> bool {
+    let (w, h) = app.size();
+    let size = (w.clamp(1, 1920), h.clamp(1, 1080));
     app.source_bytes().is_ok_and(|source| {
         crate::animation::frame::decode(&source)
-            .and_then(|scene| scene.render_sized(0.0, (8, 8), &AtomicBool::new(false)))
+            .and_then(|scene| scene.render_sized(0.0, size, &AtomicBool::new(false)))
             .is_ok()
     })
 }
