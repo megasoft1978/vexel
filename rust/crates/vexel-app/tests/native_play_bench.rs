@@ -95,6 +95,8 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
     let clock = BenchClock::default();
     let play = std::env::var_os("VEXEL_BENCH_PLAY").is_some_and(|v| v != "0");
     let mut host = NativeAnimationHost::new(clock.clone());
+    // VEXEL_BENCH_AHEAD=0 decodes serially (A/B against the decode-ahead ring).
+    host.set_decode_ahead(std::env::var("VEXEL_BENCH_AHEAD").map_or(true, |v| v != "0"));
     let t = Instant::now();
     let first = host.snapshot(doc, None);
     println!(
@@ -109,6 +111,8 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
             .unwrap_or(96),
     );
     let (mut snap, mut tick, mut got, mut hashes) = (vec![], vec![], 0, vec![]);
+    let (mut interval, mut last_shown) = (vec![], None::<Instant>);
+    let want_hashes = std::env::var_os("HASH_OUT").is_some();
     let loops: u32 = std::env::var("LOOPS")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -130,8 +134,14 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
         let frame = host.tick(doc, (size, size));
         tick.push(ms(t));
         if let Some(frame) = frame {
+            let now = Instant::now();
+            if let Some(prev) = last_shown.replace(now) {
+                interval.push(now.duration_since(prev).as_secs_f64() * 1000.0);
+            }
             got += 1;
-            hashes.push(format!("{i}:{:016x}", fnv(&frame.rgba)));
+            if want_hashes {
+                hashes.push(format!("{i}:{:016x}", fnv(&frame.rgba)));
+            }
         }
     }
     if let Some(path) = std::env::var_os("HASH_OUT") {
@@ -141,6 +151,15 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
         "{label}: size {size} frames {got}/{ticks} snapshot p50 {:.2} p95 {:.2} | tick p50 {:.2} p95 {:.2} ms",
         pct(&mut snap, 0.5),
         pct(&mut snap, 0.95),
+        pct(&mut tick, 0.5),
+        pct(&mut tick, 0.95)
+    );
+    // Frame interval = gap between consecutive frames shown (snapshot + tick
+    // back to back); latency = tick request -> frame returned.
+    println!(
+        "{label}: frame interval p50 {:.2} p95 {:.2} ms | latency p50 {:.2} p95 {:.2} ms",
+        pct(&mut interval, 0.5),
+        pct(&mut interval, 0.95),
         pct(&mut tick, 0.5),
         pct(&mut tick, 0.95)
     );
