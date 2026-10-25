@@ -251,7 +251,12 @@ fn set_duration_extends_timeline_and_guards_keys_and_cap() {
     )
     .unwrap();
     let key = "\"trackId\":\"t1\",\"tick\":100,\"value\":1";
-    assert!(run(&mut app, "native_timeline_set_property_key", key).is_err());
+    // A key past the end lengthens the timeline itself; past the cap it fails.
+    let far = "\"trackId\":\"t1\",\"tick\":86400,\"value\":1";
+    assert!(run(&mut app, "native_timeline_set_property_key", far).is_err());
+    run(&mut app, "native_timeline_set_property_key", key).unwrap();
+    let grown = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(grown.contains("\"durationTicks\":101"), "{grown}");
 
     run(
         &mut app,

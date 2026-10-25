@@ -14,6 +14,7 @@ use vexel_json::JsonDocument;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
 
 pub(crate) mod mcp_camera;
+mod mcp_extend;
 mod mcp_tracks;
 
 /// One property track with its keys: an `add_property_track` request, or one
@@ -271,7 +272,13 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             ease,
         } => app
             .edit_timeline(settings(), limits, |c| {
-                c.set_property_key_with_ease(&track_id, tick, &value, ease.as_deref())
+                let grown = mcp_extend::grown(c, Some(tick))?;
+                grown.as_ref().unwrap_or(c).set_property_key_with_ease(
+                    &track_id,
+                    tick,
+                    &value,
+                    ease.as_deref(),
+                )
             })
             .map_err(|error| operation_error(error, "set_property_key", Refs::default()))?,
         NativeOp::AddTrack {
@@ -513,7 +520,7 @@ fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static st
             "native_timeline_set_property_key trackId must be a property track (drawing tracks use set_cel)"
         }
         ("set_property_key", _) => {
-            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline; lengthen with native_timeline_set_duration) and value must match the track valueType (a d or points track needs the same path commands as its base path, arcs unsupported)"
+            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (a key past the end lengthens the timeline automatically up to 3600 seconds) and value must match the track valueType (a d or points track needs the same path commands as its base path, arcs unsupported)"
         }
         ("remove_key", TimelineError::InvalidReference) => {
             "native_timeline_remove_key trackId must identify a property track and tick must identify an existing key"

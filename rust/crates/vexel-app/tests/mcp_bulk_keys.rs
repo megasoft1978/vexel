@@ -81,7 +81,12 @@ fn trs_keys_and_errors() {
         r#","keys":[{"tick":1,"value":1},{"tick":2,"value":1,"extra":1}]"#,
     );
     assert!(bad.error().contains("keys[1]"), "{}", bad.body);
-    let bad = track(&mut rig, "bad", &a, r#","keys":[{"tick":900,"value":1}]"#);
+    let bad = track(
+        &mut rig,
+        "bad",
+        &a,
+        r#","keys":[{"tick":100000,"value":1}]"#,
+    );
     assert!(bad.is_error, "{}", bad.body);
     let many = vec![r#"{"tick":1,"value":1}"#; 257].join(",");
     let bad = track(&mut rig, "bad", &a, &format!(r#","keys":[{many}]"#));
