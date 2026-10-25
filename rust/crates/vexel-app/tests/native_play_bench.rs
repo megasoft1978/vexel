@@ -109,7 +109,11 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
             .unwrap_or(96),
     );
     let (mut snap, mut tick, mut got, mut hashes) = (vec![], vec![], 0, vec![]);
-    for i in 0..ticks {
+    let loops: u32 = std::env::var("LOOPS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1);
+    for i in (0..ticks * loops).map(|n| n % ticks) {
         let seconds = f64::from(i) / 24.0;
         if play {
             if i == 0 {

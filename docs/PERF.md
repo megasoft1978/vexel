@@ -823,3 +823,34 @@ validation/freeze ~20%; work-charge calls (`charge` through two dyn layers)
 are ~19% of samples and the next target (batching charges changes where a
 limit trips, so it needs a limits review). Painting of moving shapes
 (`render_parallel`) was not changed.
+
+## Playback speed lane s1-speed (findings, targets not met)
+
+Same bench (`LOOPS=n` now repeats the 96 ticks for sampling). shot1, 900 px,
+release, load 6-9, 3 runs: tick p50 41.0 / 41.7 / 45.5 before; 40.3 / 41.0 /
+40.7 after (decode 12.4, render 26.8 unchanged within noise).
+
+- Element-level incremental decode is not possible for these shots. Frame
+  text of shot1 differs in 53 of 691 tags per tick, but one is the root
+  `world` camera group: every shape's device-space edges change every tick,
+  so no decoded subtree is reusable. The path cache already is the
+  incremental mechanism (hit = replayed charges + `map_edges`): shot1 had
+  27.8k hits, 6.9k short (<512 byte) paths parsed, ~3.2k tolerance-window
+  misses (~34 per tick, unavoidable while the camera zooms). Caching short
+  paths (MIN_D_BYTES 64) changed nothing measurable.
+- shot1 decode samples: `charge` (CancelControl + JobWorkMeter + Recorder
+  dyn chain) ~27%, path parse ~15%, lexing ~15%, scene validation
+  (`validate_scene_sources`, `scene_from`, `segment_valid`) ~15%. Charging is
+  per number / segment / edge (about 1M calls per tick). Batching changes
+  which error wins when an invalid item precedes the limit trip point, so it
+  was not done; a `WorkControl` budget query (remaining units) would allow
+  exact batching and is the next step.
+- Render shot1 per tick: r.paint 11.6, layer reuse (`lc.use`) 7.8,
+  r.composite 5.2, r.filter 2.4 ms. The layer plan already serves 361 of 406
+  shapes from cached runs. Capping paint threads by pixel count (fewer
+  spawns) was slower (tick 54 ms) and was reverted.
+- `layer_warp::sample_rows`: interior texels read without per-texel bounds
+  tests, all-transparent samples skipped early; arithmetic unchanged
+  (lc.use sum 782 -> 750 ms over 96 ticks).
+- Remaining gap (unchanged from l5): shot1 41 vs 25, s3 45.5 vs 30,
+  s4 64 vs 35, s9 52.4 vs 30.

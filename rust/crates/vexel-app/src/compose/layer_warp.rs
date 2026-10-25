@@ -169,12 +169,31 @@ fn sample_rows(
                 (256 - fx) * fy,
                 fx * fy,
             ];
-            let texels = [
-                bitmap.texel(ix, iy),
-                bitmap.texel(ix + 1, iy),
-                bitmap.texel(ix, iy + 1),
-                bitmap.texel(ix + 1, iy + 1),
-            ];
+            let texels = if ix >= 0 && iy >= 0 && ix + 1 < w && iy + 1 < h {
+                // Interior: all four texels exist, no per-texel bounds test.
+                let at = (iy as usize * w as usize + ix as usize) * 4;
+                let below = at + w as usize * 4;
+                let t = |i: usize| {
+                    let p = &bitmap.rgba[i..i + 4];
+                    [
+                        u32::from(p[0]),
+                        u32::from(p[1]),
+                        u32::from(p[2]),
+                        u32::from(p[3]),
+                    ]
+                };
+                [t(at), t(at + 4), t(below), t(below + 4)]
+            } else {
+                [
+                    bitmap.texel(ix, iy),
+                    bitmap.texel(ix + 1, iy),
+                    bitmap.texel(ix, iy + 1),
+                    bitmap.texel(ix + 1, iy + 1),
+                ]
+            };
+            if texels[0][3] | texels[1][3] | texels[2][3] | texels[3][3] == 0 {
+                continue;
+            }
             let mut alpha = 0u32;
             let mut sum = [0u32; 3];
             for (wt, t) in weights.iter().zip(&texels) {
