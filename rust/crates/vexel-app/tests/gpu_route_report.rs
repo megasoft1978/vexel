@@ -174,3 +174,44 @@ fn gpu_vs_cpu_playback_ticks() {
     }
     set_gpu_display(None);
 }
+
+/// Forced-GPU vs CPU playback ticks (and the cold first tick, the static
+/// compose) of the demo scenes the route accepts; scenes it refuses are
+/// reported with their first blocker.
+#[test]
+#[ignore]
+fn demo_scenes_gpu_vs_cpu() {
+    for name in ["walk_home", "logo", "loader"] {
+        let path = format!("/private/tmp/vexel-demo/{name}.vexel");
+        if !Path::new(&path).exists() {
+            println!("demo {name}: absent");
+            continue;
+        }
+        let mut doc = AppDocument::new(512, 512).unwrap();
+        doc.open_path(Path::new(&path)).unwrap();
+        for size in [900u32, 1800] {
+            set_gpu_display(Some(false));
+            let (cpu, _, _) = run(&doc, size, 24);
+            let cold_cpu = {
+                let mut host = NativeAnimationHost::new(ManualClock::default());
+                let _ = host.snapshot(&doc, None);
+                let t = Instant::now();
+                let _ = host.tick(&doc, (size, size));
+                ms(t)
+            };
+            set_gpu_display(Some(true));
+            let (gpu, last, frames) = run(&doc, size, 24);
+            let cold_gpu = {
+                let mut host = NativeAnimationHost::new(ManualClock::default());
+                let _ = host.snapshot(&doc, None);
+                let t = Instant::now();
+                let _ = host.tick(&doc, (size, size));
+                ms(t)
+            };
+            println!(
+                "demo {name} {size}px: tick cpu {cpu:.2} ms gpu {gpu:.2} ms ({last}, {frames} gpu frames) | cold first tick cpu {cold_cpu:.2} ms gpu {cold_gpu:.2} ms"
+            );
+        }
+    }
+    set_gpu_display(None);
+}
