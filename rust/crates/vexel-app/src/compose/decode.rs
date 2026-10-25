@@ -31,10 +31,22 @@ const LEDGER_RESERVE: usize = 2 * MAX_SVG_BYTES;
 /// Work control that stops at the next checkpoint once `cancel` is true.
 pub(crate) struct CancelControl<'a> {
     pub cancel: &'a dyn Fn() -> bool,
+    /// Charges since the last cancel poll.
+    pub charges: u32,
 }
+
+/// Charges are issued per edge and per token (millions per large decode), so
+/// the cancel flag is polled on every 64th charge; explicit checkpoints
+/// always poll.
+const CHARGES_PER_POLL: u32 = 64;
 
 impl WorkControl for CancelControl<'_> {
     fn charge(&mut self, _: WorkKind, _: u64) -> Result<(), Stop> {
+        self.charges += 1;
+        if self.charges < CHARGES_PER_POLL {
+            return Ok(());
+        }
+        self.charges = 0;
         self.checkpoint()
     }
     fn checkpoint(&mut self) -> Result<(), Stop> {
@@ -192,7 +204,7 @@ pub(crate) fn decode_owned(
         _ => owner,
     };
     let bytes = owner.as_slice();
-    let mut control = CancelControl { cancel };
+    let mut control = CancelControl { cancel, charges: 0 };
     let diag = |d| from_diagnostic(d, bytes);
     let document =
         LexicalDocument::parse(owner.clone(), TOKEN_STORAGE_LIMIT, &mut control).map_err(diag)?;
