@@ -11,9 +11,11 @@ use crate::animation::native_properties::{
     NativePropertyError, SourceIndex, apply_native_properties, apply_native_properties_indexed,
 };
 use crate::compose::{
-    ComposeError, DiffCache, Frame, compose_frame_cached, compose_frame_owned, compose_svg,
+    ComposeError, DiffCache, Frame, compose_frame_cached, compose_frame_owned,
+    compose_graph_cached, compose_svg,
 };
 use std::sync::Arc;
+use vexel_scene::SceneGraph;
 use vexel_timeline::{TimelineIterator, TimelineView, TrackView, string_copy};
 
 struct OwnedDrawingCel {
@@ -124,23 +126,7 @@ fn render_with(
     geometry: SvgGeometry,
     cache: Option<&mut DiffCache>,
 ) -> Result<Frame, NativeFrameError> {
-    if tick >= timeline.duration_ticks() {
-        return Err(NativeFrameError::InvalidTick);
-    }
-
-    let props = crate::profile::phase("native.properties");
-    let patched = match index {
-        Some(index) => apply_native_properties_indexed(source_svg, index, timeline, tick),
-        None => apply_native_properties(source_svg, timeline, tick),
-    };
-    let snapshot = patched.map_err(|error| {
-        if error == NativePropertyError::InvalidTick {
-            NativeFrameError::InvalidTick
-        } else {
-            NativeFrameError::Property(error)
-        }
-    })?;
-    drop(props);
+    let snapshot = native_snapshot(source_svg, index, timeline, tick)?;
     let compose = crate::profile::phase("native.compose");
     let base = if let Some(cache) = cache {
         compose_frame_cached(Arc::new(snapshot), output_width, output_height, cache)
@@ -151,6 +137,62 @@ fn render_with(
     }
     .map_err(NativeFrameError::Compose)?;
     drop(compose);
+    overlay_cels(base, timeline, assets, tick, geometry)
+}
+
+/// The source with `tick`'s property samples applied: the bytes a tick composes.
+pub fn native_snapshot(
+    source_svg: &[u8],
+    index: Option<&SourceIndex>,
+    timeline: &TimelineView<'_>,
+    tick: u32,
+) -> Result<Vec<u8>, NativeFrameError> {
+    if tick >= timeline.duration_ticks() {
+        return Err(NativeFrameError::InvalidTick);
+    }
+    let _props = crate::profile::phase("native.properties");
+    let patched = match index {
+        Some(index) => apply_native_properties_indexed(source_svg, index, timeline, tick),
+        None => apply_native_properties(source_svg, timeline, tick),
+    };
+    patched.map_err(|error| {
+        if error == NativePropertyError::InvalidTick {
+            NativeFrameError::InvalidTick
+        } else {
+            NativeFrameError::Property(error)
+        }
+    })
+}
+
+/// [`render_native_frame_cached`] over a graph already decoded from
+/// [`native_snapshot`]'s bytes (playback decode-ahead). Same pixels.
+pub fn render_native_frame_predecoded(
+    graph: &SceneGraph,
+    timeline: &TimelineView<'_>,
+    assets: &[DrawingAsset<'_>],
+    tick: u32,
+    output_width: u32,
+    output_height: u32,
+    geometry: SvgGeometry,
+    cache: &mut DiffCache,
+) -> Result<Frame, NativeFrameError> {
+    if tick >= timeline.duration_ticks() {
+        return Err(NativeFrameError::InvalidTick);
+    }
+    let compose = crate::profile::phase("native.compose");
+    let base = compose_graph_cached(graph, output_width, output_height, cache)
+        .map_err(NativeFrameError::Compose)?;
+    drop(compose);
+    overlay_cels(base, timeline, assets, tick, geometry)
+}
+
+fn overlay_cels(
+    base: Frame,
+    timeline: &TimelineView<'_>,
+    assets: &[DrawingAsset<'_>],
+    tick: u32,
+    geometry: SvgGeometry,
+) -> Result<Frame, NativeFrameError> {
     let _cels = crate::profile::phase("native.cels");
 
     let (cel_storage, visibility) = collect_drawing_cels(timeline)?;

@@ -1,5 +1,8 @@
 //! Application contracts shared by native timeline control, rendering and UI.
 
+mod ahead;
+#[cfg(test)]
+mod ahead_tests;
 mod commands;
 mod controller;
 #[cfg(test)]

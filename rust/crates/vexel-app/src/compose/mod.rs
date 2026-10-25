@@ -77,6 +77,7 @@ pub use worker::{ComposeWorker, WorkerEvent};
 use std::collections::HashMap;
 use std::sync::Arc;
 use vexel_render::{PreserveAspect, ViewBox, offscreen_tile_size};
+use vexel_scene::SceneGraph;
 
 /// A composed straight-alpha RGBA8 frame (row 0 at the top, no padding).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -183,6 +184,16 @@ pub(crate) fn compose_frame_cached(
     compose_owned(bytes, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
 }
 
+/// [`compose_frame_cached`] over a graph decoded ahead by [`decode_owned`].
+pub(crate) fn compose_graph_cached(
+    graph: &SceneGraph,
+    width: u32,
+    height: u32,
+    cache: &mut DiffCache,
+) -> Result<Frame, ComposeError> {
+    render_decoded(graph, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
+}
+
 /// [`compose_document_owned`] repainting only what changed since the previous
 /// document composed with the same `cache` (hit-test data included). Same pixels.
 pub(crate) fn compose_document_cached(
@@ -203,11 +214,33 @@ fn compose_owned(
     with_ids: bool,
     cache: Option<&mut DiffCache>,
 ) -> Result<Composed, ComposeError> {
+    offscreen_tile_size(f64::from(width), f64::from(height))
+        .map_err(|_| ComposeError::InvalidSize)?;
+    let graph = decode_owned(bytes, cancel)?;
+    render_decoded(&graph, width, height, cancel, with_ids, cache)
+}
+
+/// The decode half of [`compose_owned`]: size independent, so playback can run
+/// it for upcoming ticks on other threads.
+pub(crate) fn decode_owned(
+    bytes: Arc<Vec<u8>>,
+    cancel: &dyn Fn() -> bool,
+) -> Result<SceneGraph, ComposeError> {
+    let _ph = crate::profile::phase("c.decode");
+    decode::decode_owned(bytes, cancel)
+}
+
+/// The render half of [`compose_owned`], over an already decoded graph.
+pub(crate) fn render_decoded(
+    graph: &SceneGraph,
+    width: u32,
+    height: u32,
+    cancel: &dyn Fn() -> bool,
+    with_ids: bool,
+    cache: Option<&mut DiffCache>,
+) -> Result<Composed, ComposeError> {
     let (tile_width, tile_height) = offscreen_tile_size(f64::from(width), f64::from(height))
         .map_err(|_| ComposeError::InvalidSize)?;
-    let ph = crate::profile::phase("c.decode");
-    let graph = decode::decode_owned(bytes, cancel)?;
-    drop(ph);
     let scene = graph.root();
     let viewport = scene.viewport;
     let view = ViewBox {

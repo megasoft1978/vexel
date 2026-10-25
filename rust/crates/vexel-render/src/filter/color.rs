@@ -3,6 +3,10 @@
 //! Layers are straight (non-premultiplied) RGBA8. All maths is `f64` with the
 //! same operation order as the C so that results round identically.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::ScopedJoinHandle;
+use std::time::Duration;
+
 use vexel_scene::{FilterKind, FilterPrimitive};
 
 pub(super) fn clamp01(value: f64) -> f64 {
@@ -283,53 +287,128 @@ pub(super) fn color_matrix(
     // `unit(b)` for every byte, and the previous pixel's result: flat-colour
     // art repeats pixels, and the same input always gives the same output.
     let units: Vec<f64> = (0..=255u8).map(unit).collect();
-    let mut last: Option<([u8; 4], [u8; 4])> = None;
-    for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
-        if control() {
-            return false;
-        }
-        for (source, destination) in rows_in.chunks_exact(4).zip(rows_out.chunks_exact_mut(4)) {
-            let key = [source[0], source[1], source[2], source[3]];
-            if let Some((seen, result)) = last {
-                if seen == key {
-                    destination.copy_from_slice(&result);
-                    continue;
-                }
+    let rows = input.len().div_ceil(row_bytes.max(1));
+    let threads = std::thread::available_parallelism()
+        .map_or(1, usize::from)
+        .min(MAX_BANDS)
+        .min(rows / MIN_BAND_ROWS)
+        .max(1);
+    if threads == 1 {
+        for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
+            if control() {
+                return false;
             }
-            let rgba = [
-                units[usize::from(source[0])],
-                units[usize::from(source[1])],
-                units[usize::from(source[2])],
-                units[usize::from(source[3])],
-            ];
-            if primitive.mode == 3 {
-                destination[..3].fill(0);
-                destination[3] = quantize(clamp01(
-                    LUMINANCE[0] * rgba[0] + LUMINANCE[1] * rgba[1] + LUMINANCE[2] * rgba[2],
-                ));
-            } else if source[3] == 0 {
-                destination.fill(0);
-            } else {
-                for row in 0..4 {
-                    let mut value = matrix[row * 5 + 4];
-                    for (column, sample) in rgba.iter().enumerate() {
-                        value += matrix[row * 5 + column] * sample;
-                    }
-                    destination[row] = quantize(clamp01(value));
-                }
-            }
-            last = Some((
-                key,
-                [
-                    destination[0],
-                    destination[1],
-                    destination[2],
-                    destination[3],
-                ],
-            ));
+            matrix_pixels(primitive, &matrix, &units, rows_in, rows_out);
         }
+        return true;
     }
-    true
+    // Pixels are independent, so bands give the bytes of the serial loop.
+    // `control` is not shareable across threads: the calling thread polls it
+    // while the bands run and raises `cancel`, which bands check per row.
+    if control() {
+        return false;
+    }
+    let band = rows.div_ceil(threads) * row_bytes;
+    let (matrix, units) = (&matrix, &units);
+    let cancel = AtomicBool::new(false);
+    let mut cancelled = false;
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = input
+            .chunks(band)
+            .zip(output.chunks_mut(band))
+            .map(|(rows_in, rows_out)| {
+                let cancel = &cancel;
+                scope.spawn(move || {
+                    matrix_band(
+                        primitive, matrix, units, row_bytes, rows_in, rows_out, cancel,
+                    )
+                })
+            })
+            .collect();
+        while !handles.iter().all(ScopedJoinHandle::is_finished) {
+            if !cancelled && control() {
+                cancelled = true;
+                cancel.store(true, Ordering::Relaxed);
+            }
+            std::thread::sleep(BAND_POLL);
+        }
+    });
+    !cancelled && !control()
+}
+
+/// How often the caller polls `control` while bands run.
+const BAND_POLL: Duration = Duration::from_micros(500);
+
+/// One thread band, row by row, stopping early once `cancel` is raised.
+fn matrix_band(
+    primitive: &FilterPrimitive,
+    matrix: &[f64; 20],
+    units: &[f64],
+    row_bytes: usize,
+    input: &[u8],
+    output: &mut [u8],
+    cancel: &AtomicBool,
+) {
+    for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
+        if cancel.load(Ordering::Relaxed) {
+            return;
+        }
+        matrix_pixels(primitive, matrix, units, rows_in, rows_out);
+    }
+}
+
+/// Bands never get fewer rows than this (thread spawn cost).
+const MIN_BAND_ROWS: usize = 64;
+const MAX_BANDS: usize = 8;
+
+fn matrix_pixels(
+    primitive: &FilterPrimitive,
+    matrix: &[f64; 20],
+    units: &[f64],
+    input: &[u8],
+    output: &mut [u8],
+) {
+    let mut last: Option<([u8; 4], [u8; 4])> = None;
+    for (source, destination) in input.chunks_exact(4).zip(output.chunks_exact_mut(4)) {
+        let key = [source[0], source[1], source[2], source[3]];
+        if let Some((seen, result)) = last {
+            if seen == key {
+                destination.copy_from_slice(&result);
+                continue;
+            }
+        }
+        let rgba = [
+            units[usize::from(source[0])],
+            units[usize::from(source[1])],
+            units[usize::from(source[2])],
+            units[usize::from(source[3])],
+        ];
+        if primitive.mode == 3 {
+            destination[..3].fill(0);
+            destination[3] = quantize(clamp01(
+                LUMINANCE[0] * rgba[0] + LUMINANCE[1] * rgba[1] + LUMINANCE[2] * rgba[2],
+            ));
+        } else if source[3] == 0 {
+            destination.fill(0);
+        } else {
+            for row in 0..4 {
+                let mut value = matrix[row * 5 + 4];
+                for (column, sample) in rgba.iter().enumerate() {
+                    value += matrix[row * 5 + column] * sample;
+                }
+                destination[row] = quantize(clamp01(value));
+            }
+        }
+        last = Some((
+            key,
+            [
+                destination[0],
+                destination[1],
+                destination[2],
+                destination[3],
+            ],
+        ));
+    }
 }
 
 #[cfg(test)]
@@ -428,5 +507,56 @@ mod tests {
             ));
             assert_eq!(output, reference(&primitive, &input), "mode {mode}");
         }
+    }
+
+    #[test]
+    fn banded_color_matrix_matches_the_reference_and_honours_cancel() {
+        // 12 px wide, 1003 rows: several bands, the last one shorter.
+        let tile = runs_image();
+        let input: Vec<u8> = (0..1003 / 8 + 1)
+            .flat_map(|_| tile.clone())
+            .take(12 * 4 * 1003)
+            .collect();
+        for mode in [0u8, 3] {
+            let primitive = primitive(mode);
+            let mut output = vec![0u8; input.len()];
+            assert!(color_matrix(
+                &primitive,
+                &input,
+                &mut output,
+                &|| false,
+                12 * 4
+            ));
+            assert_eq!(output, reference(&primitive, &input), "mode {mode}");
+        }
+        let mut output = vec![0u8; input.len()];
+        assert!(!color_matrix(
+            &primitive(0),
+            &input,
+            &mut output,
+            &|| true,
+            12 * 4
+        ));
+    }
+
+    #[test]
+    fn banded_color_matrix_stops_when_control_cancels_midway() {
+        // Only the first poll reports "keep going"; every later one cancels,
+        // so the bands are cancelled while they run (or right after).
+        let tile = runs_image();
+        let input: Vec<u8> = (0..1003 / 8 + 1)
+            .flat_map(|_| tile.clone())
+            .take(12 * 4 * 1003)
+            .collect();
+        let polls = std::sync::atomic::AtomicUsize::new(0);
+        let control = || polls.fetch_add(1, std::sync::atomic::Ordering::Relaxed) >= 1;
+        let mut output = vec![0u8; input.len()];
+        assert!(!color_matrix(
+            &primitive(0),
+            &input,
+            &mut output,
+            &control,
+            12 * 4
+        ));
     }
 }

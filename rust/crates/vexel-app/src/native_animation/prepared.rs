@@ -7,12 +7,17 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
+use vexel_scene::SceneGraph;
 use vexel_timeline::{DetachedTimeline, LoopMode};
 
+use super::ahead::Ahead;
+
 use crate::animation::native_drawing::{DrawingAsset, SvgGeometry};
-use crate::animation::native_frame::{NativeFrameError, render_native_frame_cached};
+use crate::animation::native_frame::{
+    NativeFrameError, native_snapshot, render_native_frame_cached, render_native_frame_predecoded,
+};
 use crate::animation::native_properties::{NativePropertyError, SourceIndex};
-use crate::compose::{DiffCache, Frame, SvgViewport, svg_viewport};
+use crate::compose::{DiffCache, Frame, SvgViewport, decode_owned, svg_viewport};
 use crate::project_session::ProjectTimelineCandidate;
 use crate::session::AppDocument;
 
@@ -32,6 +37,8 @@ pub struct Prepared {
     diff: Mutex<DiffCache>,
     /// Frames are for playback preview: they may resample cached layers.
     preview: AtomicBool,
+    /// Decoded upcoming ticks while playing.
+    ahead: Ahead,
 }
 
 struct Derived {
@@ -64,13 +71,42 @@ impl Prepared {
             derived: OnceLock::new(),
             diff: Mutex::new(DiffCache::display()),
             preview: AtomicBool::new(false),
+            ahead: Ahead::default(),
         })
     }
 
     /// Playback frames may resample cached layers; stills (paused, scrubbed,
     /// exported) stay exact. Takes effect with the next render.
     pub fn set_preview(&self, on: bool) {
-        self.preview.store(on, Ordering::Relaxed);
+        if self.preview.swap(on, Ordering::Relaxed) && !on {
+            self.ahead.invalidate();
+        }
+    }
+
+    pub fn set_ahead_enabled(&self, on: bool) {
+        self.ahead.set_enabled(on);
+    }
+
+    /// Drops decoded-ahead ticks and cancels running decodes (new generation).
+    pub fn cancel_ahead(&self) {
+        self.ahead.invalidate();
+    }
+
+    pub(super) fn ahead(&self) -> &Ahead {
+        &self.ahead
+    }
+
+    pub(super) fn repeats(&self) -> bool {
+        self.loop_mode == LoopMode::Repeat
+    }
+
+    /// Patches and decodes `tick`; `None` when cancelled or invalid (the
+    /// serial path then reports the error).
+    pub(super) fn decode_tick(&self, tick: u32, cancel: &dyn Fn() -> bool) -> Option<SceneGraph> {
+        let derived = self.derived().ok()?;
+        let timeline = self.timeline.attach(self.candidate.timeline_bytes())?;
+        let snapshot = native_snapshot(&self.source, Some(&derived.index), &timeline, tick).ok()?;
+        decode_owned(Arc::new(snapshot), cancel).ok()
     }
 
     fn derived(&self) -> Result<&Derived, NativeFrameError> {
@@ -87,7 +123,11 @@ impl Prepared {
     }
 
     /// Renders one integer tick at `size`.
-    pub fn render(&self, tick: u32, size: (u32, u32)) -> Result<Frame, NativeFrameError> {
+    pub fn render(
+        self: &Arc<Self>,
+        tick: u32,
+        size: (u32, u32),
+    ) -> Result<Frame, NativeFrameError> {
         let derived = self.derived()?;
         let timeline = self
             .timeline
@@ -108,7 +148,30 @@ impl Prepared {
             .diff
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        cache.set_preview(self.preview.load(Ordering::Relaxed));
+        let preview = self.preview.load(Ordering::Relaxed);
+        cache.set_preview(preview);
+        let graph = if preview {
+            let graph = self.ahead.take(tick);
+            self.ahead.plan(self, tick);
+            graph
+        } else {
+            None
+        };
+        let geometry = SvgGeometry {
+            width: f64::from(viewport.output_width),
+            height: f64::from(viewport.output_height),
+            view_box: [
+                viewport.view_box.x,
+                viewport.view_box.y,
+                viewport.view_box.width,
+                viewport.view_box.height,
+            ],
+        };
+        if let Some(graph) = graph {
+            return render_native_frame_predecoded(
+                &graph, &timeline, &assets, tick, size.0, size.1, geometry, &mut cache,
+            );
+        }
         render_native_frame_cached(
             &self.source,
             Some(&derived.index),
@@ -117,16 +180,7 @@ impl Prepared {
             tick,
             size.0,
             size.1,
-            SvgGeometry {
-                width: f64::from(viewport.output_width),
-                height: f64::from(viewport.output_height),
-                view_box: [
-                    viewport.view_box.x,
-                    viewport.view_box.y,
-                    viewport.view_box.width,
-                    viewport.view_box.height,
-                ],
-            },
+            geometry,
             &mut cache,
         )
     }
