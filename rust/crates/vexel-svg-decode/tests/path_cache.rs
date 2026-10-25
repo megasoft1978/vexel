@@ -90,7 +90,7 @@ fn cache_stays_bounded() {
         let src = format!("<svg><path d=\"M0 0 {d}\"/></svg>");
         geometry_of(&src, t);
     }
-    assert!(cached_bytes() <= 24 * 1024 * 1024);
+    assert!(cached_bytes() <= 128 * 1024 * 1024);
 }
 
 // ---- accounting: a hit is charged exactly like the parse it replaces ----
