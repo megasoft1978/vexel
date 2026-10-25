@@ -273,3 +273,12 @@ fn rename_urls(text: &str, renames: &[(String, String)]) -> String {
         acc.replace(&format!("url(#{old})"), &format!("url(#{new})"))
     })
 }
+
+/// Ids declared inside a standalone XML fragment, in source order.
+pub(crate) fn fragment_ids(source: &[u8]) -> Result<Vec<String>, V1DocumentError> {
+    Ok(scan_fragment(source)?
+        .ids
+        .into_iter()
+        .map(|site| site.old)
+        .collect())
+}

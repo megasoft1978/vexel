@@ -8,6 +8,7 @@ pub use vexel_document_edit::EditSnapshot;
 
 mod attrs;
 mod draw;
+mod fragment;
 mod paint_defs;
 mod path_data;
 mod query;
@@ -18,6 +19,7 @@ mod text;
 mod transform;
 
 pub use draw::{ElementKind, HIT_TOLERANCE};
+pub use fragment::{MAX_FRAGMENT_BYTES, UseSpec, fragment_ids};
 pub use paint_defs::{GradientStop, GradientUnits, Spread};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
 pub use query::{ElementInfo, Query, TreeEntry, TreeNode};

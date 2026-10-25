@@ -92,7 +92,7 @@ impl V1Document {
                 )?;
                 path_data::bounds(&segments).ok_or(V1DocumentError::InvalidPathData)?
             }
-            ElementKind::Group | ElementKind::Text | ElementKind::Other => {
+            ElementKind::Group | ElementKind::Text | ElementKind::Use | ElementKind::Other => {
                 return Err(V1DocumentError::Unsupported);
             }
         };
