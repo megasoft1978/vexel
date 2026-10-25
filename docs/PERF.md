@@ -957,3 +957,28 @@ and `film_grain` limited with `target` to the area that needs it (cost follows
 its bounds). A cheaper grain that stays under 6 ms on the full frame needs a
 renderer change (a cached noise tile or a lower-resolution filter layer) and is
 not done here.
+
+## Low-load re-measure (ADR-0036 goal check, 2026-10-25)
+
+Release, 900 px, `VEXEL_BENCH_PLAY=1 VEXEL_BENCH_SCENE=<file> cargo test --release -p vexel-app --test native_play_bench env_scene_animate_playback -- --ignored --nocapture`, 96 ticks x 3 loops. Median of 3 runs. Ring = decode-ahead on (default); serial = `VEXEL_BENCH_AHEAD=0`. Machine 1-min load before each playback run: 3.65-4.97 (gate < 5, passed on the first or a later retry).
+
+| scene | mode | frame interval p50 ms | latency p50 ms | target ms (interval / latency) | met? |
+|---|---|---|---|---|---|
+| shot1 | ring | 28.29 (28.29 / 28.20 / 28.35) | 27.20 | 25 | no |
+| shot1 | serial | 41.57 | 40.59 | n/a | n/a |
+| s3 | ring | 23.25 (23.25 / 23.49 / 23.23) | 21.19 | 30 | yes |
+| s3 | serial | 47.13 | 45.26 | n/a | n/a |
+| s4 | ring | 24.58 (24.58 / 23.88 / 24.86) | 24.06 | 35 | yes |
+| s4 | serial | 64.28 | 63.63 | n/a | n/a |
+| s9 | ring | 34.31 (32.44 / 34.31 / 34.90) | 31.32 | 30 | no |
+| s9 | serial | not run (skipped, comparison only) | | | |
+
+s4 peak RSS (`/usr/bin/time -l vexel --mcp-preview`, copy of `animatic/s4/shot.vexel`): open, 6 `render_png` at 720 px, 100 `native_timeline_set_duration` edits, then 480-frame 1080 mp4 export (22.6 s wall, 261.7 s user).
+- Maximum resident set size: 1,303,347,200 B (1243 MiB). Target 600 MB: **no**.
+- Sampled RSS: after open 276.6 MB; after renders 386.8 MB; after 100 edits 388.0 MB (+1.2 MB); after export 1014.4 MB.
+- Load during export: 1-min 14.2 (the export itself uses about 11 cores), so this is not a low-load figure.
+
+Track flush, `mcp_flush_bench` `flush_200_tracks_bulk` (`native_timeline_tracks_set`, 200 tracks / 3200 keys): 0.014 s. Target 2 s: **yes**. The bench discards the call result (`.ok()`), so it does not assert success.
+Load at flush: 1-min 19.3 (right after the export, so not a low-load figure).
+
+Goal status: interval/latency targets not met for shot1 (28.3 vs 25) and s9 (34.3 vs 30); met for s3 and s4. s4 RSS not met (1243 MiB vs 600 MB). Flush met.
