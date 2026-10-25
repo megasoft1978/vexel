@@ -105,7 +105,11 @@ fn wav(b: &[u8]) -> Result<Layout<'_>, AudioError> {
             }
             let channels = le16(b, body + 2).ok_or(AudioError::BadHeader)? as usize;
             let rate = le32(b, body + 4).ok_or(AudioError::BadHeader)?;
+            let align = le16(b, body + 12).ok_or(AudioError::BadHeader)? as usize;
             let bits = le16(b, body + 14).ok_or(AudioError::BadHeader)? as usize;
+            if align != channels * bits / 8 {
+                return Err(AudioError::Unsupported);
+            }
             fmt = Some((tag, channels, rate, bits));
         } else if id == b"data" {
             let (tag, channels, rate, bits) = fmt.ok_or(AudioError::BadHeader)?;
@@ -202,8 +206,13 @@ fn caf(b: &[u8]) -> Result<Layout<'_>, AudioError> {
                 return Err(AudioError::Unsupported);
             }
             let flags = be32(b, body + 12).ok_or(AudioError::BadHeader)?;
+            let bytes_per_packet = be32(b, body + 16).ok_or(AudioError::BadHeader)? as usize;
+            let frames_per_packet = be32(b, body + 20).ok_or(AudioError::BadHeader)?;
             let channels = be32(b, body + 24).ok_or(AudioError::BadHeader)? as usize;
             let bits = be32(b, body + 28).ok_or(AudioError::BadHeader)? as usize;
+            if bytes_per_packet != channels * bits / 8 || frames_per_packet != 1 {
+                return Err(AudioError::Unsupported);
+            }
             let enc = if flags & 1 != 0 { Enc::Float } else { Enc::Int };
             desc = Some((rate, enc, flags & 2 == 0, channels, bits));
         } else if id == b"data" {
@@ -254,6 +263,9 @@ fn layout(bytes: &[u8]) -> Result<(Layout<'_>, usize), AudioError> {
         return Err(AudioError::Unsupported);
     }
     let frame_bytes = l.channels * l.bits / 8;
+    if l.data.len() % frame_bytes != 0 {
+        return Err(AudioError::BadHeader);
+    }
     let frames = l.data.len() / frame_bytes;
     if frames == 0 || frames as u64 > u64::from(l.rate) * MAX_SECONDS {
         return Err(AudioError::BadLength);

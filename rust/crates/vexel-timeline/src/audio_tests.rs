@@ -113,6 +113,7 @@ fn codec_reads_wav_aiff_caf_and_rejects_bad_files() {
     // Float WAV.
     let mut f = wav16(48_000, 1, &[0, 0]);
     f[20] = 3;
+    f[32] = 4;
     f[34] = 32;
     f.truncate(44);
     f.extend_from_slice(&0.25f32.to_le_bytes());
@@ -161,6 +162,106 @@ fn codec_reads_wav_aiff_caf_and_rejects_bad_files() {
     assert_eq!(audio_codec::decode(&caf_trunc).unwrap_err(), AudioError::Truncated);
     let big = vec![0u8; audio_codec::MAX_FILE_BYTES + 1];
     assert_eq!(audio_codec::probe(&big).unwrap_err(), AudioError::TooLarge);
+}
+
+/// Minimal CAF with one `desc` and one `data` chunk; `samples` follow the
+/// 4-byte edit count. The data chunk size is `4 + samples.len()`.
+fn caf_pcm(channels: u32, bits: u32, bytes_per_packet: u32, frames_per_packet: u32, samples: &[u8]) -> Vec<u8> {
+    let mut c = b"caff\0\x01\0\0desc".to_vec();
+    c.extend_from_slice(&32i64.to_be_bytes());
+    c.extend_from_slice(&48_000f64.to_be_bytes());
+    c.extend_from_slice(b"lpcm");
+    for v in [0, bytes_per_packet, frames_per_packet, channels, bits] {
+        c.extend_from_slice(&v.to_be_bytes());
+    }
+    c.extend_from_slice(b"data");
+    c.extend_from_slice(&(4 + samples.len() as i64).to_be_bytes());
+    c.extend_from_slice(&[0; 4]);
+    c.extend_from_slice(samples);
+    c
+}
+
+/// Valid 16-bit stereo AIFF at 44.1 kHz with the given 80-bit rate field.
+fn aiff_with_rate(rate: [u8; 10]) -> Vec<u8> {
+    let mut a = b"FORM\0\0\0\0AIFFCOMM".to_vec();
+    a.extend_from_slice(&18u32.to_be_bytes());
+    a.extend_from_slice(&[0, 2, 0, 0, 0, 1, 0, 16]);
+    a.extend_from_slice(&rate);
+    a.extend_from_slice(b"SSND");
+    a.extend_from_slice(&12u32.to_be_bytes());
+    a.extend_from_slice(&[0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0x00, 0xC0, 0x00]);
+    let total = (a.len() - 8) as u32;
+    a[4..8].copy_from_slice(&total.to_be_bytes());
+    a
+}
+
+#[test]
+fn stride_fields_and_frame_alignment_are_checked() {
+    // Sanity: the helpers build decodable files.
+    assert!(audio_codec::decode(&caf_pcm(1, 16, 2, 1, &[0x40, 0, 0x80, 0])).is_ok());
+    assert!(audio_codec::decode(&aiff_with_rate([0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0])).is_ok());
+    // WAV block_align must equal channels * bits / 8.
+    let mut w = wav16(48_000, 1, &[1, 2]);
+    w[32] = 3;
+    assert_eq!(audio_codec::decode(&w).unwrap_err(), AudioError::Unsupported);
+    // CAF bytesPerPacket must match, and framesPerPacket must be 1.
+    assert_eq!(audio_codec::decode(&caf_pcm(1, 16, 4, 1, &[0x40, 0, 0x80, 0])).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&caf_pcm(1, 16, 2, 2, &[0x40, 0, 0x80, 0])).unwrap_err(), AudioError::Unsupported);
+    // CAF 24-bit padded to 32-bit containers is refused.
+    assert_eq!(audio_codec::decode(&caf_pcm(1, 24, 4, 1, &[0, 0x40, 0, 0])).unwrap_err(), AudioError::Unsupported);
+    // Data length that is not a whole number of frames.
+    let mut odd = wav16(48_000, 1, &[1, 2, 3]);
+    odd[40..44].copy_from_slice(&5u32.to_le_bytes());
+    odd.truncate(44 + 5);
+    assert_eq!(audio_codec::decode(&odd).unwrap_err(), AudioError::BadHeader);
+}
+
+#[test]
+fn hostile_files_error_without_panicking() {
+    // AIFF sample rate: NaN/inf encoding, overflowing exponent, zero.
+    assert_eq!(audio_codec::decode(&aiff_with_rate([0x7F, 0xFF, 0x80, 0, 0, 0, 0, 0, 0, 0])).unwrap_err(), AudioError::BadHeader);
+    assert_eq!(audio_codec::decode(&aiff_with_rate([0xFF, 0xFF, 0x80, 0, 0, 0, 0, 0, 0, 0])).unwrap_err(), AudioError::BadHeader);
+    assert_eq!(audio_codec::decode(&aiff_with_rate([0x7F, 0xFE, 0x80, 0, 0, 0, 0, 0, 0, 0])).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&aiff_with_rate([0; 10])).unwrap_err(), AudioError::Unsupported);
+    // Chunk sizes of 0xFFFFFFFF in AIFF COMM, SSND.
+    let mut a = aiff_with_rate([0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0]);
+    a[16..20].copy_from_slice(&u32::MAX.to_be_bytes());
+    assert_eq!(audio_codec::decode(&a).unwrap_err(), AudioError::BadHeader);
+    let mut a = aiff_with_rate([0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0]);
+    a[42..46].copy_from_slice(&u32::MAX.to_be_bytes());
+    assert_eq!(audio_codec::decode(&a).unwrap_err(), AudioError::Truncated);
+    // Chunk sizes of 0xFFFFFFFF in WAV fmt and data.
+    let mut w = wav16(48_000, 1, &[1, 2]);
+    w[16..20].copy_from_slice(&u32::MAX.to_le_bytes());
+    assert_eq!(audio_codec::decode(&w).unwrap_err(), AudioError::BadHeader);
+    let mut w = wav16(48_000, 1, &[1, 2]);
+    w[40..44].copy_from_slice(&u32::MAX.to_le_bytes());
+    assert_eq!(audio_codec::decode(&w).unwrap_err(), AudioError::Truncated);
+    // CAF data size -1 (no payload), 0 and i64::MAX.
+    let mut c = caf_pcm(1, 16, 2, 1, &[]);
+    c[56..64].copy_from_slice(&(-1i64).to_be_bytes());
+    assert_eq!(audio_codec::decode(&c).unwrap_err(), AudioError::BadLength);
+    let mut c = caf_pcm(1, 16, 2, 1, &[]);
+    c[56..64].copy_from_slice(&0i64.to_be_bytes());
+    assert_eq!(audio_codec::decode(&c).unwrap_err(), AudioError::BadHeader);
+    let mut c = caf_pcm(1, 16, 2, 1, &[0x40, 0, 0x80, 0]);
+    c[56..64].copy_from_slice(&i64::MAX.to_be_bytes());
+    assert_eq!(audio_codec::decode(&c).unwrap_err(), AudioError::Truncated);
+    // Channel counts 0 and 3 (CAF with consistent stride fields).
+    assert_eq!(audio_codec::decode(&caf_pcm(0, 16, 0, 1, &[0x40, 0, 0x80, 0])).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&caf_pcm(3, 16, 6, 1, &[0; 6])).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&wav16(48_000, 0, &[1, 2])).unwrap_err(), AudioError::Unsupported);
+    // Bit depths 8 and 12 (WAV and CAF).
+    let mut w = wav16(48_000, 1, &[1, 2]);
+    w[34] = 8;
+    w[32] = 1;
+    assert_eq!(audio_codec::decode(&w).unwrap_err(), AudioError::Unsupported);
+    let mut w = wav16(48_000, 1, &[1, 2]);
+    w[34] = 12;
+    w[32] = 1;
+    assert_eq!(audio_codec::decode(&w).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&caf_pcm(1, 8, 1, 1, &[0, 0])).unwrap_err(), AudioError::Unsupported);
+    assert_eq!(audio_codec::decode(&caf_pcm(1, 12, 1, 1, &[0, 0])).unwrap_err(), AudioError::Unsupported);
 }
 
 fn const_pcm(value: f32, frames: usize) -> Pcm {
