@@ -901,3 +901,35 @@ Not done: local-space layer keys per character group (step 4); the cached
 layer plan already serves 361 of 406 shapes, the rest is paint of moving
 characters. Next lever is rendering tick N+1's static layers while N finishes,
 or fewer moving shapes per tick.
+
+## effect_apply presets (900 px scene)
+
+`cargo test -p vexel-app --release --test mcp_fx_perf -- --ignored --nocapture`
+(Apple Silicon, one run, median of 8 ticks x 3 renders of `render_still_at`;
+900x900 grey page, one 300 px red group; baseline 1.2 ms). Added cost per tick:
+
+| preset (parameters) | total ms | added ms | target |
+|---|---|---|---|
+| speed_lines (count 32, 3 flicker variants) | 2.8 | 1.5 | |
+| smear (trail 3) | 3.0 | 1.7 | |
+| flash | 4.0 | 2.8 | |
+| vignette | 4.3 | 3.0 | |
+| halftone (size 8) | 5.4 | 4.2 | |
+| chromatic_split (amount 8, on the group) | 6.7 | 5.4 | |
+| glow (radius 4) | 7.5 | 6.3 | grain/vhs/glow <= 6: just over |
+| glow (radius 8, default) | 10.5 | 9.2 | exceeds |
+| motion_blur_dir (30 px, 6 copies) | 7.7 | 6.4 | |
+| vhs_scanlines (noise 0) | 7.0 | 5.8 | cheaper variant |
+| vhs_scanlines (default, noise 0.25) | 17.7 | 16.5 | exceeds |
+| film_grain (3 frames) | 12.9 | 11.7 | exceeds |
+| film_grain (2 frames, octaves 1) | 12.3 | 11.0 | exceeds |
+
+Targets missed: `film_grain`, `vhs_scanlines` with noise, and `glow` at its
+default radius. Grain costs about 11 ms for a full 900x900 filter layer whatever
+the octave count (the layer, noise and linearRGB conversions dominate), and the
+cost scales with the covered area. Cheaper variants: `vhs_scanlines` with
+`noise: 0` (+5.8 ms), `glow` with `radius` 4 (+6.3 ms) or on a smaller target,
+and `film_grain` limited with `target` to the area that needs it (cost follows
+its bounds). A cheaper grain that stays under 6 ms on the full frame needs a
+renderer change (a cached noise tile or a lower-resolution filter layer) and is
+not done here.

@@ -438,6 +438,53 @@ closedScale?}` groups squashed in scale-y about the pivot), `swap`
 `duration` 2-48 ticks (default 4, closed at the half). Tracks are `blink_*` and
 `gaze_*`; running again replaces them.
 
+## Effects: `effect_apply`
+
+`effect_apply` adds one 80s-cartoon effect in ONE undoable edit: it generates
+fragment markup (through the `element_add_fragment` allow-list, no new markup
+features) and the tracks that animate it. `preset` is one of:
+
+| preset | what it makes | main parameters |
+| --- | --- | --- |
+| `speed_lines` | radial fan or parallel streaks, three variants flickering by tick | `mode` radial/parallel, `count` 1-64, `length`, `angle` (parallel), `seed`, `intensity`, `period`, `color` |
+| `glow` | blurred `plus-lighter`/`screen` copy of the target (a `<use>`), intensity and sigma pulse | `radius` 0-32, `intensity`, `pulse`, `period`, `blend` |
+| `chromatic_split` | red and blue channel copies offset opposite ways (`feColorMatrix` + `feOffset`, `screen`) | `amount` 0-64 px, `angle`, `pulse`, `period` |
+| `film_grain` | soft-light `feTurbulence` overlay cycling 2-6 frames with different seeds | `frames`, `intensity`, `frequency`, `octaves` 1-3, `period`, `seed` |
+| `halftone` | rotated dot pattern whose dot radius animates `dot` to `dotTo` | `size` 2-64, `dot`, `dotTo`, `angle`, `intensity`, `color` |
+| `vhs_scanlines` | line pattern, per-tick jitter, rolling bar, optional grain | `pitch`, `jitter`, `noise`, `period`, `seed`, `intensity` |
+| `motion_blur_dir` | trail of offset, fading copies along an angle, animated length | `amount`, `angle`, `copies` 1-12, `pulse`, `intensity` |
+| `smear` | squash-stretch scale+skew keys on the target over `start..start+ticks`, optional trail copies | `stretch` 1-4, `angle`, `attack`, `trail` 0-8, `amount`, `intensity` |
+| `vignette` | radial dark edge, edge opacity pulses | `intensity`, `softness`, `pulse`, `period`, `color` |
+| `flash` | colour pulse with attack and eased falloff | `intensity`, `attack`, `falloff`, `color`, `blend` |
+
+`target` is a group or shape id. `glow`, `chromatic_split` and
+`motion_blur_dir` act on it, or on the whole scene when it is omitted (the
+scene content is wrapped in a group `<idPrefix>-scene`); `smear` requires one.
+Overlays cover the canvas, or the target's bounds when `target` is given (then
+it needs usable bounds and no transform on it or its ancestors). `start`
+(default 0) and `ticks` (default to the last tick) bound the active ticks; they
+must stay below the timeline duration. Overlays are hidden outside that
+window by a `<idPrefix>-window` visibility track.
+
+`idPrefix` (A-Z a-z 0-9 _ -, up to 48; default `fx-<preset>-N`, the first
+free N) prefixes every generated element id and track id and must be unused.
+`remove: true` with that `idPrefix` deletes the tracks, the generated root
+element and any scene grouping in one undoable edit. Parameters are bounded
+(for example `radius` <= 32, `count` <= 64, at most 256 generated elements,
+integer `seed`), a parameter the preset does not take is refused, and a refused
+call changes nothing. Everything is deterministic: positions come from an
+integer hash of `seed`, and the trig uses the unpaired `sin`/`cos` helpers.
+
+Notes: `glow`, `chromatic_split`, `motion_blur_dir` and `smear` trails
+reference the target with `<use>`, so they sit as the last children of its
+parent and show it as drawn in the document; a transform track on the target is
+followed by the copies only if the renderer resolves it for `<use>` (not
+guaranteed). `smear` fails with a timeline rejection when the target already
+has a `transform` track. Per-tick render costs on a 900 px scene are in
+`docs/PERF.md` (`film_grain`, `vhs_scanlines` with noise and `glow` at radius 8
+exceed 6 ms; cheaper variants are listed there). A static look at the markup is
+in `docs/media/effects_v2_showcase.svg`.
+
 ## Fragments and `<use>` instances
 
 `element_add_fragment` (`parentId` is `"root"` or any element id, `xml` is one

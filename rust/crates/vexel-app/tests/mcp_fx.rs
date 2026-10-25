@@ -260,3 +260,21 @@ fn tool_is_listed() {
     let (mut rig, _) = scene();
     assert!(rig.list_tools().iter().any(|t| t == "effect_apply"));
 }
+
+#[test]
+fn showcase_file_renders() {
+    let path = format!(
+        "{}/../../../docs/media/effects_v2_showcase.svg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let bytes = std::fs::read(path).unwrap();
+    let scene = vexel_app::animation::frame::decode(&bytes).unwrap();
+    let tile = scene
+        .render_sized(0.0, (160, 90), &std::sync::atomic::AtomicBool::new(false))
+        .unwrap();
+    assert!(
+        tile.rgba()
+            .chunks(4)
+            .any(|p| p[0] > 200 && p[1] > 200 && p[2] < 160)
+    );
+}
