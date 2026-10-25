@@ -52,11 +52,14 @@ const TIMEOUT: &str = "audio helper timed out and was stopped; try a shorter tex
 const CRASHED: &str = "audio helper exited unexpectedly; it will be restarted on the next request";
 const MALFORMED: &str = "audio helper sent an invalid reply and was stopped";
 const BAD_OUTPUT: &str = "audio helper produced an unusable file (not a regular WAV within the size and duration caps); it was discarded";
+const EXISTS: &str = "audio_generate outPath already exists; choose a new file name (existing files are never overwritten)";
 const FILE_FAILED: &str = "audio file operation failed";
 const NO_TIMELINE: &str = "audio_envelope needs a native timeline for the tick rate";
 const NOT_FOUND: &str = "audio file not found";
 const NOT_GRANTED: &str = "path not granted";
 const NO_TRACK: &str = "audio_envelope trackId is not an audio track; read ids with audio_list";
+const NAME_TOO_LONG: &str = "audio_generate outPath file name is too long (120 bytes at most)";
+const CLIP_TOO_LONG: &str = "audio_envelope clip is too long for the default tick count; pass ticks (1-100000) to take the first part";
 const ENVELOPE_LIMIT: &str = "audio_envelope ticks must be 1-100000";
 
 /// One request parameter, already rendered as a JSON value.
@@ -210,11 +213,16 @@ impl AudioGen {
         {
             return Err(BUDGET);
         }
-        let existed = target.exists();
+        if fs::symlink_metadata(&target).is_ok() {
+            return Err(EXISTS);
+        }
         let name = target
             .file_name()
             .and_then(OsStr::to_str)
             .ok_or(FILE_FAILED)?;
+        if name.len() > 120 {
+            return Err(NAME_TOO_LONG);
+        }
         let temp = target.with_file_name(format!(
             ".{name}.vexel-audio-{}-{}.wav",
             std::process::id(),
@@ -263,9 +271,16 @@ impl AudioGen {
             }
         };
         self.bytes += bytes;
-        if fs::rename(&temp, &target).is_err() {
-            remove_temp();
-            return Err(FILE_FAILED);
+        // Create-new move: a hard link fails if the target appeared meanwhile,
+        // so a granted file is never replaced.
+        let linked = fs::hard_link(&temp, &target);
+        remove_temp();
+        if let Err(e) = linked {
+            return Err(if e.kind() == std::io::ErrorKind::AlreadyExists {
+                EXISTS
+            } else {
+                FILE_FAILED
+            });
         }
         let millis = info.frames as u64 * 1000 / u64::from(info.rate);
         let target_text = target.to_str().ok_or(FILE_FAILED)?.to_owned();
@@ -278,9 +293,7 @@ impl AudioGen {
                 }
                 Ok(_) => {}
                 Err(message) => {
-                    if !existed {
-                        let _ = fs::remove_file(&target);
-                    }
+                    let _ = fs::remove_file(&target);
                     return Err(message);
                 }
             }
@@ -384,7 +397,11 @@ pub(super) fn envelope(
         }
     };
     pcm.samples.shrink_to_fit();
-    let env = audio_envelope::envelope(&pcm, tps, start_ms, limit).ok_or(ENVELOPE_LIMIT)?;
+    let env = audio_envelope::envelope(&pcm, tps, start_ms, limit).ok_or(if limit.is_none() {
+        CLIP_TOO_LONG
+    } else {
+        ENVELOPE_LIMIT
+    })?;
     let millis = pcm.frames() as u64 * 1000 / u64::from(pcm.rate.max(1));
     let values: Vec<String> = env.rms.iter().map(|v| format!("{v:.3}")).collect();
     Ok(McpOutcome::Reply(format!(

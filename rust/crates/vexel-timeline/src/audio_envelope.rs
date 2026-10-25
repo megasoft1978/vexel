@@ -92,4 +92,11 @@ mod tests {
         assert_eq!(envelope(&p, 24, 500, None).unwrap().rms.len(), 12);
         assert!(envelope(&p, 0, 0, None).is_none());
     }
+
+    #[test]
+    fn too_many_default_ticks_is_none_but_a_limit_clamps() {
+        let p = pcm(8000, vec![0.1; 8000 * 5]);
+        assert!(envelope(&p, 30_000, 0, None).is_none());
+        assert_eq!(envelope(&p, 30_000, 0, Some(10)).unwrap().rms.len(), 10);
+    }
 }

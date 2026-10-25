@@ -377,6 +377,66 @@ fn failed_add_removes_the_new_file() {
     assert!(reply.error().contains("already exists"), "{}", reply.body);
     assert!(!dir.file("audio/two.wav").exists());
     assert!(dir.file("audio/one.wav").exists());
+    let stray: Vec<_> = fs::read_dir(dir.file("audio"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .filter(|n| n.contains("vexel-audio"))
+        .collect();
+    assert!(stray.is_empty(), "{stray:?}");
+}
+
+#[test]
+fn existing_target_is_refused_and_left_untouched() {
+    let dir = Dir::new();
+    let mut rig = saved(&dir, fake());
+    fs::write(dir.file("audio/keep.wav"), b"original bytes").unwrap();
+    for extra in ["", r#","addTrack":{"trackId":"k"}"#] {
+        let reply = generate(&mut rig, &dir, "ok", "audio/keep.wav", extra);
+        assert!(reply.error().contains("already exists"), "{}", reply.body);
+        assert_eq!(
+            fs::read(dir.file("audio/keep.wav")).unwrap(),
+            b"original bytes"
+        );
+    }
+    assert!(rig.doc_tool("audio_list", "").ok().contains(r#""count":0"#));
+    let names: Vec<_> = fs::read_dir(dir.file("audio"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .filter(|n| n.contains("vexel-audio"))
+        .collect();
+    assert!(names.is_empty(), "{names:?}");
+}
+
+#[test]
+fn overlong_out_path_names_are_rejected() {
+    let dir = Dir::new();
+    let mut rig = saved(&dir, fake());
+    let long = format!("audio/{}.wav", "a".repeat(130));
+    let reply = generate(&mut rig, &dir, "ok", &long, "");
+    assert!(reply.error().contains("too long"), "{}", reply.body);
+    let fine = format!("audio/{}.wav", "b".repeat(100));
+    generate(&mut rig, &dir, "ok", &fine, "").ok();
+}
+
+#[test]
+fn envelope_of_a_long_clip_asks_for_ticks() {
+    let dir = Dir::new();
+    let mut rig = saved(&dir, fake());
+    // 100001 ticks at 240 tps is about 417 s; 8 kHz is the lowest rate accepted.
+    rig.doc_tool(
+        "native_timeline_set_duration",
+        r#""durationTicks":48,"ticksPerSecond":240"#,
+    )
+    .ok();
+    let frames = vec![0i16; 420 * 8_000];
+    fs::write(dir.file("audio/long.wav"), encode_wav16(8_000, 1, &frames)).unwrap();
+    let args = format!(r#""path":{}"#, jstr(&dir.text("audio/long.wav")));
+    let reply = rig.doc_tool("audio_envelope", &args);
+    assert!(reply.error().contains("pass ticks"), "{}", reply.body);
+    let bad = rig.doc_tool("audio_envelope", &format!("{args},\"ticks\":0"));
+    assert!(bad.error().contains("1-100000"), "{}", bad.body);
+    rig.doc_tool("audio_envelope", &format!("{args},\"ticks\":10"))
+        .ok();
 }
 
 #[test]
