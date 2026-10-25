@@ -267,35 +267,45 @@ pub(super) fn color_matrix(
     row_bytes: usize,
 ) -> bool {
     let matrix = matrix_for(primitive);
+    // `unit(b)` for every byte, and the previous pixel's result: flat-colour
+    // art repeats pixels, and the same input always gives the same output.
+    let units: Vec<f64> = (0..=255u8).map(unit).collect();
+    let mut last: Option<([u8; 4], [u8; 4])> = None;
     for (rows_in, rows_out) in input.chunks(row_bytes).zip(output.chunks_mut(row_bytes)) {
         if control() {
             return false;
         }
         for (source, destination) in rows_in.chunks_exact(4).zip(rows_out.chunks_exact_mut(4)) {
+            let key = [source[0], source[1], source[2], source[3]];
+            if let Some((seen, result)) = last {
+                if seen == key {
+                    destination.copy_from_slice(&result);
+                    continue;
+                }
+            }
             let rgba = [
-                unit(source[0]),
-                unit(source[1]),
-                unit(source[2]),
-                unit(source[3]),
+                units[usize::from(source[0])],
+                units[usize::from(source[1])],
+                units[usize::from(source[2])],
+                units[usize::from(source[3])],
             ];
             if primitive.mode == 3 {
                 destination[..3].fill(0);
                 destination[3] = quantize(clamp01(
                     LUMINANCE[0] * rgba[0] + LUMINANCE[1] * rgba[1] + LUMINANCE[2] * rgba[2],
                 ));
-                continue;
-            }
-            if source[3] == 0 {
+            } else if source[3] == 0 {
                 destination.fill(0);
-                continue;
-            }
-            for row in 0..4 {
-                let mut value = matrix[row * 5 + 4];
-                for (column, sample) in rgba.iter().enumerate() {
-                    value += matrix[row * 5 + column] * sample;
+            } else {
+                for row in 0..4 {
+                    let mut value = matrix[row * 5 + 4];
+                    for (column, sample) in rgba.iter().enumerate() {
+                        value += matrix[row * 5 + column] * sample;
+                    }
+                    destination[row] = quantize(clamp01(value));
                 }
-                destination[row] = quantize(clamp01(value));
             }
+            last = Some((key, [destination[0], destination[1], destination[2], destination[3]]));
         }
     }
     true
