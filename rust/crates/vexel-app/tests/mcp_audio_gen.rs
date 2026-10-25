@@ -28,6 +28,7 @@ for raw in sys.stdin:
     side = os.path.join(d, name)
     open(side + ".pid", "w").write(str(os.getpid()))
     open(side + ".req", "w").write(raw)
+    open(side + ".env", "w").write(json.dumps(sorted(os.environ)))
     reply = {"id": rid, "ok": True, "path": out, "durationMs": 500}
     if mode == "ok" or mode == "echo":
         wav(out)
@@ -196,6 +197,18 @@ fn user_text_travels_only_as_json_and_consent_is_forwarded() {
     assert!(again.contains(r#""ok":true"#));
     let req = fs::read_to_string(dir.file("audio/w.wav.req")).unwrap();
     assert!(req.contains(r#""consent":false"#), "{req}");
+}
+
+#[test]
+fn helper_environment_is_scrubbed() {
+    let dir = Dir::new();
+    let mut rig = saved(&dir, fake());
+    generate(&mut rig, &dir, "echo", "audio/e.wav", "").ok();
+    let env = fs::read_to_string(dir.file("audio/e.wav.env")).unwrap();
+    for name in ["USER", "SHELL", "LOGNAME", "TERM", "PWD"] {
+        assert!(!env.contains(&format!("\"{name}\"")), "{name} leaked: {env}");
+    }
+    assert!(env.contains("PATH"), "{env}");
 }
 
 #[test]

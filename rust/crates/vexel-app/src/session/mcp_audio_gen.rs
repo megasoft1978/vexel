@@ -122,6 +122,7 @@ fn code_message(code: &str) -> &'static str {
 fn failure_message(failure: HelperFailure) -> &'static str {
     match failure {
         HelperFailure::NotFound => NO_HELPER,
+        HelperFailure::Untrusted(message) => message,
         HelperFailure::Spawn => "audio helper could not be started; check that python3 is installed and the helper is executable",
         HelperFailure::Timeout => TIMEOUT,
         HelperFailure::Crashed => CRASHED,
@@ -174,11 +175,10 @@ impl AudioGen {
             self.helper = None;
         }
         if self.helper.is_none() {
-            let path = self
-                .path
-                .clone()
-                .or_else(locate)
-                .ok_or(HelperFailure::NotFound)?;
+            let path = match self.path.clone() {
+                Some(path) => path,
+                None => locate()?,
+            };
             self.helper = Some(Helper::spawn(&path)?);
         }
         self.helper.as_mut().ok_or(HelperFailure::Spawn)
