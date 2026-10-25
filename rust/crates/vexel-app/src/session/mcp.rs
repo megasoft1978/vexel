@@ -85,6 +85,11 @@ impl McpHost {
         self.audio_gen.configure(helper, timeout);
     }
 
+    /// Lowers the per-session audio generation request budget.
+    pub fn limit_audio_requests(&mut self, max: u32) {
+        self.audio_gen.limit_requests(max);
+    }
+
     /// Pid of the running audio helper, if one was started.
     pub fn audio_helper_pid(&self) -> Option<u32> {
         self.audio_gen.helper_pid()

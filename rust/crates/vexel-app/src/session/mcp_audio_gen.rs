@@ -41,11 +41,11 @@ pub const OTHER_TIMEOUT: Duration = Duration::from_secs(60);
 pub const MAX_PARAMS: usize = 24;
 
 const NOT_WAV: &str = "audio_generate outPath must be a .wav file inside a granted directory";
-const NEEDS_SAVE: &str = "addTrack needs a saved document (save_as first) and an outPath inside its directory";
-const OUTSIDE: &str = "addTrack outPath must be inside the document's directory";
+const NEEDS_SAVE: &str = "audio_generate addTrack needs a saved document (save_as first) and an outPath inside its directory";
+const OUTSIDE: &str = "audio_generate addTrack outPath must be inside the document's directory";
 const NO_HELPER: &str = "audio helper not found; install tools/vexel-audio next to the app or set VEXEL_AUDIO_HELPER (see docs/audio.md)";
 const BUDGET: &str = "audio generation budget for this session is used up (128 requests or 512 MiB); restart Vexel to reset it";
-const MODEL_MISSING: &str = "model_missing: voice needs the Kokoro model and mlx-audio. Install: python3 -m pip install mlx-audio, then run tools/vexel-audio/vexel-audio --download-model (about 100 MB from huggingface.co/mlx-community/Kokoro-82M-4bit), or call audio_generate again with consent=true to download it now. Nothing is downloaded without consent.";
+const MODEL_MISSING: &str = "audio_generate failed with model_missing: voice needs the Kokoro model and mlx-audio. Install: python3 -m pip install mlx-audio, then run tools/vexel-audio/vexel-audio --download-model (about 100 MB from huggingface.co/mlx-community/Kokoro-82M-4bit), or call audio_generate again with consent=true to download it now. Nothing is downloaded without consent.";
 const BAD_PARAMS: &str = "audio helper rejected params: voice takes text (1-1000 chars), voice (Kokoro id such as af_heart), speed 0.5-2, effect (pip, whisper, soft) and pitchSemitones, bitcrushBits, tremoloHz, tremoloDepth, ringModHz, ringModMix, highpassHz, lowpassHz; sfx takes preset (whoosh, hum, launch, chime, siren, wind, comet, hoverbike), durationMs 200-15000, seed; music takes mood (adventure, calm, tense, bright), key (A, C#, Bb), tempo 50-220, bars 2-64, seed";
 const FAILED: &str = "audio helper failed to generate the clip";
 const TIMEOUT: &str = "audio helper timed out and was stopped; try a shorter text or retry";
@@ -95,6 +95,7 @@ pub struct AudioGen {
     path: Option<PathBuf>,
     timeout: Option<Duration>,
     requests: u32,
+    max_requests: Option<u32>,
     bytes: u64,
     next_id: u64,
 }
@@ -158,6 +159,11 @@ impl AudioGen {
         self.timeout = timeout;
     }
 
+    /// Lowers the per-session request budget (tests).
+    pub fn limit_requests(&mut self, max: u32) {
+        self.max_requests = Some(max);
+    }
+
     /// Pid of the running helper, if any.
     pub fn helper_pid(&self) -> Option<u32> {
         self.helper.as_ref().map(Helper::pid)
@@ -197,7 +203,7 @@ impl AudioGen {
                 return Err(OUTSIDE);
             }
         }
-        if self.requests >= MAX_REQUESTS || self.bytes >= MAX_TOTAL_BYTES {
+        if self.requests >= self.max_requests.unwrap_or(MAX_REQUESTS) || self.bytes >= MAX_TOTAL_BYTES {
             return Err(BUDGET);
         }
         let existed = target.exists();
@@ -330,7 +336,7 @@ fn granted_file(
         PathBuf::from(input)
     } else {
         document_dir(app)
-            .map_err(|_| "relative audio paths need a saved document; use an absolute path")?
+            .map_err(|_| "audio paths must be absolute unless the document is saved")?
             .join(input)
     };
     let canonical = policy

@@ -11,7 +11,6 @@ use crate::preview::native_timeline::settings;
 use crate::project_session::{NativeCommandError, ProjectTimelineError};
 use crate::session::AppDocument;
 use std::ffi::OsStr;
-use std::fs::File;
 use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs::OpenOptionsExt;
