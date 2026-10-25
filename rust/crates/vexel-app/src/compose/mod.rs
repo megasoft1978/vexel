@@ -30,6 +30,8 @@ mod tests;
 #[cfg(test)]
 mod tests_chrome;
 #[cfg(test)]
+mod tests_dirty;
+#[cfg(test)]
 mod tests_image;
 #[cfg(test)]
 mod tests_open;
@@ -162,6 +164,18 @@ pub(crate) fn compose_frame_cached(
     compose_owned(bytes, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
 }
 
+/// [`compose_document_owned`] repainting only what changed since the previous
+/// document composed with the same `cache` (hit-test data included). Same pixels.
+pub(crate) fn compose_document_cached(
+    bytes: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+    cancel: &dyn Fn() -> bool,
+    cache: &mut DiffCache,
+) -> Result<Composed, ComposeError> {
+    compose_owned(bytes, width, height, cancel, true, Some(cache))
+}
+
 fn compose_owned(
     bytes: Arc<Vec<u8>>,
     width: u32,
@@ -192,7 +206,9 @@ fn compose_owned(
     let mut tile = blank_tile(tile_width, tile_height)?;
     let ph = crate::profile::phase("c.render");
     let drawn = match cache {
-        Some(cache) => diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache)?,
+        Some(cache) => {
+            diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache, with_ids)?
+        }
         None => render_scene(&scene, view, aspect, &mut tile, false, cancel)?,
     };
     drop(ph);
