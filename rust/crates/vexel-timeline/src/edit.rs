@@ -3,6 +3,7 @@ mod initialize;
 #[cfg(test)]
 mod initialize_tests;
 mod ops;
+mod ops_audio;
 mod ops_bulk;
 mod ops_ext;
 mod ops_timing;
@@ -282,6 +283,14 @@ impl TimelineEdit {
     }
     pub fn set_loop(&mut self, context: &TimelineContext, mode: LoopMode) -> EditResult {
         ops::set_loop(self, context, mode)
+    }
+    /// Replaces the audio tracks (at most 64) in one undoable edit.
+    pub fn set_audio_tracks(
+        &mut self,
+        context: &TimelineContext,
+        tracks: &[crate::audio::AudioTrack],
+    ) -> EditResult {
+        ops_audio::set_audio_tracks(self, context, tracks)
     }
     /// Sets the duration in ticks and optionally the ticks per second.
     pub fn set_timing(

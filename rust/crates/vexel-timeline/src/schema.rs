@@ -51,7 +51,7 @@ pub struct TimelineView<'a> {
     pub(crate) source: &'a [u8], pub(crate) tracks: Vec<TrackMeta>, tracks_span: Span,
     ticks_per_second: u32, duration_ticks: u32, fps_numerator: u32,
     fps_denominator: u32, loop_mode: LoopMode, onion_before: u32,
-    onion_after: u32, onion_opacity: f64, empty: bool,
+    onion_after: u32, onion_opacity: f64, empty: bool, audio: Option<Span>,
 }
 
 pub fn decode<'a>(source: &'a [u8], context: &TimelineContext) -> Result<TimelineView<'a>> {
@@ -62,7 +62,7 @@ where F: FnMut() -> bool {
     validate_context(context)?;
     if source.is_empty() { return Ok(TimelineView { source, tracks: Vec::new(), tracks_span: Span {start:0,end:0},
         ticks_per_second:0,duration_ticks:0,fps_numerator:0,fps_denominator:0,loop_mode:LoopMode::Once,
-        onion_before:0,onion_after:0,onion_opacity:0.0,empty:true }); }
+        onion_before:0,onion_after:0,onion_opacity:0.0,empty:true,audio:None }); }
     if source.len() > MAX_SOURCE_BYTES { return Err(DecodeFailure { error:Error::Limit,offset:0,canceled:false }); }
     let mut callback = cancel;
     let mut poll_cancel = || callback.as_mut().is_some_and(|check| check());
@@ -78,7 +78,9 @@ where F: FnMut() -> bool {
     let version_field = required(&root,b"version").ok_or(DecodeFailure{error:Error::InvalidSchema,offset:schema.value.start,canceled:false})?;
     let version = uint(source,version_field.value)?;
     if version != 1 { return Err(DecodeFailure{error:Error::UnsupportedVersion,offset:version_field.value.start,canceled:false}); }
-    require_fields(&root,&[b"schema",b"version",b"ticks_per_second",b"duration_ticks",b"fps",b"loop",b"onion",b"tracks"],0)?;
+    let audio_span=field(&root,b"audio").map(|f|f.value);
+    if audio_span.is_some() { require_fields(&root,&[b"schema",b"version",b"ticks_per_second",b"duration_ticks",b"fps",b"loop",b"onion",b"tracks",b"audio"],0)?; }
+    else { require_fields(&root,&[b"schema",b"version",b"ticks_per_second",b"duration_ticks",b"fps",b"loop",b"onion",b"tracks"],0)?; }
     let tps_span = required(&root,b"ticks_per_second").ok_or_else(|| at(Error::InvalidSchema,0))?.value;
     let duration_span = required(&root,b"duration_ticks").ok_or_else(|| at(Error::InvalidSchema,0))?.value;
     let tps=uint(source,tps_span)?; let duration=uint(source,duration_span)?;
@@ -171,8 +173,9 @@ where F: FnMut() -> bool {
         if total_items>MAX_ITEMS { return Err(at(Error::Limit,items_field.value.start)); }
         metas.push(TrackMeta {span:*span,items:items_field.value,drawing,item_count:item_spans.len()});
     }
+    if let Some(span)=audio_span { crate::audio::parse_tracks(source,span,duration)?; }
     Ok(TimelineView {source,tracks:metas,tracks_span:tracks_field.value,ticks_per_second:tps,duration_ticks:duration,
-        fps_numerator:numerator,fps_denominator:denominator,loop_mode,onion_before:before,onion_after:after,onion_opacity:opacity,empty:false})
+        fps_numerator:numerator,fps_denominator:denominator,loop_mode,onion_before:before,onion_after:after,onion_opacity:opacity,empty:false,audio:audio_span})
 }
 
 pub fn classify(source:&[u8]) -> Result<bool> { classify_cancellable(source,None::<fn()->bool>) }
@@ -298,7 +301,7 @@ pub(crate) fn uint(source:&[u8],span:Span)->Result<u32>{
     let mut value=0u32;for b in bytes {value=value.checked_mul(10).and_then(|v|v.checked_add(u32::from(*b-b'0'))).ok_or_else(||at(Error::Limit,span.start))?;}Ok(value)
 }
 pub(crate) fn boolean(source:&[u8],span:Span)->Result<bool>{match source.get(span.start..span.end){Some(b"true")=>Ok(true),Some(b"false")=>Ok(false),_=>Err(at(Error::InvalidValue,span.start))}}
-fn number(source:&[u8],span:Span)->Result<f64>{let raw=source.get(span.start..span.end).ok_or_else(||at(Error::InvalidValue,span.start))?;let s=std::str::from_utf8(raw).map_err(|_|at(Error::InvalidValue,span.start))?;let n=s.parse::<f64>().map_err(|_|at(Error::InvalidValue,span.start))?;if n.is_finite(){Ok(n)}else{Err(at(Error::InvalidValue,span.start))}}
+pub(crate) fn number(source:&[u8],span:Span)->Result<f64>{let raw=source.get(span.start..span.end).ok_or_else(||at(Error::InvalidValue,span.start))?;let s=std::str::from_utf8(raw).map_err(|_|at(Error::InvalidValue,span.start))?;let n=s.parse::<f64>().map_err(|_|at(Error::InvalidValue,span.start))?;if n.is_finite(){Ok(n)}else{Err(at(Error::InvalidValue,span.start))}}
 fn at(error:Error,offset:usize)->DecodeFailure{DecodeFailure{error,offset,canceled:false}}
 
 // Accessors share the exact source spans captured by this decoder.
@@ -317,6 +320,10 @@ impl<'a> TimelineView<'a> {
     pub fn loop_mode(&self)->LoopMode{self.loop_mode}
     pub fn onion(&self)->(u32,u32,f64){(self.onion_before,self.onion_after,self.onion_opacity)}
     pub fn is_empty(&self)->bool{self.empty}
+    /// The validated audio tracks (empty when the timeline has none).
+    pub fn audio_tracks(&self)->Vec<crate::audio::AudioTrack>{
+        self.audio.and_then(|span|crate::audio::parse_tracks(self.source,span,self.duration_ticks).ok()).unwrap_or_default()
+    }
 }
 
 /// Validated structure of one decoded timeline without the borrow on its
@@ -326,7 +333,7 @@ pub struct DetachedTimeline {
     source_len: usize, tracks: Vec<TrackMeta>, tracks_span: Span,
     ticks_per_second: u32, duration_ticks: u32, fps_numerator: u32,
     fps_denominator: u32, loop_mode: LoopMode, onion_before: u32,
-    onion_after: u32, onion_opacity: f64, empty: bool,
+    onion_after: u32, onion_opacity: f64, empty: bool, audio: Option<Span>,
 }
 impl<'a> TimelineView<'a> {
     /// Drops the borrow; see [`DetachedTimeline::attach`].
@@ -334,7 +341,7 @@ impl<'a> TimelineView<'a> {
         tracks:self.tracks.clone(),tracks_span:self.tracks_span,ticks_per_second:self.ticks_per_second,
         duration_ticks:self.duration_ticks,fps_numerator:self.fps_numerator,fps_denominator:self.fps_denominator,
         loop_mode:self.loop_mode,onion_before:self.onion_before,onion_after:self.onion_after,
-        onion_opacity:self.onion_opacity,empty:self.empty}}
+        onion_opacity:self.onion_opacity,empty:self.empty,audio:self.audio}}
 }
 impl DetachedTimeline {
     /// The view over `source`, which must be the bytes the view was decoded
@@ -345,6 +352,6 @@ impl DetachedTimeline {
         Some(TimelineView{source,tracks:self.tracks.clone(),tracks_span:self.tracks_span,ticks_per_second:self.ticks_per_second,
             duration_ticks:self.duration_ticks,fps_numerator:self.fps_numerator,fps_denominator:self.fps_denominator,
             loop_mode:self.loop_mode,onion_before:self.onion_before,onion_after:self.onion_after,
-            onion_opacity:self.onion_opacity,empty:self.empty})
+            onion_opacity:self.onion_opacity,empty:self.empty,audio:self.audio})
     }
 }
