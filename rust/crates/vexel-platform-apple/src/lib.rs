@@ -5,6 +5,8 @@
 //! [`guard_native_call`], with callback adapters returning their ABI-valid
 //! fallback after observing an error.
 
+#[cfg(target_os = "macos")]
+pub mod gpu_compute;
 mod main_thread;
 mod native_boundary;
 mod native_window;
