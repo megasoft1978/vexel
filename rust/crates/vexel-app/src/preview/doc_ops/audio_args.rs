@@ -27,7 +27,13 @@ fn text(
         .and_then(|b| String::from_utf8(b).ok())
         .filter(|s| !s.is_empty() && s.len() <= max)
         .map(Some)
-        .ok_or_else(|| invalid(tool, key, &format!("a non-empty UTF-8 string of at most {max} bytes")))
+        .ok_or_else(|| {
+            invalid(
+                tool,
+                key,
+                &format!("a non-empty UTF-8 string of at most {max} bytes"),
+            )
+        })
 }
 
 fn required_text(
@@ -99,7 +105,9 @@ fn duck(
         .and_then(|t| doc.decoded_string(t))
         .and_then(|b| String::from_utf8(b).ok())
         .filter(|s| !s.is_empty() && s.len() <= 128);
-    let amount = doc.object_get(token, b"amountDb").and_then(|t| number(doc, t));
+    let amount = doc
+        .object_get(token, b"amountDb")
+        .and_then(|t| number(doc, t));
     match (under, amount) {
         (Some(under), Some(amount_db)) => Ok(Some(DuckSpec { under, amount_db })),
         _ => Err(invalid(tool, "duck", form)),

@@ -54,7 +54,9 @@ impl AudioFeed {
             let asset = AVURLAsset::URLAssetWithURL_options(&url, None);
             let media = AVMediaTypeAudio.ok_or_else(|| native("media type unavailable"))?;
             let tracks = asset.tracksWithMediaType(media);
-            let track = tracks.firstObject().ok_or_else(|| native("source has no track"))?;
+            let track = tracks
+                .firstObject()
+                .ok_or_else(|| native("source has no track"))?;
             let reader = AVAssetReader::assetReaderWithAsset_error(&asset)
                 .map_err(|e| VideoError::Native(e.localizedDescription().to_string()))?;
             let read_settings = dict(&[
@@ -85,7 +87,12 @@ impl AudioFeed {
                 Some(&write_settings),
             );
             input.setExpectsMediaDataInRealTime(false);
-            Ok(Self { reader, output, input, done: false })
+            Ok(Self {
+                reader,
+                output,
+                input,
+                done: false,
+            })
         }
     }
 
@@ -113,7 +120,8 @@ impl AudioFeed {
                         }
                     }
                     None => {
-                        if self.reader.status() == objc2_av_foundation::AVAssetReaderStatus::Failed {
+                        if self.reader.status() == objc2_av_foundation::AVAssetReaderStatus::Failed
+                        {
                             return Err(native("read failed"));
                         }
                         self.input.markAsFinished();

@@ -87,7 +87,9 @@ impl SourceError {
 
 fn document_dir(app: &AppDocument) -> Result<PathBuf, &'static str> {
     let path = app.path().ok_or(NEEDS_SAVE)?;
-    let parent = Path::new(OsStr::from_bytes(path)).parent().ok_or(NEEDS_SAVE)?;
+    let parent = Path::new(OsStr::from_bytes(path))
+        .parent()
+        .ok_or(NEEDS_SAVE)?;
     std::fs::canonicalize(parent).map_err(|_| NEEDS_SAVE)
 }
 
@@ -124,7 +126,10 @@ fn locate(
 
 fn read_bounded(path: &Path) -> Result<Vec<u8>, SourceError> {
     let file = File::open(path).map_err(|_| SourceError::Message(NOT_FOUND))?;
-    let len = file.metadata().map_err(|_| SourceError::Message(NOT_FOUND))?.len();
+    let len = file
+        .metadata()
+        .map_err(|_| SourceError::Message(NOT_FOUND))?
+        .len();
     if len > MAX_FILE_BYTES as u64 {
         return Err(SourceError::Audio(AudioError::TooLarge));
     }
@@ -220,7 +225,10 @@ fn track_json(t: &AudioTrack) -> String {
 }
 
 fn duck(spec: DuckSpec) -> Duck {
-    Duck { under: spec.under, amount_db: spec.amount_db }
+    Duck {
+        under: spec.under,
+        amount_db: spec.amount_db,
+    }
 }
 
 pub(crate) fn apply(

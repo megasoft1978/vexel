@@ -8,10 +8,10 @@ use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
 use std::path::PathBuf;
 use std::sync::Arc;
+use vexel_platform_apple::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
 use vexel_timeline::audio::AudioTrack;
 use vexel_timeline::audio_codec::{self, Pcm};
 use vexel_timeline::audio_mix::{MixError, frames_for_ticks, mixdown};
-use vexel_platform_apple::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
 
 /// Most frames one video export may contain; longer loops keep every
 /// `stride`-th tick (the same rule the GIF export uses).
@@ -196,17 +196,20 @@ impl NativeExportSource {
             }
             _ => None,
         };
-        let created = VideoWriter::create_with_audio(VideoSpec {
-            path: req.path.clone(),
-            width,
-            height,
-            codec: req.codec,
-            timescale: tps as i32,
-            background: req.background,
-            alpha: req.alpha,
-            bit_rate: Some(bit_rate),
-            quality: Some(quality),
-        }, scratch.as_deref());
+        let created = VideoWriter::create_with_audio(
+            VideoSpec {
+                path: req.path.clone(),
+                width,
+                height,
+                codec: req.codec,
+                timescale: tps as i32,
+                background: req.background,
+                alpha: req.alpha,
+                bit_rate: Some(bit_rate),
+                quality: Some(quality),
+            },
+            scratch.as_deref(),
+        );
         let result = created.map_err(NativeVideoError::from).and_then(|writer| {
             self.append_frames(writer, &ticks, &view, width, height, geometry, stride)
         });

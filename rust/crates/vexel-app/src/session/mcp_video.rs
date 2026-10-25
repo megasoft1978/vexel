@@ -90,17 +90,20 @@ pub(super) fn export_video(
         load: &mut load,
         scratch_wav: temp.with_extension("audio.wav"),
     });
-    let result = native.export_video_with_audio(&NativeVideoRequest {
-        path: temp.clone(),
-        codec: request.codec,
-        size: request.size,
-        background: request.background,
-        alpha: request.alpha,
-        bit_rate: request.bit_rate,
-        quality: request.quality,
-        fps: request.fps,
-        loops: request.loops,
-    }, audio);
+    let result = native.export_video_with_audio(
+        &NativeVideoRequest {
+            path: temp.clone(),
+            codec: request.codec,
+            size: request.size,
+            background: request.background,
+            alpha: request.alpha,
+            bit_rate: request.bit_rate,
+            quality: request.quality,
+            fps: request.fps,
+            loops: request.loops,
+        },
+        audio,
+    );
     let video = match result {
         Ok(video) => video,
         Err(error) => {

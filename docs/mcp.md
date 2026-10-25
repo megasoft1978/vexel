@@ -119,6 +119,32 @@ Claude Desktop:
 }
 ```
 
+### Audio
+
+`audio_add_track`, `audio_set` and `audio_list` keep up to 64 audio tracks in the
+native timeline (root `audio` array of the `.vexel` timeline JSON), so they save,
+reopen, undo and redo with it. Each track has `trackId`, `kind` (`voice`, `sfx`,
+`music`), `path`, `startTick`, `trimInMs`/`trimOutMs`, `gainDb` (-120 to 24),
+`fadeInTicks`/`fadeOutTicks` (linear), `loop` and an optional
+`duck: {under, amountDb}` (`under` is a track id or a kind; -60 to 0 dB while it
+is audible). `audio_set` changes any of these (`trimOutMs: 0` and
+`clearDuck: true` clear), moves a clip with `startTick`, or deletes it with
+`remove: true`.
+
+Sources are WAV, AIFF/AIFC or CAF PCM (16/24/32-bit integer or 32-bit float, mono
+or stereo, 8-192 kHz), at most 10 minutes and 256 MiB. The document must be saved
+first: `path` is relative to the saved document's directory (an absolute path
+inside it is accepted) and is stored relative. Every use re-resolves it through
+the grant policy and requires a regular, granted file still inside the document
+directory after symlinks are resolved. Bad headers, truncated data, unsupported
+encodings and oversize files are rejected with a typed message and change nothing.
+
+`export_animation` mp4/mov with audio tracks mixes them (deterministic linear
+resampling, trim, loop, gain, fades, envelope ducking, then a look-ahead peak
+limiter) to 48 kHz stereo and muxes AAC (128 kbit/s) for the video's length; the
+export stays synchronous. Loops of the video do not repeat the audio. Without audio
+tracks the export path is unchanged. A GIF/APNG/frames export ignores audio.
+
 ## Tools
 
 Live preview advertises document open/close/list/info, tree and element
