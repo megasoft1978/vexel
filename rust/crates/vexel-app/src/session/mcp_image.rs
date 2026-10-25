@@ -22,7 +22,10 @@ const MAX_FILE_BYTES: u64 = 64 * 1024 * 1024;
 /// Longest reply body returned inline.
 const MAX_REPLY: usize = 1024 * 1024;
 const MAX_MASK_PATH_D: usize = 256 * 1024;
+#[cfg(target_os = "macos")]
 const O_NOFOLLOW: i32 = 0x100;
+#[cfg(not(target_os = "macos"))]
+const O_NOFOLLOW: i32 = 0o400000;
 /// Source bytes one added `<path>` costs besides its data.
 const ELEMENT_OVERHEAD: usize = 160;
 
@@ -156,8 +159,42 @@ fn write_new(policy: &AccessPolicy, out: &str, png: &[u8]) -> Result<String, &'s
     if std::fs::symlink_metadata(&target).is_ok() {
         return Err("image output file already exists; choose a new file name");
     }
-    super::mcp_png::write_atomic(&target, png)?;
+    link_new_file(&target, png)?;
     Ok(target.to_string_lossy().into_owned())
+}
+
+/// Writes a temporary sibling, then hard-links it to `target` (which fails if
+/// the target appeared since the check) and removes the temporary.
+fn link_new_file(target: &std::path::Path, bytes: &[u8]) -> Result<(), &'static str> {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
+    let failed = "file operation failed";
+    let name = target
+        .file_name()
+        .and_then(std::ffi::OsStr::to_str)
+        .ok_or(failed)?;
+    let temp = target.with_file_name(format!(
+        ".{name}.vexel-img-{}-{}",
+        std::process::id(),
+        COUNTER.fetch_add(1, Ordering::Relaxed)
+    ));
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temp)
+        .map_err(|_| failed)?;
+    let written = file.write_all(bytes).and_then(|()| file.sync_all());
+    drop(file);
+    let linked = written.and_then(|()| std::fs::hard_link(&temp, target));
+    let _ = std::fs::remove_file(&temp);
+    linked.map_err(|e| {
+        if e.kind() == std::io::ErrorKind::AlreadyExists {
+            "image output file already exists; choose a new file name"
+        } else {
+            failed
+        }
+    })
 }
 
 fn encode(width: usize, height: usize, rgba: &[u8]) -> Result<Vec<u8>, &'static str> {
@@ -315,6 +352,15 @@ fn image_segment(policy: &AccessPolicy, spec: SegmentSpec) -> Result<McpOutcome,
         stats.bbox[2],
         stats.bbox[3]
     );
+    if spec.trace {
+        let opts = TraceOptions::default();
+        let (d, _) =
+            trace::trace(&mask.bits, mask.width, mask.height, &opts).map_err(trace_error)?;
+        if d.len() > MAX_MASK_PATH_D {
+            return Err("image mask outline too large to return; use outMask instead of trace");
+        }
+        body.push_str(&format!(",\"d\":\"{d}\""));
+    }
     if let Some(out) = &spec.out_mask {
         let rgba: Vec<u8> = mask
             .bits
@@ -329,15 +375,6 @@ fn image_segment(policy: &AccessPolicy, spec: SegmentSpec) -> Result<McpOutcome,
             .collect();
         let written = write_new(policy, out, &encode(mask.width, mask.height, &rgba)?)?;
         body.push_str(&format!(",\"maskPath\":{}", json_string(&written)));
-    }
-    if spec.trace {
-        let opts = TraceOptions::default();
-        let (d, _) =
-            trace::trace(&mask.bits, mask.width, mask.height, &opts).map_err(trace_error)?;
-        if d.len() > MAX_MASK_PATH_D {
-            return Err("image mask outline too large to return; use outMask instead of trace");
-        }
-        body.push_str(&format!(",\"d\":\"{d}\""));
     }
     body.push('}');
     reply(body)

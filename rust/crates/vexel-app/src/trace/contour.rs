@@ -71,7 +71,14 @@ pub fn loops(
                 if out.len() >= max_loops {
                     return None;
                 }
-                out.push(follow(&g, &mut seen, vw, (vx as i32, vy as i32), d, steps_left)?);
+                out.push(follow(
+                    &g,
+                    &mut seen,
+                    vw,
+                    (vx as i32, vy as i32),
+                    d,
+                    steps_left,
+                )?);
             }
         }
     }

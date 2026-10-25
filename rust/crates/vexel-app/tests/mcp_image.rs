@@ -354,3 +354,18 @@ fn oversized_layer_path_is_rejected_and_leaves_the_document_unchanged() {
     );
     assert_eq!(rig.state(), before);
 }
+
+#[test]
+fn existing_output_is_never_replaced() {
+    let dir = Dir::new();
+    let path = disc_png(&dir, "disc.png");
+    fs::write(dir.file("taken.png"), b"keep").unwrap();
+    let mut rig = rig(&dir);
+    let args = format!(
+        r#""path":{},"seeds":[[48,48]],"outMask":{}"#,
+        quoted(&path),
+        quoted(&dir.text("taken.png"))
+    );
+    assert!(rig.doc_tool("image_segment", &args).is_error);
+    assert_eq!(fs::read(dir.file("taken.png")).unwrap(), b"keep");
+}
