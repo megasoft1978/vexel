@@ -275,13 +275,17 @@ pub fn switch_child_matches(
     language: &[u8],
     control: &mut dyn WorkControl,
 ) -> Result<bool> {
-    for name in [b"requiredFeatures".as_slice(), b"requiredExtensions"] {
-        if let Some(v) = attribute(source, tokens, element, name, None) {
-            return Err(Diagnostic {
-                kind: ErrorKind::Unsupported,
-                offset: v.offset,
-            });
-        }
+    if let Some(v) = attribute(source, tokens, element, b"requiredFeatures", None) {
+        return Err(Diagnostic {
+            kind: ErrorKind::Unsupported,
+            offset: v.offset,
+        });
+    }
+    // SVG 1.1 conditional processing: a requiredExtensions URI is true only
+    // when the user agent supports that extension. This one supports none, so
+    // the child never matches (Illustrator `foreignObject` fallbacks).
+    if attribute(source, tokens, element, b"requiredExtensions", None).is_some() {
+        return Ok(false);
     }
     let Some(v) = attribute(source, tokens, element, b"systemLanguage", None) else {
         return Ok(true);

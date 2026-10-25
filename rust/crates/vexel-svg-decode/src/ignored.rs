@@ -8,8 +8,19 @@ use vexel_xml::{TokenKind, XmlSpan, XmlToken};
 #[derive(Debug, Default)]
 pub struct IgnoredSink {
     pub records: [Ignored; 4],
+    background_input: Option<bool>,
 }
 impl IgnoredSink {
+    /// `enable-background` only affects rendering through the deprecated
+    /// `BackgroundImage`/`BackgroundAlpha` filter inputs; without either in the
+    /// document it is inert. Scanned once per document.
+    fn uses_background_input(&mut self, source: &[u8]) -> bool {
+        *self.background_input.get_or_insert_with(|| {
+            [&b"BackgroundImage"[..], b"BackgroundAlpha"]
+                .iter()
+                .any(|n| source.windows(n.len()).any(|w| w == *n))
+        })
+    }
     pub fn note(&mut self, kind: IgnoredKind, offset: usize) -> Result<()> {
         let r = &mut self.records[kind as usize];
         r.count = r.count.checked_add(1).ok_or(Diagnostic {
@@ -270,7 +281,9 @@ pub fn attributes_supported(
             return Ok(false);
         }
         let writing = eq(source, a.local_name, b"writing-mode");
-        if !writing && affects_rendering(source, a.local_name) {
+        let inert_background =
+            eq(source, a.local_name, b"enable-background") && !sink.uses_background_input(source);
+        if !writing && !inert_background && affects_rendering(source, a.local_name) {
             return Ok(false);
         }
         if eq(source, a.local_name, b"xmlns") {

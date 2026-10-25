@@ -174,6 +174,20 @@ pub fn decode_base64(
 ) -> Result<Vec<u8>> {
     let bytes = valid_span(source, payload)
         .ok_or_else(|| fail(ErrorKind::InvalidArgument, payload.offset))?;
+    // Line-wrapped payloads (Adobe, Inkscape) carry ASCII whitespace; like the
+    // data-URL decoders in browsers, ignore it. Error offsets then refer to the
+    // whitespace-free positions within the payload.
+    let cleaned: Vec<u8>;
+    let bytes = if bytes.iter().any(u8::is_ascii_whitespace) {
+        cleaned = bytes
+            .iter()
+            .copied()
+            .filter(|b| !b.is_ascii_whitespace())
+            .collect();
+        &cleaned[..]
+    } else {
+        bytes
+    };
     if bytes.is_empty() || bytes.len() > MAX_IMAGE_URI_BYTES || bytes.len() % 4 != 0 {
         return Err(fail(ErrorKind::Limit(LimitKind::Images), payload.offset));
     }
@@ -269,7 +283,8 @@ fn parse_data_uri_controlled(
     }
     let comma = comma.ok_or_else(|| fail(ErrorKind::Unsupported, uri.offset))?;
     let mime = match &bytes[..comma] {
-        b"data:image/png;base64" => ImageMime::Png,
+        // An empty media type (Adobe Illustrator output) is content-sniffed by the provider.
+        b"data:image/png;base64" | b"data:;base64" => ImageMime::Png,
         b"data:image/jpeg;base64" => ImageMime::Jpeg,
         _ => return Err(fail(ErrorKind::Unsupported, uri.offset)),
     };

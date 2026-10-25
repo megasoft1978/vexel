@@ -13,6 +13,8 @@ mod stream;
 pub use stream::XmlTokenStream;
 mod utf8_scan;
 mod entity;
+mod attr_entity;
+pub use attr_entity::expand_attribute_entities;
 pub use entity::{EntityTable, MAX_ENTITIES, MAX_ENTITY_DEPTH, MAX_ENTITY_EXPANDED_BYTES, MAX_ENTITY_VALUE_BYTES};
 
 /// XML 1.0 Fifth Edition `Char` production.
@@ -398,3 +400,5 @@ fn is_reader_name_byte(byte: u8) -> bool {
 mod tests;
 #[cfg(test)]
 mod entity_tests;
+#[cfg(test)]
+mod attr_entity_tests;
