@@ -9,8 +9,9 @@
 
 use crate::encode::Encoded;
 use crate::layout::{
-    self, EDGE_FIXED_SHIFT, FILL_EVENODD, GpuEdge, GpuStop, PAINT_RADIAL, PAINT_SOLID,
-    SAMPLE_COUNT, SAMPLES_PER_AXIS, SPREAD_PAD, SPREAD_REFLECT, TILE_SIZE,
+    self, EDGE_FIXED_SHIFT, FILL_EVENODD, GpuEdge, GpuStop, GpuStrokePrim, JOIN_MITER, JOIN_ROUND,
+    PAINT_RADIAL, PAINT_SOLID, PRIM_JOIN, SAMPLE_COUNT, SAMPLES_PER_AXIS, SEG_DOT, SEG_DOT_SQUARE,
+    SEG_ROUND_A, SEG_ROUND_B, SHAPE_FILL, SHAPE_STROKE, SPREAD_PAD, SPREAD_REFLECT, TILE_SIZE,
 };
 
 /// Fixed-point distance between neighbouring samples (a quarter pixel).
@@ -38,7 +39,11 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
             for entry in list {
                 let shape = &e.shapes[entry.shape as usize];
                 frames.switch(e, &shape.frames[..shape.frame_count as usize]);
-                let edges = &e.edges[entry.edge_start as usize..][..entry.edge_count as usize];
+                let edges: &[GpuEdge] = if shape.flags & SHAPE_FILL != 0 {
+                    &e.edges[entry.edge_start as usize..][..entry.edge_count as usize]
+                } else {
+                    &[]
+                };
                 let mut masks = [0u16; (TILE_SIZE * TILE_SIZE) as usize];
                 for sr in 0..tile_px * SAMPLES_PER_AXIS as usize {
                     // Tile-local sample row centre.
@@ -73,10 +78,23 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                         }
                     }
                 }
+                let mut stroke_masks = [0u16; (TILE_SIZE * TILE_SIZE) as usize];
+                if shape.flags & SHAPE_STROKE != 0 && entry.prim_count > 0 {
+                    let prims = &e.prims[entry.prim_start as usize..][..entry.prim_count as usize];
+                    stroke_coverage(
+                        &e.header,
+                        shape,
+                        prims,
+                        [x_px0, y_px0],
+                        [x_end, y_end],
+                        &mut stroke_masks,
+                    );
+                }
                 shade(
                     e,
                     shape,
                     &masks,
+                    &stroke_masks,
                     [x_px0, y_px0],
                     [x_end, y_end],
                     frames.top(),
@@ -127,41 +145,53 @@ fn shade(
     e: &Encoded,
     shape: &layout::GpuShape,
     masks: &[u16],
+    stroke_masks: &[u16],
     origin: [usize; 2],
     end: [usize; 2],
     dest: &mut [[u8; 4]],
 ) {
-    let solid = shape.color_rgba.to_le_bytes();
-    let gradient = (shape.paint_kind != PAINT_SOLID).then(|| {
+    let paint = |kind: u32, color: u32, index: u32| {
         (
-            &e.gradients[shape.gradient_index as usize],
-            shape.paint_kind,
+            color.to_le_bytes(),
+            (kind != PAINT_SOLID).then(|| (&e.gradients[index as usize], kind)),
         )
-    });
+    };
+    let (solid, gradient) = paint(shape.paint_kind, shape.color_rgba, shape.gradient_index);
+    let (stroke_solid, stroke_gradient) = paint(
+        shape.stroke_paint_kind,
+        shape.stroke_color_rgba,
+        shape.stroke_gradient_index,
+    );
     for y in origin[1]..end[1] {
         for x in origin[0]..end[0] {
-            let mask = masks[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])];
-            if mask == 0 {
+            let at = (y - origin[1]) * TILE_SIZE as usize + (x - origin[0]);
+            let (mask, smask) = (masks[at], stroke_masks[at]);
+            if mask == 0 && smask == 0 {
                 continue;
             }
             let mut samples = [[0u8; 4]; SAMPLE_COUNT as usize];
             for (i, sample) in samples.iter_mut().enumerate() {
-                if mask & (1 << i) == 0 {
-                    continue;
-                }
-                let color = match gradient {
-                    None => solid,
-                    Some((g, kind)) => {
-                        let (sx, sy) = (i % 4, i / 4);
-                        let fx = x as f32 + layout::SAMPLE_LOCATIONS[sx];
-                        let fy = y as f32 + layout::SAMPLE_LOCATIONS[sy];
-                        match gradient_color(g, kind, &e.stops, fx, fy) {
-                            Some(c) => c,
-                            None => continue,
-                        }
+                for (bits, solid, gradient) in [
+                    (mask, solid, gradient),
+                    (smask, stroke_solid, stroke_gradient),
+                ] {
+                    if bits & (1 << i) == 0 {
+                        continue;
                     }
-                };
-                source_over(sample, color);
+                    let color = match gradient {
+                        None => solid,
+                        Some((g, kind)) => {
+                            let (sx, sy) = (i % 4, i / 4);
+                            let fx = x as f32 + layout::SAMPLE_LOCATIONS[sx];
+                            let fy = y as f32 + layout::SAMPLE_LOCATIONS[sy];
+                            match gradient_color(g, kind, &e.stops, fx, fy) {
+                                Some(c) => c,
+                                None => continue,
+                            }
+                        }
+                    };
+                    source_over(sample, color);
+                }
             }
             let source = resolve_samples(&samples);
             source_over(
@@ -170,6 +200,88 @@ fn shade(
             );
         }
     }
+}
+
+/// Per-pixel stroke coverage masks of one tile entry: bit `sy * 4 + sx` set
+/// when the sample (inside the content rectangle) hits a primitive.
+fn stroke_coverage(
+    header: &layout::GpuSceneHeader,
+    shape: &layout::GpuShape,
+    prims: &[GpuStrokePrim],
+    origin: [usize; 2],
+    end: [usize; 2],
+    masks: &mut [u16],
+) {
+    let r = shape.stroke_width;
+    let m = shape.stroke_m;
+    for y in origin[1]..end[1] {
+        for x in origin[0]..end[0] {
+            for i in 0..SAMPLE_COUNT as usize {
+                let (sx, sy) = (i % 4, i / 4);
+                let (col, row) = ((x * 4 + sx) as u32, (y * 4 + sy) as u32);
+                if col < header.content_x0
+                    || col >= header.content_x1
+                    || row < header.content_y0
+                    || row >= header.content_y1
+                {
+                    continue;
+                }
+                let dx = (x - origin[0]) as f32 + layout::SAMPLE_LOCATIONS[sx];
+                let dy = (y - origin[1]) as f32 + layout::SAMPLE_LOCATIONS[sy];
+                let (lx, ly) = (m[0] * dx + m[2] * dy, m[1] * dx + m[3] * dy);
+                if prims.iter().any(|p| prim_hit(p, r, lx, ly)) {
+                    masks[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])] |= 1 << i;
+                }
+            }
+        }
+    }
+}
+
+/// The CPU's `within`: squared distance against the squared radius.
+fn within(dx: f32, dy: f32, r: f32) -> bool {
+    dx * dx + dy * dy <= r * r
+}
+
+/// The CPU's `in_triangle` (boundary inclusive, orientation independent).
+fn in_triangle(p: [f32; 2], a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> bool {
+    let d1 = (p[0] - b[0]) * (a[1] - b[1]) - (a[0] - b[0]) * (p[1] - b[1]);
+    let d2 = (p[0] - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (p[1] - c[1]);
+    let d3 = (p[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (p[1] - a[1]);
+    let neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
+    let pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
+    !(neg && pos)
+}
+
+/// Hit test of one primitive at the local offset `(px, py)` from the tile's
+/// base (`vexel-render` `export.rs` `segment_hit` / `join_hit` in `f32`).
+pub fn prim_hit(p: &GpuStrokePrim, r: f32, px: f32, py: f32) -> bool {
+    let w = &p.w;
+    if p.kind & PRIM_JOIN != 0 {
+        if !(px >= w[8] && px <= w[10] && py >= w[9] && py <= w[11]) {
+            return false;
+        }
+        let (v, p1, m, p2) = ([w[0], w[1]], [w[2], w[3]], [w[4], w[5]], [w[6], w[7]]);
+        let at = [px, py];
+        return match p.kind & 0xff {
+            JOIN_ROUND => within(px - v[0], py - v[1], r),
+            JOIN_MITER => in_triangle(at, v, p1, m) || in_triangle(at, v, m, p2),
+            _ => in_triangle(at, v, p1, p2),
+        };
+    }
+    let (ax, ay) = (w[6], w[7]);
+    if p.kind & SEG_DOT != 0 {
+        let (dx, dy) = (px - ax, py - ay);
+        if p.kind & (SEG_ROUND_A | SEG_ROUND_B) != 0 {
+            return within(dx, dy, r);
+        }
+        return p.kind & SEG_DOT_SQUARE != 0 && dx.abs() <= r && dy.abs() <= r;
+    }
+    let (qx, qy) = (px - w[0], py - w[1]);
+    let along = qx * w[2] + qy * w[3];
+    let across = (qx * w[3] - qy * w[2]).abs();
+    (along >= w[4] && along <= w[5] && across <= r)
+        || (p.kind & SEG_ROUND_A != 0 && within(px - ax, py - ay, r))
+        || (p.kind & SEG_ROUND_B != 0 && within(px - w[8], py - w[9], r))
 }
 
 type TilePixels = [[u8; 4]; (TILE_SIZE * TILE_SIZE) as usize];

@@ -4,7 +4,7 @@
 use crate::encode::Encoded;
 use crate::layout::{
     GpuClip, GpuEdge, GpuGradient, GpuGroup, GpuSceneHeader, GpuShape, GpuStop, GpuTile,
-    GpuTileEntry,
+    GpuStrokePrim, GpuTileEntry,
 };
 
 fn u(out: &mut Vec<u8>, v: u32) {
@@ -47,7 +47,7 @@ pub fn header_bytes(h: &GpuSceneHeader) -> Vec<u8> {
 }
 
 pub fn shape_bytes(shapes: &[GpuShape]) -> Vec<u8> {
-    let mut o = Vec::with_capacity(shapes.len() * 88);
+    let mut o = Vec::with_capacity(shapes.len() * 120);
     for s in shapes {
         s.bbox.iter().for_each(|v| f(&mut o, *v));
         u(&mut o, s.z);
@@ -68,6 +68,24 @@ pub fn shape_bytes(shapes: &[GpuShape]) -> Vec<u8> {
             u(&mut o, v);
         }
         s.frames.iter().for_each(|v| u(&mut o, *v));
+        for v in [
+            s.flags,
+            s.stroke_paint_kind,
+            s.stroke_color_rgba,
+            s.stroke_gradient_index,
+        ] {
+            u(&mut o, v);
+        }
+        s.stroke_m.iter().for_each(|v| f(&mut o, *v));
+    }
+    o
+}
+
+pub fn prim_bytes(prims: &[GpuStrokePrim]) -> Vec<u8> {
+    let mut o = Vec::with_capacity(prims.len() * 64);
+    for p in prims {
+        u(&mut o, p.kind);
+        p.w.iter().for_each(|v| f(&mut o, *v));
     }
     o
 }
@@ -92,9 +110,9 @@ pub fn tile_bytes(tiles: &[GpuTile]) -> Vec<u8> {
 }
 
 pub fn list_bytes(list: &[GpuTileEntry]) -> Vec<u8> {
-    let mut o = Vec::with_capacity(list.len() * 12);
+    let mut o = Vec::with_capacity(list.len() * 20);
     for e in list {
-        for v in [e.shape, e.edge_start, e.edge_count] {
+        for v in [e.shape, e.edge_start, e.edge_count, e.prim_start, e.prim_count] {
             u(&mut o, v);
         }
     }
@@ -144,8 +162,8 @@ pub fn clip_bytes(clips: &[GpuClip]) -> Vec<u8> {
 
 impl Encoded {
     /// Byte buffers in upload order: header, shapes, edges, tiles, tile list,
-    /// gradients, stops, groups, clips.
-    pub fn buffers(&self) -> [Vec<u8>; 9] {
+    /// gradients, stops, groups, clips, stroke primitives.
+    pub fn buffers(&self) -> [Vec<u8>; 10] {
         [
             header_bytes(&self.header),
             shape_bytes(&self.shapes),
@@ -156,6 +174,7 @@ impl Encoded {
             stop_bytes(&self.stops),
             group_bytes(&self.groups),
             clip_bytes(&self.clips),
+            prim_bytes(&self.prims),
         ]
     }
 }
@@ -186,10 +205,10 @@ mod tests {
         let e = encode(&scene).unwrap();
         let b = e.buffers();
         assert_eq!(b[0].len(), 80);
-        assert_eq!(b[1].len(), 88);
+        assert_eq!(b[1].len(), 120);
         assert_eq!(b[2].len(), 16 * e.edges.len());
         assert_eq!(b[3].len(), 8 * e.tiles.len());
-        assert_eq!(b[4].len(), 12 * e.tile_list.len());
+        assert_eq!(b[4].len(), 20 * e.tile_list.len());
         assert_eq!(&b[0][..4], &0x5658_4C31u32.to_le_bytes());
         // z at offset 16, edge_start at 40 (layout key offsets).
         assert_eq!(&b[1][16..20], &0u32.to_le_bytes());

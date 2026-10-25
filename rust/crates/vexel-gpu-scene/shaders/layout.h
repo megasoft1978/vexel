@@ -6,7 +6,7 @@
 #define VEXEL_GPU_LAYOUT_H
 
 #define VX_LAYOUT_MAGIC 0x56584C31
-#define VX_LAYOUT_VERSION 7
+#define VX_LAYOUT_VERSION 8
 #define VX_TILE_SIZE 16
 #define VX_SAMPLES_PER_AXIS 4
 #define VX_SAMPLE_COUNT 16
@@ -14,7 +14,7 @@
 #define VX_MAX_COORDINATE 16384
 #define VX_MAX_SHAPES 262144
 #define VX_MAX_EDGES 4194304
-#define VX_MAX_TILE_LIST 8388608
+#define VX_MAX_TILE_LIST 6291456
 #define VX_MAX_GRADIENTS 65536
 #define VX_MAX_STOPS 262144
 #define VX_MAX_GROUP_DEPTH 4
@@ -30,6 +30,19 @@
 #define VX_SPREAD_PAD 0
 #define VX_SPREAD_REFLECT 1
 #define VX_SPREAD_REPEAT 2
+#define VX_MAX_STROKE_PRIMS 2097152
+#define VX_MAX_TILE_PRIMS 4096
+#define VX_SHAPE_FILL 1
+#define VX_SHAPE_STROKE 2
+#define VX_PRIM_SEG 0x100
+#define VX_PRIM_JOIN 0x200
+#define VX_SEG_ROUND_A 1
+#define VX_SEG_ROUND_B 2
+#define VX_SEG_DOT 4
+#define VX_SEG_DOT_SQUARE 8
+#define VX_JOIN_ROUND 1
+#define VX_JOIN_TRIANGLE 2
+#define VX_JOIN_MITER 3
 
 // Sample centres within a pixel, per axis (vexel-render SAMPLE_LOCATIONS).
 constant float VX_SAMPLE_LOCATIONS[4] = {0.125f, 0.375f, 0.625f, 0.875f};
@@ -73,6 +86,11 @@ struct GpuShape {
     uint group_depth;
     uint frame_count;
     uint frames[5];
+    uint flags;
+    uint stroke_paint_kind;
+    uint stroke_color_rgba;
+    uint stroke_gradient_index;
+    float stroke_m[4];
 };
 
 struct GpuGroup {
@@ -95,6 +113,13 @@ struct GpuTileEntry {
     uint shape;
     uint edge_start;
     uint edge_count;
+    uint prim_start;
+    uint prim_count;
+};
+
+struct GpuStrokePrim {
+    uint kind;
+    float w[15];
 };
 
 struct GpuGradient {

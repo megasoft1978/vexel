@@ -20,8 +20,10 @@ pub enum UnsupportedReason {
     TooManyGradientStops,
     /// Canvas larger than the GPU path's texture or buffer budget.
     CanvasTooLarge,
-    /// Stroked shape; supported by a later lane.
+    /// Unused since layout version 8 (strokes render on the GPU).
     Strokes,
+    /// Stroke primitives exceed the pool, per-tile or work budget.
+    TooManyStrokePrims,
     /// Opacity group; supported by a later lane.
     Groups,
     /// Clipped shape within the layout budgets; supported by the clip lane.

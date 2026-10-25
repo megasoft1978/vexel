@@ -12,9 +12,20 @@
 //! `GpuGradient[gradient_count]`, `GpuStop[stop_count]`,
 //! `GpuClip[clip_count]` (child records, see [`GpuClip`]).
 //!
-//! Strokes are expanded to filled polygons on the CPU (non-zero union), so a
-//! shape is always an edge list plus a fill rule. `stroke_width` is
-//! informational (0 for fills).
+//! A shape has an optional fill (an edge list plus a rule) and an optional
+//! stroke, evaluated exactly as the CPU does: per sample, a hit test against
+//! stroke primitives ([`GpuStrokePrim`]: segments with caps and precomputed
+//! joins), not polygon expansion. Per sample the fill is composited first and
+//! the stroke over it, then the 16 samples resolve once (CPU `paint_sample`).
+//!
+//! Stroke primitives are stored per tile entry (like edges) in `f32`,
+//! relative to the stroke-local position `base` of the tile origin (computed
+//! in `f64`). The sample `d = (dx, dy)` (pixels from the tile origin, exact
+//! in `f32`) is at the local offset `(m0*dx + m2*dy, m1*dx + m3*dy)` from
+//! `base`, where `m = GpuShape::stroke_m` is the device-to-local linear part.
+//! Segment records carry the foot of the tile centre on the segment, its unit
+//! direction and the `along` range, so no large coordinates or divisions enter
+//! the `f32` hit test. `GpuShape::stroke_width` is the stroke radius.
 //!
 //! Edge coordinates are fixed point with [`EDGE_FIXED_SHIFT`] fractional
 //! bits, relative to the origin of the tile whose entry owns them (exact
@@ -32,7 +43,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 7;
+pub const LAYOUT_VERSION: u32 = 8;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -50,7 +61,7 @@ pub const MAX_COORDINATE: u32 = 16_384;
 pub const MAX_SHAPES: u32 = 262_144;
 pub const MAX_EDGES: u32 = 4_194_304;
 /// Maximum number of [`GpuTileEntry`] records.
-pub const MAX_TILE_LIST: u32 = 8_388_608;
+pub const MAX_TILE_LIST: u32 = 6_291_456;
 pub const MAX_GRADIENTS: u32 = 65_536;
 pub const MAX_STOPS: u32 = 262_144;
 /// Deepest opacity-group nesting the GPU route renders; deeper is CPU only.
@@ -64,6 +75,27 @@ pub const FRAME_RUN: u32 = 0x8000_0000;
 pub const MAX_CLIP_CHAIN: u32 = 4;
 /// Most [`GpuClip`] child records in a scene.
 pub const MAX_CLIP_RECORDS: u32 = 65_536;
+/// Most [`GpuStrokePrim`] records in a scene (128 MiB).
+pub const MAX_STROKE_PRIMS: u32 = 1 << 21;
+/// Most primitives one tile entry may hold; bounds the work of one thread.
+pub const MAX_TILE_PRIMS: u32 = 4096;
+
+/// `GpuShape::flags`: the shape has a fill / a stroke.
+pub const SHAPE_FILL: u32 = 1;
+pub const SHAPE_STROKE: u32 = 2;
+/// `GpuStrokePrim::kind` high part: segment or join. A segment ORs in the
+/// `SEG_*` flags, a join one of the `JOIN_*` kinds.
+pub const PRIM_SEG: u32 = 0x100;
+pub const PRIM_JOIN: u32 = 0x200;
+pub const SEG_ROUND_A: u32 = 1;
+pub const SEG_ROUND_B: u32 = 2;
+/// Zero-length segment (a dot).
+pub const SEG_DOT: u32 = 4;
+/// Zero-length segment with a square cap.
+pub const SEG_DOT_SQUARE: u32 = 8;
+pub const JOIN_ROUND: u32 = 1;
+pub const JOIN_TRIANGLE: u32 = 2;
+pub const JOIN_MITER: u32 = 3;
 
 pub const PAINT_SOLID: u32 = 0;
 pub const PAINT_LINEAR: u32 = 1;
@@ -108,7 +140,7 @@ pub struct GpuSceneHeader {
     pub content_y1: u32,
 }
 
-/// One shape record, 88 bytes.
+/// One shape record, 120 bytes.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct GpuShape {
@@ -142,6 +174,14 @@ pub struct GpuShape {
     /// per-pixel accumulator per open frame, closes (composites into the
     /// parent) the frames the next shape no longer shares, and opens new ones.
     pub frames: [u32; MAX_FRAMES as usize],
+    /// `SHAPE_FILL | SHAPE_STROKE`.
+    pub flags: u32,
+    /// Stroke paint, like `paint_kind` / `color_rgba` / `gradient_index`.
+    pub stroke_paint_kind: u32,
+    pub stroke_color_rgba: u32,
+    pub stroke_gradient_index: u32,
+    /// Device-to-stroke-local linear part `[a, b, c, d]` (`x' = a*x + c*y`).
+    pub stroke_m: [f32; 4],
 }
 
 /// One layered group, 256 bytes: the CPU's per-alpha opacity table
@@ -178,14 +218,35 @@ pub struct GpuTile {
     pub list_count: u32,
 }
 
-/// Tile list entry, 12 bytes: one shape in one tile with that tile's edges
-/// (a range of the edge array, tile-local coordinates, see module docs).
+/// Tile list entry, 20 bytes: one shape in one tile with that tile's edges
+/// (a range of the edge array, tile-local coordinates, see module docs) and
+/// stroke primitives (a range of the primitive array).
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GpuTileEntry {
     pub shape: u32,
     pub edge_start: u32,
     pub edge_count: u32,
+    pub prim_start: u32,
+    pub prim_count: u32,
+}
+
+/// One stroke primitive, 64 bytes, in `f32` relative to the tile's local
+/// `base` (see module docs). `kind` is `PRIM_SEG | SEG_*` or `PRIM_JOIN | JOIN_*`.
+///
+/// Segment `w`: `[fx, fy, ux, uy, lo, hi, ax, ay, bx, by, ..]`: foot point,
+/// unit direction, `along` range (relative to the foot, square caps folded
+/// in), start and end points (for round caps and dots). Hit when
+/// `along = q.u` in `[lo, hi]` and `|q x u| <= r` with `q = p - foot`, or a
+/// round cap disc contains `p`; a dot hits by its disc / square around `a`.
+///
+/// Join `w`: `[vx, vy, p1x, p1y, mx, my, p2x, p2y, bx0, by0, bx1, by1, ..]`:
+/// vertex, triangle corners, miter apex and the hit box.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct GpuStrokePrim {
+    pub kind: u32,
+    pub w: [f32; 15],
 }
 
 /// Gradient record, 48 bytes.
@@ -259,12 +320,16 @@ mod tests {
             (size_of::<GpuSceneHeader>(), align_of::<GpuSceneHeader>()),
             (80, 4)
         );
-        assert_eq!((size_of::<GpuShape>(), align_of::<GpuShape>()), (88, 4));
+        assert_eq!((size_of::<GpuShape>(), align_of::<GpuShape>()), (120, 4));
         assert_eq!((size_of::<GpuEdge>(), align_of::<GpuEdge>()), (16, 4));
         assert_eq!((size_of::<GpuTile>(), align_of::<GpuTile>()), (8, 4));
         assert_eq!(
             (size_of::<GpuTileEntry>(), align_of::<GpuTileEntry>()),
-            (12, 4)
+            (20, 4)
+        );
+        assert_eq!(
+            (size_of::<GpuStrokePrim>(), align_of::<GpuStrokePrim>()),
+            (64, 4)
         );
         assert_eq!(
             (size_of::<GpuGradient>(), align_of::<GpuGradient>()),
@@ -281,6 +346,7 @@ mod tests {
         assert_eq!(offset_of!(GpuShape, edge_start), 40);
         assert_eq!(offset_of!(GpuShape, group_depth), 60);
         assert_eq!(offset_of!(GpuShape, frames), 68);
+        assert_eq!(offset_of!(GpuShape, stroke_m), 104);
         assert_eq!(offset_of!(GpuGradient, spread), 24);
         assert_eq!(offset_of!(GpuClip, union_size), 12);
         assert_eq!(offset_of!(GpuSceneHeader, content_x0), 64);
@@ -299,6 +365,7 @@ mod tests {
         assert!(u64::from(MAX_SHAPES) * size_of::<GpuShape>() as u64 <= 1 << 28);
         assert!(u64::from(MAX_EDGES) * size_of::<GpuEdge>() as u64 <= 1 << 27);
         assert!(u64::from(MAX_TILE_LIST) * size_of::<GpuTileEntry>() as u64 <= 1 << 27);
+        assert!(u64::from(MAX_STROKE_PRIMS) * size_of::<GpuStrokePrim>() as u64 <= 1 << 27);
         assert!(MAX_CLIP_CHAIN <= 4 && MAX_GROUP_DEPTH == 4);
     }
 
@@ -365,7 +432,12 @@ mod tests {
                 clip_count,
                 group_depth,
                 frame_count,
-                frames
+                frames,
+                flags,
+                stroke_paint_kind,
+                stroke_color_rgba,
+                stroke_gradient_index,
+                stroke_m
             ]
         );
         s!(GpuGroup, "GpuGroup", [lut]);
@@ -374,8 +446,9 @@ mod tests {
         s!(
             GpuTileEntry,
             "GpuTileEntry",
-            [shape, edge_start, edge_count]
+            [shape, edge_start, edge_count, prim_start, prim_count]
         );
+        s!(GpuStrokePrim, "GpuStrokePrim", [kind, w]);
         s!(
             GpuGradient,
             "GpuGradient",
@@ -462,7 +535,7 @@ mod tests {
                 Some((k, v))
             })
             .collect();
-        let expect: [(&str, u64); 25] = [
+        let expect: [(&str, u64); 38] = [
             ("LAYOUT_MAGIC", LAYOUT_MAGIC.into()),
             ("LAYOUT_VERSION", LAYOUT_VERSION.into()),
             ("TILE_SIZE", TILE_SIZE.into()),
@@ -488,11 +561,24 @@ mod tests {
             ("SPREAD_PAD", SPREAD_PAD.into()),
             ("SPREAD_REFLECT", SPREAD_REFLECT.into()),
             ("SPREAD_REPEAT", SPREAD_REPEAT.into()),
+            ("MAX_STROKE_PRIMS", MAX_STROKE_PRIMS.into()),
+            ("MAX_TILE_PRIMS", MAX_TILE_PRIMS.into()),
+            ("SHAPE_FILL", SHAPE_FILL.into()),
+            ("SHAPE_STROKE", SHAPE_STROKE.into()),
+            ("PRIM_SEG", PRIM_SEG.into()),
+            ("PRIM_JOIN", PRIM_JOIN.into()),
+            ("SEG_ROUND_A", SEG_ROUND_A.into()),
+            ("SEG_ROUND_B", SEG_ROUND_B.into()),
+            ("SEG_DOT", SEG_DOT.into()),
+            ("SEG_DOT_SQUARE", SEG_DOT_SQUARE.into()),
+            ("JOIN_ROUND", JOIN_ROUND.into()),
+            ("JOIN_TRIANGLE", JOIN_TRIANGLE.into()),
+            ("JOIN_MITER", JOIN_MITER.into()),
         ];
         for (k, v) in &expect {
             assert_eq!(defines.get(k), Some(v), "#define VX_{k}");
         }
-        assert_eq!(defines.len(), 25);
+        assert_eq!(defines.len(), 38);
         assert!(src.contains("{0.125f, 0.375f, 0.625f, 0.875f}"));
     }
 }

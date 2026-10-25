@@ -78,28 +78,59 @@ pub enum GpuCap {
     Square,
 }
 
+/// Join geometry the CPU precomputed (`vexel-render` `export::JoinKind`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GpuJoin {
-    Miter,
+pub enum GpuJoinKind {
+    /// Degenerate or collinear: never hits.
+    Never,
+    /// Disc of the stroke radius around the vertex.
     Round,
-    Bevel,
+    /// Triangle `(vertex, p1, p2)` (bevel, or miter beyond the limit).
+    Triangle,
+    /// Triangles `(vertex, p1, miter)` and `(vertex, miter, p2)`.
+    Miter,
 }
 
-/// Stroke primitive: the centre line is the owning shape's `edges`; the
-/// stroke is evaluated in the space `transform` maps to device space, as the
-/// CPU does. Not rendered yet (`Unsupported(Strokes)`); a later lane expands
-/// it to filled polygons.
+/// One stroke segment in stroke-local space (dashes already applied).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct GpuStrokeSegment {
+    pub a: [f64; 2],
+    pub b: [f64; 2],
+    pub start_cap: GpuCap,
+    pub end_cap: GpuCap,
+}
+
+/// One join in stroke-local space with its exact precomputed hit geometry.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct GpuStrokeJoin {
+    pub vertex: [f64; 2],
+    pub kind: GpuJoinKind,
+    /// Triangle corner `p1` (ignored for `Never` / `Round`).
+    pub p1: [f64; 2],
+    /// Miter apex (only `Miter`).
+    pub miter: [f64; 2],
+    pub p2: [f64; 2],
+    /// Exact hit box `[x0, y0, x1, y1]`; otherwise `|p - vertex| <= join_reach`
+    /// per axis.
+    pub tight: Option<[f64; 4]>,
+}
+
+/// A stroke exactly as the CPU evaluates it: per sample, a hit against
+/// segments and joins in stroke-local space (`vexel-render` `export.rs`
+/// documents the semantics; the app lowers `export_stroke` output). The
+/// sample is mapped to local space with the inverse of `transform`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GpuStroke {
     pub paint: GpuPaint,
-    pub width: f64,
-    pub miter_limit: f64,
-    pub cap: GpuCap,
-    pub join: GpuJoin,
-    pub dashes: Vec<f64>,
-    pub dash_offset: f64,
-    /// Local space -> device space, `[a, b, c, d, e, f]`.
+    /// Half the stroke width.
+    pub radius: f64,
+    /// `radius * miter_limit` for miter joins, else `radius`.
+    pub join_reach: f64,
+    /// Local space -> device space, `[a, b, c, d, e, f]` (shape transform
+    /// composed with the view map).
     pub transform: [f64; 6],
+    pub segments: Vec<GpuStrokeSegment>,
+    pub joins: Vec<GpuStrokeJoin>,
 }
 
 /// One clip path (union of its filled children under one rule) in device

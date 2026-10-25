@@ -22,8 +22,10 @@ use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread
 use crate::layout::{
     self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, GpuClip, GpuEdge, GpuSceneHeader, GpuStop,
     GpuTile, GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, MAX_FRAMES, PAINT_LINEAR, PAINT_RADIAL,
-    PAINT_SOLID, SPREAD_PAD, SPREAD_REFLECT, SPREAD_REPEAT, TILE_SIZE, to_fixed,
+    PAINT_SOLID, SHAPE_FILL, SHAPE_STROKE, SPREAD_PAD, SPREAD_REFLECT, SPREAD_REPEAT, TILE_SIZE,
+    to_fixed,
 };
+use crate::strokes::StrokeBinner;
 use std::time::{Duration, Instant};
 
 const FIXED_ONE: f32 = (1u32 << layout::EDGE_FIXED_SHIFT) as f32;
@@ -40,6 +42,7 @@ pub struct Encoded {
     pub stops: Vec<GpuStop>,
     pub groups: Vec<layout::GpuGroup>,
     pub clips: Vec<GpuClip>,
+    pub prims: Vec<layout::GpuStrokePrim>,
 }
 
 /// Packs straight-alpha RGBA8 little-endian (r in the low byte).
@@ -64,6 +67,7 @@ pub struct Encoder {
     binner: Binner,
     binned: Binned,
     src: Vec<GpuEdge>,
+    strokes: StrokeBinner,
 }
 
 impl Encoder {
@@ -110,16 +114,19 @@ impl Encoder {
         out.stops.clear();
         out.clips.clear();
         out.groups.clear();
+        out.prims.clear();
         let Self {
             binner,
             binned,
             src,
+            strokes,
         } = self;
         binner.reset(tiles_x, tiles_y, clip);
         binner.reserve(stats.tile_entries as usize, stats.tile_entries as usize * 3);
         let mut ctx = Walk {
             binner,
             src,
+            strokes,
             out,
             tiles_x,
             tiles_y,
@@ -173,6 +180,7 @@ impl Encoder {
 struct Walk<'a> {
     binner: &'a mut Binner,
     src: &'a mut Vec<GpuEdge>,
+    strokes: &'a mut StrokeBinner,
     out: &'a mut Encoded,
     tiles_x: u32,
     tiles_y: u32,
@@ -222,16 +230,16 @@ impl Walk<'_> {
     }
 
     fn shape(&mut self, shape: &GpuShape) -> Result<(), GpuError> {
-        let Some(paint) = &shape.fill else {
+        if shape.fill.is_none() && shape.stroke.is_none() {
             return Ok(());
-        };
+        }
         if self.layered && self.run.is_none() {
             let id = FRAME_RUN | self.next_run;
             self.next_run += 1;
             self.run = Some(id);
             self.frames.push(id);
         }
-        self.add(shape, paint)
+        self.add(shape)
     }
 
     fn frames_array(&self) -> [u32; MAX_FRAMES as usize] {
@@ -240,7 +248,7 @@ impl Walk<'_> {
         a
     }
 
-    fn add(&mut self, shape: &GpuShape, paint: &GpuPaint) -> Result<(), GpuError> {
+    fn add(&mut self, shape: &GpuShape) -> Result<(), GpuError> {
         let (frames, frame_count, groups_open) = (
             self.frames_array(),
             self.frames.len() as u32,
@@ -248,49 +256,79 @@ impl Walk<'_> {
         );
         let ctx = self;
         let (src, out) = (&mut *ctx.src, &mut *ctx.out);
-        let paint_ok = match paint {
-            GpuPaint::Solid(rgba) => rgba[3] != 0,
-            GpuPaint::Linear(g) | GpuPaint::Radial(g) => gradient_valid(g),
-        };
-        if !paint_ok {
-            return Ok(());
-        }
-        src.clear();
+        // Fill: quantised edges and the tile range they cover.
         let mut bounds = [i32::MAX, i32::MAX, i32::MIN, i32::MIN];
-        for seg in &shape.edges {
-            let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
-            let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
-                return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
-            };
-            let edge = GpuEdge { x0, y0, x1, y1 };
-            if !spans_sample_row(&edge) {
-                continue;
+        let mut fill: Option<(&GpuPaint, [u32; 4])> = None;
+        src.clear();
+        if let Some(paint) = shape.fill.as_ref().filter(|p| paint_valid(p)) {
+            for seg in &shape.edges {
+                let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
+                let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
+                    return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
+                };
+                let edge = GpuEdge { x0, y0, x1, y1 };
+                if !spans_sample_row(&edge) {
+                    continue;
+                }
+                bounds = [
+                    bounds[0].min(x0.min(x1)),
+                    bounds[1].min(y0.min(y1)),
+                    bounds[2].max(x0.max(x1)),
+                    bounds[3].max(y0.max(y1)),
+                ];
+                src.push(edge);
             }
-            bounds = [
-                bounds[0].min(x0.min(x1)),
-                bounds[1].min(y0.min(y1)),
-                bounds[2].max(x0.max(x1)),
-                bounds[3].max(y0.max(y1)),
-            ];
-            src.push(edge);
+            if !src.is_empty()
+                && let Some(range) = crate::bin::tile_range(bounds, ctx.tiles_x, ctx.tiles_y)
+            {
+                fill = Some((paint, range));
+            }
         }
-        let range = crate::bin::tile_range(bounds, ctx.tiles_x, ctx.tiles_y);
-        let Some(range) = range.filter(|_| !src.is_empty()) else {
+        // Stroke: primitives binned per tile.
+        let mut stroke = None;
+        if let Some(st) = shape.stroke.as_ref().filter(|s| paint_valid(&s.paint)) {
+            if let Some(p) = ctx
+                .strokes
+                .prepare(st, ctx.tiles_x, ctx.tiles_y)
+                .map_err(GpuError::Encode)?
+            {
+                stroke = Some((st, p));
+            }
+        }
+        if fill.is_none() && stroke.is_none() {
             return Ok(());
-        };
-        let (paint_kind, color_rgba, gradient_index) = match paint {
-            GpuPaint::Solid(rgba) => (PAINT_SOLID, pack_rgba(*rgba), u32::MAX),
-            GpuPaint::Linear(g) => (PAINT_LINEAR, 0, push_gradient(out, g)),
-            GpuPaint::Radial(g) => (PAINT_RADIAL, 0, push_gradient(out, g)),
-        };
+        }
+        let mut flags = 0;
+        let (mut paint_kind, mut color_rgba, mut gradient_index) = (PAINT_SOLID, 0, u32::MAX);
+        if let Some((paint, _)) = fill {
+            flags |= SHAPE_FILL;
+            (paint_kind, color_rgba, gradient_index) = encode_paint(out, paint);
+        }
+        let (mut sp_kind, mut sp_color, mut sp_gradient, mut sp_m) =
+            (PAINT_SOLID, 0, u32::MAX, [0.0f32; 4]);
+        let mut shape_box = bounds.map(|v| v as f32 / FIXED_ONE);
+        let mut radius = 0.0f32;
+        if let Some((st, p)) = &stroke {
+            flags |= SHAPE_STROKE;
+            (sp_kind, sp_color, sp_gradient) = encode_paint(out, &st.paint);
+            sp_m = p.m;
+            radius = st.radius as f32;
+            let b = p.bounds.map(|v| v as f32);
+            if fill.is_none() {
+                shape_box = b;
+            } else {
+                shape_box = [
+                    shape_box[0].min(b[0]),
+                    shape_box[1].min(b[1]),
+                    shape_box[2].max(b[2]),
+                    shape_box[3].max(b[3]),
+                ];
+            }
+        }
+        let shape_index = out.shapes.len() as u32;
         out.shapes.push(layout::GpuShape {
-            bbox: [
-                bounds[0] as f32 / FIXED_ONE,
-                bounds[1] as f32 / FIXED_ONE,
-                bounds[2] as f32 / FIXED_ONE,
-                bounds[3] as f32 / FIXED_ONE,
-            ],
-            z: out.shapes.len() as u32,
+            bbox: shape_box,
+            z: shape_index,
             paint_kind,
             color_rgba,
             opacity: 1.0,
@@ -299,25 +337,58 @@ impl Walk<'_> {
             } else {
                 FILL_NONZERO
             },
-            stroke_width: 0.0,
+            stroke_width: radius,
             edge_start: 0,
-            edge_count: src.len() as u32,
+            edge_count: if fill.is_some() { src.len() as u32 } else { 0 },
             gradient_index,
             clip_start: 0,
             clip_count: 0,
             group_depth: groups_open,
             frame_count,
             frames,
+            flags,
+            stroke_paint_kind: sp_kind,
+            stroke_color_rgba: sp_color,
+            stroke_gradient_index: sp_gradient,
+            stroke_m: sp_m,
         });
         let started = ctx.bin_time.is_some().then(Instant::now);
-        let shape_index = out.shapes.len() as u32 - 1;
-        ctx.binner
-            .add_shape(shape_index, src, range)
-            .map_err(GpuError::Encode)?;
+        let first = ctx.binner.pending_len();
+        if let Some((_, range)) = fill {
+            ctx.binner
+                .add_shape(shape_index, src, range)
+                .map_err(GpuError::Encode)?;
+        }
+        let fill_entries = first..ctx.binner.pending_len();
+        if let Some((st, p)) = &stroke {
+            let binner = &mut *ctx.binner;
+            ctx.strokes
+                .emit(st, p, ctx.tiles_x, &mut out.prims, |tile, start, count| {
+                    binner.add_prims(shape_index, fill_entries.clone(), tile, start, count)
+                })
+                .map_err(GpuError::Encode)?;
+        }
         if let (Some(t), Some(started)) = (ctx.bin_time.as_deref_mut(), started) {
             *t += started.elapsed();
         }
         Ok(())
+    }
+}
+
+/// True when a paint can colour a sample (not fully transparent, valid gradient).
+fn paint_valid(paint: &GpuPaint) -> bool {
+    match paint {
+        GpuPaint::Solid(rgba) => rgba[3] != 0,
+        GpuPaint::Linear(g) | GpuPaint::Radial(g) => gradient_valid(g),
+    }
+}
+
+/// (paint kind, packed colour, gradient index) of a valid paint.
+fn encode_paint(out: &mut Encoded, paint: &GpuPaint) -> (u32, u32, u32) {
+    match paint {
+        GpuPaint::Solid(rgba) => (PAINT_SOLID, pack_rgba(*rgba), u32::MAX),
+        GpuPaint::Linear(g) => (PAINT_LINEAR, 0, push_gradient(out, g)),
+        GpuPaint::Radial(g) => (PAINT_RADIAL, 0, push_gradient(out, g)),
     }
 }
 

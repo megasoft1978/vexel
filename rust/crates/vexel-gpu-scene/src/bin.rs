@@ -295,8 +295,53 @@ impl Binner {
                 shape,
                 edge_start: start as u32,
                 edge_count: (self.edges.len() - start) as u32,
+                prim_start: 0,
+                prim_count: 0,
             },
         ));
+        Ok(())
+    }
+
+    /// Number of entries added so far.
+    pub(crate) fn pending_len(&self) -> usize {
+        self.pending.len()
+    }
+
+    /// Gives the shape's tile `tile` the primitive range `start, count`:
+    /// attaches it to the shape's fill entry among `pending[from..to]`
+    /// (ascending tiles) or adds a stroke-only entry.
+    pub(crate) fn add_prims(
+        &mut self,
+        shape: u32,
+        fill_entries: std::ops::Range<usize>,
+        tile: u32,
+        start: u32,
+        count: u32,
+    ) -> Result<(), UnsupportedReason> {
+        let found = self.pending[fill_entries.clone()]
+            .binary_search_by_key(&tile, |(t, _)| *t);
+        match found {
+            Ok(i) => {
+                let entry = &mut self.pending[fill_entries.start + i].1;
+                entry.prim_start = start;
+                entry.prim_count = count;
+            }
+            Err(_) => {
+                if self.pending.len() >= MAX_TILE_LIST as usize {
+                    return Err(UnsupportedReason::TooManyTileEntries);
+                }
+                self.pending.push((
+                    tile,
+                    GpuTileEntry {
+                        shape,
+                        edge_start: 0,
+                        edge_count: 0,
+                        prim_start: start,
+                        prim_count: count,
+                    },
+                ));
+            }
+        }
         Ok(())
     }
 

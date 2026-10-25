@@ -1,13 +1,15 @@
 //! Capability classification: can the GPU route draw this scene, and within
 //! the layout budgets? The supported set grows lane by lane; today it is solid,
 //! linear and radial fills (any content rectangle, as letterboxed frames) and
-//! opacity groups up to `MAX_GROUP_DEPTH`; no strokes or clips.
+//! opacity groups up to `MAX_GROUP_DEPTH` and strokes (segments, caps, joins,
+//! dashes as exported by the CPU) within the primitive budget; no clips.
 
 use crate::error::{Capability, UnsupportedReason as Reason};
-use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape};
+use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuStroke};
+use crate::strokes;
 use crate::layout::{
     MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
-    MAX_STOPS, MAX_TILE_LIST, TILE_SIZE,
+    MAX_STOPS, MAX_STROKE_PRIMS, MAX_TILE_LIST, TILE_SIZE,
 };
 
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
@@ -43,6 +45,7 @@ pub(crate) struct Stats {
     pub groups: u64,
     pub clip_records: u64,
     pub clip_edge_work: u64,
+    pub stroke_work: u64,
 }
 
 /// Classifies `scene`; `Supported` scenes are guaranteed to encode.
@@ -124,11 +127,14 @@ fn walk(
             }
             GpuNode::Shape(shape) => shape,
         };
-        if shape.stroke.is_some() {
-            return Err(Reason::Strokes);
-        }
         if shape.clips.len() > MAX_CLIP_CHAIN as usize {
             return Err(Reason::ClipChainTooLong);
+        }
+        if let Some(stroke) = &shape.stroke {
+            stroke_budget(stats, stroke, tiles_x, tiles_y)?;
+            if shape.fill.is_none() && !shape.clips.is_empty() {
+                *clipped = true;
+            }
         }
         let Some(paint) = &shape.fill else { continue };
         stats.shapes += 1;
@@ -171,6 +177,35 @@ fn walk(
             clip_budget(stats, shape, tiles)?;
             *clipped = true;
         }
+    }
+    Ok(())
+}
+
+/// Stroke budget: primitives in the pool, and the (tile, primitive) records
+/// the primitives' device boxes bound (each costs one pool record and one
+/// primitive visit per tile thread, the kernel's work).
+fn stroke_budget(
+    stats: &mut Stats,
+    stroke: &GpuStroke,
+    tiles_x: u64,
+    tiles_y: u64,
+) -> Result<(), Reason> {
+    if !strokes::stroke_valid(stroke) || strokes::invert(&stroke.transform).is_none() {
+        return Err(Reason::InvalidScene);
+    }
+    if stroke.segments.len() as u64 + stroke.joins.len() as u64 > u64::from(MAX_STROKE_PRIMS) {
+        return Err(Reason::TooManyStrokePrims);
+    }
+    let Some((_, work, bounds)) = strokes::estimate(stroke, tiles_x as u32, tiles_y as u32) else {
+        return Ok(());
+    };
+    stats.stroke_work += work;
+    if stats.stroke_work > u64::from(MAX_STROKE_PRIMS) {
+        return Err(Reason::TooManyStrokePrims);
+    }
+    stats.tile_entries += tile_count(bounds, tiles_x, tiles_y);
+    if stats.tile_entries > u64::from(MAX_TILE_LIST) {
+        return Err(Reason::TooManyTileEntries);
     }
     Ok(())
 }
@@ -293,7 +328,8 @@ fn tile_count(bounds: [f64; 4], tiles_x: u64, tiles_y: u64) -> u64 {
 mod tests {
     use super::*;
     use crate::input::{
-        GpuCap, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoin, GpuSpread, GpuStroke,
+        GpuCap, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuSpread, GpuStroke,
+        GpuStrokeSegment,
     };
 
     fn square(x: f64, y: f64, s: f64) -> Vec<GpuSegment> {
@@ -352,20 +388,50 @@ mod tests {
 
     #[test]
     fn deferred_features_report_reason() {
-        let mut stroked = fill(square(0.0, 0.0, 4.0));
-        stroked.stroke = Some(GpuStroke {
+        let stroke = |segments: usize| GpuStroke {
             paint: GpuPaint::Solid([0, 0, 0, 255]),
-            width: 1.0,
-            miter_limit: 4.0,
-            cap: GpuCap::Butt,
-            join: GpuJoin::Miter,
-            dashes: Vec::new(),
-            dash_offset: 0.0,
+            radius: 0.5,
+            join_reach: 2.0,
             transform: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-        });
+            segments: vec![
+                GpuStrokeSegment {
+                    a: [1.0, 1.0],
+                    b: [20.0, 5.0],
+                    start_cap: GpuCap::Butt,
+                    end_cap: GpuCap::Round,
+                };
+                segments
+            ],
+            joins: Vec::new(),
+        };
+        let mut stroked = fill(square(0.0, 0.0, 4.0));
+        stroked.stroke = Some(stroke(3));
+        assert_eq!(classify(&scene_with(stroked)), Capability::Supported);
+        // Singular transform and non-finite radius are invalid scenes.
+        let mut bad = fill(Vec::new());
+        let mut st = stroke(1);
+        st.transform = [1.0, 2.0, 2.0, 4.0, 0.0, 0.0];
+        bad.stroke = Some(st);
         assert_eq!(
-            classify(&scene_with(stroked)),
-            Capability::Unsupported(Reason::Strokes)
+            classify(&scene_with(bad)),
+            Capability::Unsupported(Reason::InvalidScene)
+        );
+        // More tile visits than the pool holds: falls back to the CPU.
+        let mut huge = fill(Vec::new());
+        let mut st = stroke(1);
+        st.segments = vec![
+            GpuStrokeSegment {
+                a: [0.0, 0.0],
+                b: [63.0, 63.0],
+                start_cap: GpuCap::Butt,
+                end_cap: GpuCap::Butt,
+            };
+            600_000
+        ];
+        huge.stroke = Some(st);
+        assert_eq!(
+            classify(&scene_with(huge)),
+            Capability::Unsupported(Reason::TooManyStrokePrims)
         );
 
         let mut clipped = fill(square(0.0, 0.0, 4.0));
