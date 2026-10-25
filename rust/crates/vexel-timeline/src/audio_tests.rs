@@ -198,8 +198,8 @@ fn silence_gain_trim_and_start() {
 #[test]
 fn fades_ramp_linearly() {
     let mut t = track("a");
-    t.fade_in_ticks = 12;
-    t.fade_out_ticks = 12;
+    t.fade_in_ticks = 6;
+    t.fade_out_ticks = 6;
     let out = mix(&[t], 48_000, &[const_pcm(0.5, 48_000)]);
     let at = |i: usize| i32::from(out[i * 2]);
     assert_eq!(at(0), 0);
