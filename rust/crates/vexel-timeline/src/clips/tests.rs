@@ -112,3 +112,15 @@ fn names_round_trip() {
     assert_eq!(Clip::parse("blink-body-bob"), Some(Clip::BlinkBob));
     assert_eq!(Clip::parse("dance"), None);
 }
+
+#[test]
+fn tick_clash_keeps_loop_closed() {
+    let tight = ClipParams { start: 4, duration: 3, ..params(ClipMode::Loop, 1) };
+    for clip in Clip::ALL {
+        for track in generate(clip, &tight, &all).unwrap() {
+            assert!(track.keys.windows(2).all(|w| w[0].tick < w[1].tick));
+            assert_eq!(track.keys.last().unwrap().tick, 7);
+            assert_eq!(track.keys.first().unwrap().pose, track.keys.last().unwrap().pose);
+        }
+    }
+}

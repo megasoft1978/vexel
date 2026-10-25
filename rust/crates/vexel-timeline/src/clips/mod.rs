@@ -191,7 +191,8 @@ pub fn generate(
         for i in 0..=total {
             let tick = params.start
                 + ((u64::from(params.duration) * i + total / 2) / total) as u32;
-            if keys.last().is_some_and(|k| k.tick == tick) {
+            // The final sample (i == total) wins a tick clash so a loop ends on its start pose.
+            if i < total && keys.last().is_some_and(|k| k.tick == tick) {
                 continue;
             }
             let j = (i % u64::from(per_cycle)) as u32;
@@ -203,10 +204,14 @@ pub fn generate(
             let pose = clip
                 .pose(role, phase, params.amplitude)
                 .unwrap_or(LocalPose::REST);
-            keys.push(ClipKey {
+            let key = ClipKey {
                 tick,
                 pose: clean(pose),
-            });
+            };
+            match keys.last_mut() {
+                Some(last) if last.tick == tick => *last = key,
+                _ => keys.push(key),
+            }
         }
         out.push(RoleKeys { role, keys });
     }
