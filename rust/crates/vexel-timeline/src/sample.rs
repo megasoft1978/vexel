@@ -83,14 +83,15 @@ fn sample_track<'a>(
     track: TrackView<'a>,
     tick: u32,
 ) -> Result<PropertySample<'a>, DecodeFailure> {
+    let mut cursor = crate::schema::TimelineIterator::default();
     let first = view
-        .item_at(track_index, 0)
+        .item_next(track_index, &mut cursor)
         .ok_or_else(|| failure(Error::InvalidSchema, 0))?;
     let mut lower = first;
     let mut upper = first;
-    for index in 1..track.item_count {
+    for _ in 1..track.item_count {
         let next = view
-            .item_at(track_index, index)
+            .item_next(track_index, &mut cursor)
             .ok_or_else(|| failure(Error::InvalidSchema, 0))?;
         if next.tick > tick {
             upper = next;

@@ -4,7 +4,7 @@
 use crate::bounds::{PixelBounds, shape_bounds};
 use crate::clip::ClipList;
 use crate::clip_rows::{ClipPlan, ClipRows, FULL_MASK};
-use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
+use crate::composite::{SAMPLE_COUNT, resolve_rows, resolve_samples, source_over};
 use crate::dash::Pattern;
 use crate::fill::{Crossings, inside};
 use crate::pattern::{PatternPaint, sample as sample_pattern};
@@ -420,6 +420,15 @@ fn render_band(
         }
         sweep.reset(shape.edges, tables, y_first, y_last)?;
         let table = pass.fill_table.as_ref();
+        // Stroke only: a block of pixels with no candidate primitive paints nothing.
+        let block_skip = pass.prims.is_some()
+            && !pass.fill_visible
+            && pass.fill_pattern.is_none()
+            && pass.stroke_pattern.is_none();
+        // A solid opaque stroke covering a whole pixel decides it, whatever lies below.
+        let opaque_stroke = pass.stroke_pattern.is_none()
+            && shape.stroke_gradient.is_none()
+            && shape.stroke.is_some_and(|s| s.rgba[3] == 255);
         let mut x_terms: Vec<f64> = Vec::new();
         if let Some(table) = table {
             for x in bounds.x_first..=bounds.x_last {
@@ -489,7 +498,22 @@ fn render_band(
             let mut row_pixel: Option<[u8; 4]> = None;
             let mut clip_ready = !has_clip;
             let mut cursors = [[0usize; 2]; SAMPLES_PER_AXIS];
+            let rows_placed = row_in_view.iter().all(|v| *v);
+            let (mut skip_until, mut next_probe) = (0u32, x_first);
             for x in x_first..=x_last {
+                if block_skip && let Some(prims) = pass.prims.as_ref() {
+                    if x < skip_until {
+                        continue;
+                    }
+                    if x >= next_probe {
+                        let end = x.saturating_add(STROKE_BLOCK - 1).min(x_last);
+                        next_probe = end + 1;
+                        if stroke_block_empty(pass, prims, tables, (x, end), &sample_y, &mut candidates) {
+                            skip_until = end + 1;
+                            continue;
+                        }
+                    }
+                }
                 // C samples pattern paint once at the centre of pixels that no
                 // edge touches (see `pattern_boundary`).
                 let center_only = (pass.fill_pattern.is_some() || pass.stroke_pattern.is_some())
@@ -606,6 +630,22 @@ fn render_band(
                         prims.candidates_in(rect, &mut candidates);
                         culled = true;
                         stroke_full = prims.body_covers(&corners, &candidates);
+                        if stroke_full
+                            && opaque_stroke
+                            && mask == FULL_MASK
+                            && rows_placed
+                            && (0..SAMPLES_PER_AXIS).all(|sx| tables.column(x, sx).1)
+                            && let Some(style) = shape.stroke.as_ref()
+                        {
+                            // All 16 samples take the stroke colour: sixteen equal opaque
+                            // samples resolve to it, and it replaces whatever is below.
+                            let offset = (row_base + x as usize) * 4;
+                            let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                                .try_into()
+                                .map_err(|_| RenderError::InvalidGeometry)?;
+                            source_over(pixel, style.rgba);
+                            continue;
+                        }
                         if candidates.is_empty() && !pass.fill_visible {
                             continue;
                         }
@@ -618,6 +658,34 @@ fn render_band(
                     fill_all_in && mask == FULL_MASK && shape.fill_gradient.is_some();
                 if gradient_direct && let Some(prepared) = pass.fill_gradient.flatten() {
                     let base = (x - bounds.x_first) as usize * SAMPLES_PER_AXIS;
+                    // Keys are `x_term + y_term`, and rounded addition is
+                    // monotone: if the table vouches for the whole key range
+                    // of a sample row (of the pixel), all its samples have
+                    // that colour. Four rows resolve like the 16 samples.
+                    if let Some(table) = table
+                        && let Some((x_low, x_high)) = min_max(&x_terms[base..base + SAMPLES_PER_AXIS])
+                        && min_max(&y_terms).is_some()
+                    {
+                        let mut rows = [[0u8; 4]; SAMPLES_PER_AXIS];
+                        let mut all = true;
+                        for (row, y_term) in rows.iter_mut().zip(y_terms) {
+                            match table.lookup_range(x_low + y_term, x_high + y_term) {
+                                Some(color) => *row = color,
+                                None => {
+                                    all = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if all {
+                            let offset = (row_base + x as usize) * 4;
+                            let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                                .try_into()
+                                .map_err(|_| RenderError::InvalidGeometry)?;
+                            source_over(pixel, resolve_rows(&rows));
+                            continue;
+                        }
+                    }
                     for sy in 0..SAMPLES_PER_AXIS {
                         for sx in 0..SAMPLES_PER_AXIS {
                             let slot = &mut samples[sy * SAMPLES_PER_AXIS + sx];
@@ -676,6 +744,44 @@ fn render_band(
         }
     }
     Ok(())
+}
+
+/// Pixels per probe of [`stroke_block_empty`].
+const STROKE_BLOCK: u32 = 8;
+
+/// True when no stroke primitive can touch any pixel of columns `cols`
+/// (inclusive) of the current row. The block's local rectangle holds every
+/// pixel rectangle of the block, so its candidate list holds theirs.
+fn stroke_block_empty(
+    pass: &ShapePass<'_, '_>,
+    prims: &StrokePrims,
+    tables: &AxisTables,
+    cols: (u32, u32),
+    sample_y: &[f64; SAMPLES_PER_AXIS],
+    candidates: &mut Vec<u32>,
+) -> bool {
+    let mut rect = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+    for (x, sx, sy) in [(cols.0, 0, 0), (cols.1, SAMPLES_PER_AXIS - 1, 0), (cols.0, 0, SAMPLES_PER_AXIS - 1), (cols.1, SAMPLES_PER_AXIS - 1, SAMPLES_PER_AXIS - 1)] {
+        let Some(p) = map_local(pass, tables.column(x, sx).0, sample_y[sy]) else {
+            return false;
+        };
+        rect = [rect[0].min(p.x), rect[1].min(p.y), rect[2].max(p.x), rect[3].max(p.y)];
+    }
+    prims.candidates_in(rect, candidates);
+    candidates.is_empty()
+}
+
+/// Smallest and largest of `values`, when all are finite.
+fn min_max(values: &[f64]) -> Option<(f64, f64)> {
+    let (mut low, mut high) = (f64::MAX, f64::MIN);
+    for &v in values {
+        if !v.is_finite() {
+            return None;
+        }
+        low = low.min(v);
+        high = high.max(v);
+    }
+    Some((low, high))
 }
 
 /// Whether the centre of pixel `(x, y)` lies in every clip of the shape.

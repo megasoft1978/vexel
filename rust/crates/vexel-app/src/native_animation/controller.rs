@@ -16,6 +16,8 @@ const DEFAULT_DURATION_TICKS: u32 = 48;
 pub struct NativeAnimationController {
     pub(super) candidate_revision: Option<u64>,
     pub(super) candidate: Option<ProjectTimelineCandidate>,
+    /// Decoded structure of `candidate`'s timeline, valid for the revision it names.
+    pub(super) detached: Option<(u64, vexel_timeline::DetachedTimeline)>,
     pub(super) selected_track: Option<String>,
     pub(super) selected_item_tick: Option<u32>,
     pub(super) selected_target: Option<String>,
@@ -52,6 +54,7 @@ impl NativeAnimationController {
         Self {
             candidate_revision: None,
             candidate: None,
+            detached: None,
             selected_track: None,
             selected_item_tick: None,
             selected_target: None,
@@ -440,4 +443,24 @@ fn available_duplicate_track_id(
         }
     }
     Err(ProjectTimelineError::Limit)
+}
+
+/// `candidate`'s timeline view (`revision` names its document revision); the
+/// JSON decode runs once per revision, later calls re-attach `detached`.
+pub(super) fn cached_view<'a>(
+    candidate: &'a ProjectTimelineCandidate,
+    revision: Option<u64>,
+    detached: &mut Option<(u64, vexel_timeline::DetachedTimeline)>,
+) -> Result<vexel_timeline::TimelineView<'a>, ProjectTimelineError> {
+    if let (Some(revision), Some((cached, shape))) = (revision, detached.as_ref())
+        && revision == *cached
+        && let Some(view) = shape.attach(candidate.timeline_bytes())
+    {
+        return Ok(view);
+    }
+    let view = candidate.view()?;
+    if let Some(revision) = revision {
+        *detached = Some((revision, view.detach()));
+    }
+    Ok(view)
 }

@@ -30,7 +30,11 @@ impl NativeAnimationController {
         }
         let candidate = self.candidate.as_ref().expect("candidate was just loaded");
         let decode = crate::profile::phase("native.snapshot.view");
-        let view = match candidate.view() {
+        let view = match super::controller::cached_view(
+            candidate,
+            self.candidate_revision,
+            &mut self.detached,
+        ) {
             Ok(view) => view,
             Err(error) => {
                 return Ok(self.disabled_snapshot(format!(
