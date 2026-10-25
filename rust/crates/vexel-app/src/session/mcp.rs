@@ -224,6 +224,11 @@ impl McpHost {
                 AudioOp::Envelope(spec) => super::mcp_audio_gen::envelope(app, &self.policy, *spec),
                 op => super::mcp_audio::apply(app, &self.policy, op),
             },
+            Operation::Doc(crate::preview::DocOp::Image(op)) => self.image(app, op),
+            Operation::Doc(crate::preview::DocOp::Import(op)) => self.import(app, op),
+            Operation::Doc(crate::preview::DocOp::Scene(scene)) => {
+                self.scene_apply(app, *scene, driver)
+            }
             Operation::Doc(op) => {
                 crate::preview::native_timeline::mcp_face::route(app, &self.policy, op)
             }

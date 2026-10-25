@@ -12,6 +12,8 @@ pub(crate) const BATCH_MAX_OPS: usize = 256;
 const BATCH_FORBIDDEN: &[&str] = &[
     "batch",
     "document_open",
+    "document_import",
+    "scene_apply",
     "document_close",
     "save",
     "save_as",
@@ -170,6 +172,17 @@ pub(crate) fn request_weight(doc: &JsonDocument<'_>, method: &str, params: Optio
     };
     if doc.string_equals(name, b"audio_generate") {
         return GENERATE_WEIGHT;
+    }
+    if doc.string_equals(name, b"scene_apply") {
+        let count = |member: &[u8]| {
+            doc.object_get(params, b"arguments")
+                .and_then(|args| doc.object_get(args, member))
+                .and_then(|array| doc.token(array))
+                .filter(|t| t.kind == JsonType::Array)
+                .map_or(0, |t| t.child_count)
+        };
+        let items = count(b"elements") + count(b"tracks");
+        return u32::try_from(1 + items / 8).unwrap_or(u32::MAX);
     }
     let member: &[u8] = if doc.string_equals(name, b"batch") {
         b"ops"

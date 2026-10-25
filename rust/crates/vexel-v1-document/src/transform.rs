@@ -5,12 +5,12 @@ use vexel_document_edit::HistoryAction;
 /// optimized Apple builds merge them into `__sincos_stret`, whose `sin` can
 /// differ by one ulp from `f64::sin`. `inline(never)` prevents the merge.
 #[inline(never)]
-fn sin_unpaired(angle: f64) -> f64 {
+pub(crate) fn sin_unpaired(angle: f64) -> f64 {
     angle.sin()
 }
 
 #[inline(never)]
-fn cos_unpaired(angle: f64) -> f64 {
+pub(crate) fn cos_unpaired(angle: f64) -> f64 {
     angle.cos()
 }
 

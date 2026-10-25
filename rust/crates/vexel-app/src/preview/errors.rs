@@ -31,6 +31,7 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
         m if m.starts_with("native_timeline_") => m,
         m if m.starts_with("native timeline ") => m,
         m if m.starts_with("audio") => m,
+        m if m.starts_with("image ") => m,
         m if m.starts_with("batch op ") => m,
         m if m.starts_with("export ") => m,
         m if m.starts_with("render_png ") => m,
@@ -61,6 +62,8 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
 const DOC_TOOL_PREFIXES: &[&str] = &[
     "element_group",
     "element_add_fragment",
+    "document_import",
+    "scene_apply",
     "use_",
     "element_ungroup",
     "element_duplicate",

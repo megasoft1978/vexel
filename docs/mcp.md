@@ -374,6 +374,64 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Image trace, segment and inpaint
+
+`image_trace`, `image_segment` and `image_inpaint` replace the external
+OpenCV/numpy scripts (ADR-0036 B5). They are native Rust, deterministic and take
+no helper. Inputs are PNG files (not interlaced, at most 16 megapixels and 64 MiB,
+no JPEG) read through the grant policy; outputs are new `.png` files in a granted
+directory and are never overwritten. A bad, truncated or oversize PNG is a typed
+error and changes nothing.
+
+- `image_trace {path, k?, minArea?, tolerance?, region?, seed?, groupId?, idPrefix?}`:
+  seeded k-means++ quantisation to `k` colours (1-64, default 16), exact contour
+  following with holes, Bezier fitting within `tolerance` px (0.25-8, default 1.5),
+  one `<path>` per colour, largest colour first (a near-black colour goes last as
+  line art). Each layer is the union of its colour and all colours above it, so
+  neighbouring layers leave no gaps. `minArea` drops smaller outer contours
+  (default pixels/12000, clamped 30-400). With `groupId` (`root` or an existing
+  `<g>`) the paths are added as `<idPrefix>-0..` in ONE undoable edit, within the
+  4096-element and 4 MiB document limits; without it nothing is edited and
+  `paths:[{fill,d}]` is returned. Coordinates are image pixels.
+- `image_segment {path, seeds, include?, exclude?, tolerance?, fillHoles?, outMask?, trace?}`:
+  a colour model learned around the seeds is flood-grown and refined three
+  rounds; `include` polygons confine the mask, `exclude` polygons forbid areas.
+  Returns `{width,height,area,bbox}`; `outMask` writes a black/white PNG, `trace`
+  returns the outline as path data.
+- `image_inpaint {path, maskPath|polygon, outPath}`: fills masked pixels from their
+  surroundings (fast marching, inverse-distance average) into a new PNG underlay.
+  `maskPath` is white (alpha >= 128) where to fill, as written by `outMask`.
+
+Measured on `ref2/shot3_village.png` (1536x1536, k=24, release): 0.61 s, 24 layers,
+3073 contours, 2.3 MB of path data (under the 4 MiB source limit), mean colour
+error 9.3/255 against the source (flat colours cannot show the painted texture).
+## Authoring a scene in one call
+
+`document_import` brings a saved `.vexel` (inside a granted directory) into the
+current document as one group, in one undo step. Every id gets `idPrefix`
+(default: file name plus `_`) together with `href="#id"`, `url(#id)`, clip, mask,
+gradient and filter references, so one file imports many times without clashes.
+The group is named like the prefix without trailing `_-.` and takes
+`transform` `[tx, ty, rotation, sx, sy]`. `includeTimeline` (default true) copies the
+property tracks with prefixed ids and targets (drawing, audio and camera tracks are
+not copied); `includeRig` (default false) merges the file's rig, bone ids prefixed,
+existing roles winning. The scene passes the `element_add_fragment` allow-list:
+scripts, `foreignObject`, `style`, SMIL, `on*` attributes, DOCTYPE entities and
+external references are refused with nothing changed. Limits: 4 MiB source scene,
+4096 elements in the document, not allowed in a `batch`.
+
+`scene_apply` builds a whole scene atomically: `elements` (nested tree; `template`
+rect, ellipse, line, path with the `element_add` members; text, group with `children`,
+use, fragment), `tracks` (as `native_timeline_tracks_set`), `rig` (as `rig_create`),
+`duration` (ticks) and `background`. Everything is validated first, applied as one
+undoable edit and rolled back fully on any error; messages name the member, e.g.
+`scene_apply elements[12].children[3] (path): ...` or `scene_apply tracks[7]: ...`.
+Calls are additive (ids must be new), so a scene beyond the 2 MiB / 65536-token
+request limit is sent as several calls: elements, then tracks, then the rig. The
+request limit was not raised. Not allowed in a `batch`. Speed matches `batch` of
+`element_add` plus `tracks_set` (see docs/PERF.md); the gain is one call, one
+rate-limit charge (1 + (elements + tracks)/8) and an atomic result.
+
 ## Skeletal rigs and clips
 
 `rig_create` (`bones`: 1-128 of `{id, pivot?, parent?}`, optional `roles`
