@@ -325,6 +325,31 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Skeletal rigs and clips
+
+`rig_create` (`bones`: 1-128 of `{id, pivot?, parent?}`, optional `roles`
+`{head, torso, arm_l, arm_r, leg_l, leg_r, tail}` mapping to bone ids) defines
+one rig over existing `<g>` groups. `pivot` is `[x,y]` in the group's own space
+or `"center"` (default, bounds centre now); a `parent` bone's group must contain
+the child's group, so children inherit through the group tree and only local
+values are keyed. Bone ids use `[A-Za-z0-9_-]`. Cycles, unknown ids, non-groups
+and non-finite pivots are rejected. The rig is stored in the document as
+`<desc id="vexel-rig">{json}</desc>` under the root, so it saves, reopens and
+undoes with the file (one undo per call; calling again replaces it).
+
+`rig_pose` (`poses`: 1-256 of `{tick, bones:{id:{rotate?, translate?, scale?}},
+ease?}`, `interpolation?`, `noise?`) writes one `trs` track `rig_<bone>` per bone
+in ONE atomic undoable edit (existing tracks gain/replace keys; at most 16384
+keys; ticks below the timeline duration). Each key is the bone's full local
+pose, omitted parts are rest. `noise` applies to tracks created by the call.
+
+`clip_apply` (`clip`: walk, run, idle, talk_body, blink_bob, wave, jump; `start`,
+`duration` ticks, `loops` 1-64, `speed` 0.25-4, `amplitude` 0-4, `mode`
+loop|pingpong, `ease`) generates deterministic keys per role (needs e.g.
+leg_l/leg_r for walk; torso for idle/jump; head for talk_body/blink_bob; arm_r
+for wave) and writes them through the same path. A loop ends on its first pose.
+Example: `{"clip":"walk","start":0,"duration":48,"loops":2}`.
+
 ## Fragments and `<use>` instances
 
 `element_add_fragment` (`parentId` is `"root"` or any element id, `xml` is one
