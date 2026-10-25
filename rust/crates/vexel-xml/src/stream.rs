@@ -440,6 +440,14 @@ impl<'a> XmlTokenStream<'a> {
     pub fn tokens(&self)->&[XmlToken]{if self.failed||self.canceled{&[]}else{&self.tokens}}
     pub fn take(&mut self)->Option<Vec<XmlToken>>{if self.complete&&!self.failed&&!self.canceled&&!self.visitor_mode&&!self.taken{self.taken=true;Some(core::mem::take(&mut self.tokens))}else{None}}
     pub fn visitor_storage_bytes(&self)->usize{if self.visitor_mode{self.tag_scratch.capacity().saturating_mul(size_of::<XmlToken>())}else{0}}
+    /// Pre-sizes an empty token store for about `tokens` entries in one
+    /// allocation (bounded by the storage limit) instead of doubling through
+    /// several multi-megabyte blocks. A failed hint is ignored.
+    pub fn reserve_token_hint(&mut self,tokens:usize){
+        let want=tokens.min(self.token_capacity);
+        if self.visitor_mode||!self.tokens.is_empty()||want<=self.tokens.capacity(){return}
+        if self.tokens.try_reserve_exact(want).is_err()||self.tokens.capacity()>self.token_capacity{self.tokens=Vec::new()}
+    }
     /// Bytes in the token Vec's retained, observable capacity.
     pub fn token_storage_bytes(&self)->usize{self.tokens.capacity().saturating_mul(size_of::<XmlToken>())}
     /// Bytes in the open-element name stack's retained, observable capacity.

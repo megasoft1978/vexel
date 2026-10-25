@@ -264,7 +264,7 @@ fn compose_owned(
     let frame = Frame {
         width,
         height,
-        rgba: tile.rgba().to_vec(),
+        rgba: tile.into_rgba(),
         disclosures,
     };
     Ok(Composed {

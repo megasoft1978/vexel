@@ -588,6 +588,29 @@ limit (`LimitRender`) rejects larger sizes, so those cases are reported as
 skipped. Deterministic work counters (edge visits, samples, decodes per tick)
 are not collected because they would need counters in the raster crates.
 
+## Memory (`vexel-bench mem`)
+
+Peak RSS is the child's `/usr/bin/time -l` max resident set; heap is the
+counting allocator's live peak. Hashes are unchanged by both fixes.
+
+| scenario | RSS before | RSS after | heap before | heap after |
+|---|---|---|---|---|
+| zoom/400 | 149.2 MB | 85.1 MB | 134.4 MB | 72.0 MB |
+| zoom/1600 | 149.1 MB | 85.0 MB | 134.4 MB | 72.0 MB |
+| journal/200 | 431.2 MB | 49.8 MB | 15.7 MB | 16.2 MB |
+
+- Zoom: `compose_owned` moved the tile buffer into the frame
+  (`Tile::into_rgba`) instead of `to_vec()`, dropping one full-frame copy.
+- Journal: RSS was allocator retention, not live heap. Every edit, undo and
+  piece-table validation re-parsed the whole document, and the token `Vec`
+  doubled through 0.8/1.5/3/6/12 MB blocks each time; libmalloc keeps freed
+  large blocks resident ("Malloc Large (empty)", ~390 MB after 40 edits).
+  `XmlTokenStream::reserve_token_hint` now sizes the token store once
+  (`Cache::build` and `parse_core`), removing the chain. Heap baselines
+  for journal/200 are not lowered (peak heap is +0.5 MB).
+- Rejected: pooling token buffers (kept 6 MB live, no RSS gain) and
+  `shrink_to_fit` after parse (re-created the retained blocks, RSS 446 MB).
+
 ## GPU display rasterizer (ADR-0035)
 
 Kernel `vexel-gpu-scene/shaders/raster.metal` (one 16x16 threadgroup per tile,
@@ -601,14 +624,11 @@ Parity (`cargo test -p vexel-gpu-scene --test gpu_parity`, `VEXEL_REQUIRE_GPU=1`
 - GPU vs the pure-Rust reference (`reference.rs`): byte-equal on every seeded
   scene (solid, linear, radial, mixed; straight and premultiplied output).
 - GPU vs the `vexel-render` CPU rasterizer, 12 seeds at 256 / 900 / 1024 px per
-  paint kind, thresholds frozen in `tests/parity.json`. Worst frame: fill 0.0102%
-  over 2/255, 0.00033% over 16/255, mae 2.1e-6; radial 0.0163%, 0.0005%, 3.6e-6;
-  linear 0.0173%, 0.0059% (two frames above the ADR 0.002%, see below), 7.0e-6.
-- Two linear frames (seeds 305, 310) exceed the ADR over-16 bound (0.0059% vs
-  0.002%): a pentagram whose horizontal edge pair is within 1/4096 px of a
-  sample row, so the encoder's vertex rounding moves a span of about 56 pixels
-  by one sample row. Identical in the reference; listed as capped exceptions in
-  `parity.json`.
+  paint kind, thresholds frozen in `tests/parity.json`. Worst frame: fill 0.0020%
+  over 2/255, 0.00016% over 16/255, mae 1.0e-6; radial 0.0020%, 0%, 6.1e-7;
+  linear 0.0013%, 0%, 2.2e-7 (layout v6, `EDGE_FIXED_SHIFT = 16`; the earlier
+  shift 12 had two linear frames above the ADR over-16 bound, see ADR-0035
+  addendum). No exceptions.
 
 Timing (release, M-series Mac, p50 of 5 runs, 3 for 20000 shapes or 2048 px;
 `cargo test --release -p vexel-gpu-scene --test gpu_parity bench -- --ignored
