@@ -3,14 +3,18 @@
 //! tolerances from `policy`. `-- --nocapture` prints the metrics.
 
 use vexel_gpu_scene::input::{
-    GpuColorStop, GpuGradient, GpuPaint, GpuScene, GpuSegment, GpuSpread,
+    GpuColorStop, GpuGradient, GpuGroup, GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape,
+    GpuSpread,
 };
 use vexel_gpu_scene::policy::{
     PARITY_MEAN_ABS_ERROR_MAX, PARITY_OVER_2_MAX_FRACTION, PARITY_OVER_16_MAX_FRACTION,
 };
 use vexel_gpu_scene::{encode, reference};
 use vexel_raster::Tile;
-use vexel_render::{Affine, FlatEdge, GradientRef, RenderShape, ViewBox, ViewMap, render_shapes};
+use vexel_render::{
+    Affine, FlatEdge, GradientRef, RenderGroup, RenderNode, RenderShape, ViewBox, ViewMap,
+    render_groups, render_shapes,
+};
 use vexel_scene::{Paint, PaintKind, PaintStop, Spread, TableRange};
 
 struct Lcg(u64);
@@ -290,6 +294,21 @@ fn cpu_render_view(
     offset: (f64, f64),
     scale: f64,
 ) -> Vec<u8> {
+    cpu_draw(specs, w, h, vb, offset, scale, &|shapes, view, tile| {
+        render_shapes(shapes, view, tile, &|| false).unwrap()
+    })
+}
+
+/// [`cpu_render_view`] with the drawing step supplied (flat or group tree).
+fn cpu_draw(
+    specs: &[Spec],
+    w: u32,
+    h: u32,
+    vb: ViewBox,
+    offset: (f64, f64),
+    scale: f64,
+    draw: &dyn Fn(&[RenderShape<'_>], ViewMap, &mut Tile),
+) -> Vec<u8> {
     let base = Paint {
         kind: PaintKind::Linear,
         spread: Spread::Pad,
@@ -371,7 +390,7 @@ fn cpu_render_view(
         .collect();
     let view = ViewMap::from_viewbox(vb, w, h, None).unwrap();
     let mut tile = Tile::from_owned_rgba(w, h, vec![0; w as usize * h as usize * 4]).unwrap();
-    render_shapes(&shapes, view, &mut tile, &|| false).unwrap();
+    draw(&shapes, view, &mut tile);
     tile.rgba().to_vec()
 }
 
@@ -545,5 +564,149 @@ fn letterboxed_frames_match_cpu() {
         ];
         let cpu = cpu_render_view(&s, w, h, vb, offset, 2.0);
         check_against(&format!("letterbox seed {seed}"), &s, &scene, &cpu, ADR);
+    }
+}
+
+/// Opacity-group tree over the spec list: leaves are spec indices in order.
+enum Node {
+    Leaf(usize),
+    Group(f64, Vec<Node>),
+}
+
+fn tree(rng: &mut Lcg, next: &mut usize, total: usize, depth: u32, max: u32) -> Vec<Node> {
+    let mut nodes = Vec::new();
+    let budget = 1 + (rng.next() * 6.0) as usize;
+    while *next < total && nodes.len() < budget {
+        if depth < max && rng.next() < 0.45 {
+            let opacity = match (rng.next() * 8.0) as u32 {
+                0 => 1.0,
+                1 => 0.1,
+                _ => (rng.range(0.1, 1.0) * 100.0).round() / 100.0,
+            };
+            let children = tree(rng, next, total, depth + 1, max);
+            nodes.push(Node::Group(opacity, children));
+        } else {
+            nodes.push(Node::Leaf(*next));
+            *next += 1;
+        }
+    }
+    nodes
+}
+
+fn group_tree(seed: u64, total: usize, max: u32) -> Vec<Node> {
+    let mut rng = Lcg(seed ^ 0x9e37);
+    let (mut next, mut out) = (0, Vec::new());
+    while next < total {
+        out.extend(tree(&mut rng, &mut next, total, 0, max));
+    }
+    out
+}
+
+fn gpu_nodes(specs: &[Spec], nodes: &[Node]) -> Vec<GpuNode> {
+    nodes
+        .iter()
+        .map(|n| match n {
+            Node::Leaf(i) => GpuNode::Shape(GpuShape {
+                edges: spec_edges(&specs[*i]),
+                evenodd: specs[*i].evenodd,
+                fill: Some(gpu_paint(&specs[*i])),
+                stroke: None,
+                clips: Vec::new(),
+            }),
+            Node::Group(opacity, c) => GpuNode::Group(GpuGroup {
+                opacity: *opacity,
+                clips: Vec::new(),
+                children: gpu_nodes(specs, c),
+            }),
+        })
+        .collect()
+}
+
+fn cpu_nodes<'a>(shapes: &[RenderShape<'a>], nodes: &[Node]) -> Vec<RenderNode<'a>> {
+    nodes
+        .iter()
+        .map(|n| match n {
+            Node::Leaf(i) => RenderNode::Shape {
+                shape: shapes[*i],
+                clip: None,
+            },
+            Node::Group(opacity, c) => RenderNode::Group(RenderGroup {
+                opacity: *opacity,
+                clip: None,
+                mask: None,
+                children: Box::leak(cpu_nodes(shapes, c).into_boxed_slice()),
+            }),
+        })
+        .collect()
+}
+
+fn group_scene(specs: &[Spec], nodes: &[Node], w: u32, h: u32) -> GpuScene {
+    let mut scene = GpuScene::new(w, h);
+    scene.nodes = gpu_nodes(specs, nodes);
+    scene
+}
+
+fn group_cpu(specs: &[Spec], nodes: &[Node], w: u32, h: u32) -> Vec<u8> {
+    let vb = ViewBox {
+        x: 0.0,
+        y: 0.0,
+        width: f64::from(w),
+        height: f64::from(h),
+    };
+    cpu_draw(specs, w, h, vb, (0.0, 0.0), 1.0, &|shapes, view, tile| {
+        let tree = cpu_nodes(shapes, nodes);
+        render_groups(&tree, view, tile, &|| false).unwrap()
+    })
+}
+
+/// Opacity groups, 1 to 4 levels, opacity 0.1..1.0 (1.0 included: the CPU
+/// flattens it), mixed solid and gradient fills, overlapping children: the
+/// reference meets the ADR-0035 bounds against `render_groups`.
+#[test]
+fn group_scenes_match_cpu_within_adr() {
+    for (k, (seed, count, w, h)) in [
+        (51, 60, 200, 136),
+        (52, 120, 256, 192),
+        (53, 200, 333, 250),
+        (54, 300, 512, 384),
+        (55, 150, 256, 192),
+        (56, 250, 400, 300),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let max_depth = 1 + (k as u32 % 4);
+        let s = specs(seed, count, f64::from(w), f64::from(h));
+        let nodes = group_tree(seed, count, max_depth);
+        let scene = group_scene(&s, &nodes, w, h);
+        let cpu = group_cpu(&s, &nodes, w, h);
+        check_against(&format!("groups seed {seed} depth<={max_depth}"), &s, &scene, &cpu, ADR);
+    }
+}
+
+/// Nesting deeper than the layout's `MAX_GROUP_DEPTH` is a CPU fallback.
+#[test]
+fn deep_groups_fall_back() {
+    let mut node = GpuNode::Shape(GpuShape {
+        edges: closed(&[(1.0, 1.0), (9.0, 1.0), (9.0, 9.0)]),
+        evenodd: false,
+        fill: Some(GpuPaint::Solid([9, 9, 9, 255])),
+        stroke: None,
+        clips: Vec::new(),
+    });
+    for depth in 1..=5 {
+        node = GpuNode::Group(GpuGroup {
+            opacity: 0.5,
+            clips: Vec::new(),
+            children: vec![node],
+        });
+        let mut scene = GpuScene::new(16, 16);
+        scene.nodes = vec![node.clone()];
+        let want = if depth <= 4 {
+            vexel_gpu_scene::Capability::Supported
+        } else {
+            vexel_gpu_scene::Capability::Unsupported(vexel_gpu_scene::UnsupportedReason::GroupTooDeep)
+        };
+        assert_eq!(vexel_gpu_scene::classify(&scene), want, "depth {depth}");
     }
 }

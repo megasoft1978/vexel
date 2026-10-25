@@ -29,7 +29,7 @@ pub mod run;
 mod bench;
 
 pub use bytes::{
-    clip_bytes, edge_bytes, gradient_bytes, header_bytes, list_bytes, shape_bytes, stop_bytes,
+    clip_bytes, group_bytes, edge_bytes, gradient_bytes, header_bytes, list_bytes, shape_bytes, stop_bytes,
     tile_bytes,
 };
 pub use classify::{

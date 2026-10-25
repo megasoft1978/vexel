@@ -1,12 +1,13 @@
 //! Capability classification: can the GPU route draw this scene, and within
 //! the layout budgets? The supported set grows lane by lane; today it is solid,
-//! linear and radial fills (any content rectangle, as letterboxed frames), no strokes,
-//! groups or clips.
+//! linear and radial fills (any content rectangle, as letterboxed frames) and
+//! opacity groups up to `MAX_GROUP_DEPTH`; no strokes or clips.
 
 use crate::error::{Capability, UnsupportedReason as Reason};
 use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape};
 use crate::layout::{
-    MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_SHAPES, MAX_STOPS,
+    MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
+    MAX_STOPS,
     MAX_TILE_LIST, TILE_SIZE,
 };
 
@@ -40,6 +41,7 @@ pub(crate) struct Stats {
     pub stops: u64,
     pub tile_entries: u64,
     pub edge_tile_work: u64,
+    pub groups: u64,
     pub clip_records: u64,
     pub clip_edge_work: u64,
 }
@@ -58,9 +60,63 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
     let tiles_y = u64::from(scene.height.div_ceil(TILE_SIZE));
     let mut stats = Stats::default();
     let mut clipped = false;
-    for node in &scene.nodes {
+    walk(&scene.nodes, 0, [tiles_x, tiles_y], &mut stats, &mut clipped)?;
+    if clipped {
+        // Within every budget, but the clip lane has not landed: CPU renders it.
+        return Err(Reason::Clips);
+    }
+    Ok(stats)
+}
+
+/// True when the group needs its own layer (CPU `RenderGroup::is_layered`
+/// without masks): opacity other than exactly 1.
+pub(crate) fn is_layered(g: &crate::input::GpuGroup) -> bool {
+    g.opacity != 1.0
+}
+
+/// True when any layered group (even an empty one) exists in `nodes`: the CPU
+/// then routes shape runs through layers (`group.rs` `has_layer`).
+pub(crate) fn has_layer(nodes: &[GpuNode]) -> bool {
+    nodes.iter().any(|n| match n {
+        GpuNode::Shape(_) => false,
+        GpuNode::Group(g) => is_layered(g) || has_layer(&g.children),
+    })
+}
+
+fn walk(
+    nodes: &[GpuNode],
+    depth: u32,
+    tiles_xy: [u64; 2],
+    stats: &mut Stats,
+    clipped: &mut bool,
+) -> Result<(), Reason> {
+    let [tiles_x, tiles_y] = tiles_xy;
+    for node in nodes {
         let shape = match node {
-            GpuNode::Group(_) => return Err(Reason::Groups),
+            GpuNode::Group(g) => {
+                if !g.opacity.is_finite() || !(0.0..=1.0).contains(&g.opacity) {
+                    return Err(Reason::InvalidScene);
+                }
+                if g.clips.len() > MAX_CLIP_CHAIN as usize {
+                    return Err(Reason::ClipChainTooLong);
+                }
+                if !g.clips.is_empty() {
+                    *clipped = true;
+                }
+                if g.children.is_empty() {
+                    continue;
+                }
+                let layered = is_layered(g);
+                let inner = depth + u32::from(layered);
+                if inner > MAX_GROUP_DEPTH {
+                    return Err(Reason::GroupTooDeep);
+                }
+                if layered {
+                    stats.groups += 1;
+                }
+                walk(&g.children, inner, tiles_xy, stats, clipped)?;
+                continue;
+            }
             GpuNode::Shape(shape) => shape,
         };
         if shape.stroke.is_some() {
@@ -107,15 +163,11 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
             return Err(Reason::TooManyEdges);
         }
         if !shape.clips.is_empty() {
-            clip_budget(&mut stats, shape, tiles)?;
-            clipped = true;
+            clip_budget(stats, shape, tiles)?;
+            *clipped = true;
         }
     }
-    if clipped {
-        // Within every budget, but the clip lane has not landed: CPU renders it.
-        return Err(Reason::Clips);
-    }
-    Ok(stats)
+    Ok(())
 }
 
 fn check_canvas(scene: &GpuScene) -> Result<(), Reason> {
@@ -325,9 +377,9 @@ mod tests {
         grouped.nodes.push(GpuNode::Group(GpuGroup {
             opacity: 0.5,
             clips: Vec::new(),
-            children: Vec::new(),
+            children: vec![GpuNode::Shape(fill(square(0.0, 0.0, 4.0)))],
         }));
-        assert_eq!(classify(&grouped), Capability::Unsupported(Reason::Groups));
+        assert_eq!(classify(&grouped), Capability::Supported);
     }
 
     fn clipped_scene(

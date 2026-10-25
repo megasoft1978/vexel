@@ -6,7 +6,7 @@
 #define VEXEL_GPU_LAYOUT_H
 
 #define VX_LAYOUT_MAGIC 0x56584C31
-#define VX_LAYOUT_VERSION 6
+#define VX_LAYOUT_VERSION 7
 #define VX_TILE_SIZE 16
 #define VX_SAMPLES_PER_AXIS 4
 #define VX_SAMPLE_COUNT 16
@@ -19,6 +19,8 @@
 #define VX_MAX_STOPS 262144
 #define VX_MAX_GROUP_DEPTH 4
 #define VX_MAX_CLIP_CHAIN 4
+#define VX_MAX_FRAMES 5
+#define VX_FRAME_RUN 0x80000000
 #define VX_MAX_CLIP_RECORDS 65536
 #define VX_PAINT_SOLID 0
 #define VX_PAINT_LINEAR 1
@@ -47,7 +49,7 @@ struct GpuSceneHeader {
     uint clip_count;
     uint flags;
     uint background_rgba;
-    uint reserved0;
+    uint group_count;
     uint reserved1;
     uint content_x0;
     uint content_y0;
@@ -69,6 +71,12 @@ struct GpuShape {
     uint clip_start;
     uint clip_count;
     uint group_depth;
+    uint frame_count;
+    uint frames[5];
+};
+
+struct GpuGroup {
+    uint lut[64];
 };
 
 struct GpuEdge {

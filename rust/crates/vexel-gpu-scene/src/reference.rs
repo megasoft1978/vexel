@@ -5,6 +5,7 @@
 //! tile-local fixed-point edges,
 //! gradient colours in `f32`, one source-over per shape per sample, then the
 //! CPU's integer resolve and pixel source-over (`vexel-render` `composite`).
+//! Opacity groups and shape runs are per-pixel layers ([`Frames`]).
 
 use crate::encode::Encoded;
 use crate::layout::{
@@ -33,8 +34,10 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
             let (x_px0, y_px0) = (tx * tile_px, ty * tile_px);
             let x_end = (x_px0 + tile_px).min(w);
             let y_end = (y_px0 + tile_px).min(h);
+            let mut frames = Frames::new(&out, [x_px0, y_px0], [x_end, y_end], w);
             for entry in list {
                 let shape = &e.shapes[entry.shape as usize];
+                frames.switch(e, &shape.frames[..shape.frame_count as usize]);
                 let edges = &e.edges[entry.edge_start as usize..][..entry.edge_count as usize];
                 let mut masks = [0u16; (TILE_SIZE * TILE_SIZE) as usize];
                 for sr in 0..tile_px * SAMPLES_PER_AXIS as usize {
@@ -76,10 +79,11 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                     &masks,
                     [x_px0, y_px0],
                     [x_end, y_end],
-                    w,
-                    &mut out,
+                    frames.top(),
                 );
             }
+            frames.switch(e, &[]);
+            frames.store(&mut out, [x_px0, y_px0], [x_end, y_end], w);
         }
     }
     out
@@ -125,8 +129,7 @@ fn shade(
     masks: &[u16],
     origin: [usize; 2],
     end: [usize; 2],
-    width: usize,
-    out: &mut [u8],
+    dest: &mut [[u8; 4]],
 ) {
     let solid = shape.color_rgba.to_le_bytes();
     let gradient = (shape.paint_kind != PAINT_SOLID).then(|| {
@@ -161,9 +164,91 @@ fn shade(
                 source_over(sample, color);
             }
             let source = resolve_samples(&samples);
-            let offset = (y * width + x) * 4;
-            let pixel: &mut [u8; 4] = (&mut out[offset..offset + 4]).try_into().unwrap();
-            source_over(pixel, source);
+            source_over(
+                &mut dest[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])],
+                source,
+            );
+        }
+    }
+}
+
+type TilePixels = [[u8; 4]; (TILE_SIZE * TILE_SIZE) as usize];
+
+/// The per-pixel stack of one tile: the canvas pixels and one transparent
+/// layer per open frame (layered group or shape run), as the CPU's nested
+/// layers (`vexel-render` `group.rs`). Closing a frame composites its layer
+/// into the one below with the group's opacity table.
+struct Frames {
+    base: Box<TilePixels>,
+    layers: Vec<Box<TilePixels>>,
+    open: Vec<u32>,
+}
+
+impl Frames {
+    fn new(out: &[u8], origin: [usize; 2], end: [usize; 2], width: usize) -> Self {
+        let mut base = Box::new([[0u8; 4]; (TILE_SIZE * TILE_SIZE) as usize]);
+        for y in origin[1]..end[1] {
+            for x in origin[0]..end[0] {
+                let o = (y * width + x) * 4;
+                base[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])]
+                    .copy_from_slice(&out[o..o + 4]);
+            }
+        }
+        let layers = (0..layout::MAX_FRAMES)
+            .map(|_| Box::new([[0u8; 4]; (TILE_SIZE * TILE_SIZE) as usize]))
+            .collect();
+        Self {
+            base,
+            layers,
+            open: Vec::new(),
+        }
+    }
+
+    fn top(&mut self) -> &mut TilePixels {
+        match self.open.len() {
+            0 => &mut self.base,
+            n => &mut self.layers[n - 1],
+        }
+    }
+
+    /// Makes `target` the open chain: closes what it no longer shares, opens
+    /// the rest as transparent layers.
+    fn switch(&mut self, e: &Encoded, target: &[u32]) {
+        let shared = self
+            .open
+            .iter()
+            .zip(target)
+            .take_while(|(a, b)| a == b)
+            .count();
+        while self.open.len() > shared {
+            let i = self.open.len() - 1;
+            let id = self.open.pop().unwrap();
+            let (below, above) = self.layers.split_at_mut(i);
+            let dest = if i == 0 { &mut self.base } else { &mut below[i - 1] };
+            let lut = (id & layout::FRAME_RUN == 0).then(|| &e.groups[id as usize].lut);
+            for (d, s) in dest.iter_mut().zip(above[0].iter()) {
+                let a = match lut {
+                    None => s[3],
+                    Some(l) => (l[usize::from(s[3]) / 4] >> ((u32::from(s[3]) % 4) * 8)) as u8,
+                };
+                if a != 0 {
+                    source_over(d, [s[0], s[1], s[2], a]);
+                }
+            }
+        }
+        for (i, id) in target.iter().enumerate().skip(shared) {
+            self.layers[i].fill([0; 4]);
+            self.open.push(*id);
+        }
+    }
+
+    fn store(&self, out: &mut [u8], origin: [usize; 2], end: [usize; 2], width: usize) {
+        for y in origin[1]..end[1] {
+            for x in origin[0]..end[0] {
+                let o = (y * width + x) * 4;
+                out[o..o + 4]
+                    .copy_from_slice(&self.base[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])]);
+            }
         }
     }
 }

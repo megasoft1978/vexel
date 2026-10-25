@@ -16,11 +16,11 @@
 //! * The header's content range is the CPU content rectangle in sample units.
 
 use crate::bin::{Binned, Binner, spans_sample_row};
-use crate::classify::{MAX_GRADIENT_STOPS, analyze};
+use crate::classify::{MAX_GRADIENT_STOPS, analyze, has_layer, is_layered};
 use crate::error::{GpuError, UnsupportedReason};
-use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuSpread};
+use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
 use crate::layout::{
-    self, FILL_EVENODD, FILL_NONZERO, GpuClip, GpuEdge, GpuSceneHeader, GpuStop, GpuTile,
+    self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, MAX_FRAMES, GpuClip, GpuEdge, GpuSceneHeader, GpuStop, GpuTile,
     GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, PAINT_LINEAR, PAINT_RADIAL, PAINT_SOLID,
     SPREAD_PAD, SPREAD_REFLECT, SPREAD_REPEAT, TILE_SIZE, to_fixed,
 };
@@ -38,6 +38,7 @@ pub struct Encoded {
     pub tile_list: Vec<GpuTileEntry>,
     pub gradients: Vec<layout::GpuGradient>,
     pub stops: Vec<GpuStop>,
+    pub groups: Vec<layout::GpuGroup>,
     pub clips: Vec<GpuClip>,
 }
 
@@ -108,6 +109,7 @@ impl Encoder {
         out.gradients.clear();
         out.stops.clear();
         out.clips.clear();
+        out.groups.clear();
         let Self {
             binner,
             binned,
@@ -115,79 +117,20 @@ impl Encoder {
         } = self;
         binner.reset(tiles_x, tiles_y, clip);
         binner.reserve(stats.tile_entries as usize, stats.tile_entries as usize * 3);
-        for node in &scene.nodes {
-            let GpuNode::Shape(shape) = node else {
-                return Err(GpuError::Encode(UnsupportedReason::Groups));
-            };
-            let Some(paint) = &shape.fill else { continue };
-            let paint_ok = match paint {
-                GpuPaint::Solid(rgba) => rgba[3] != 0,
-                GpuPaint::Linear(g) | GpuPaint::Radial(g) => gradient_valid(g),
-            };
-            if !paint_ok {
-                continue;
-            }
-            src.clear();
-            let mut bounds = [i32::MAX, i32::MAX, i32::MIN, i32::MIN];
-            for seg in &shape.edges {
-                let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
-                let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
-                    return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
-                };
-                let edge = GpuEdge { x0, y0, x1, y1 };
-                if !spans_sample_row(&edge) {
-                    continue;
-                }
-                bounds = [
-                    bounds[0].min(x0.min(x1)),
-                    bounds[1].min(y0.min(y1)),
-                    bounds[2].max(x0.max(x1)),
-                    bounds[3].max(y0.max(y1)),
-                ];
-                src.push(edge);
-            }
-            let range = crate::bin::tile_range(bounds, tiles_x, tiles_y);
-            let Some(range) = range.filter(|_| !src.is_empty()) else {
-                continue;
-            };
-            let (paint_kind, color_rgba, gradient_index) = match paint {
-                GpuPaint::Solid(rgba) => (PAINT_SOLID, pack_rgba(*rgba), u32::MAX),
-                GpuPaint::Linear(g) => (PAINT_LINEAR, 0, push_gradient(out, g)),
-                GpuPaint::Radial(g) => (PAINT_RADIAL, 0, push_gradient(out, g)),
-            };
-            out.shapes.push(layout::GpuShape {
-                bbox: [
-                    bounds[0] as f32 / FIXED_ONE,
-                    bounds[1] as f32 / FIXED_ONE,
-                    bounds[2] as f32 / FIXED_ONE,
-                    bounds[3] as f32 / FIXED_ONE,
-                ],
-                z: out.shapes.len() as u32,
-                paint_kind,
-                color_rgba,
-                opacity: 1.0,
-                fill_rule: if shape.evenodd {
-                    FILL_EVENODD
-                } else {
-                    FILL_NONZERO
-                },
-                stroke_width: 0.0,
-                edge_start: 0,
-                edge_count: src.len() as u32,
-                gradient_index,
-                clip_start: 0,
-                clip_count: 0,
-                group_depth: 0,
-            });
-            let started = bin_time.is_some().then(Instant::now);
-            let shape_index = out.shapes.len() as u32 - 1;
-            binner
-                .add_shape(shape_index, src, range)
-                .map_err(GpuError::Encode)?;
-            if let (Some(t), Some(started)) = (bin_time.as_deref_mut(), started) {
-                *t += started.elapsed();
-            }
-        }
+        let mut ctx = Walk {
+            binner,
+            src,
+            out,
+            tiles_x,
+            tiles_y,
+            bin_time: bin_time.as_deref_mut(),
+            layered: has_layer(&scene.nodes),
+            groups_open: 0,
+            frames: Vec::new(),
+            run: None,
+            next_run: 0,
+        };
+        ctx.nodes(&scene.nodes)?;
         let started = bin_time.is_some().then(Instant::now);
         // `binned` holds the previous frame's buffers, `out` takes this frame's.
         std::mem::swap(&mut binned.edges, &mut out.edges);
@@ -212,7 +155,7 @@ impl Encoder {
             clip_count: 0,
             flags: 0,
             background_rgba: pack_rgba(scene.background),
-            reserved0: 0,
+            group_count: out.groups.len() as u32,
             reserved1: 0,
             content_x0: sx0,
             content_y0: sy0,
@@ -224,6 +167,170 @@ impl Encoder {
         std::mem::swap(&mut binned.entries, &mut out.tile_list);
         Ok(())
     }
+}
+
+/// State of the recursive scene walk.
+struct Walk<'a> {
+    binner: &'a mut Binner,
+    src: &'a mut Vec<GpuEdge>,
+    out: &'a mut Encoded,
+    tiles_x: u32,
+    tiles_y: u32,
+    bin_time: Option<&'a mut Duration>,
+    /// Some layered group exists: shape runs go through run frames (CPU
+    /// `render_tree`), else shapes paint straight onto the canvas.
+    layered: bool,
+    groups_open: u32,
+    /// Open frame ids, outermost first (groups, then the current run).
+    frames: Vec<u32>,
+    /// The run frame currently open, if any.
+    run: Option<u32>,
+    next_run: u32,
+}
+
+impl Walk<'_> {
+    /// Mirrors vexel-render `group.rs` `walk`: opacity-1 groups are
+    /// transparent, a layered group closes the current run and opens a frame.
+    fn nodes(&mut self, nodes: &[GpuNode]) -> Result<(), GpuError> {
+        for node in nodes {
+            match node {
+                GpuNode::Shape(shape) => self.shape(shape)?,
+                GpuNode::Group(g) if !is_layered(g) => self.nodes(&g.children)?,
+                GpuNode::Group(g) => {
+                    if g.children.is_empty() {
+                        continue;
+                    }
+                    self.close_run();
+                    let id = self.out.groups.len() as u32;
+                    self.out.groups.push(opacity_table(g.opacity));
+                    self.frames.push(id);
+                    self.groups_open += 1;
+                    self.nodes(&g.children)?;
+                    self.close_run();
+                    self.groups_open -= 1;
+                    self.frames.pop();
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn close_run(&mut self) {
+        if self.run.take().is_some() {
+            self.frames.pop();
+        }
+    }
+
+    fn shape(&mut self, shape: &GpuShape) -> Result<(), GpuError> {
+        let Some(paint) = &shape.fill else {
+            return Ok(());
+        };
+        if self.layered && self.run.is_none() {
+            let id = FRAME_RUN | self.next_run;
+            self.next_run += 1;
+            self.run = Some(id);
+            self.frames.push(id);
+        }
+        self.add(shape, paint)
+    }
+
+    fn frames_array(&self) -> [u32; MAX_FRAMES as usize] {
+        let mut a = [0u32; MAX_FRAMES as usize];
+        a[..self.frames.len()].copy_from_slice(&self.frames);
+        a
+    }
+
+    fn add(&mut self, shape: &GpuShape, paint: &GpuPaint) -> Result<(), GpuError> {
+        let (frames, frame_count, groups_open) =
+            (self.frames_array(), self.frames.len() as u32, self.groups_open);
+        let ctx = self;
+        let (src, out) = (&mut *ctx.src, &mut *ctx.out);
+        let paint_ok = match paint {
+            GpuPaint::Solid(rgba) => rgba[3] != 0,
+            GpuPaint::Linear(g) | GpuPaint::Radial(g) => gradient_valid(g),
+        };
+        if !paint_ok {
+            return Ok(());
+        }
+        src.clear();
+        let mut bounds = [i32::MAX, i32::MAX, i32::MIN, i32::MIN];
+        for seg in &shape.edges {
+            let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
+            let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
+                return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
+            };
+            let edge = GpuEdge { x0, y0, x1, y1 };
+            if !spans_sample_row(&edge) {
+                continue;
+            }
+            bounds = [
+                bounds[0].min(x0.min(x1)),
+                bounds[1].min(y0.min(y1)),
+                bounds[2].max(x0.max(x1)),
+                bounds[3].max(y0.max(y1)),
+            ];
+            src.push(edge);
+        }
+        let range = crate::bin::tile_range(bounds, ctx.tiles_x, ctx.tiles_y);
+        let Some(range) = range.filter(|_| !src.is_empty()) else {
+            return Ok(());
+        };
+        let (paint_kind, color_rgba, gradient_index) = match paint {
+            GpuPaint::Solid(rgba) => (PAINT_SOLID, pack_rgba(*rgba), u32::MAX),
+            GpuPaint::Linear(g) => (PAINT_LINEAR, 0, push_gradient(out, g)),
+            GpuPaint::Radial(g) => (PAINT_RADIAL, 0, push_gradient(out, g)),
+        };
+        out.shapes.push(layout::GpuShape {
+            bbox: [
+                bounds[0] as f32 / FIXED_ONE,
+                bounds[1] as f32 / FIXED_ONE,
+                bounds[2] as f32 / FIXED_ONE,
+                bounds[3] as f32 / FIXED_ONE,
+            ],
+            z: out.shapes.len() as u32,
+            paint_kind,
+            color_rgba,
+            opacity: 1.0,
+            fill_rule: if shape.evenodd {
+                FILL_EVENODD
+            } else {
+                FILL_NONZERO
+            },
+            stroke_width: 0.0,
+            edge_start: 0,
+            edge_count: src.len() as u32,
+            gradient_index,
+            clip_start: 0,
+            clip_count: 0,
+            group_depth: groups_open,
+            frame_count,
+            frames,
+        });
+        let started = ctx.bin_time.is_some().then(Instant::now);
+        let shape_index = out.shapes.len() as u32 - 1;
+        ctx.binner
+            .add_shape(shape_index, src, range)
+            .map_err(GpuError::Encode)?;
+        if let (Some(t), Some(started)) = (ctx.bin_time.as_deref_mut(), started) {
+            *t += started.elapsed();
+        }
+        Ok(())
+    }
+}
+
+/// The CPU's `composite_layer` `alpha_lut`, packed four bytes to a word.
+fn opacity_table(opacity: f64) -> layout::GpuGroup {
+    let mut g = layout::GpuGroup::default();
+    for alpha in 0..256usize {
+        let scaled = (alpha as f64 / 255.0 * opacity).min(1.0);
+        let v = if scaled > 0.0 {
+            (scaled * 255.0).round() as u32
+        } else {
+            0
+        };
+        g.lut[alpha / 4] |= v << ((alpha % 4) * 8);
+    }
+    g
 }
 
 /// Sample-index range `[lo, hi)` along one axis of `size` pixels that lies in
@@ -406,17 +513,79 @@ mod tests {
         assert_eq!(encode(&scene).unwrap().shapes.len(), 0);
     }
 
-    #[test]
-    fn unsupported_scene_does_not_encode() {
-        let mut scene = GpuScene::new(16, 16);
-        scene.nodes.push(GpuNode::Group(crate::input::GpuGroup {
-            opacity: 0.5,
+    fn leaf(x: f64) -> GpuNode {
+        GpuNode::Shape(crate::input::GpuShape {
+            edges: rect(x, 1.0, x + 4.0, 5.0),
+            evenodd: false,
+            fill: Some(GpuPaint::Solid([1, 2, 3, 255])),
+            stroke: None,
             clips: Vec::new(),
-            children: Vec::new(),
-        }));
+        })
+    }
+
+    fn group(opacity: f64, children: Vec<GpuNode>) -> GpuNode {
+        GpuNode::Group(crate::input::GpuGroup {
+            opacity,
+            clips: Vec::new(),
+            children,
+        })
+    }
+
+    #[test]
+    fn groups_become_frame_chains() {
+        let mut scene = GpuScene::new(32, 16);
+        // run0 | group0 { run1 | group1 { run2 } run3 } | run4 (opacity-1 group joins it)
+        scene.nodes = vec![
+            leaf(1.0),
+            group(
+                0.5,
+                vec![leaf(6.0), group(0.25, vec![leaf(11.0)]), leaf(16.0)],
+            ),
+            group(1.0, vec![leaf(21.0)]),
+            leaf(26.0),
+        ];
+        let e = encode(&scene).unwrap();
+        let run = |n: u32| FRAME_RUN | n;
+        let chains: Vec<Vec<u32>> = e
+            .shapes
+            .iter()
+            .map(|s| s.frames[..s.frame_count as usize].to_vec())
+            .collect();
+        assert_eq!(
+            chains,
+            vec![
+                vec![run(0)],
+                vec![0, run(1)],
+                vec![0, 1, run(2)],
+                vec![0, run(3)],
+                vec![run(4)],
+                vec![run(4)],
+            ]
+        );
+        assert_eq!(e.header.group_count, 2);
+        assert_eq!(e.shapes[2].group_depth, 2);
+        // Opacity table: alpha 255 at 0.5 -> 128 (round(0.5 * 255)), 0 -> 0.
+        let lut = |g: usize, a: usize| (e.groups[g].lut[a / 4] >> ((a % 4) * 8)) & 255;
+        assert_eq!((lut(0, 255), lut(0, 0), lut(1, 255)), (128, 0, 64));
+        // No layered group: straight painting, empty chains.
+        scene.nodes = vec![leaf(1.0), group(1.0, vec![leaf(6.0)])];
+        assert!(encode(&scene).unwrap().shapes.iter().all(|s| s.frame_count == 0));
+    }
+
+    #[test]
+    fn clipped_group_does_not_encode() {
+        let mut scene = GpuScene::new(16, 16);
+        scene.nodes = vec![GpuNode::Group(crate::input::GpuGroup {
+            opacity: 0.5,
+            clips: vec![crate::input::GpuClipPath {
+                edges: rect(0.0, 0.0, 4.0, 4.0),
+                evenodd: false,
+            }],
+            children: vec![leaf(1.0)],
+        })];
         assert_eq!(
             encode(&scene).unwrap_err(),
-            GpuError::Encode(UnsupportedReason::Groups)
+            GpuError::Encode(UnsupportedReason::Clips)
         );
     }
 

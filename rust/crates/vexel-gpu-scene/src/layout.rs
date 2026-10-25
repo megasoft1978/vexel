@@ -32,7 +32,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 6;
+pub const LAYOUT_VERSION: u32 = 7;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -55,6 +55,11 @@ pub const MAX_GRADIENTS: u32 = 65_536;
 pub const MAX_STOPS: u32 = 262_144;
 /// Deepest opacity-group nesting the GPU route renders; deeper is CPU only.
 pub const MAX_GROUP_DEPTH: u32 = 4;
+/// Frames a shape's chain holds: its layered groups plus one run frame.
+pub const MAX_FRAMES: u32 = MAX_GROUP_DEPTH + 1;
+/// Marks a frame id as a run frame (shapes between layered groups, composited
+/// at opacity 1) instead of an index into the group array.
+pub const FRAME_RUN: u32 = 0x8000_0000;
 /// Longest clip chain per shape; the CPU limit is 256, longer is CPU only.
 pub const MAX_CLIP_CHAIN: u32 = 4;
 /// Most [`GpuClip`] child records in a scene.
@@ -88,7 +93,8 @@ pub struct GpuSceneHeader {
     pub flags: u32,
     /// Straight-alpha RGBA8 packed little-endian (r in the low byte).
     pub background_rgba: u32,
-    pub reserved0: u32,
+    /// Number of [`GpuGroup`] records.
+    pub group_count: u32,
     pub reserved1: u32,
     /// Content rectangle (the CPU `ViewMap` content rectangle, meet
     /// letterboxing) as a half-open range of sample indices, where sample
@@ -102,7 +108,7 @@ pub struct GpuSceneHeader {
     pub content_y1: u32,
 }
 
-/// One shape record, 64 bytes.
+/// One shape record, 88 bytes.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct GpuShape {
@@ -128,6 +134,30 @@ pub struct GpuShape {
     pub clip_count: u32,
     /// Opacity-group nesting depth, `<= MAX_GROUP_DEPTH`.
     pub group_depth: u32,
+    /// Valid entries of `frames`: 0 when the scene has no layered group
+    /// (shape painted straight onto the canvas), else `group_depth + 1`.
+    pub frame_count: u32,
+    /// Compositing chain, outermost first: ids of the layered groups the shape
+    /// sits in, then the id of its run (`FRAME_RUN | n`). The kernel keeps one
+    /// per-pixel accumulator per open frame, closes (composites into the
+    /// parent) the frames the next shape no longer shares, and opens new ones.
+    pub frames: [u32; MAX_FRAMES as usize],
+}
+
+/// One layered group, 256 bytes: the CPU's per-alpha opacity table
+/// (`composite_layer` `alpha_lut`, evaluated in `f64` by the encoder so the
+/// kernel needs no `f64`). Byte `a` (little-endian within `lut[a / 4]`) is
+/// the alpha the layer pixel of alpha `a` is composited with.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GpuGroup {
+    pub lut: [u32; 64],
+}
+
+impl Default for GpuGroup {
+    fn default() -> Self {
+        Self { lut: [0; 64] }
+    }
 }
 
 /// One edge, 16 bytes, tile-local fixed point (see module docs).
@@ -229,7 +259,7 @@ mod tests {
             (size_of::<GpuSceneHeader>(), align_of::<GpuSceneHeader>()),
             (80, 4)
         );
-        assert_eq!((size_of::<GpuShape>(), align_of::<GpuShape>()), (64, 4));
+        assert_eq!((size_of::<GpuShape>(), align_of::<GpuShape>()), (88, 4));
         assert_eq!((size_of::<GpuEdge>(), align_of::<GpuEdge>()), (16, 4));
         assert_eq!((size_of::<GpuTile>(), align_of::<GpuTile>()), (8, 4));
         assert_eq!(
@@ -242,6 +272,7 @@ mod tests {
         );
         assert_eq!((size_of::<GpuStop>(), align_of::<GpuStop>()), (20, 4));
         assert_eq!((size_of::<GpuClip>(), align_of::<GpuClip>()), (16, 4));
+        assert_eq!((size_of::<GpuGroup>(), align_of::<GpuGroup>()), (256, 4));
     }
 
     #[test]
@@ -249,6 +280,7 @@ mod tests {
         assert_eq!(offset_of!(GpuShape, z), 16);
         assert_eq!(offset_of!(GpuShape, edge_start), 40);
         assert_eq!(offset_of!(GpuShape, group_depth), 60);
+        assert_eq!(offset_of!(GpuShape, frames), 68);
         assert_eq!(offset_of!(GpuGradient, spread), 24);
         assert_eq!(offset_of!(GpuClip, union_size), 12);
         assert_eq!(offset_of!(GpuSceneHeader, content_x0), 64);
@@ -307,7 +339,7 @@ mod tests {
                 clip_count,
                 flags,
                 background_rgba,
-                reserved0,
+                group_count,
                 reserved1,
                 content_x0,
                 content_y0,
@@ -331,9 +363,12 @@ mod tests {
                 gradient_index,
                 clip_start,
                 clip_count,
-                group_depth
+                group_depth,
+                frame_count,
+                frames
             ]
         );
+        s!(GpuGroup, "GpuGroup", [lut]);
         s!(GpuEdge, "GpuEdge", [x0, y0, x1, y1]);
         s!(GpuTile, "GpuTile", [list_start, list_count]);
         s!(
@@ -427,7 +462,7 @@ mod tests {
                 Some((k, v))
             })
             .collect();
-        let expect: [(&str, u64); 23] = [
+        let expect: [(&str, u64); 25] = [
             ("LAYOUT_MAGIC", LAYOUT_MAGIC.into()),
             ("LAYOUT_VERSION", LAYOUT_VERSION.into()),
             ("TILE_SIZE", TILE_SIZE.into()),
@@ -443,6 +478,8 @@ mod tests {
             ("MAX_GROUP_DEPTH", MAX_GROUP_DEPTH.into()),
             ("MAX_CLIP_CHAIN", MAX_CLIP_CHAIN.into()),
             ("MAX_CLIP_RECORDS", MAX_CLIP_RECORDS.into()),
+            ("MAX_FRAMES", MAX_FRAMES.into()),
+            ("FRAME_RUN", FRAME_RUN.into()),
             ("PAINT_SOLID", PAINT_SOLID.into()),
             ("PAINT_LINEAR", PAINT_LINEAR.into()),
             ("PAINT_RADIAL", PAINT_RADIAL.into()),
@@ -455,7 +492,7 @@ mod tests {
         for (k, v) in &expect {
             assert_eq!(defines.get(k), Some(v), "#define VX_{k}");
         }
-        assert_eq!(defines.len(), 23);
+        assert_eq!(defines.len(), 25);
         assert!(src.contains("{0.125f, 0.375f, 0.625f, 0.875f}"));
     }
 }
