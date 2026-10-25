@@ -14,7 +14,7 @@ use super::clips::ClipStore;
 use super::diff::{Rect, device_rect};
 use super::layers::{Geo, composite_tile, composite_tile_in, mask_layer};
 use super::shapes::{Entry, OwnedShape, Prepared, prepare};
-use std::cell::OnceCell;
+use std::cell::{OnceCell, RefCell};
 use vexel_raster::Tile;
 use vexel_render::filter::apply_filter_chain;
 use vexel_render::{
@@ -180,6 +180,8 @@ pub(super) struct Renderer<'c> {
     /// layer decisions still follow the whole scene, so painted pixels equal
     /// a full render.
     pub(super) only: Option<Only<'c>>,
+    /// Transparent layers left by scissored batches, reused instead of allocated.
+    spare: RefCell<Vec<Tile>>,
 }
 
 impl<'c> Renderer<'c> {
@@ -198,11 +200,29 @@ impl<'c> Renderer<'c> {
             mask_depth: 0,
             masks: 0,
             only: None,
+            spare: RefCell::new(Vec::new()),
         })
     }
 }
 
 impl Renderer<'_> {
+    /// The pixel rectangles a composite of a layer touches; `None` means the
+    /// whole tile. `region` bounds every non-transparent pixel of the layer
+    /// (`None`: the whole layer may hold pixels).
+    fn composite_rects(&self, region: Option<Option<Rect>>) -> Option<Vec<Rect>> {
+        match (self.only, region) {
+            (Some(only), Some(region)) => Some(
+                region
+                    .into_iter()
+                    .flat_map(|g| only.rects.iter().filter_map(move |r| r.intersect(g)))
+                    .collect(),
+            ),
+            (Some(only), None) => Some(only.rects.to_vec()),
+            (None, Some(region)) => Some(region.into_iter().collect()),
+            (None, None) => None,
+        }
+    }
+
     /// Source-over of `layer` into `dest`, over the produced regions only.
     /// `region` bounds every non-transparent pixel of `layer`; `None` means
     /// the whole layer may hold pixels.
@@ -213,16 +233,31 @@ impl Renderer<'_> {
         opacity: f64,
         region: Option<Option<Rect>>,
     ) -> Result<(), RenderError> {
-        let rects: Vec<Rect> = match (self.only, region) {
-            (Some(only), Some(region)) => region
-                .into_iter()
-                .flat_map(|g| only.rects.iter().filter_map(move |r| r.intersect(g)))
-                .collect(),
-            (Some(only), None) => only.rects.to_vec(),
-            (None, Some(region)) => region.into_iter().collect(),
-            (None, None) => return composite_tile(dest, layer, opacity, self.cancel),
-        };
-        composite_tile_in(dest, layer, opacity, &rects, self.cancel)
+        match self.composite_rects(region) {
+            Some(rects) => composite_tile_in(dest, layer, opacity, &rects, self.cancel),
+            None => composite_tile(dest, layer, opacity, self.cancel),
+        }
+    }
+
+    /// A transparent layer: a recycled one when available.
+    fn take_layer(&self) -> Result<Tile, RenderError> {
+        match self.spare.borrow_mut().pop() {
+            Some(layer) => Ok(layer),
+            None => self.new_tile(),
+        }
+    }
+
+    /// Clears `rects` of `layer`, which a scissored batch painted only inside,
+    /// and keeps it for the next batch.
+    fn recycle_layer(&self, mut layer: Tile, rects: &[Rect]) {
+        let width = layer.width() as usize;
+        for rect in rects {
+            for y in rect.y0 as usize..rect.y1 as usize {
+                layer.rgba_mut()[(y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4]
+                    .fill(0);
+            }
+        }
+        self.spare.borrow_mut().push(layer);
     }
 
     fn cancelled(&self) -> bool {
@@ -386,7 +421,7 @@ impl Renderer<'_> {
         depth: usize,
     ) -> Result<(), RenderError> {
         let group = &scene.view.groups[index];
-        let mut layer = self.new_tile()?;
+        let mut layer = self.take_layer()?;
         let children_range = children.clone();
         self.range(scene, children, Some(index), &mut layer, depth + 1, false)?;
         if let Some(id) = group.filter {
@@ -414,7 +449,17 @@ impl Renderer<'_> {
         // only holds what its shapes painted.
         let region = (group.filter.is_none() && group.mask.is_none())
             .then(|| union_of(scene.bounds, children_range));
-        self.composite(dest, &layer, group.opacity, region)
+        let rects = self.composite_rects(region);
+        match &rects {
+            Some(rects) => composite_tile_in(dest, &layer, group.opacity, rects, self.cancel)?,
+            None => composite_tile(dest, &layer, group.opacity, self.cancel)?,
+        }
+        // Without filter or mask the layer only received composites inside the
+        // rectangles just composited.
+        if let Some(rects) = rects {
+            self.recycle_layer(layer, &rects);
+        }
+        Ok(())
     }
 
     /// C `apply_mask`: renders the mask content scene and multiplies it into `layer`.
@@ -479,14 +524,27 @@ impl Renderer<'_> {
             }
             self.reserve()?;
             let result = (|| {
-                let mut layer = self.new_tile()?;
+                let mut layer = self.take_layer()?;
                 self.paint(scene, *kind, items, &mut layer)?;
                 let _composite = crate::profile::phase("r.composite");
                 let region = Some(union_of(
                     scene.bounds,
                     items.iter().map(|p| p.shape.scene_index),
                 ));
-                self.composite(dest, &layer, 1.0, region)
+                let rects = self.composite_rects(region);
+                match &rects {
+                    Some(rects) => composite_tile_in(dest, &layer, 1.0, rects, self.cancel)?,
+                    None => composite_tile(dest, &layer, 1.0, self.cancel)?,
+                }
+                // A plain batch paints only inside its shapes' bounds (and the
+                // scissor), which the composited rectangles cover: clearing
+                // them restores a transparent layer.
+                if matches!(kind, Kind::Plain | Kind::Dashed)
+                    && let Some(rects) = rects
+                {
+                    self.recycle_layer(layer, &rects);
+                }
+                Ok(())
             })();
             self.release();
             result?;

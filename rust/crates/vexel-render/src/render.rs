@@ -4,7 +4,7 @@
 use crate::bounds::{PixelBounds, shape_bounds};
 use crate::clip::ClipList;
 use crate::clip_rows::{ClipPlan, ClipRows, FULL_MASK};
-use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
+use crate::composite::{SAMPLE_COUNT, resolve_rows, resolve_samples, source_over};
 use crate::dash::Pattern;
 use crate::fill::{Crossings, inside};
 use crate::pattern::{PatternPaint, sample as sample_pattern};
@@ -659,19 +659,32 @@ fn render_band(
                 if gradient_direct && let Some(prepared) = pass.fill_gradient.flatten() {
                     let base = (x - bounds.x_first) as usize * SAMPLES_PER_AXIS;
                     // Keys are `x_term + y_term`, and rounded addition is
-                    // monotone: if one table cell vouches for the whole key
-                    // range of the pixel, all 16 samples are that colour.
+                    // monotone: if the table vouches for the whole key range
+                    // of a sample row (of the pixel), all its samples have
+                    // that colour. Four rows resolve like the 16 samples.
                     if let Some(table) = table
-                        && let Some((low, high)) = key_range(&x_terms[base..base + SAMPLES_PER_AXIS], &y_terms)
-                        && let Some(color) = table.lookup_range(low, high)
+                        && let Some((x_low, x_high)) = min_max(&x_terms[base..base + SAMPLES_PER_AXIS])
+                        && min_max(&y_terms).is_some()
                     {
-                        let source = if color[3] == 0 { [0; 4] } else { color };
-                        let offset = (row_base + x as usize) * 4;
-                        let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
-                            .try_into()
-                            .map_err(|_| RenderError::InvalidGeometry)?;
-                        source_over(pixel, source);
-                        continue;
+                        let mut rows = [[0u8; 4]; SAMPLES_PER_AXIS];
+                        let mut all = true;
+                        for (row, y_term) in rows.iter_mut().zip(y_terms) {
+                            match table.lookup_range(x_low + y_term, x_high + y_term) {
+                                Some(color) => *row = color,
+                                None => {
+                                    all = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if all {
+                            let offset = (row_base + x as usize) * 4;
+                            let pixel: &mut [u8; 4] = (&mut rgba[offset..offset + 4])
+                                .try_into()
+                                .map_err(|_| RenderError::InvalidGeometry)?;
+                            source_over(pixel, resolve_rows(&rows));
+                            continue;
+                        }
                     }
                     for sy in 0..SAMPLES_PER_AXIS {
                         for sx in 0..SAMPLES_PER_AXIS {
@@ -758,24 +771,17 @@ fn stroke_block_empty(
     candidates.is_empty()
 }
 
-/// Smallest and largest `x + y` over the terms, when all are finite.
-fn key_range(xs: &[f64], ys: &[f64]) -> Option<(f64, f64)> {
-    let (mut x_low, mut x_high, mut y_low, mut y_high) = (f64::MAX, f64::MIN, f64::MAX, f64::MIN);
-    for &x in xs {
-        if !x.is_finite() {
+/// Smallest and largest of `values`, when all are finite.
+fn min_max(values: &[f64]) -> Option<(f64, f64)> {
+    let (mut low, mut high) = (f64::MAX, f64::MIN);
+    for &v in values {
+        if !v.is_finite() {
             return None;
         }
-        x_low = x_low.min(x);
-        x_high = x_high.max(x);
+        low = low.min(v);
+        high = high.max(v);
     }
-    for &y in ys {
-        if !y.is_finite() {
-            return None;
-        }
-        y_low = y_low.min(y);
-        y_high = y_high.max(y);
-    }
-    Some((x_low + y_low, x_high + y_high))
+    Some((low, high))
 }
 
 /// Whether the centre of pixel `(x, y)` lies in every clip of the shape.
