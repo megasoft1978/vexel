@@ -16,6 +16,7 @@ mod sample_tests;
 pub use edit::{
     DEFAULT_HISTORY_BYTES, DEFAULT_HISTORY_COMMANDS, MAX_HISTORY_BYTES, MAX_HISTORY_COMMANDS,
 };
+pub use edit::{BulkFailure, BulkKey, BulkTrack};
 pub use edit::{EditFailure, EditLimits, TimelineEdit, TimelineSourceLease};
 pub use edit::{EmptyTimelineSettings, initialize_empty_timeline};
 pub use json::string_copy;

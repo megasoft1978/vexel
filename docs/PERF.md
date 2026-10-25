@@ -723,3 +723,24 @@ would only duplicate memory; `vexel-bench mem --check` baselines unchanged).
 Render bands may use up to 16 threads (was 8); output is byte-identical.
 Benches: `VEXEL_BENCH_SCENE=<file>` with `native_play_bench
 env_scene_animate_playback` and `scene_edit_bench`.
+
+## Track flush (C1, 2026-10-25)
+
+`cargo test -p vexel-app --release --test mcp_flush_bench -- --ignored --nocapture --test-threads=1`
+(200 rects, 200 trs tracks, 16 keys each = 3200 keys, M-series, one process).
+Profile of the old path (`VEXEL_PROFILE` phases): 98% of the time was
+`edit_ops` (3200 calls at 19.5 ms): every key was a separate edit that decoded
+the whole timeline two to three times, so cost grew with the square of the
+timeline size; `candidate_open` (a full decode per op) was the next 2%.
+
+| path | before | after |
+|---|---|---|
+| `batch`, 5 x 40 `add_property_track` with keys | 63.8 s | 1.2 s |
+| `native_timeline_tracks_set`, one call | n/a | 0.014 s |
+
+Fix: a track with its keys is one splice and one validation
+(`TimelineEdit::add_property_tracks`), the decoded candidate is cached per
+scene state and payload, and `native_timeline_tracks_set` applies up to 256
+tracks in one edit. "Before" used the object trs form, "after" the 7-number
+array form (same bytes in the timeline). Real cartoon shots (1 MB sources)
+were not re-timed here.

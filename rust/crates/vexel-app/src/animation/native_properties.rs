@@ -394,6 +394,23 @@ pub fn element_tag(source: &[u8], id: &[u8]) -> Option<Vec<u8>> {
         .map(<[u8]>::to_vec)
 }
 
+/// `element_tag` for many ids from one parse of `source`: one entry per id,
+/// `None` where the source cannot be read or has no such element.
+pub fn element_tags(source: &[u8], ids: &[&[u8]]) -> Vec<Option<Vec<u8>>> {
+    let Ok(elements) = parse_elements(source) else {
+        return vec![None; ids.len()];
+    };
+    let mut by_id = std::collections::HashMap::new();
+    for element in &elements {
+        if let (Some(id), Some(tag)) = (element.id.as_deref(), element.tag.slice(source)) {
+            by_id.entry(id).or_insert(tag);
+        }
+    }
+    ids.iter()
+        .map(|id| by_id.get(id).map(|tag| tag.to_vec()))
+        .collect()
+}
+
 fn scalar_property(name: &[u8]) -> bool {
     matches!(
         name,

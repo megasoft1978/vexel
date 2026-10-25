@@ -225,6 +225,15 @@ stroke-opacity stroke-width stroke-dashoffset` (scalar), `fill stroke stop-color
   raised too), `stop-opacity`, `stop-color` (rgba; also writes `stop-opacity`).
   Scenes with filters render on the CPU route.
 
+To create many tracks at once use `native_timeline_tracks_set` (`tracks`: 1-256
+entries, each the arguments of `native_timeline_add_property_track` without
+`documentId`, at most 16384 keys per call): one undoable, all-or-nothing edit
+with a single timeline validation (200 tracks / 3200 keys in about 15 ms). A
+rejection names the entry (`tracks[3]: ...`) and changes nothing. It costs
+1 + tracks/8 of the per-minute request budget, like a batch of that size, and
+the request is still bound by the 2 MiB / 65536-token JSON limit, so very large
+scenes need several calls (a trs key as a 7-number array is cheapest).
+
 Then refine keys and
 tracks with the corresponding `native_timeline_move_key`, `remove_key`,
 `duplicate_track`, `rename_track`, `set_interpolation`, and `reorder_track`

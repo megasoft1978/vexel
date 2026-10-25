@@ -3,6 +3,8 @@
 use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, native_timeline::NativeOp};
 use vexel_timeline::LoopMode;
 
+mod tracks;
+
 const VALUE_LIMIT: usize = 4096;
 
 fn sanitized(value: &[u8]) -> String {
@@ -349,6 +351,9 @@ pub(super) fn parse(
     args: usize,
     tool: &str,
 ) -> Option<Result<Operation, PreviewArgumentError>> {
+    if tool == "tracks_set" {
+        return Some(tracks::parse(doc, args));
+    }
     matches!(
         tool,
         "add_track"

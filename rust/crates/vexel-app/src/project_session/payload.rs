@@ -73,6 +73,17 @@ impl SessionPayload {
         }
     }
 
+    /// Both handles share one immutable payload.
+    pub(super) fn same_payload(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.data, &other.data)
+    }
+
+    /// The payload already holds a timeline (an empty one is initialised from
+    /// settings when opened, so it is never a stable candidate).
+    pub(super) fn has_timeline(&self) -> bool {
+        !self.data.timeline_json.is_empty()
+    }
+
     #[cfg(test)]
     pub(super) fn timeline_bytes(&self) -> &[u8] {
         &self.data.timeline_json

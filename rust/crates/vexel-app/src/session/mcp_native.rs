@@ -13,6 +13,22 @@ use crate::session::{AppDocument, McpOutcome};
 use vexel_json::JsonDocument;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
 
+mod mcp_tracks;
+
+/// One property track with its keys: an `add_property_track` request, or one
+/// entry of `native_timeline_tracks_set`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NativeTrack {
+    pub track_id: Vec<u8>,
+    pub target_id: Vec<u8>,
+    pub property: Vec<u8>,
+    pub value_type: Vec<u8>,
+    pub interpolation: Vec<u8>,
+    pub value: Vec<u8>,
+    pub name: Vec<u8>,
+    pub keys: Vec<PropertyKey>,
+}
+
 /// One key of a bulk `native_timeline_add_property_track` request.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PropertyKey {
@@ -46,6 +62,8 @@ pub enum NativeOp {
         /// Extra keys applied in the same edit as the track.
         keys: Vec<PropertyKey>,
     },
+    /// Many property tracks with their keys in one undoable edit.
+    TracksSet(Vec<NativeTrack>),
     SetPropertyKey {
         track_id: Vec<u8>,
         tick: u32,
@@ -220,42 +238,23 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             name,
             keys,
         } => {
-            if let Some(message) = property_target_mismatch(app, &target_id, &property) {
+            let track = NativeTrack {
+                track_id,
+                target_id,
+                property,
+                value_type,
+                interpolation,
+                value,
+                name,
+                keys,
+            };
+            if let Some(message) = property_target_mismatch(app, &track.target_id, &track.property)
+            {
                 return Err(message);
             }
-            let in_keys = std::cell::Cell::new(false);
-            app.edit_timeline(settings(), limits, |c| {
-                let mut edited = c.add_property_track(
-                    &track_id,
-                    &target_id,
-                    &property,
-                    &value_type,
-                    &interpolation,
-                    &value,
-                    &name,
-                )?;
-                in_keys.set(true);
-                for key in &keys {
-                    edited = edited.set_property_key_with_ease(
-                        &track_id,
-                        key.tick,
-                        &key.value,
-                        key.ease.as_deref(),
-                    )?;
-                }
-                Ok(edited)
-            })
-            .map_err(|error| {
-                if in_keys.get() {
-                    return operation_error(error, "set_property_key", Refs::default());
-                }
-                let refs = Refs {
-                    asset: true,
-                    target: known_target(app, &target_id),
-                };
-                operation_error(error, "add_property_track", refs)
-            })?
+            mcp_tracks::add_one(app, &track)?
         }
+        NativeOp::TracksSet(tracks) => return mcp_tracks::tracks_set(app, &tracks),
         NativeOp::SetPropertyKey {
             track_id,
             tick,
@@ -403,7 +402,11 @@ fn property_target_mismatch(
     if property_fits_tag(&tag, property) {
         return None;
     }
-    Some(match property {
+    Some(mismatch_message(property))
+}
+
+fn mismatch_message(property: &[u8]) -> &'static str {
+    match property {
         b"d" => {
             "native_timeline_add_property_track property d morphs path data and needs a <path> target (polygon and polyline use points)"
         }
@@ -425,7 +428,7 @@ fn property_target_mismatch(
         _ => {
             "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry"
         }
-    })
+    }
 }
 
 fn known_target(app: &AppDocument, id: &[u8]) -> bool {

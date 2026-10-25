@@ -115,7 +115,7 @@ fn append(out: &mut Vec<u8>, part: &[u8]) -> EditResult {
     out.extend_from_slice(part);
     Ok(())
 }
-fn json_string(raw: &[u8]) -> EditResult<Vec<u8>> {
+pub(super) fn json_string(raw: &[u8]) -> EditResult<Vec<u8>> {
     if !validate_utf8(raw) || raw.len() > crate::MAX_STRING_BYTES {
         return Err(at(Error::InvalidArgument, 0));
     }
@@ -146,7 +146,7 @@ fn json_string(raw: &[u8]) -> EditResult<Vec<u8>> {
     out.push(b'"');
     Ok(out)
 }
-fn value_json(raw: &[u8]) -> Result<(), EditFailure> {
+pub(super) fn value_json(raw: &[u8]) -> Result<(), EditFailure> {
     if raw.is_empty() {
         return Err(at(Error::InvalidArgument, 0));
     }
@@ -447,7 +447,7 @@ fn insert_item(
     };
     splice(source, insert_at, remove, &insert)
 }
-fn make_key(tick: u32, value: &[u8], ease: Option<&[u8]>) -> EditResult<Vec<u8>> {
+pub(super) fn make_key(tick: u32, value: &[u8], ease: Option<&[u8]>) -> EditResult<Vec<u8>> {
     value_json(value)?;
     let mut out = Vec::new();
     out.try_reserve(value.len() + ease.map_or(40, |e| e.len() + 48))

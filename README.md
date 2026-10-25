@@ -69,7 +69,7 @@ separately in [docs/ui/live-check.md](docs/ui/live-check.md) and
 | PNG render | Done | `vexel-png`; `render_png` over MCP. |
 | Text (CoreText) | Done | ([HANDOFF.md](HANDOFF.md)). |
 | Masks, opacity groups, patterns, filters, markers, stroke dashes | Done | Dashes are deferred in animation frames ([HANDOFF.md](HANDOFF.md)). |
-| Local MCP server | Partial | 55 live-preview tools. The `batch` tool applies ordered scene and timeline operations as one undo step (atomic by default). Tool reference in [docs/mcp.md](docs/mcp.md). A real Codex session driving Vexel over MCP is recorded in [docs/demo/](docs/demo/live-session.mp4); Claude Code setup is documented but not verified. |
+| Local MCP server | Partial | 56 live-preview tools. The `batch` tool applies ordered scene and timeline operations as one undo step (atomic by default). Tool reference in [docs/mcp.md](docs/mcp.md). A real Codex session driving Vexel over MCP is recorded in [docs/demo/](docs/demo/live-session.mp4); Claude Code setup is documented but not verified. |
 | Gradients (linear, radial) | Done | Fills render in the canvas, playback and exports; inspector gradient fill control; `gradient_add` over MCP. |
 | Blend modes, JPEG, interlaced PNG | Planned | Typed disclosures, not rendered ([HANDOFF.md](HANDOFF.md)). |
 | Documents over 32 MiB | Planned | Refused by design; needs streaming decode ([BLOCKERS.md](BLOCKERS.md)). |
@@ -132,7 +132,7 @@ cargo run -p vexel-dev -- bench
 
 - `vexel --mcp-preview` runs the GUI app and serves JSON-RPC over stdio.
 - The client launches that command; the window stays live while it is connected.
-- 55 tools: document, tree and element editing, grouping, undo/redo, `batch`,
+- 56 tools: document, tree and element editing, grouping, undo/redo, `batch`,
   native timeline, `animation_control`, `export_animation`, `render_png`.
 - `--grant-dir <dir>` (repeatable) is the only file access the tools get.
 - Per-session budget is 600 requests per minute. Details: [docs/mcp.md](docs/mcp.md).

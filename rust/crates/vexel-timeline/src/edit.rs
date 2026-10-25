@@ -3,6 +3,7 @@ mod initialize;
 #[cfg(test)]
 mod initialize_tests;
 mod ops;
+mod ops_bulk;
 mod ops_ext;
 mod ops_timing;
 #[cfg(test)]
@@ -46,6 +47,7 @@ impl From<DecodeFailure> for EditFailure {
 pub type EditResult<T = ()> = Result<T, EditFailure>;
 
 pub use initialize::{initialize_empty_timeline, EmptyTimelineSettings};
+pub use ops_bulk::{BulkFailure, BulkKey, BulkTrack};
 
 /// Owns source snapshots. Editor methods require exclusive access; cloned leases
 /// are immutable, `Send + Sync`, and remain valid after history eviction/drop.
@@ -244,6 +246,12 @@ impl TimelineEdit {
     }
     pub fn set_property_key_with_ease(&mut self, context: &TimelineContext, track_id: &[u8], tick: u32, value_json: &[u8], ease_json: Option<&[u8]>) -> EditResult {
         ops::set_property_key(self, context, track_id, tick, value_json, ease_json)
+    }
+    /// Adds many property tracks, each with its keys, in one splice and one
+    /// validation. Equivalent to `add_property_track` followed by
+    /// `set_property_key_with_ease` for each key, in order, but O(total) once.
+    pub fn add_property_tracks(&mut self, context: &TimelineContext, tracks: &[BulkTrack<'_>]) -> Result<(), BulkFailure> {
+        ops_bulk::add_property_tracks(self, context, tracks)
     }
     pub fn set_cel(
         &mut self,

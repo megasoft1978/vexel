@@ -51,7 +51,7 @@ fn tools_schema_matches_dispatch() {
     let doc = JsonDocument::parse(listing.as_bytes()).unwrap();
     let result = doc.object_get(doc.root(), b"result").unwrap();
     let advertised = names(&doc, doc.object_get(result, b"tools").unwrap());
-    assert_eq!(advertised.len(), 55);
+    assert_eq!(advertised.len(), 56);
 
     let full = tool_schemas().unwrap();
     let full_doc = JsonDocument::parse(&full).unwrap();

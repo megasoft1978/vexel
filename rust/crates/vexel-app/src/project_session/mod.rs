@@ -206,6 +206,9 @@ pub struct ProjectSession {
     /// Scene ids of the source state named by the first member (the scene
     /// history state id), so timeline edits do not re-serialize and re-tokenize.
     scene_ids: std::cell::RefCell<Option<(u64, Vec<Vec<u8>>)>>,
+    /// The decoded timeline candidate of the current scene state and payload,
+    /// so a run of timeline edits decodes each committed result once.
+    candidate: std::cell::RefCell<Option<native_commands::CandidateCache>>,
 }
 
 impl ProjectSession {
@@ -222,6 +225,7 @@ impl ProjectSession {
             recovery_conflict: false,
             baseline: None,
             scene_ids: std::cell::RefCell::new(None),
+            candidate: std::cell::RefCell::new(None),
         })
     }
     pub fn document(&self) -> &V1Document {
@@ -393,6 +397,7 @@ impl ProjectSession {
             recovery_conflict: false,
             baseline: Some(baseline),
             scene_ids: std::cell::RefCell::new(None),
+            candidate: std::cell::RefCell::new(None),
         })
     }
 
@@ -419,6 +424,7 @@ impl ProjectSession {
             recovery_conflict: false,
             baseline: None,
             scene_ids: std::cell::RefCell::new(None),
+            candidate: std::cell::RefCell::new(None),
         })
     }
 

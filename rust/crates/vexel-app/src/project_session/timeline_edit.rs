@@ -1,13 +1,15 @@
 //! Transactional native-timeline and drawing-asset payload candidates.
 
+use std::cell::Cell;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::svg_asset::{OwnedProjectAsset, SvgAssetError};
 use crate::animation::native_drawing::SvgGeometry;
 use crate::profile::phase;
 use vexel_timeline::{
-    AssetRef, EditFailure, EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode,
-    MAX_SOURCE_BYTES, TimelineContext, TimelineEdit, classify, initialize_empty_timeline,
+    AssetRef, BulkFailure, BulkTrack, EditFailure, EditLimits, EmptyTimelineSettings,
+    Error as TimelineError, LoopMode, MAX_SOURCE_BYTES, TimelineContext, TimelineEdit, classify,
+    initialize_empty_timeline,
 };
 
 static NEXT_CANDIDATE_LINEAGE: AtomicU64 = AtomicU64::new(1);
@@ -276,6 +278,21 @@ impl ProjectTimelineCandidate {
         new_track_id: &[u8],
     ) -> Result<Self, ProjectTimelineError> {
         self.transact(|editor, context| editor.duplicate_track(context, track_id, new_track_id))
+    }
+
+    /// Adds many property tracks with all their keys in one splice and one
+    /// validation. A rejection stores the offending track in `failure`.
+    pub fn add_property_tracks(
+        &self,
+        tracks: &[BulkTrack<'_>],
+        failure: &Cell<Option<BulkFailure>>,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| {
+            editor.add_property_tracks(context, tracks).map_err(|f| {
+                failure.set(Some(f));
+                f.failure
+            })
+        })
     }
 
     pub fn set_track_interpolation(

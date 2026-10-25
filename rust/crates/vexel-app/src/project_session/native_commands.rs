@@ -1,5 +1,6 @@
 //! Atomic native-timeline commands for project sessions.
 
+use super::payload::SessionPayload;
 use super::svg_asset::OwnedProjectAsset;
 use super::timeline_edit::{ProjectTimelineCandidate, ProjectTimelineError};
 use super::{ProjectSession, SessionError};
@@ -30,6 +31,15 @@ pub enum NativeCommandError<E> {
     Operation(E),
 }
 
+/// A candidate decoded for one scene state, payload and edit limits.
+#[derive(Debug)]
+pub(super) struct CandidateCache {
+    state: u64,
+    payload: SessionPayload,
+    limits: EditLimits,
+    candidate: ProjectTimelineCandidate,
+}
+
 impl ProjectSession {
     /// Returns a validated view of the current timeline and its owned assets
     /// without publishing a journal transition. Opaque timeline bytes remain
@@ -39,10 +49,40 @@ impl ProjectSession {
         settings: EmptyTimelineSettings,
         limits: EditLimits,
     ) -> Result<ProjectTimelineCandidate, NativeCommandError<()>> {
+        let state = self.document.history_state_id();
+        if let Some(cache) = self.candidate.borrow().as_ref() {
+            if cache.state == state
+                && cache.limits == limits
+                && cache.payload.same_payload(&self.payload)
+            {
+                let _phase = phase("candidate_cached");
+                return Ok(cache.candidate.clone());
+            }
+        }
         let scene_ids = self.cached_scene_ids()?;
-        self.payload
+        let candidate = self
+            .payload
             .timeline_candidate(scene_ids, settings, limits)
-            .map_err(NativeCommandError::Timeline)
+            .map_err(NativeCommandError::Timeline)?;
+        self.remember_candidate(state, limits, &candidate);
+        Ok(candidate)
+    }
+
+    fn remember_candidate(
+        &self,
+        state: u64,
+        limits: EditLimits,
+        candidate: &ProjectTimelineCandidate,
+    ) {
+        if !self.payload.has_timeline() || !candidate.is_editable() {
+            return;
+        }
+        *self.candidate.borrow_mut() = Some(CandidateCache {
+            state,
+            payload: self.payload.clone(),
+            limits,
+            candidate: candidate.clone(),
+        });
     }
 
     /// Returns the decoded, unique, byte-sorted IDs present in the current SVG.
@@ -158,6 +198,9 @@ impl ProjectSession {
         self.document.history_boundary();
         self.payload = replacement;
         admission.commit();
+        // `edited` was decoded when its last edit was committed and is exactly
+        // the new payload, so the next edit need not decode it again.
+        self.remember_candidate(self.document.history_state_id(), limits, &edited);
         Ok(true)
     }
 }

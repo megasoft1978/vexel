@@ -434,8 +434,8 @@ fn live_preview_lists_the_fragment_and_use_tools() {
     let tools = rig().list_tools();
     assert_eq!(
         tools.len(),
-        55,
-        "53 earlier tools + element_add_fragment + use_add"
+        56,
+        "53 earlier tools + element_add_fragment + use_add + native_timeline_tracks_set"
     );
     for name in ["element_add_fragment", "use_add"] {
         assert!(tools.iter().any(|t| t == name), "{name}");

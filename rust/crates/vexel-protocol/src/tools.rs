@@ -395,6 +395,7 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "native_timeline_reorder_track",
     "native_timeline_set_duration",
     "batch",
+    "native_timeline_tracks_set",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -422,6 +423,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
     super::tools_paint::PAINT_TOOLS
         .iter()
         .chain(super::tools_native_edit::NATIVE_EDIT_TOOLS)
+        .chain(super::tools_native_bulk::NATIVE_BULK_TOOLS)
         .chain(super::tools_structure::STRUCTURE_TOOLS)
         .chain(super::tools_batch::BATCH_TOOLS)
 }
@@ -590,6 +592,12 @@ pub(super) fn validate_arguments(
         }
         if tool.name == "batch" && field == "ops" {
             super::tools_batch::validate_ops(doc, arguments, value)?;
+        }
+        if tool.name == "native_timeline_tracks_set" && field == "tracks" {
+            let count = doc.token(value).map_or(0, |t| t.child_count);
+            if !(1..=super::tools_native_bulk::MAX_TRACKS).contains(&count) {
+                return Err(ToolValidationError::InvalidArguments);
+            }
         }
         if tool.name == "transaction" && field == "edits" {
             let count = doc.token(value).map_or(0, |t| t.child_count);

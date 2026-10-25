@@ -1,0 +1,13 @@
+//! Schema of the bulk native track tool.
+use super::ToolSchema;
+
+/// Most tracks one `native_timeline_tracks_set` call may carry.
+pub(crate) const MAX_TRACKS: usize = 256;
+
+pub(crate) const NATIVE_BULK_TOOLS: &[ToolSchema] = &[ToolSchema {
+    name: "native_timeline_tracks_set",
+    description: "Create 1-256 property tracks with all their keys in ONE undoable, all-or-nothing edit; far faster than one native_timeline_add_property_track call or batch entry per track (a 200 track, 3000 key scene flushes in well under a second). tracks is an array; each entry has the arguments of native_timeline_add_property_track without documentId: trackId, targetId, property, valueType, interpolation, value (the tick-zero value), optional name and optional keys [{tick, value, interp?}] (at most 256 per track, 16384 per call; same value forms and interp names). The whole request is limited to 2 MiB and 65536 JSON tokens, so split a very large scene over several calls (a trs key given as a 7-number array costs fewer tokens than an object). Counts as 1 + tracks/8 requests of the per-minute budget. Any rejected track (bad id, unknown target, duplicate trackId, tick past the end, mismatched value) names its index as `tracks[i]` and nothing changes. Example: {\"tracks\":[{\"trackId\":\"fade\",\"targetId\":\"vexel-object-1\",\"property\":\"opacity\",\"valueType\":\"scalar\",\"interpolation\":\"linear\",\"value\":0,\"keys\":[{\"tick\":12,\"value\":1}]}]}.",
+    properties: "{\"documentId\":{\"type\":\"string\"},\"tracks\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"type\":\"object\",\"properties\":{\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"targetId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"property\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"trs\",\"boolean\",\"path\"]},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]},\"value\":{\"type\":[\"number\",\"boolean\",\"array\",\"object\",\"string\"]},\"name\":{\"type\":\"string\",\"maxLength\":256},\"keys\":{\"type\":\"array\",\"maxItems\":256,\"items\":{\"type\":\"object\",\"properties\":{\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"value\":{\"type\":[\"number\",\"boolean\",\"array\",\"object\",\"string\"]},\"interp\":{\"type\":\"string\"}},\"required\":[\"tick\",\"value\"],\"additionalProperties\":false}}},\"required\":[\"trackId\",\"targetId\",\"property\",\"valueType\",\"interpolation\",\"value\"],\"additionalProperties\":false}}}",
+    required: "documentId,tracks",
+    fields: "documentId:string;tracks:array",
+}];

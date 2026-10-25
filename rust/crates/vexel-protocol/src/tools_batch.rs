@@ -155,25 +155,30 @@ fn validate_op(
     })
 }
 
-/// Rate-limit weight of one request. A `batch` call costs 1 + ops/8; every other
-/// request costs 1. `params` is the request's `params` token.
+/// Rate-limit weight of one request. A `batch` call costs 1 + ops/8 and a
+/// `native_timeline_tracks_set` call 1 + tracks/8; every other request costs 1.
+/// `params` is the request's `params` token.
 pub(crate) fn request_weight(doc: &JsonDocument<'_>, method: &str, params: Option<usize>) -> u32 {
     let Some(params) = params.filter(|_| method == "tools/call") else {
         return 1;
     };
-    if !doc
-        .object_get(params, b"name")
-        .is_some_and(|name| doc.string_equals(name, b"batch"))
-    {
+    let Some(name) = doc.object_get(params, b"name") else {
         return 1;
-    }
-    let ops = doc
+    };
+    let member: &[u8] = if doc.string_equals(name, b"batch") {
+        b"ops"
+    } else if doc.string_equals(name, b"native_timeline_tracks_set") {
+        b"tracks"
+    } else {
+        return 1;
+    };
+    let items = doc
         .object_get(params, b"arguments")
-        .and_then(|args| doc.object_get(args, b"ops"))
-        .and_then(|ops| doc.token(ops))
+        .and_then(|args| doc.object_get(args, member))
+        .and_then(|array| doc.token(array))
         .filter(|t| t.kind == JsonType::Array)
         .map_or(0, |t| t.child_count);
-    u32::try_from(1 + ops / 8).unwrap_or(u32::MAX)
+    u32::try_from(1 + items / 8).unwrap_or(u32::MAX)
 }
 
 #[cfg(test)]
