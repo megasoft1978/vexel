@@ -46,7 +46,7 @@ fn reference(shapes: &[RenderShape<'_>], clips: &[ClipList<'_>], view: ViewMap, 
     for (index, shape) in shapes.iter().enumerate() {
         let style = shape.stroke.filter(|s| stroke::is_visible(s) && !shape.edges.is_empty());
         let inverse = if style.is_some() { stroke::invert(shape.transform) } else { None };
-        let Some(bounds) = shape_bounds(shape, &view, inverse).unwrap() else {
+        let Some(bounds) = shape_bounds(shape, &view, inverse, false).unwrap() else {
             continue;
         };
         let prims = match (style.as_ref(), inverse) {

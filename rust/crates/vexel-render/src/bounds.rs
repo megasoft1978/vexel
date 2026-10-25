@@ -65,6 +65,7 @@ pub(crate) fn shape_bounds(
     shape: &RenderShape<'_>,
     view: &ViewMap,
     inverse: Option<Affine>,
+    dashed: bool,
 ) -> Result<Option<PixelBounds>, RenderError> {
     let mut fill: Option<Extent> = None;
     if shape.filled {
@@ -83,7 +84,7 @@ pub(crate) fn shape_bounds(
             Extent::include(&mut stroke_box, edge.x1, edge.y1);
         }
         let (pad_x, pad_y) =
-            bounds_padding(style, inverse, shape.stroke_closed).ok_or(RenderError::InvalidGeometry)?;
+            bounds_padding(style, inverse, shape.stroke_closed, dashed).ok_or(RenderError::InvalidGeometry)?;
         if let Some(e) = stroke_box.as_mut() {
             e.left -= pad_x;
             e.right += pad_x;
@@ -204,7 +205,7 @@ mod tests {
             stops: &CLEAR_STOPS,
         };
         let shape = stroked(&edges, [0; 4], Some(gradient));
-        let bounds = shape_bounds(&shape, &view(), Some(affine_identity()))
+        let bounds = shape_bounds(&shape, &view(), Some(affine_identity()), false)
             .unwrap()
             .expect("gradient stroke has bounds");
         // The stroke covers rows 3 and 4 (y in [3, 5]) across x in [0, 8).
@@ -221,7 +222,7 @@ mod tests {
             y1: 4.0,
         }];
         let shape = stroked(&edges, [0; 4], None);
-        let bounds = shape_bounds(&shape, &view(), Some(affine_identity())).unwrap();
+        let bounds = shape_bounds(&shape, &view(), Some(affine_identity()), false).unwrap();
         assert!(bounds.is_none(), "{bounds:?}");
     }
 }
