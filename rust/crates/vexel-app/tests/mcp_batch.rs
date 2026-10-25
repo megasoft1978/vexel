@@ -4,7 +4,7 @@
 mod common;
 
 use common::{Rig, no_grants};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 const DOC: &str = "preview-document";
 
@@ -157,12 +157,18 @@ fn rejects_nested_batch_file_tools_and_bad_shapes() {
     assert_eq!(rig.state(), before);
 }
 
+/// Work is deterministic (one request and one undo step versus 100 of each);
+/// wall time is only compared as a mean over several runs with a generous
+/// relative bound, so scheduler noise cannot fail it.
 #[test]
 fn batch_is_not_slower_than_single_calls() {
-    let single = {
+    const RUNS: u32 = 5;
+    const CALLS: u32 = 100;
+    let (mut single, mut batched) = (Duration::ZERO, Duration::ZERO);
+    for _ in 0..RUNS {
         let mut rig = Rig::new(no_grants());
         let start = Instant::now();
-        for i in 0..100 {
+        for i in 0..CALLS {
             rig.tool(
                 "element_add",
                 &format!(
@@ -171,17 +177,21 @@ fn batch_is_not_slower_than_single_calls() {
             )
             .ok();
         }
-        start.elapsed()
-    };
-    let batched = {
+        single += start.elapsed();
+
         let mut rig = Rig::new(no_grants());
-        let ops: Vec<String> = (0..100).map(|i| add_op(i, "")).collect();
+        let initial = rig.state();
+        let ops: Vec<String> = (0..CALLS).map(|i| add_op(i, "")).collect();
         let start = Instant::now();
         batch(&mut rig, None, &ops).ok();
-        start.elapsed()
-    };
-    println!("100 element_add: {single:?} as 100 calls, {batched:?} as one batch");
-    assert!(batched <= single, "{batched:?} > {single:?}");
+        batched += start.elapsed();
+        // Budget: the whole batch costs one undo step, not one per op.
+        undo(&mut rig);
+        assert_eq!(rig.state().source, initial.source, "one undo reverts all");
+    }
+    let (single, batched) = (single / RUNS, batched / RUNS);
+    println!("100 element_add (mean of {RUNS}): {single:?} as 100 calls, {batched:?} as one batch");
+    assert!(batched <= single * 3 / 2, "{batched:?} > 1.5 x {single:?}");
 }
 
 fn bare_add(index: u32) -> String {

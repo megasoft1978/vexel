@@ -72,6 +72,13 @@ pub struct InteractionState {
     pub drag_preview: Option<DragPreview>,
     pub hover: Option<Hit>,
     pub bezier: BezierDraft,
+    /// First track row drawn (vertical scroll), before any pending reveal.
+    pub scroll: usize,
+    /// Track the document selected since the last scroll or pointer input;
+    /// the next layout scrolls just enough to show it.
+    pub reveal: Option<String>,
+    seen_selected: Option<String>,
+    scroll_acc: f64,
     press: Option<Press>,
 }
 
@@ -85,6 +92,10 @@ impl Default for InteractionState {
             drag_preview: None,
             hover: None,
             bezier: BezierDraft::default(),
+            scroll: 0,
+            reveal: None,
+            seen_selected: None,
+            scroll_acc: 0.0,
             press: None,
         }
     }
@@ -110,6 +121,7 @@ impl InteractionState {
         layout: &TimelineLayout,
         model: &TimelineModel,
     ) -> Vec<NativeTimelineAction> {
+        self.commit_scroll(layout);
         let editor_live = self.bezier.open
             && model.selected_item().is_some_and(|(_, _, track, _)| {
                 matches!(track.kind, super::NativeTrackKind::Property)

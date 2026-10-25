@@ -4,7 +4,7 @@
 //! playhead is the single strong accent line of the panel.
 
 use super::interaction::InteractionState;
-use super::layout::{Hit, TimelineLayout};
+use super::layout::Hit;
 use super::model::TimelineModel;
 use crate::layout::paint::text_width;
 use vexel_ui::{Rect, WidgetCanvas};
@@ -56,7 +56,7 @@ pub fn paint(
     if panel.width == 0 || panel.height == 0 {
         return;
     }
-    let layout = TimelineLayout::new(panel, model, state.viewport(model));
+    let layout = state.layout(panel, model);
     let t = canvas.tokens;
     canvas.paint_rect(panel, t.panel);
     canvas.paint_rect(rect(panel.x, panel.y, panel.width, 1), t.separator);

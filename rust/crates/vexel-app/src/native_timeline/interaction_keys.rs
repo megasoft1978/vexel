@@ -1,6 +1,8 @@
 //! Keyboard, zoom and viewport handling for `InteractionState`.
 
 use super::*;
+use crate::native_timeline::NativeTimelineTrack;
+use vexel_ui::Rect;
 
 impl InteractionState {
     pub fn key(&mut self, key: Key, model: &TimelineModel) -> Vec<NativeTimelineAction> {
@@ -305,5 +307,69 @@ impl InteractionState {
             },
             model,
         )
+    }
+
+    /// First row drawn for a band of `visible` rows: the stored scroll, moved
+    /// just far enough to show a pending reveal, clamped to the track count.
+    pub fn first_row(&self, model: &TimelineModel, visible: usize) -> usize {
+        let max = model.tracks.len().saturating_sub(visible);
+        let mut first = self.scroll.min(max);
+        let wanted = self
+            .reveal
+            .as_deref()
+            .and_then(|id| model.tracks.iter().position(|track| track.id == id));
+        if let (Some(index), true) = (wanted, visible > 0) {
+            if index < first {
+                first = index;
+            } else if index >= first + visible {
+                first = index + 1 - visible;
+            }
+        }
+        first.min(max)
+    }
+
+    /// The layout for `panel` with this state's viewport and vertical scroll.
+    pub fn layout(&self, panel: Rect, model: &TimelineModel) -> TimelineLayout {
+        let base = TimelineLayout::new(panel, model, self.viewport(model));
+        let first = self.first_row(model, base.visible_rows());
+        base.scrolled(first, model.tracks.len())
+    }
+
+    /// Remembers the scroll `layout` shows and drops any pending reveal.
+    pub(super) fn commit_scroll(&mut self, layout: &TimelineLayout) {
+        self.scroll = layout.first_row;
+        self.reveal = None;
+    }
+
+    /// Notes the document-selected track of a new snapshot; a change to a new
+    /// track schedules a reveal so a canvas selection stays on screen.
+    pub fn note_selection(&mut self, tracks: &[NativeTimelineTrack]) {
+        let selected = tracks.iter().find(|t| t.selected).map(|t| t.id.as_str());
+        if selected != self.seen_selected.as_deref() {
+            self.seen_selected = selected.map(str::to_owned);
+            if self.seen_selected.is_some() {
+                self.reveal = self.seen_selected.clone();
+            }
+        }
+    }
+
+    /// Scrolls the rows by `delta_rows` (negative = up); true when they moved.
+    pub fn scroll_rows(&mut self, delta_rows: i64, layout: &TimelineLayout, total: usize) -> bool {
+        let max = layout.max_first_row(total) as i64;
+        let next = (layout.first_row as i64 + delta_rows).clamp(0, max) as usize;
+        let moved = next != layout.first_row;
+        self.scroll = next;
+        self.reveal = None;
+        moved
+    }
+
+    /// Wheel/trackpad delta in points (positive = content moves down, as in
+    /// the SMIL panel); accumulates to whole rows.
+    pub fn scroll_points(&mut self, dy: f64, layout: &TimelineLayout, total: usize) -> bool {
+        let row = f64::from(crate::native_timeline::layout::TRACK_HEIGHT);
+        self.scroll_acc += dy;
+        let rows = (self.scroll_acc / row).trunc();
+        self.scroll_acc -= rows * row;
+        rows != 0.0 && self.scroll_rows(-(rows as i64), layout, total)
     }
 }

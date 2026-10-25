@@ -1,7 +1,7 @@
 //! Gesture state machine turning pointer/key events into document edits.
 
 use super::{
-    frame::{compose, decompose, rotation_about, shape_frame},
+    frame::{compose, decompose, rotation_about, shape_frame, translate_shape},
     handles::{HANDLE_PX, handle_at, resize_bounds, rotate_start},
     map::{CanvasMap, doc_per_pixel},
     pen::{PenPath, Vertex},
@@ -225,7 +225,7 @@ impl ToolController {
             }
             EditKey::Duplicate => {
                 let duplicate = doc.duplicate(&id)?;
-                doc.translate(&duplicate, 12.0, 12.0)?;
+                translate_shape(doc, &duplicate, 12.0, 12.0)?;
                 self.selection = Some(duplicate);
             }
             EditKey::Forward => doc.reorder(&id, Reorder::Forward)?,
@@ -387,7 +387,7 @@ impl ToolController {
         let Some(id) = self.selection.clone() else {
             return Ok(Outcome::Ignored);
         };
-        doc.translate(&id, dx, dy)?;
+        translate_shape(doc, &id, dx, dy)?;
         Ok(Outcome::Committed)
     }
 
@@ -520,7 +520,7 @@ impl ToolController {
                 if dx.abs() < MIN_DRAG && dy.abs() < MIN_DRAG {
                     return Ok(Outcome::Updated);
                 }
-                doc.translate(&id, dx, dy)?;
+                translate_shape(doc, &id, dx, dy)?;
                 Ok(Outcome::Committed)
             }
             Gesture::Resize {
