@@ -148,7 +148,7 @@ fn wide_stroke_scenes_match_the_recorded_digests() {
         }
     }
     let recorded = include_str!("raster_diff_wide_hashes.txt");
-    let expected: Vec<(&str, &str)> = recorded.lines().filter_map(|l| l.split_once(' ')).collect();
+    let expected: Vec<(&str, &str)> = recorded.lines().filter(|l| !l.starts_with('#')).filter_map(|l| l.split_once(' ')).collect();
     assert_eq!(expected.len(), rows.len(), "recorded digest count");
     for ((name, hash), (want_name, want_hash)) in rows.iter().zip(expected) {
         assert_eq!(name, want_name);

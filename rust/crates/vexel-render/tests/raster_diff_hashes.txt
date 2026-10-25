@@ -20,7 +20,9 @@ Stroke-389 8b6a1ea0d6a3e2b64a6794685c3acacaf9be7bde16c982d274364c1419b0cac7
 Nest-389 49374759687c4f46fbe9b6d23b183d4414556a449dfc35a06c07d6bef71897a1
 Clip-389 7ff724aa06e9d1a3110722408f241987329a5aea15962a1620cf1bce0154f4bc
 Mix-389 d357088bfc42ec57f045eaf68303c5cc18c6c119a4899c48856755c4f9c3c46f
-Dash-389 c5f30fcaf6e434406d6f6ba793891ac6d1970bccbf4c31f7b3781436349df595
+# Dash-389: re-pinned after the closed-dashed square-cap bounds fix (1 pixel, alpha increased, max channel delta 102; every differing pixel lies in the square-cap corner reach of a dash end on a closed subpath,
+# pre-fix 08f0793d vs a1cc3a4a RGBA diff). Old: c5f30fcaf6e434406d6f6ba793891ac6d1970bccbf4c31f7b3781436349df595
+Dash-389 5a4d529181ee572fbb61815e3e631fc591cca0caa41193a10c8eecb9fe30b0e2
 Strokex-61 2da96415dd9f207cf9f47a335bd6512ba357bed8078c6fa2cb0714bb9fbf4bca
 Nestx-61 116fb7bf32616a03da82b820bdb553bfbe7c414c3a4561625fb1df945c98ec46
 Strokex-203 fe405be28833e7ea4b99ebdeaa4cf72fcaaeba6dc48fdc47096e9f6c6a46f897
