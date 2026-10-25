@@ -479,7 +479,7 @@ fn document_error(error: V1DocumentError) -> &'static str {
         V1DocumentError::Allocation | V1DocumentError::FormattingLimit => {
             "preview allocation or formatting failed"
         }
-        V1DocumentError::Edit(_) => "document edit failed",
+        _ => "document edit failed",
     }
 }
 fn clone_shapes(input: &[Shape]) -> Result<Vec<Shape>, &'static str> {

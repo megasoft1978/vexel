@@ -7,6 +7,7 @@ use super::super::ext_structure::{document, string};
 use super::super::{JsonType, PreviewArgumentError};
 use crate::project_session::SessionEditError;
 use crate::session::{AppDocument, McpOutcome, check_room};
+use std::sync::atomic::AtomicBool;
 use vexel_json::JsonDocument;
 use vexel_v1_document::{UseSpec, V1DocumentError, fragment_ids};
 
@@ -134,6 +135,18 @@ fn fragment_error(error: V1DocumentError) -> &'static str {
         V1DocumentError::InvalidStableId => {
             "element_add_fragment: every id in the fragment must be new and valid"
         }
+        V1DocumentError::DisallowedElement => {
+            "element_add_fragment: element not allowed; use shapes, g, defs, symbol, use, mask, clipPath, filter/fe*, gradients, pattern, marker, text, tspan or image"
+        }
+        V1DocumentError::DisallowedAttribute => {
+            "element_add_fragment: event-handler (on*) attributes are not allowed"
+        }
+        V1DocumentError::ExternalReference => {
+            "element_add_fragment: href and url(...) must be local #id references (image may use data:image/)"
+        }
+        V1DocumentError::UseCycle => {
+            "element_add_fragment: the fragment creates a <use> reference cycle"
+        }
         _ => "element_add_fragment: xml must be one well-formed element of at most 65536 bytes",
     }
 }
@@ -142,7 +155,9 @@ fn use_error(error: V1DocumentError) -> &'static str {
     match error {
         V1DocumentError::MissingStableId => "use_add: refId or parentId is not an element id",
         V1DocumentError::InvalidStableId => "use_add: id is invalid or already used",
-        V1DocumentError::Unsupported => "use_add: refId must not contain the parent (cycle)",
+        V1DocumentError::Unsupported | V1DocumentError::UseCycle => {
+            "use_add: refId must not contain the parent (reference cycle)"
+        }
         V1DocumentError::InvalidColor | V1DocumentError::InvalidGeometry => {
             "use_add: x, y, fill, stroke, opacity or transform is out of range"
         }
@@ -157,14 +172,45 @@ fn history<E>(error: SessionEditError<E>, map: impl FnOnce(E) -> &'static str) -
     }
 }
 
+/// Whether the renderer accepts the current source (decode plus an 8x8 render).
+fn renders(app: &AppDocument) -> bool {
+    app.source_bytes().is_ok_and(|source| {
+        crate::animation::frame::decode(&source)
+            .and_then(|scene| scene.render_sized(0.0, (8, 8), &AtomicBool::new(false)))
+            .is_ok()
+    })
+}
+
+/// Runs `edit`; when it turns a renderable document into one the renderer
+/// rejects (unsupported filter primitive, blend mode...), the edit is undone.
+fn guarded<R>(
+    app: &mut AppDocument,
+    edit: impl FnOnce(&mut AppDocument) -> Result<R, &'static str>,
+    refused: &'static str,
+) -> Result<R, &'static str> {
+    let was = renders(app);
+    let result = edit(app)?;
+    if was && !renders(app) {
+        app.undo().map_err(|_| "project history unavailable")?;
+        return Err(refused);
+    }
+    Ok(result)
+}
+
 pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'static str> {
     match op {
         Op::Fragment { parent, xml } => {
             let declared = fragment_ids(xml.as_bytes()).map_err(fragment_error)?;
-            check_room(app, declared.len())?;
-            let ids = app
-                .edit(|doc| doc.add_fragment(&parent, xml.as_bytes()))
-                .map_err(|e| history(e, fragment_error))?;
+            // The fragment's root element gets an id when it has none.
+            check_room(app, declared.len() + 1)?;
+            let ids = guarded(
+                app,
+                |app| {
+                    app.edit(|doc| doc.add_fragment(&parent, xml.as_bytes()))
+                        .map_err(|e| history(e, fragment_error))
+                },
+                "element_add_fragment: the renderer does not support this construct (feTurbulence, mix-blend-mode...); edit undone. See docs/mcp.md",
+            )?;
             let list = ids
                 .iter()
                 .map(|id| format!("\"{id}\""))

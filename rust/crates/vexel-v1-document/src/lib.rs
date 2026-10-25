@@ -9,6 +9,7 @@ pub use vexel_document_edit::EditSnapshot;
 mod attrs;
 mod draw;
 mod fragment;
+mod fragment_check;
 mod paint_defs;
 mod path_data;
 mod query;
@@ -43,6 +44,14 @@ pub enum V1DocumentError {
     MissingStableId,
     InvalidAnimationFragment,
     InvalidPathData,
+    /// A fragment element is not on the allow-list.
+    DisallowedElement,
+    /// An event handler, non-local href or other disallowed attribute.
+    DisallowedAttribute,
+    /// A `url(...)` or href that is not a local `#id` reference.
+    ExternalReference,
+    /// A `<use>` reference cycle would result.
+    UseCycle,
     InvalidStrokeWidth,
     Unsupported,
     UnsupportedTransform,

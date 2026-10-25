@@ -56,7 +56,8 @@ impl V1Document {
         if xml.is_empty() || xml.len() > MAX_FRAGMENT_BYTES {
             return Err(V1DocumentError::InvalidAnimationFragment);
         }
-        let parent = self.fragment_parent(parent)?;
+        let parent_node = self.fragment_parent(parent)?;
+        crate::fragment_check::validate_fragment(xml)?;
         let ids = crate::structure_defs::fragment_ids(xml)?;
         for (at, id) in ids.iter().enumerate() {
             validate_stable_id(id)?;
@@ -64,8 +65,27 @@ impl V1Document {
                 return Err(V1DocumentError::InvalidStableId);
             }
         }
-        self.editor.insert_xml_fragment(parent, xml)?;
+        self.insert_checked(parent, parent_node, xml)?;
         Ok(ids)
+    }
+
+    /// Inserts `xml` under `parent`; when it holds a `<use>`, a scratch copy
+    /// of the document takes the insert first and a reference cycle refuses
+    /// it before the real document changes.
+    fn insert_checked(
+        &mut self,
+        parent: &str,
+        parent_node: DocumentHandle,
+        xml: &[u8],
+    ) -> Result<(), V1DocumentError> {
+        if xml.windows(4).any(|w| w == b"<use") {
+            let mut scratch = V1Document::from_source(&self.source()?)?;
+            let node = scratch.fragment_parent(parent)?;
+            scratch.editor.insert_xml_fragment(node, xml)?;
+            scratch.check_use_cycles()?;
+        }
+        self.editor.insert_xml_fragment(parent_node, xml)?;
+        Ok(())
     }
 
     /// Inserts `<use id href="#target">` as the last child of `parent`. The
@@ -131,13 +151,13 @@ impl V1Document {
         if self.editor.try_find_id(id.as_bytes())?.is_some() {
             return Err(V1DocumentError::InvalidStableId);
         }
-        self.editor.insert_xml_fragment(parent_node, tag.as_bytes())?;
+        self.insert_checked(parent, parent_node, tag.as_bytes())?;
         Ok(id.to_owned())
     }
 
     /// Whether a document point hits what a `<use>` shows: the translated
     /// referenced shape (or, for a `<g>`/`<symbol>`, any child shape).
-    pub(crate) fn hit_use(&self, node: DocumentHandle, x: f64, y: f64) -> bool {
+    pub(crate) fn hit_use(&self, node: DocumentHandle, x: f64, y: f64, depth: usize) -> bool {
         let Some(href) = self
             .raw_attr(node, b"href")
             .or_else(|| self.raw_attr(node, b"xlink:href"))
@@ -166,7 +186,7 @@ impl V1Document {
             };
             let mut child = vexel_document_edit::document_view_first_child(model, target);
             while let Some(item) = child {
-                if self.hit_id(item, px, py).is_some() {
+                if self.hit_depth(item, px, py, depth + 1).is_some() {
                     return true;
                 }
                 child = vexel_document_edit::document_view_next_sibling(model, item);
@@ -175,7 +195,7 @@ impl V1Document {
         }
         // The target is referenced by id, so it passes hit_id's id filter; its
         // own transform is applied by hit_id, matching how `<use>` renders it.
-        self.hit_id(target, px, py).is_some()
+        self.hit_depth(target, px, py, depth + 1).is_some()
     }
 }
 

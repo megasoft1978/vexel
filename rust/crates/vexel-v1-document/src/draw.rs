@@ -11,6 +11,9 @@ use vexel_document_edit::{
 
 /// Distance, in document units, added around line and path geometry by
 /// [`V1Document::hit_test`] (path hits use the bounding box plus this margin).
+/// Deepest group/`<use>` nesting hit testing follows.
+pub(crate) const MAX_HIT_DEPTH: usize = 64;
+
 pub const HIT_TOLERANCE: f64 = 2.0;
 const MAX_STROKE_WIDTH: f64 = 256.0;
 const MAX_COORDINATE: f64 = 1_000_000.0;
@@ -522,6 +525,21 @@ impl V1Document {
     }
 
     pub(crate) fn hit_id(&self, node: DocumentHandle, x: f64, y: f64) -> Option<String> {
+        self.hit_depth(node, x, y, 0)
+    }
+
+    /// `hit_id` with a nesting depth; groups, symbols and `<use>` stop at
+    /// [`MAX_HIT_DEPTH`] so a cyclic or very deep source cannot overflow the stack.
+    pub(crate) fn hit_depth(
+        &self,
+        node: DocumentHandle,
+        x: f64,
+        y: f64,
+        depth: usize,
+    ) -> Option<String> {
+        if depth > MAX_HIT_DEPTH {
+            return None;
+        }
         let id = self
             .raw_attr(node, b"id")
             .filter(|raw| !raw.contains(&b'&'))?;
@@ -588,14 +606,14 @@ impl V1Document {
                 let mut child = document_view_first_child(model, node);
                 let mut topmost = None;
                 while let Some(item) = child {
-                    if let Some(id) = self.hit_id(item, px, py) {
+                    if let Some(id) = self.hit_depth(item, px, py, depth + 1) {
                         topmost = Some(id);
                     }
                     child = document_view_next_sibling(model, item);
                 }
                 return topmost;
             }
-            ElementKind::Use => self.hit_use(node, px, py),
+            ElementKind::Use => self.hit_use(node, px, py, depth + 1),
             ElementKind::Text | ElementKind::Other => false,
         };
         if !inside {
