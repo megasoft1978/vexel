@@ -18,9 +18,11 @@ pub enum Profile {
     Blur,
     Text,
     Mix,
+    /// Production-like animated cartoon: gradients, blend groups, blur and a grain filter.
+    Cartoon,
 }
 
-pub const PROFILES: [Profile; 10] = [
+pub const PROFILES: [Profile; 11] = [
     Profile::Fill,
     Profile::Lin,
     Profile::Rad,
@@ -31,6 +33,7 @@ pub const PROFILES: [Profile; 10] = [
     Profile::Blur,
     Profile::Text,
     Profile::Mix,
+    Profile::Cartoon,
 ];
 
 impl Profile {
@@ -46,6 +49,7 @@ impl Profile {
             Profile::Blur => "blur",
             Profile::Text => "text",
             Profile::Mix => "mix",
+            Profile::Cartoon => "cartoon",
         }
     }
     pub fn parse(name: &str) -> Option<Profile> {
@@ -260,6 +264,52 @@ fn filter_defs(out: &mut String, rng: &mut Lcg, count: usize) {
     }
 }
 
+/// Grain over the whole canvas, as the production cartoon does: noise,
+/// desaturated, multiplied onto the scene.
+const GRAIN: &str = "<filter id=\"grain\" x=\"0\" y=\"0\" width=\"1\" height=\"1\">\
+<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.8\" numOctaves=\"2\" seed=\"3\" result=\"n\"/>\
+<feColorMatrix in=\"n\" type=\"saturate\" values=\"0\" result=\"g\"/>\
+<feBlend in=\"SourceGraphic\" in2=\"g\" mode=\"multiply\"/></filter>\n";
+
+/// About `n` elements in character-like groups: gradient fills, every fifth
+/// group multiply-blended, every seventh blurred, all under one grain filter.
+fn cartoon(shared: &mut String, body: &mut String, rng: &mut Lcg, n: usize) {
+    let d = 16;
+    gradient_defs(shared, rng, d, false);
+    gradient_defs(shared, rng, d, true);
+    filter_defs(shared, rng, 4);
+    shared.push_str(GRAIN);
+    body.push_str("<g id=\"scene\" filter=\"url(#grain)\">\n");
+    let per_group = 20;
+    for (g, first) in (0..n).step_by(per_group).enumerate() {
+        let blend = if g % 5 == 4 {
+            " style=\"mix-blend-mode:multiply\""
+        } else {
+            ""
+        };
+        let blur = if g % 7 == 6 {
+            format!(" filter=\"url(#f{})\"", g % 4)
+        } else {
+            String::new()
+        };
+        let _ = writeln!(
+            body,
+            "<g id=\"g{g}\" opacity=\"{:.2}\"{blend}{blur}>",
+            rng.range(0.6, 1.0)
+        );
+        for i in first..(first + per_group).min(n) {
+            let paint = match i % 3 {
+                0 => Paint::Lin,
+                1 => Paint::Rad,
+                _ => Paint::Flat,
+            };
+            leaf(body, rng, i, paint, d);
+        }
+        body.push_str("</g>\n");
+    }
+    body.push_str("</g>\n");
+}
+
 pub fn generate(profile: Profile, n: usize) -> String {
     let mut rng = Lcg::new(seed_for(profile, n));
     let c = CANVAS;
@@ -290,6 +340,7 @@ pub fn generate(profile: Profile, n: usize) -> String {
             (0..n).for_each(|i| leaf(&mut body, &mut rng, i, Paint::Blur, defs.min(8)));
         }
         Profile::Text => (0..n).for_each(|i| leaf(&mut body, &mut rng, i, Paint::Text, defs)),
+        Profile::Cartoon => cartoon(&mut shared, &mut body, &mut rng, n),
         Profile::Nest => nested(&mut body, &mut rng, n, defs),
         Profile::Opac => opacity_groups(&mut body, &mut rng, n, defs),
         Profile::Mix => {

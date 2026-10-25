@@ -57,23 +57,13 @@ pub(super) fn user_region(view: &ViewMap, filter: &Filter, source: Option<[f64; 
     ]
 }
 
-/// Clears every pixel whose centre lies outside the filter region.
-///
-/// `objectBoundingBox` (and the default region) is relative to the
-/// pre-filter alpha bounds; `userSpaceOnUse` maps through the view.
-pub(super) fn clip(
-    rgba: &mut [u8],
-    width: usize,
-    height: usize,
-    view: &ViewMap,
-    filter: &Filter,
-    bounds: Option<[f64; 4]>,
-) {
-    let Some(source) = bounds else {
+/// Clears every pixel whose centre lies outside `region` (device pixels of
+/// this buffer, from [`device_region`]); `None` clears everything.
+pub(super) fn clip(rgba: &mut [u8], width: usize, height: usize, region: Option<[f64; 4]>) {
+    let Some(region) = region else {
         rgba.fill(0);
         return;
     };
-    let region = device_region(view, filter, source);
     for y in 0..height {
         let sample_y = y as f64 + 0.5;
         for x in 0..width {

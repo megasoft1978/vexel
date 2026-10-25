@@ -89,3 +89,17 @@ fn loop_ticks_follow_the_loop_mode() {
     assert_eq!(loop_ticks(4, LoopMode::PingPong), vec![0, 1, 2, 3, 2, 1]);
     assert_eq!(loop_ticks(1, LoopMode::PingPong), vec![0]);
 }
+
+#[test]
+fn gif_size_shrinks_to_fit_the_encoder_pixel_budget() {
+    use crate::animation::native_export::fit_total_pixels;
+    use vexel_gif::MAX_TOTAL_PIXELS;
+    assert_eq!(fit_total_pixels((64, 48), 10), (64, 48));
+    let (w, h) = fit_total_pixels((1536, 1536), 120);
+    assert!(u64::from(w) * u64::from(h) * 120 <= MAX_TOTAL_PIXELS);
+    assert_eq!(w, h);
+    assert!(w >= 500, "scaled too far: {w}");
+    let (w, h) = fit_total_pixels((4096, 1024), 120);
+    assert!(u64::from(w) * u64::from(h) * 120 <= MAX_TOTAL_PIXELS);
+    assert_eq!(w / h, 4);
+}

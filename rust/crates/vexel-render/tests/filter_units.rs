@@ -6,7 +6,7 @@ mod common;
 
 use common::{NEVER, unit_view};
 use std::cell::Cell;
-use vexel_render::filter::{FILTER_WORK_LIMIT, apply_filter_chain};
+use vexel_render::filter::{MAX_FILTER_PIXELS, apply_filter_chain};
 use vexel_render::{RenderError, ViewBox, ViewMap};
 use vexel_scene::{Filter, FilterInput, FilterKind, FilterPrimitive, TableRange};
 
@@ -475,11 +475,11 @@ fn dangling_or_empty_chains_are_invalid() {
 
 #[test]
 fn oversize_work_and_scratch_are_limit_exceeded() {
-    // 4096 x 4096 pixels: three single-pass primitives exceed the work bound.
-    let size = 4096u32;
-    let mut data = vec![0u8; size as usize * size as usize * 4];
-    let chain = [offset(1.0, 0.0), offset(1.0, 0.0), offset(1.0, 0.0)];
-    assert!(3 * (size as usize * size as usize) > FILTER_WORK_LIMIT);
+    // 4100 x 4100 opaque pixels exceed the 16 Mpx window cap.
+    let size = 4100u32;
+    let mut data = vec![255u8; size as usize * size as usize * 4];
+    let chain = [offset(1.0, 0.0)];
+    assert!(size as usize * size as usize > MAX_FILTER_PIXELS);
     let view = ViewMap::from_viewbox(
         ViewBox {
             x: 0.0,
@@ -493,7 +493,7 @@ fn oversize_work_and_scratch_are_limit_exceeded() {
     )
     .unwrap();
     assert_eq!(
-        apply_filter_chain(&mut data, &view, &whole(3), &chain, 1 << 40, NEVER),
+        apply_filter_chain(&mut data, &view, &whole(1), &chain, 1 << 40, NEVER),
         Err(RenderError::LimitExceeded)
     );
     // scratch smaller than the surfaces it needs

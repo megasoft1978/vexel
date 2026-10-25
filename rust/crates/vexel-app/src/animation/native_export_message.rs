@@ -68,6 +68,7 @@ fn cause_name(error: &NativeExportError) -> &'static str {
         }
         NativeExportError::Frame(NativeFrameError::Drawing(_)) => "drawing",
         NativeExportError::Frame(NativeFrameError::Allocation) => "limit_render",
+        NativeExportError::Encode(_) => "gif_limit",
         _ => "other",
     }
 }
@@ -92,6 +93,7 @@ pub fn render_failure(tool: Tool, error: &NativeExportError) -> &'static str {
         "feature" => "the scene uses an SVG feature that is not supported",
         "limit_decode" => "the scene exceeds a decode safety limit (document size or element count)",
         "limit_render" => "the scene exceeds a render safety limit (raster size or work budget)",
+        "gif_limit" => "the GIF would exceed the encoder frame, size or pixel limits; shorten the timeline or reduce the size",
         "malformed" => "the scene SVG could not be parsed",
         "drawing" => "a native drawing cel could not be rendered (missing or invalid drawing asset)",
         "other" => "the scene could not be rendered",
