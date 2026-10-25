@@ -189,3 +189,44 @@ fn ring_memory_and_threads_stay_bounded() {
     // Frames are still right without a ring.
     prepared.render(3, (96, 96)).unwrap();
 }
+
+/// Runs `f` on a helper thread so a hang fails the test instead of stalling it.
+fn within<T: Send + 'static>(what: &str, f: impl FnOnce() -> T + Send + 'static) -> T {
+    use std::sync::mpsc::RecvTimeoutError;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = tx.send(f());
+    });
+    match rx.recv_timeout(std::time::Duration::from_secs(60)) {
+        Ok(value) => value,
+        Err(RecvTimeoutError::Timeout) => panic!("{what} hung"),
+        Err(RecvTimeoutError::Disconnected) => panic!("{what} panicked"),
+    }
+}
+
+#[test]
+fn a_panicking_decode_settles_its_slot_and_decoding_goes_on() {
+    let doc = doc();
+    let clock = HandClock::default();
+    let mut host = host(&clock, true);
+    let prepared = host.prepared_for_test(&doc).unwrap();
+    prepared.set_preview(true);
+    *prepared.ahead().panic_at.lock().unwrap() = vec![5, 6];
+    let worker = prepared.clone();
+    let (inflight, missing, later) = within("decode after panics", move || {
+        worker.render(4, (96, 96)).expect("frame 4");
+        worker.ahead().settle();
+        let inflight = worker.ahead().inflight();
+        let missing = (
+            worker.ahead().take(5).is_none(),
+            worker.ahead().take(6).is_none(),
+        );
+        worker.render(5, (96, 96)).expect("frame 5");
+        worker.ahead().settle();
+        let later = worker.ahead().take(7).is_some();
+        (inflight, missing, later)
+    });
+    assert_eq!(inflight, 0, "decode threads leaked by a panic");
+    assert_eq!(missing, (true, true), "panicked ticks must not be served");
+    assert!(later, "no decode after two panics");
+}

@@ -60,6 +60,9 @@ pub struct Ahead {
     off: AtomicBool,
     #[cfg(test)]
     pub hits: std::sync::atomic::AtomicUsize,
+    /// Ticks whose decode panics (test hook).
+    #[cfg(test)]
+    pub panic_at: Mutex<Vec<u32>>,
     state: Mutex<State>,
     changed: Condvar,
 }
@@ -192,7 +195,24 @@ impl Ahead {
                 .stack_size(16 * 1024 * 1024)
                 .spawn(move || {
                     let cancel = || !alive.load(Ordering::SeqCst);
-                    let graph = worker.decode_tick(next, &cancel);
+                    // A panicking decode must still settle its slot and thread count.
+                    let graph = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        #[cfg(test)]
+                        {
+                            let inject = worker
+                                .ahead()
+                                .panic_at
+                                .lock()
+                                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                                .contains(&next);
+                            if inject {
+                                panic!("injected decode panic at tick {next}");
+                            }
+                        }
+                        worker.decode_tick(next, &cancel)
+                    }))
+                    .ok()
+                    .flatten();
                     worker.ahead().finish(key, graph);
                 });
             if spawned.is_err() {
@@ -251,5 +271,10 @@ impl Ahead {
                 .wait(state)
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
         }
+    }
+
+    /// Decode threads still running.
+    pub fn inflight(&self) -> usize {
+        lock(self).inflight
     }
 }
