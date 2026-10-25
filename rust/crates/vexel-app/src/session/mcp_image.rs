@@ -15,6 +15,7 @@ use std::io::Read;
 use std::os::unix::fs::OpenOptionsExt;
 use vexel_mcp_access::{AccessError, AccessPolicy};
 use vexel_png::Compression;
+use vexel_v1_document::{MAX_PATH_DATA_BYTES, validate_path_data};
 
 /// Largest PNG file read.
 const MAX_FILE_BYTES: u64 = 64 * 1024 * 1024;
@@ -245,7 +246,17 @@ impl McpHost {
             return Err("image trace idPrefix collides with existing ids; choose another idPrefix");
         }
         let parent = (group != "root").then_some(group);
-        app.edit(|doc| {
+        if layers
+            .iter()
+            .any(|l| validate_path_data(&l.d).is_err() || l.d.len() > MAX_PATH_DATA_BYTES)
+        {
+            return Err(
+                "image trace layer path too large; raise minArea, raise tolerance or lower k",
+            );
+        }
+        // Inside a batch the group is already open and the batch rolls back.
+        let group = app.begin_group().ok();
+        let edited = app.edit(|doc| {
             doc.set_insert_parent(parent.as_deref())?;
             let added = layers
                 .iter()
@@ -253,11 +264,22 @@ impl McpHost {
                 .try_for_each(|(l, id)| doc.add_path_with_id(&l.d, &l.hex(), "none", 0.0, id));
             doc.set_insert_parent(None)?;
             added
-        })
-        .map_err(|e| match e {
+        });
+        let edited = edited.map_err(|e| match e {
             SessionEditError::Operation(_) => "image trace edit rejected by the document",
             SessionEditError::History(_) => "project history unavailable",
-        })?;
+        });
+        match (group, edited) {
+            (Some(group), Ok(())) => app
+                .end_group(group)
+                .map_err(|_| "project history unavailable")?,
+            (Some(group), Err(message)) => {
+                app.rollback_group(group)
+                    .map_err(|_| "project history unavailable")?;
+                return Err(message);
+            }
+            (None, result) => result?,
+        }
         let list: Vec<String> = new_ids.iter().map(|i| json_string(i)).collect();
         reply(format!(
             "{{\"ok\":true,\"operation\":\"image_trace\",{head},\"dirty\":{},\"elementIds\":[{}]}}",

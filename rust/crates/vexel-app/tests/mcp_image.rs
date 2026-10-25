@@ -318,3 +318,39 @@ fn tools_are_listed() {
         assert!(tools.iter().any(|t| t == name), "{name}");
     }
 }
+
+fn checker_png(dir: &Dir, name: &str, n: usize) -> String {
+    let mut px = vec![255u8; n * n * 4];
+    for y in 0..n {
+        for x in 0..n {
+            if (x + y) % 2 == 0 {
+                let i = (y * n + x) * 4;
+                px[i..i + 3].copy_from_slice(&[0, 0, 0]);
+            }
+        }
+    }
+    let png = encode_rgba8(n as u32, n as u32, &px, Compression::Fixed).unwrap();
+    fs::write(dir.file(name), png).unwrap();
+    dir.text(name)
+}
+
+#[test]
+fn oversized_layer_path_is_rejected_and_leaves_the_document_unchanged() {
+    let dir = Dir::new();
+    let path = checker_png(&dir, "checker.png", 200);
+    let mut rig = rig(&dir);
+    let before = rig.state();
+    let reply = rig.doc_tool(
+        "image_trace",
+        &format!(
+            r#""path":{},"k":2,"minArea":1,"groupId":"root","idPrefix":"big""#,
+            quoted(&path)
+        ),
+    );
+    assert!(reply.is_error, "{}", reply.body);
+    assert_eq!(
+        reply.error(),
+        "image trace layer path too large; raise minArea, raise tolerance or lower k"
+    );
+    assert_eq!(rig.state(), before);
+}

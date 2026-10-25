@@ -160,15 +160,16 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             doc.object_get(args, b"format")
                 .is_some_and(|v| doc.string_equals(v, name))
         };
-        let video =
-            format_is(b"mp4") || format_is(b"mov") || format_is(b"apng") || format_is(b"frames");
+        let video = format_is(b"mp4")
+            || format_is(b"mov")
+            || format_is(b"apng")
+            || format_is(b"frames");
         let valid_format = format_is(b"gif") || video;
         // Video, apng and frames take fps as an optional number and no duration; the preview
         // dispatcher validates both with specific messages.
-        let valid_fps =
-            video || number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
-        let valid_duration =
-            video || number(b"duration").is_some_and(|v| (0.01..=10.0).contains(&v));
+        let valid_fps = video
+            || number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
+        let valid_duration = video || number(b"duration").is_some_and(|v| (0.01..=10.0).contains(&v));
         if !(valid_path && valid_format && valid_fps && valid_duration) {
             return append_tool_error(
                 out,
@@ -211,9 +212,10 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
                 "batch needs between 1 and 256 operations",
                 "invalid_arguments",
             ),
-            crate::ToolValidationError::BatchToolNotAllowed => {
-                ("tool is not allowed in a batch", "invalid_arguments")
-            }
+            crate::ToolValidationError::BatchToolNotAllowed => (
+                "tool is not allowed in a batch",
+                "invalid_arguments",
+            ),
             crate::ToolValidationError::InvalidArguments => {
                 ("invalid tool arguments", "invalid_arguments")
             }

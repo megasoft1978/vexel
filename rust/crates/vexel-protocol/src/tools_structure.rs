@@ -15,5 +15,5 @@ pub(crate) const STRUCTURE_TOOLS: &[ToolSchema] = &[
         properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"refId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"x\":{\"type\":\"number\"},\"y\":{\"type\":\"number\"},\"transform\":{\"type\":\"object\",\"properties\":{\"translateX\":{\"type\":\"number\"},\"translateY\":{\"type\":\"number\"},\"rotate\":{\"type\":\"number\"},\"pivotX\":{\"type\":\"number\"},\"pivotY\":{\"type\":\"number\"},\"scaleX\":{\"type\":\"number\"},\"scaleY\":{\"type\":\"number\"},\"skewX\":{\"type\":\"number\"}},\"additionalProperties\":false},\"fill\":{\"type\":\"string\"},\"stroke\":{\"type\":\"string\"},\"opacity\":{\"type\":\"number\",\"minimum\":0,\"maximum\":1}}",
         required: "documentId,refId",
         fields: "documentId:string;parentId:string;refId:string;id:string;x:number;y:number;transform:object;fill:string;stroke:string;opacity:number",
-    },
+        },
 ];

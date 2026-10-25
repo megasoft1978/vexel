@@ -152,13 +152,7 @@ pub fn handle_async<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?Sized>(
     }
     let params = doc.object_get(root, b"params");
     let weight = crate::tools_batch::request_weight(&doc, method, params);
-    rate_check(
-        session,
-        has_id,
-        weight,
-        id.and_then(|i| doc.raw_token(i)),
-        &mut out,
-    )?;
+    rate_check(session, has_id, weight, id.and_then(|i| doc.raw_token(i)), &mut out)?;
     if !out.is_empty() {
         return bytes(out);
     }

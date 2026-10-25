@@ -2,60 +2,12 @@
 use super::ToolSchema;
 
 pub(crate) const NATIVE_EDIT_TOOLS: &[ToolSchema] = &[
-    ToolSchema {
-        name: "native_timeline_remove_key",
-        description: "Remove a property key. tick must identify a key; the tick-zero key cannot be removed.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}",
-        required: "documentId,trackId,tick",
-        fields: "documentId:string;trackId:string;tick:integer",
-    },
-    ToolSchema {
-        name: "native_timeline_move_key",
-        description: "Move a property key from fromTick to an unoccupied toTick. Tick zero cannot be moved.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"fromTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"toTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}",
-        required: "documentId,trackId,fromTick,toTick",
-        fields: "documentId:string;trackId:string;fromTick:integer;toTick:integer",
-    },
-    ToolSchema {
-        name: "native_timeline_remove_track",
-        description: "Remove a native timeline track.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}",
-        required: "documentId,trackId",
-        fields: "documentId:string;trackId:string",
-    },
-    ToolSchema {
-        name: "native_timeline_rename_track",
-        description: "Set a track's display name.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"name\":{\"type\":\"string\",\"maxLength\":256}}",
-        required: "documentId,trackId,name",
-        fields: "documentId:string;trackId:string;name:string",
-    },
-    ToolSchema {
-        name: "native_timeline_duplicate_track",
-        description: "Duplicate a track with a new unique track ID.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"newTrackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}",
-        required: "documentId,trackId,newTrackId",
-        fields: "documentId:string;trackId:string;newTrackId:string",
-    },
-    ToolSchema {
-        name: "native_timeline_set_interpolation",
-        description: "Set property track interpolation to step, linear or cubic.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]}}",
-        required: "documentId,trackId,interpolation",
-        fields: "documentId:string;trackId:string;interpolation:string",
-    },
-    ToolSchema {
-        name: "native_timeline_reorder_track",
-        description: "Move a track to a zero-based index in the track list.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"index\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}",
-        required: "documentId,trackId,index",
-        fields: "documentId:string;trackId:string;index:integer",
-    },
-    ToolSchema {
-        name: "native_timeline_set_duration",
-        description: "Set the native timeline length in ticks (undoable), optionally with ticksPerSecond (1-240; the frame rate follows it). Defaults are 48 ticks at 24 ticks per second. The duration is at most 3600 seconds (durationTicks / ticksPerSecond) and must be greater than the last key or cel tick, so shrinking below existing items is rejected. Valid ticks are then 0 through durationTicks-1. Example: {\"durationTicks\":240}.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"durationTicks\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":14400000},\"ticksPerSecond\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":240}}",
-        required: "documentId,durationTicks",
-        fields: "documentId:string;durationTicks:integer;ticksPerSecond:integer",
-    },
+    ToolSchema { name: "native_timeline_remove_key", description: "Remove a property key. tick must identify a key; the tick-zero key cannot be removed.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}", required: "documentId,trackId,tick", fields: "documentId:string;trackId:string;tick:integer" },
+    ToolSchema { name: "native_timeline_move_key", description: "Move a property key from fromTick to an unoccupied toTick. Tick zero cannot be moved.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"fromTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"toTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}", required: "documentId,trackId,fromTick,toTick", fields: "documentId:string;trackId:string;fromTick:integer;toTick:integer" },
+    ToolSchema { name: "native_timeline_remove_track", description: "Remove a native timeline track.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}", required: "documentId,trackId", fields: "documentId:string;trackId:string" },
+    ToolSchema { name: "native_timeline_rename_track", description: "Set a track's display name.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"name\":{\"type\":\"string\",\"maxLength\":256}}", required: "documentId,trackId,name", fields: "documentId:string;trackId:string;name:string" },
+    ToolSchema { name: "native_timeline_duplicate_track", description: "Duplicate a track with a new unique track ID.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"newTrackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}", required: "documentId,trackId,newTrackId", fields: "documentId:string;trackId:string;newTrackId:string" },
+    ToolSchema { name: "native_timeline_set_interpolation", description: "Set property track interpolation to step, linear or cubic.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]}}", required: "documentId,trackId,interpolation", fields: "documentId:string;trackId:string;interpolation:string" },
+    ToolSchema { name: "native_timeline_reorder_track", description: "Move a track to a zero-based index in the track list.", properties: "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"index\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}", required: "documentId,trackId,index", fields: "documentId:string;trackId:string;index:integer" },
+    ToolSchema { name: "native_timeline_set_duration", description: "Set the native timeline length in ticks (undoable), optionally with ticksPerSecond (1-240; the frame rate follows it). Defaults are 48 ticks at 24 ticks per second. The duration is at most 3600 seconds (durationTicks / ticksPerSecond) and must be greater than the last key or cel tick, so shrinking below existing items is rejected. Valid ticks are then 0 through durationTicks-1. Example: {\"durationTicks\":240}.", properties: "{\"documentId\":{\"type\":\"string\"},\"durationTicks\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":14400000},\"ticksPerSecond\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":240}}", required: "documentId,durationTicks", fields: "documentId:string;durationTicks:integer;ticksPerSecond:integer" },
 ];
