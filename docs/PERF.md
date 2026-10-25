@@ -901,3 +901,12 @@ Not done: local-space layer keys per character group (step 4); the cached
 layer plan already serves 361 of 406 shapes, the rest is paint of moving
 characters. Next lever is rendering tick N+1's static layers while N finishes,
 or fewer moving shapes per tick.
+
+## scene_apply (2026-10-25)
+
+600 rects plus 100 opacity tracks (2 keys each), release, headless MCP rig
+(`cargo test -p vexel-app --release --test mcp_scene_bench -- --ignored --nocapture`),
+3 runs: old path (3 `batch` calls of 200 `element_add` + one `native_timeline_tracks_set`)
+231 / 217 / 217 ms; `scene_apply` one call 237 / 235 / 232 ms. No speedup in
+compute (both run the same per-element edits); the call count drops from 4 to 1
+and the result is atomic.

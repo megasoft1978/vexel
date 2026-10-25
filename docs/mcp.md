@@ -374,6 +374,33 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Authoring a scene in one call
+
+`document_import` brings a saved `.vexel` (inside a granted directory) into the
+current document as one group, in one undo step. Every id gets `idPrefix`
+(default: file name plus `_`) together with `href="#id"`, `url(#id)`, clip, mask,
+gradient and filter references, so one file imports many times without clashes.
+The group is named like the prefix without trailing `_-.` and takes
+`transform` `[tx, ty, rotation, sx, sy]`. `includeTimeline` (default true) copies the
+property tracks with prefixed ids and targets (drawing, audio and camera tracks are
+not copied); `includeRig` (default false) merges the file's rig, bone ids prefixed,
+existing roles winning. The scene passes the `element_add_fragment` allow-list:
+scripts, `foreignObject`, `style`, SMIL, `on*` attributes, DOCTYPE entities and
+external references are refused with nothing changed. Limits: 4 MiB source scene,
+4096 elements in the document, not allowed in a `batch`.
+
+`scene_apply` builds a whole scene atomically: `elements` (nested tree; `template`
+rect, ellipse, line, path with the `element_add` members; text, group with `children`,
+use, fragment), `tracks` (as `native_timeline_tracks_set`), `rig` (as `rig_create`),
+`duration` (ticks) and `background`. Everything is validated first, applied as one
+undoable edit and rolled back fully on any error; messages name the member, e.g.
+`scene_apply elements[12].children[3] (path): ...` or `scene_apply tracks[7]: ...`.
+Calls are additive (ids must be new), so a scene beyond the 2 MiB / 65536-token
+request limit is sent as several calls: elements, then tracks, then the rig. The
+request limit was not raised. Not allowed in a `batch`. Speed matches `batch` of
+`element_add` plus `tracks_set` (see docs/PERF.md); the gain is one call, one
+rate-limit charge (1 + (elements + tracks)/8) and an atomic result.
+
 ## Skeletal rigs and clips
 
 `rig_create` (`bones`: 1-128 of `{id, pivot?, parent?}`, optional `roles`
