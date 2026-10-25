@@ -184,6 +184,16 @@ pub(crate) fn compose_frame_cached(
     compose_owned(bytes, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
 }
 
+/// [`compose_frame_cached`] over a graph decoded ahead by [`decode_owned`].
+pub(crate) fn compose_graph_cached(
+    graph: &SceneGraph,
+    width: u32,
+    height: u32,
+    cache: &mut DiffCache,
+) -> Result<Frame, ComposeError> {
+    render_decoded(graph, width, height, &|| false, false, Some(cache)).map(|c| c.frame)
+}
+
 /// [`compose_document_owned`] repainting only what changed since the previous
 /// document composed with the same `cache` (hit-test data included). Same pixels.
 pub(crate) fn compose_document_cached(

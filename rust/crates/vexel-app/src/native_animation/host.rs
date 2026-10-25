@@ -67,6 +67,8 @@ pub struct NativeAnimationHost<C: LoopClock> {
     presented: Option<NativeFrameTag>,
     retried: Option<NativeFrameTag>,
     was_playing: bool,
+    /// Playback decodes upcoming ticks on other threads (default on).
+    decode_ahead: bool,
 }
 
 impl<C: LoopClock> NativeAnimationHost<C> {
@@ -88,6 +90,15 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             presented: None,
             retried: None,
             was_playing: false,
+            decode_ahead: true,
+        }
+    }
+
+    /// Turns playback decode-ahead on or off (off = serial decode, for A/B runs).
+    pub fn set_decode_ahead(&mut self, on: bool) {
+        self.decode_ahead = on;
+        if let Some(prepared) = &self.prepared {
+            prepared.set_ahead_enabled(on);
         }
     }
 
@@ -388,6 +399,11 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         out
     }
 
+    #[cfg(test)]
+    pub(super) fn prepared_for_test(&mut self, document: &AppDocument) -> Option<Arc<Prepared>> {
+        self.prepared(document)
+    }
+
     /// Prepared inputs for the document's revision, built once per revision.
     fn prepared(&mut self, document: &AppDocument) -> Option<Arc<Prepared>> {
         if self.controller.ensure_candidate(document).is_err() {
@@ -407,6 +423,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             self.stop_invalid_preview();
             return None;
         };
+        built.set_ahead_enabled(self.decode_ahead);
         let built = Arc::new(built);
         self.prepared = Some(built.clone());
         Some(built)
@@ -487,6 +504,9 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         if let Some(worker) = &self.worker {
             worker.cancel();
         }
+        if let Some(prepared) = &self.prepared {
+            prepared.cancel_ahead();
+        }
     }
 
     /// Forgets everything rendered for the previous clock position.
@@ -512,7 +532,9 @@ impl<C: LoopClock> NativeAnimationHost<C> {
 
     fn observe_revision(&mut self, revision: u64) -> bool {
         if self.state_revision != Some(revision) {
-            self.prepared = None;
+            if let Some(prepared) = self.prepared.take() {
+                prepared.cancel_ahead();
+            }
             if self.state_revision.is_some() {
                 self.invalidate_play();
                 // MCP edits can change the native timeline without changing
