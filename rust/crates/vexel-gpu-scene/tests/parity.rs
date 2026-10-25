@@ -183,11 +183,15 @@ fn spec_edges(spec: &Spec) -> Vec<GpuSegment> {
     edges
 }
 
-/// Rounds every vertex to the layout's 1/256 pixel grid, so the encoder's
+/// Rounds every vertex to the layout's fixed-point grid, so the encoder's
 /// quantisation is lossless and only the sampling arithmetic is compared.
+fn grid(v: f64) -> f64 {
+    let unit = f64::from(1u32 << vexel_gpu_scene::layout::EDGE_FIXED_SHIFT);
+    (v * unit).round() / unit
+}
+
 fn snapped(mut specs: Vec<Spec>) -> Vec<Spec> {
-    let snap =
-        |p: &mut (f64, f64)| *p = ((p.0 * 256.0).round() / 256.0, (p.1 * 256.0).round() / 256.0);
+    let snap = |p: &mut (f64, f64)| *p = (grid(p.0), grid(p.1));
     for spec in &mut specs {
         spec.ring.iter_mut().for_each(snap);
         spec.extra_ring.iter_mut().flatten().for_each(snap);
@@ -410,11 +414,13 @@ const ADR: Bounds = (
     PARITY_MEAN_ABS_ERROR_MAX,
 );
 
-/// Measured envelope of the frozen layout's 1/256 pixel edge quantisation on
-/// unsnapped vertices (see docs/gpu-interface-requests.md, request 2). Each
-/// sample that flips changes a pixel by 16/255 or, at low alpha, by much more.
-/// Not an acceptance bound: the ADR bounds are asserted by the ignored test.
-const QUANTISED_8: Bounds = (0.003, 0.0002, 0.0002);
+/// Small frames (under 100k pixels): the ADR bounds, except over 16/255 which
+/// is granular at one pixel (0.002% of 50k pixels) and gets 0.01% headroom.
+const SMALL_FRAME: Bounds = (
+    PARITY_OVER_2_MAX_FRACTION,
+    0.0001,
+    PARITY_MEAN_ABS_ERROR_MAX,
+);
 
 fn check(name: &str, specs: &[Spec], w: u32, h: u32, bounds: Bounds) {
     let scene = scene_for(specs, w, h);
@@ -460,7 +466,7 @@ fn solid_fills_match_cpu() {
     for seed in 1..=4 {
         let mut s = specs(seed, 80, 200.0, 136.0);
         s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));
-        check(&format!("solid seed {seed}"), &s, 200, 136, QUANTISED_8);
+        check(&format!("solid seed {seed}"), &s, 200, 136, SMALL_FRAME);
     }
 }
 
@@ -469,7 +475,7 @@ fn gradient_fills_match_cpu() {
     for seed in 21..=23 {
         let mut s = specs(seed, 120, 256.0, 192.0);
         s.retain(|s| !matches!(s.paint, SpecPaint::Solid(_)));
-        check(&format!("gradient seed {seed}"), &s, 256, 192, QUANTISED_8);
+        check(&format!("gradient seed {seed}"), &s, 256, 192, SMALL_FRAME);
     }
 }
 
@@ -477,18 +483,20 @@ fn gradient_fills_match_cpu() {
 fn mixed_scenes_match_cpu() {
     for (seed, count, w, h) in [(11, 40, 200, 136), (12, 120, 333, 250), (13, 300, 512, 384)] {
         let s = specs(seed, count, f64::from(w), f64::from(h));
-        check(&format!("mixed seed {seed}"), &s, w, h, QUANTISED_8);
+        check(&format!("mixed seed {seed}"), &s, w, h, SMALL_FRAME);
     }
 }
 
-/// Fails at `EDGE_FIXED_SHIFT = 8` (request 2 in docs/gpu-interface-requests.md);
-/// run with `-- --ignored` after the layout change.
+/// Unsnapped (arbitrary f64) vertices at sizes 256 / 900 / 1024, 12 seeds:
+/// every scene meets the ADR-0035 bounds with the layout's edge precision.
 #[test]
-#[ignore]
 fn unsnapped_scenes_meet_adr_bounds() {
-    for (seed, count, w, h) in [(11, 40, 200, 136), (12, 120, 333, 250), (13, 300, 512, 384)] {
-        let s = specs(seed, count, f64::from(w), f64::from(h));
-        check(&format!("unsnapped seed {seed}"), &s, w, h, ADR);
+    for k in 0..12u64 {
+        let size = [256u32, 900, 1024][(k % 3) as usize];
+        let (w, h) = (size, size * 3 / 4);
+        let count = (w as usize * h as usize) / 700;
+        let s = specs(100 + k, count, f64::from(w), f64::from(h));
+        check(&format!("unsnapped seed {}", 100 + k), &s, w, h, ADR);
     }
 }
 

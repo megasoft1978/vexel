@@ -10,8 +10,10 @@ use crate::layout::{MAX_EDGES, MAX_GRADIENTS, MAX_SHAPES, MAX_STOPS, MAX_TILE_LI
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
 /// crossing products stay far inside range below it.
 pub const MAX_CANVAS_AXIS: u32 = 16_384;
-/// Largest accepted absolute coordinate, as `vexel_render::MAX_COORDINATE`.
-pub const MAX_COORDINATE: f64 = 1.0e6;
+/// Largest accepted absolute coordinate in pixels: the fixed-point limit of
+/// the layout (the CPU accepts 1e6). Larger coordinates classify as
+/// `Unsupported(InvalidScene)` and the scene renders on the CPU.
+pub const MAX_COORDINATE: f64 = crate::layout::MAX_COORDINATE as f64;
 /// Budget for the sum over shapes of `edges * covered tiles`: the number of
 /// edge visits a kernel makes per frame. Not part of the frozen layout.
 pub const MAX_EDGE_TILE_WORK: u64 = 1 << 29;
@@ -267,6 +269,23 @@ mod tests {
         }]);
         assert_eq!(
             classify(&scene_with(nan)),
+            Capability::Unsupported(Reason::InvalidScene)
+        );
+        let at_limit = fill(vec![GpuSegment {
+            x0: MAX_COORDINATE,
+            y0: -MAX_COORDINATE,
+            x1: 1.0,
+            y1: 1.0,
+        }]);
+        assert_eq!(classify(&scene_with(at_limit)), Capability::Supported);
+        let past_limit = fill(vec![GpuSegment {
+            x0: MAX_COORDINATE + 1.0,
+            y0: 0.0,
+            x1: 1.0,
+            y1: 1.0,
+        }]);
+        assert_eq!(
+            classify(&scene_with(past_limit)),
             Capability::Unsupported(Reason::InvalidScene)
         );
         let far = fill(vec![GpuSegment {

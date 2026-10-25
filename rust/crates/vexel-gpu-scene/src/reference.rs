@@ -125,8 +125,10 @@ fn covers(edges: &[GpuEdge], px: i32, py: i32, evenodd: bool) -> bool {
     let (mut winding, mut parity) = (0i32, false);
     for g in edges {
         // crossing x > px  <=>  ((x0-px)*dy + (py-y0)*dx) / dy > 0
-        let dy = i64::from(g.y1 - g.y0);
-        let num = i64::from(g.x0 - px) * dy + i64::from(py - g.y0) * i64::from(g.x1 - g.x0);
+        // i64 throughout: differences of coordinates up to 2^30 exceed i32.
+        let dy = i64::from(g.y1) - i64::from(g.y0);
+        let num = (i64::from(g.x0) - i64::from(px)) * dy
+            + (i64::from(py) - i64::from(g.y0)) * (i64::from(g.x1) - i64::from(g.x0));
         if (dy > 0 && num > 0) || (dy < 0 && num < 0) {
             winding += if dy > 0 { 1 } else { -1 };
             parity = !parity;

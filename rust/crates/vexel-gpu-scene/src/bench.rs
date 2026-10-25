@@ -84,7 +84,10 @@ fn bench_encode_and_bin() {
         let boxes: Vec<FixedBox> = e
             .shapes
             .iter()
-            .map(|sh| sh.bbox.map(|v| (v * 256.0) as i32))
+            .map(|sh| {
+                sh.bbox
+                    .map(|v| (v * (1 << crate::layout::EDGE_FIXED_SHIFT) as f32) as i32)
+            })
             .collect();
         let mut best_bin = f64::MAX;
         for _ in 0..5 {

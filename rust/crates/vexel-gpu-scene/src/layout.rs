@@ -27,7 +27,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 2;
+pub const LAYOUT_VERSION: u32 = 3;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -35,8 +35,12 @@ pub const SAMPLES_PER_AXIS: u32 = 4;
 pub const SAMPLE_COUNT: u32 = SAMPLES_PER_AXIS * SAMPLES_PER_AXIS;
 /// Sample centres within a pixel per axis; equals `vexel_render` `SAMPLE_LOCATIONS`.
 pub const SAMPLE_LOCATIONS: [f32; 4] = [0.125, 0.375, 0.625, 0.875];
-/// Fractional bits of [`GpuEdge`] coordinates (1/256 pixel).
-pub const EDGE_FIXED_SHIFT: u32 = 8;
+/// Fractional bits of [`GpuEdge`] coordinates (1/4096 pixel).
+pub const EDGE_FIXED_SHIFT: u32 = 12;
+/// Largest absolute device coordinate (pixels) the fixed-point edges hold:
+/// `MAX_COORDINATE << EDGE_FIXED_SHIFT` is 2^30, and the crossing products
+/// of two such differences stay inside `i64`.
+pub const MAX_COORDINATE: u32 = 262_144;
 
 pub const MAX_SHAPES: u32 = 262_144;
 pub const MAX_EDGES: u32 = 4_194_304;
@@ -229,7 +233,11 @@ mod tests {
 
     #[test]
     fn fixed_point() {
-        assert_eq!(to_fixed(1.5), Some(384));
+        assert_eq!(to_fixed(1.5), Some(6144));
+        assert_eq!(
+            to_fixed(f64::from(MAX_COORDINATE)),
+            Some(1 << (EDGE_FIXED_SHIFT + 18))
+        );
         assert_eq!(to_fixed(f64::NAN), None);
         assert_eq!(to_fixed(1e30), None);
     }
@@ -375,13 +383,14 @@ mod tests {
                 Some((k, v))
             })
             .collect();
-        let expect: [(&str, u64); 22] = [
+        let expect: [(&str, u64); 23] = [
             ("LAYOUT_MAGIC", LAYOUT_MAGIC.into()),
             ("LAYOUT_VERSION", LAYOUT_VERSION.into()),
             ("TILE_SIZE", TILE_SIZE.into()),
             ("SAMPLES_PER_AXIS", SAMPLES_PER_AXIS.into()),
             ("SAMPLE_COUNT", SAMPLE_COUNT.into()),
             ("EDGE_FIXED_SHIFT", EDGE_FIXED_SHIFT.into()),
+            ("MAX_COORDINATE", MAX_COORDINATE.into()),
             ("MAX_SHAPES", MAX_SHAPES.into()),
             ("MAX_EDGES", MAX_EDGES.into()),
             ("MAX_TILE_LIST", MAX_TILE_LIST.into()),
@@ -402,7 +411,7 @@ mod tests {
         for (k, v) in &expect {
             assert_eq!(defines.get(k), Some(v), "#define VX_{k}");
         }
-        assert_eq!(defines.len(), 22);
+        assert_eq!(defines.len(), 23);
         assert!(src.contains("{0.125f, 0.375f, 0.625f, 0.875f}"));
     }
 }

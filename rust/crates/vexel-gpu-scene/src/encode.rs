@@ -5,7 +5,7 @@
 //!
 //! * `GpuShape::edge_start/edge_count` is one range per shape, so edges are
 //!   NOT rebased per tile. They are stored once, in canvas coordinates (tile
-//!   (0,0) origin), 1/256 pixel fixed point, and a kernel subtracts its tile
+//!   (0,0) origin), fixed point, and a kernel subtracts its tile
 //!   origin. Horizontal edges (`y0 == y1` after quantisation) are dropped.
 //! * Coverage uses the CPU rule: a sample at `(px, py)` counts an edge with
 //!   `y0 <= py < y1` (down) or `y1 <= py < y0` (up) whose crossing is strictly
@@ -282,10 +282,10 @@ mod tests {
         assert_eq!(
             e.edges[0],
             GpuEdge {
-                x0: 20 * 256,
-                y0: 2 * 256,
-                x1: 20 * 256,
-                y1: 10 * 256
+                x0: 20 << layout::EDGE_FIXED_SHIFT,
+                y0: 2 << layout::EDGE_FIXED_SHIFT,
+                x1: 20 << layout::EDGE_FIXED_SHIFT,
+                y1: 10 << layout::EDGE_FIXED_SHIFT
             }
         );
         // 3 x 2 tiles; shape 0 covers tiles 0,1 of row 0; shape 1 tiles 1,2 of row 0.
