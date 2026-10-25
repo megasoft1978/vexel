@@ -55,10 +55,28 @@ def missing(helper):
     return HelperError("model_missing", INSTALL.format(helper=helper))
 
 
-def download():
-    from huggingface_hub import snapshot_download  # installed with mlx-audio
+def force_offline():
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
-    snapshot_download(MODEL)
+
+force_offline()  # the network is only ever reached by download() below
+
+
+def download():
+    """The one place that may reach the network (explicit action with consent)."""
+    os.environ.pop("HF_HUB_OFFLINE", None)
+    os.environ.pop("TRANSFORMERS_OFFLINE", None)
+    try:
+        from huggingface_hub import constants, snapshot_download  # installed with mlx-audio
+
+        constants.HF_HUB_OFFLINE = False
+        try:
+            snapshot_download(MODEL)
+        finally:
+            constants.HF_HUB_OFFLINE = True
+    finally:
+        force_offline()
 
 
 def phase_vocoder_stretch(x, rate, n_fft=1024, hop=256):
@@ -155,8 +173,7 @@ def generate(params, helper, consent=False):
             download()
         except Exception as exc:  # network or disk failure
             raise HelperError("model_missing", f"model download failed ({exc}). " + INSTALL.format(helper=helper))
-    else:
-        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    force_offline()
     from mlx_audio.tts.utils import load_model
 
     model = load_model(MODEL)

@@ -1,4 +1,5 @@
 """Small numpy-only DSP kit: FFT filters, envelopes, resampling, WAV output."""
+import os
 import wave
 
 import numpy as np
@@ -79,7 +80,16 @@ def write_wav(path, x, sr=SR):
     if not np.all(np.isfinite(x)) or len(x) == 0:
         raise HelperError("generation_failed", "generator produced no usable samples")
     pcm = (np.clip(x, -1.0, 1.0) * 32767).astype("<i2")
-    with wave.open(path, "wb") as w:
+    name = os.path.basename(path)
+    if not name.startswith(".") or ".vexel-audio-" not in name:
+        raise HelperError("bad_path", "outPath must be the temporary name chosen by Vexel")
+    try:  # create-new only: never truncate, never follow a symlink
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    except FileExistsError:
+        raise HelperError("bad_path", "outPath already exists; refusing to overwrite")
+    except OSError as e:
+        raise HelperError("bad_path", f"cannot create outPath: {e.strerror}")
+    with os.fdopen(fd, "wb") as f, wave.open(f, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(sr)

@@ -34,7 +34,10 @@ def handle(req, vox):
             raise HelperError("bad_params", "params must be an object")
         if not isinstance(out, str) or not out.endswith(".wav") or "\0" in out or not os.path.isabs(out):
             raise HelperError("bad_path", "outPath must be an absolute .wav path")
-        if os.path.islink(out) or not os.path.isdir(os.path.dirname(out)):
+        name = os.path.basename(out)
+        if not name.startswith(".") or ".vexel-audio-" not in name:
+            raise HelperError("bad_path", "outPath must be the temporary name chosen by Vexel")
+        if os.path.lexists(out) or not os.path.isdir(os.path.dirname(out)):
             raise HelperError("bad_path", "outPath must be a new file in an existing directory")
         if kind == "sfx":
             samples = sfx.generate(params)
@@ -56,8 +59,25 @@ def handle(req, vox):
         return fail(rid, "generation_failed", f"{type(e).__name__}: {e}")
 
 
+def watch_parent():
+    """Exit if Vexel dies while a long generation keeps us from reading stdin."""
+    import threading
+    import time
+
+    parent = os.getppid()
+
+    def loop():
+        while True:
+            time.sleep(1.0)
+            if os.getppid() != parent:
+                os._exit(1)
+
+    threading.Thread(target=loop, daemon=True).start()
+
+
 def serve(real_out):
     sys.stdout = sys.stderr  # library chatter must not corrupt the protocol
+    watch_parent()
     stdin = sys.stdin.buffer
     while True:
         line = stdin.readline(MAX_LINE + 1)
@@ -85,7 +105,7 @@ def selftest():
     import tempfile
 
     with tempfile.TemporaryDirectory() as d:
-        out = os.path.join(d, "selftest.wav")
+        out = os.path.join(d, ".selftest.vexel-audio-0.wav")
         resp = handle({"id": 1, "kind": "sfx", "params": {"preset": "chime", "seed": 1}, "outPath": out}, None)
         if not resp["ok"] or os.path.getsize(out) < 1000:
             print("selftest failed:", resp, file=sys.stderr)
