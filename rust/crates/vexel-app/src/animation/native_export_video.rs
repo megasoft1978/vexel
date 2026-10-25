@@ -55,6 +55,20 @@ pub(crate) fn quality_level(quality: f64) -> f64 {
     0.6 + 0.4 * q
 }
 
+/// Average bit rate (bits/s) for `quality` (clamped to 0..1) at `pixels` per
+/// frame and `fps`. Explicit rate control is deterministic, unlike the
+/// encoder's constant-quality mode whose output size varies run to run.
+///
+/// Bits per pixel per frame is exponential in quality: x0.25 at 0, the
+/// default (0.5) at 0.2363 (= 14.7 Mbps at 1080p30), x4 at 1.
+pub(crate) fn quality_bit_rate(quality: f64, pixels: u64, fps: f64) -> u32 {
+    const DEFAULT_BPP: f64 = 14_700_000.0 / (1920.0 * 1080.0 * 30.0);
+    let bpp = DEFAULT_BPP * 16f64.powf(quality.clamp(0.0, 1.0) - 0.5);
+    (bpp * pixels as f64 * fps)
+        .round()
+        .clamp(10_000.0, f64::from(u32::MAX)) as u32
+}
+
 /// A finished video and what it contains.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NativeVideo {
@@ -138,6 +152,14 @@ impl NativeExportSource {
         let geometry = svg_geometry(&viewport, width, height);
         let assets = self.drawing_assets();
         let quality = quality_level(req.quality.unwrap_or(DEFAULT_QUALITY));
+        let fps = f64::from(tps) / stride as f64;
+        let bit_rate = req.bit_rate.unwrap_or_else(|| {
+            quality_bit_rate(
+                req.quality.unwrap_or(DEFAULT_QUALITY),
+                u64::from(width) * u64::from(height),
+                fps,
+            )
+        });
         let mut writer = VideoWriter::create(VideoSpec {
             path: req.path.clone(),
             width,
@@ -146,7 +168,7 @@ impl NativeExportSource {
             timescale: tps as i32,
             background: req.background,
             alpha: req.alpha,
-            bit_rate: req.bit_rate,
+            bit_rate: Some(bit_rate),
             quality: Some(quality),
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;

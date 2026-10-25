@@ -197,3 +197,16 @@ fn video_export_file_size_orders_with_quality() {
     }
     assert!(sizes[0] < sizes[1] && sizes[1] < sizes[2], "{sizes:?}");
 }
+
+#[test]
+fn quality_bit_rate_is_monotonic_and_keeps_the_default_rate() {
+    use crate::animation::native_export_video::{DEFAULT_QUALITY, quality_bit_rate};
+    let px = 1920 * 1080;
+    let default = quality_bit_rate(DEFAULT_QUALITY, px, 30.0);
+    assert!((14_600_000..=14_800_000).contains(&default), "{default}");
+    let steps = [0.0, 0.25, DEFAULT_QUALITY, 0.75, 1.0].map(|q| quality_bit_rate(q, px, 30.0));
+    assert!(steps.windows(2).all(|w| w[0] < w[1]), "{steps:?}");
+    assert_eq!(quality_bit_rate(-1.0, px, 30.0), steps[0]);
+    assert_eq!(quality_bit_rate(2.0, px, 30.0), steps[4]);
+    assert!(quality_bit_rate(0.5, px, 60.0) > default);
+}
