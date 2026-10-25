@@ -60,5 +60,5 @@
   </g>
 
   <!-- Grain over everything. -->
-  <g filter="url(#grain)" style="mix-blend-mode:soft-light" opacity="0.5"><rect width="640" height="360" fill="#fff"/></g>
+  <g filter="url(#grain)" style="mix-blend-mode:soft-light" opacity="0.7"><rect width="640" height="360" fill="#fff"/></g>
 </svg>

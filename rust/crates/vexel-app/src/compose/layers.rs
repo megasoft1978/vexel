@@ -154,7 +154,12 @@ pub(crate) fn composite_tile_blend(
     let table = alpha_table(opacity);
     let width = source.width() as usize;
     let height = source.height() as usize;
-    let full = [super::diff::Rect { x0: 0, y0: 0, x1: width as u32, y1: height as u32 }];
+    let full = [super::diff::Rect {
+        x0: 0,
+        y0: 0,
+        x1: width as u32,
+        y1: height as u32,
+    }];
     for rect in rects.unwrap_or(&full) {
         for y in rect.y0 as usize..rect.y1 as usize {
             if control() {

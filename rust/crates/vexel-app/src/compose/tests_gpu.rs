@@ -172,7 +172,10 @@ fn export_paths_do_not_reference_the_route() {
     for path in &files {
         let text = std::fs::read_to_string(path).unwrap();
         let name = rel(path);
-        if name.ends_with("tests_gpu.rs") || name.ends_with("tests_gpu_clips.rs") {
+        if name.ends_with("tests_gpu.rs")
+            || name.ends_with("tests_gpu_clips.rs")
+            || name.ends_with("tests_effects.rs")
+        {
             continue;
         }
         if text.contains("gpu_route") && !name.starts_with("tests/gpu_route_report") {

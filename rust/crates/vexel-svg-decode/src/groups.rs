@@ -31,12 +31,12 @@ impl<'src> Decoder<'src, '_> {
             .filter(|v| !v.bytes.eq_ignore_ascii_case(b"none"));
         let blend = if let Some(v) = style.value(Property::MixBlendMode) {
             BLEND_MODE_NAMES
-            .iter()
-            .position(|n| *n == v.bytes)
-            .ok_or(Diagnostic {
-                kind: ErrorKind::Unsupported,
-                offset: v.span.offset,
-            })? as u8
+                .iter()
+                .position(|n| *n == v.bytes)
+                .ok_or(Diagnostic {
+                    kind: ErrorKind::Unsupported,
+                    offset: v.span.offset,
+                })? as u8
         } else {
             0
         };

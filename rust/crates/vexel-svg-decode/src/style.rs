@@ -305,9 +305,9 @@ pub fn parse_style(
     };
     if let Some(v) = paint.value(Property::MixBlendMode) {
         out.blend_mode = vexel_scene::BLEND_MODE_NAMES
-        .iter()
-        .position(|n| *n == v.bytes)
-        .ok_or_else(|| error(ErrorKind::Unsupported, v.span))? as u8;
+            .iter()
+            .position(|n| *n == v.bytes)
+            .ok_or_else(|| error(ErrorKind::Unsupported, v.span))? as u8;
     }
     if let Some(v) = paint.value(Property::Isolation) {
         if v.bytes.eq_ignore_ascii_case(b"isolate") {
