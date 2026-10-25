@@ -105,7 +105,9 @@ fn filters_blur_dropshadow_colormatrix_work() {
 }
 
 #[test]
-fn turbulence_and_blend_modes_are_refused_and_rolled_back() {
+fn turbulence_and_blend_modes_are_accepted_and_render() {
+    // The renderer gained feTurbulence and mix-blend-mode (docs/svg-effects.md);
+    // fragments using them must now insert and render.
     for (parts, name) in [
         (
             vec![
@@ -125,22 +127,11 @@ fn turbulence_and_blend_modes_are_refused_and_rolled_back() {
         ),
     ] {
         let mut rig = rig();
-        let mut refused = None;
         for part in &parts {
-            let before = rig.state().source;
             let reply = fragment(&mut rig, "root", part);
-            if reply.is_error {
-                assert!(
-                    reply.error().contains("does not support"),
-                    "{name}: {}",
-                    reply.body
-                );
-                assert_eq!(rig.state().source, before, "{name}: edit undone");
-                refused = Some(());
-            }
+            assert!(!reply.is_error, "{name}: {}", reply.body);
         }
-        assert!(refused.is_some(), "{name} must be refused");
-        assert!(render(&rig).is_ok(), "{name}: document still renders");
+        assert!(render(&rig).is_ok(), "{name}: document renders");
     }
 }
 
