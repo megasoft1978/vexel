@@ -14,6 +14,7 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::ffi::OsStrExt;
+use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 use vexel_mcp_access::AccessPolicy;
 use vexel_timeline::audio::{AudioKind, AudioTrack, Duck, MAX_AUDIO_TRACKS, valid_relative_path};
@@ -124,12 +125,26 @@ fn locate(
     Ok((canonical, rel))
 }
 
+#[cfg(target_os = "macos")]
+const O_NOFOLLOW: i32 = 0x100;
+#[cfg(not(target_os = "macos"))]
+const O_NOFOLLOW: i32 = 0x20000;
+
+/// Opens without following a final symlink and reads only a regular file, so
+/// the file checked is the file read (no path re-resolution after the policy).
 fn read_bounded(path: &Path) -> Result<Vec<u8>, SourceError> {
-    let file = File::open(path).map_err(|_| SourceError::Message(NOT_FOUND))?;
-    let len = file
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(O_NOFOLLOW)
+        .open(path)
+        .map_err(|_| SourceError::Message(NOT_FOUND))?;
+    let meta = file
         .metadata()
-        .map_err(|_| SourceError::Message(NOT_FOUND))?
-        .len();
+        .map_err(|_| SourceError::Message(NOT_FOUND))?;
+    if !meta.is_file() {
+        return Err(SourceError::Message(NOT_FOUND));
+    }
+    let len = meta.len();
     if len > MAX_FILE_BYTES as u64 {
         return Err(SourceError::Audio(AudioError::TooLarge));
     }

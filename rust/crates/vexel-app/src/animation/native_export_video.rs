@@ -6,8 +6,9 @@ use super::native_export::ordered::{OrderedError, render_ordered, worker_count};
 use super::native_export::{NativeExportError, NativeExportSource, loop_ticks, svg_geometry};
 use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use vexel_platform_apple::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
 use vexel_timeline::audio::AudioTrack;
 use vexel_timeline::audio_codec::{self, Pcm};
@@ -78,6 +79,33 @@ pub struct NativeAudio<'a> {
     pub tracks: &'a [AudioTrack],
     pub load: &'a mut dyn FnMut(&AudioTrack) -> Result<Pcm, MixError>,
     pub scratch_wav: PathBuf,
+}
+
+static SCRATCH_SEQ: AtomicU64 = AtomicU64::new(0);
+
+/// A unique sibling of `base` (pid + counter) so a predictable name is never
+/// reused or pre-created by another party.
+fn unique_scratch_path(base: &Path) -> PathBuf {
+    let seq = SCRATCH_SEQ.fetch_add(1, Ordering::Relaxed);
+    let stem = base.file_stem().and_then(|s| s.to_str()).unwrap_or("audio");
+    base.with_file_name(format!("{stem}.{}.{seq}.wav", std::process::id()))
+}
+
+/// Creates a new 0600 file (fails if it exists, never follows a planted path).
+fn write_scratch(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)?;
+    let written = file.write_all(bytes);
+    if written.is_err() {
+        drop(file);
+        let _ = std::fs::remove_file(path);
+    }
+    written
 }
 
 /// A finished video and what it contains.
@@ -190,9 +218,10 @@ impl NativeExportSource {
                 let mixed = mixdown(audio.tracks, tps, frames, audio.load)
                     .map_err(NativeVideoError::Audio)?;
                 let wav = audio_codec::encode_wav16(48_000, 2, &mixed);
-                std::fs::write(&audio.scratch_wav, wav)
+                let unique = unique_scratch_path(&audio.scratch_wav);
+                write_scratch(&unique, &wav)
                     .map_err(|_| NativeVideoError::Audio(MixError::Alloc))?;
-                Some(audio.scratch_wav)
+                Some(unique)
             }
             _ => None,
         };
