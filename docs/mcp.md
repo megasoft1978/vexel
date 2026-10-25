@@ -355,3 +355,15 @@ socket, socket relay behavior, and sidecar-specific relay fixtures. Those
 descriptions do not apply to the current Rust app and are retained here only
 as a record that the old launch flow is unsupported. The current flow is the
 app's stdio server launched with `--mcp-preview` as shown above.
+
+## Render safety limits
+
+Rendering refuses (typed `limit_render`) a document that exceeds any of these:
+
+- Stroke build steps: 6,000,000 per document (was 4,000,000; `MAX_STROKE_STEPS`).
+- Stroke primitive bytes: 192 MiB per document (`MAX_STROKE_BYTES`).
+- Pattern or image tile: 4096 px per axis and 8,388,608 px area (was 1,048,576; `PATTERN_MAX_PIXELS`).
+- Pattern tiles alive at once: 1024 tiles and 128 MiB of RGBA in total (`PATTERN_MAX_TOTAL_BYTES`).
+
+Raised values were measured in release on the real corpus: france-osm-mapnik 1.6 s and 1.50 GB peak RSS,
+columbiarivermap 0.9 s and 217 MB.
