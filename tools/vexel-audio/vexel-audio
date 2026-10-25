@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""Vexel audio helper: JSON lines on stdin, one JSON line per request on stdout.
+
+Request:  {"id": 1, "kind": "voice"|"sfx"|"music", "params": {...},
+           "outPath": "/abs/file.wav", "consent": false}
+Response: {"id": 1, "ok": true, "path": "...", "durationMs": 1234}
+          {"id": 1, "ok": false, "code": "model_missing", "error": "..."}
+
+Exits when stdin closes (Vexel quit or crashed), so it never outlives its parent.
+Run `vexel-audio --selftest` to generate one sound effect without any model.
+"""
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+MAX_LINE = 64 * 1024
+HELPER = os.path.abspath(__file__)
+
+
+def fail(rid, code, message):
+    return {"id": rid, "ok": False, "code": code, "error": message}
+
+
+def handle(req, vox):
+    from vexel_audio import dsp, music, sfx, voice  # lazy: numpy loads here
+    from vexel_audio.errors import HelperError
+
+    rid = req.get("id") if isinstance(req.get("id"), (int, str)) else None
+    try:
+        kind, params, out = req.get("kind"), req.get("params", {}), req.get("outPath")
+        if not isinstance(params, dict):
+            raise HelperError("bad_params", "params must be an object")
+        if not isinstance(out, str) or not out.endswith(".wav") or "\0" in out or not os.path.isabs(out):
+            raise HelperError("bad_path", "outPath must be an absolute .wav path")
+        if os.path.islink(out) or not os.path.isdir(os.path.dirname(out)):
+            raise HelperError("bad_path", "outPath must be a new file in an existing directory")
+        if kind == "sfx":
+            samples = sfx.generate(params)
+        elif kind == "music":
+            samples = music.generate(params)
+        elif kind == "voice":
+            samples = voice.generate(params, HELPER, consent=req.get("consent") is True)
+        else:
+            raise HelperError("bad_kind", "kind must be voice, sfx or music")
+        if len(samples) > 120 * dsp.SR:
+            raise HelperError("too_long", "generated audio exceeds 120 seconds")
+        ms = dsp.write_wav(out, samples)
+        return {"id": rid, "ok": True, "path": out, "durationMs": ms}
+    except HelperError as e:
+        return fail(rid, e.code, e.message)
+    except ImportError as e:
+        return fail(rid, "dependency_missing", f"python dependency missing: {e}; install numpy")
+    except Exception as e:  # never die on one bad request
+        return fail(rid, "generation_failed", f"{type(e).__name__}: {e}")
+
+
+def serve(real_out):
+    sys.stdout = sys.stderr  # library chatter must not corrupt the protocol
+    stdin = sys.stdin.buffer
+    while True:
+        line = stdin.readline(MAX_LINE + 1)
+        if not line:
+            return 0
+        if len(line) > MAX_LINE and not line.endswith(b"\n"):
+            while True:  # discard the rest of the oversized line
+                rest = stdin.readline(MAX_LINE)
+                if not rest or rest.endswith(b"\n"):
+                    break
+            resp = fail(None, "bad_request", "request line too long")
+        else:
+            try:
+                req = json.loads(line)
+                if not isinstance(req, dict):
+                    raise ValueError("request must be an object")
+                resp = handle(req, None)
+            except ValueError as e:
+                resp = fail(None, "bad_request", f"invalid request: {e}")
+        real_out.write(json.dumps(resp, separators=(",", ":")) + "\n")
+        real_out.flush()
+
+
+def selftest():
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as d:
+        out = os.path.join(d, "selftest.wav")
+        resp = handle({"id": 1, "kind": "sfx", "params": {"preset": "chime", "seed": 1}, "outPath": out}, None)
+        if not resp["ok"] or os.path.getsize(out) < 1000:
+            print("selftest failed:", resp, file=sys.stderr)
+            return 1
+        print(json.dumps({"selftest": "ok", "durationMs": resp["durationMs"], "bytes": os.path.getsize(out)}))
+    return 0
+
+
+def main(argv):
+    if "--selftest" in argv:
+        return selftest()
+    if "--download-model" in argv:
+        from vexel_audio import voice
+
+        voice.download()
+        print("model ready:", voice.cache_dir())
+        return 0
+    if "--version" in argv:
+        print("vexel-audio 1")
+        return 0
+    return serve(sys.stdout)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
