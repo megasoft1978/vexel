@@ -1,5 +1,5 @@
-@font-face{font-family:"Geist";src:url("../fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-@font-face{font-family:"Geist Mono";src:url("../fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist";src:url("../fonts/geist-var-latin.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url("../fonts/geist-mono-var-latin.woff2") format("woff2");font-weight:100 900;font-display:swap}
 :root{
   color-scheme:dark light;
   --bg:#0d0a1f;--bg2:#120e29;--surface:#18132f;--line:#2f2758;
