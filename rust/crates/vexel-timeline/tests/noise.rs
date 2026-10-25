@@ -133,3 +133,37 @@ fn camera_target_needs_no_scene_element_and_only_camera_properties() {
     let plain_zoom = track("", "scalar", "zoom", "1", "1");
     assert!(decode(plain_zoom.as_bytes(), &context()).is_err(), "zoom is camera-only");
 }
+
+#[test]
+fn sampled_values_stay_within_validated_caps() {
+    let big = r#""noise":{"amplitude":100000,"frequency":3,"seed":42,"octaves":2},"#;
+    let blur = track(big, "scalar", "stdDeviation", "16", "16");
+    let samples: Vec<f64> = (0..200).map(|t| scalar(&blur, t)).collect();
+    assert!(samples.iter().all(|v| (0.0..=32.0).contains(v)), "{samples:?}");
+    assert!(samples.iter().any(|v| *v == 0.0 || *v == 32.0), "noise actually clamped");
+    let dx = track(big, "scalar", "dx", "0", "0");
+    assert!((0..200).all(|t| scalar(&dx, t).abs() <= 4096.0));
+    // In-range noisy values are untouched.
+    let small = track(NOISE, "scalar", "dx", "0", "0");
+    let plain = track(NOISE, "scalar", "x", "0", "0");
+    assert!((0..200).all(|t| scalar(&small, t) == scalar(&plain, t)));
+}
+
+#[test]
+fn elastic_overshoot_is_clamped() {
+    let src = doc(
+        r#"{"id":"t","kind":"property","target":"node","visible":true,"property":"dx","value_type":"scalar","interpolation":"linear","keys":[{"tick":0,"value":-4000,"ease":"ease_out_elastic"},{"tick":199,"value":4000}]}"#,
+    );
+    let vals: Vec<f64> = (0..200).map(|t| scalar(&src, t)).collect();
+    assert!(vals.iter().all(|v| v.abs() <= 4096.0), "{vals:?}");
+    assert!(vals.iter().any(|v| v.abs() == 4096.0), "overshoot reached the cap");
+}
+
+#[test]
+fn non_finite_values_are_sanitised() {
+    // Interpolating across the f64 range overflows to infinity before clamping.
+    let src = doc(
+        r#"{"id":"t","kind":"property","target":"node","visible":true,"property":"x","value_type":"scalar","interpolation":"linear","keys":[{"tick":0,"value":-1e308},{"tick":199,"value":1e308}]}"#,
+    );
+    assert!((0..200).all(|t| scalar(&src, t).is_finite()));
+}

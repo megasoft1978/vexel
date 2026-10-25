@@ -191,14 +191,68 @@ fn sample_track<'a>(
         Some(noise) => add_noise(value, &noise, tick, view.ticks_per_second()),
         None => value,
     };
+    let property = track
+        .property
+        .ok_or_else(|| failure(Error::InvalidSchema, 0))?;
     Ok(PropertySample {
         track_index,
         target: track.target,
-        property: track
-            .property
-            .ok_or_else(|| failure(Error::InvalidSchema, 0))?,
-        value,
+        property,
+        value: clamp_value(value, property),
     })
+}
+
+/// Pulls a sampled number into `lo..=hi`; NaN and infinities become the nearest bound
+/// (NaN the lower one) so overshooting easing or noise never escapes the key caps.
+fn clamp_num(v: f64, lo: f64, hi: f64) -> f64 {
+    if v.is_nan() {
+        lo
+    } else {
+        v.clamp(lo, hi)
+    }
+}
+
+/// Per-property scalar range: the same limits `validate_typed_value` enforces on keys.
+fn scalar_range(property: &[u8]) -> (f64, f64) {
+    match property {
+        b"stdDeviation" => (0.0, 32.0),
+        b"dx" | b"dy" => (-4096.0, 4096.0),
+        b"flood-opacity" => (0.0, 1.0),
+        b"values" => (-1e6, 1e6),
+        b"zoom" => (0.01, 100.0),
+        b"rotate" => (-36000.0, 36000.0),
+        _ => (-f64::MAX, f64::MAX),
+    }
+}
+
+/// Clamps a sampled value to the ranges keys are validated against after easing and
+/// noise. In-range values pass through unchanged.
+fn clamp_value(value: PropertyValue, property: &[u8]) -> PropertyValue {
+    const TRS_MAX: f64 = 1e9;
+    match value {
+        PropertyValue::Scalar(v) => {
+            let (lo, hi) = scalar_range(property);
+            PropertyValue::Scalar(clamp_num(v, lo, hi))
+        }
+        PropertyValue::Rgba(c) => PropertyValue::Rgba(c.map(|v| clamp_num(v, 0.0, 1.0))),
+        PropertyValue::Transform2d(m) => {
+            PropertyValue::Transform2d(m.map(|v| clamp_num(v, -f64::MAX, f64::MAX)))
+        }
+        PropertyValue::Trs(t) => {
+            let c = |v: f64| clamp_num(v, -TRS_MAX, TRS_MAX);
+            PropertyValue::Trs(Trs {
+                tx: c(t.tx),
+                ty: c(t.ty),
+                rotation_deg: c(t.rotation_deg),
+                sx: c(t.sx),
+                sy: c(t.sy),
+                pivot_x: c(t.pivot_x),
+                pivot_y: c(t.pivot_y),
+                skew_x_deg: c(t.skew_x_deg),
+            })
+        }
+        other => other,
+    }
 }
 
 /// Adds seeded noise to numeric components; other value types pass through.
@@ -384,5 +438,41 @@ fn failure(error: Error, offset: usize) -> DecodeFailure {
         error,
         offset,
         canceled: false,
+    }
+}
+
+#[cfg(test)]
+mod clamp_tests {
+    use super::*;
+
+    #[test]
+    fn nan_and_infinity_are_sanitised() {
+        let get = |v: f64, p: &[u8]| match clamp_value(PropertyValue::Scalar(v), p) {
+            PropertyValue::Scalar(s) => s,
+            _ => unreachable!(),
+        };
+        assert_eq!(get(f64::NAN, b"stdDeviation"), 0.0);
+        assert_eq!(get(f64::INFINITY, b"stdDeviation"), 32.0);
+        assert_eq!(get(f64::NEG_INFINITY, b"dx"), -4096.0);
+        assert_eq!(get(f64::NAN, b"zoom"), 0.01);
+        assert!(get(f64::NAN, b"x").is_finite());
+        assert!(get(f64::INFINITY, b"x").is_finite());
+        assert_eq!(get(12.5, b"x"), 12.5);
+        let PropertyValue::Trs(t) = clamp_value(
+            PropertyValue::Trs(Trs {
+                tx: f64::NAN,
+                ty: f64::INFINITY,
+                rotation_deg: 5.0,
+                sx: 1.0,
+                sy: 1.0,
+                pivot_x: 0.0,
+                pivot_y: 0.0,
+                skew_x_deg: 0.0,
+            }),
+            b"transform",
+        ) else {
+            unreachable!()
+        };
+        assert!(t.tx.is_finite() && t.ty == 1e9 && t.rotation_deg == 5.0);
     }
 }
