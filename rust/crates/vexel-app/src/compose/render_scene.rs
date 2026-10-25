@@ -223,22 +223,6 @@ impl Renderer<'_> {
         }
     }
 
-    /// Source-over of `layer` into `dest`, over the produced regions only.
-    /// `region` bounds every non-transparent pixel of `layer`; `None` means
-    /// the whole layer may hold pixels.
-    fn composite(
-        &self,
-        dest: &mut Tile,
-        layer: &Tile,
-        opacity: f64,
-        region: Option<Option<Rect>>,
-    ) -> Result<(), RenderError> {
-        match self.composite_rects(region) {
-            Some(rects) => composite_tile_in(dest, layer, opacity, &rects, self.cancel),
-            None => composite_tile(dest, layer, opacity, self.cancel),
-        }
-    }
-
     /// A transparent layer: a recycled one when available.
     fn take_layer(&self) -> Result<Tile, RenderError> {
         match self.spare.borrow_mut().pop() {
@@ -253,7 +237,8 @@ impl Renderer<'_> {
         let width = layer.width() as usize;
         for rect in rects {
             for y in rect.y0 as usize..rect.y1 as usize {
-                layer.rgba_mut()[(y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4]
+                layer.rgba_mut()
+                    [(y * width + rect.x0 as usize) * 4..(y * width + rect.x1 as usize) * 4]
                     .fill(0);
             }
         }

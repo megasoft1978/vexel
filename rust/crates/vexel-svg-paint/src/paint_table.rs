@@ -121,11 +121,12 @@ impl<'a> PreparedPaint<'a> {
         }
         let mut run_end = vec![0u32; CELLS];
         for i in (0..CELLS).rev() {
-            run_end[i] = if uniform[i] && i + 1 < CELLS && uniform[i + 1] && cells[i + 1] == cells[i] {
-                run_end[i + 1]
-            } else {
-                i as u32
-            };
+            run_end[i] =
+                if uniform[i] && i + 1 < CELLS && uniform[i + 1] && cells[i + 1] == cells[i] {
+                    run_end[i + 1]
+                } else {
+                    i as u32
+                };
         }
         Some(KeyTable {
             paint: *self,
