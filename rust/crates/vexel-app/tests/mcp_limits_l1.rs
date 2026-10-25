@@ -90,6 +90,32 @@ fn long_path_data_is_accepted_and_the_bound_is_enforced() {
 }
 
 #[test]
+fn path_segment_bound_is_enforced_at_16384() {
+    let mut rig = rig();
+    // "M" counts as one segment: M + 16383 implicit H repeats = 16384 is the
+    // accepted maximum. Implicit H keeps the argument small; an L-per-segment
+    // string of 16383 segments (~98 KB) is refused before reaching the bound.
+    let at_limit = format!("M 0 0 H{}", "1 ".repeat(16_383));
+    assert!(at_limit.len() < vexel_v1_document::MAX_PATH_DATA_BYTES);
+    add(
+        &mut rig,
+        "path",
+        &format!(r##""d":"{at_limit}","stroke":"#000""##),
+        "",
+    )
+    .ok();
+    let over = format!("M 0 0 {}", "L 1 1 ".repeat(16_400));
+    assert!(over.len() < vexel_v1_document::MAX_PATH_DATA_BYTES);
+    let reply = add(
+        &mut rig,
+        "path",
+        &format!(r##""d":"{over}","stroke":"#000""##),
+        "",
+    );
+    assert!(reply.is_error, "over 16384 segments rejected");
+}
+
+#[test]
 fn path_presentation_attributes_and_short_hex() {
     let mut rig = rig();
     add(

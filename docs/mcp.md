@@ -192,8 +192,10 @@ and `fill-rule` (`nonzero|evenodd`); `rect`/`ellipse` may omit `fill` when
 `gradientId` is given (the gradient is the fill, or the stroke with `paint`).
 `attribute_set` with `name` `id` renames any element, groups included
 (`value` 1-64 characters `[A-Za-z0-9_.-]` starting with a letter or `_`, not used
-by another element): `href="#id"` and `url(#id)` references and native timeline
-tracks that target the element follow, and one undo reverts all of it.
+by another element): `href="#id"`, `xlink:href="#id"` and `url(#id)`/`url('#id')`
+references and native timeline tracks that target the element follow, and one
+undo reverts all of it. The rename does not rewrite CSS `#id` selectors in
+`<style>`, whitespace-padded `url( #id )`, or SMIL `begin="id.end"` references.
 `element_group` accepts `elementIds[]` (1-1024 siblings of
 one parent) to wrap several elements in one group, and `element_reparent`
 (`elementId`, `parentId`, optional `index`) moves an element into another group
@@ -305,8 +307,9 @@ is undone and refused (see the table), so the document always renders.
 `use_add` instantiates an existing element, group or `symbol` by reference:
 `{"refId":"star","x":40,"y":30,"id":"star-1","fill":"#00ff00","opacity":0.8,
 "transform":{...}}` (`parentId` defaults to `"root"`; `transform` is the
-`element_add` object). `x`/`y` move the instance in the parent's space and the
-transform (scale, rotation) acts about the instance origin at `x`,`y`: with a
+`element_add` object). `x`/`y` are applied in the parent's space: the offset is not scaled or
+rotated by the transform (earlier versions applied it in the transformed space).
+The transform (scale, rotation) acts about the instance origin at `x`,`y`: with a
 transform they are folded into the matrix translation, so `scaleX: 0.5` with
 `x: 100` puts the origin at 100 and halves the size around it. It returns the new `elementId`.
 The instance is one element: it counts once toward the scene limit (the
