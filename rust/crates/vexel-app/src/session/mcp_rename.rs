@@ -3,6 +3,7 @@
 
 use super::AppDocument;
 use super::mcp::{source, stable_ids};
+use crate::preview::native_timeline::mcp_mouth::MOUTHS_ID;
 use crate::preview::native_timeline::mcp_rig::{RIG_ID, check_rename, retarget};
 use crate::preview::native_timeline::settings;
 use crate::project_session::SessionEditError;
@@ -17,6 +18,11 @@ pub(super) fn rename(app: &mut AppDocument, old: &str, new: &str) -> Result<(), 
     }
     if old == RIG_ID || new == RIG_ID {
         return Err("attribute_set id: the id vexel-rig belongs to the rig and cannot be renamed");
+    }
+    if old == MOUTHS_ID || new == MOUTHS_ID {
+        return Err(
+            "attribute_set id: the id vexel-mouths belongs to the mouth sets and cannot be renamed",
+        );
     }
     // Check up front so a clash cannot strand retargeted tracks.
     if stable_ids(&source(app)?).iter().any(|id| id == new) {

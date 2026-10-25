@@ -4,6 +4,8 @@
 use super::super::add_extras::number;
 use super::super::ext_structure::document;
 use super::{JsonDocument, JsonType, PreviewArgumentError};
+mod face;
+
 use vexel_timeline::clips::{Clip, ClipMode, ClipParams};
 use vexel_timeline::rig::{LocalPose, MAX_BONES, MAX_COORD, Role, valid_bone_id};
 
@@ -59,6 +61,8 @@ pub enum Op {
     Create(Create),
     Pose(Pose),
     Clip(ClipCall),
+    /// Mouth, lip-sync, eye and blink tools (see `face`).
+    Face(crate::preview::native_timeline::mcp_face::FaceOp),
 }
 
 fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
@@ -68,7 +72,11 @@ fn invalid(tool: &str, argument: &str, form: &str) -> PreviewArgumentError {
 }
 
 /// `(key, value)` token pairs of an object, at most `max`.
-fn members(doc: &JsonDocument<'_>, object: usize, max: usize) -> Option<Vec<(String, usize)>> {
+pub(crate) fn members(
+    doc: &JsonDocument<'_>,
+    object: usize,
+    max: usize,
+) -> Option<Vec<(String, usize)>> {
     let token = doc.token(object).filter(|t| t.kind == JsonType::Object)?;
     if token.child_count / 2 > max {
         return None;
@@ -321,6 +329,9 @@ pub(in crate::preview) fn parse(
     args: usize,
     tool: &str,
 ) -> Option<Result<Op, PreviewArgumentError>> {
+    if let Some(parsed) = face::parse(doc, args, tool) {
+        return Some(parsed.map(Op::Face));
+    }
     Some(match tool {
         "rig_create" => create(doc, args, tool),
         "rig_pose" => pose(doc, args, tool),

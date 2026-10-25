@@ -9,6 +9,7 @@ pub mod clips;
 mod easing;
 mod edit;
 mod json;
+pub mod lipsync;
 pub mod noise;
 pub mod pathmorph;
 pub mod rig;

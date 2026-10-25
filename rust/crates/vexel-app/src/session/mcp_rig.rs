@@ -19,20 +19,25 @@ pub(crate) const RIG_ID: &str = "vexel-rig";
 const NO_RIG: &str = "no rig in this document; call rig_create first";
 const BAD_RIG: &str = "the rig stored in the document is invalid; call rig_create again";
 
-fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+pub(crate) fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack.windows(needle.len()).position(|w| w == needle)
 }
 
-/// The text of the stored rig element: the one `<desc id="vexel-rig"`.
-fn stored_text(source: &[u8]) -> Option<&[u8]> {
-    const TAG: &[u8] = b"<desc id=\"vexel-rig\"";
-    let at = find(source, TAG)?;
-    if find(&source[at + TAG.len()..], TAG).is_some() {
+/// The text of the one `<desc id="...">` element whose opening is `tag`
+/// (`<desc id="vexel-rig"`); `None` when absent or when the tag occurs twice.
+pub(crate) fn desc_text<'a>(source: &'a [u8], tag: &[u8]) -> Option<&'a [u8]> {
+    let at = find(source, tag)?;
+    if find(&source[at + tag.len()..], tag).is_some() {
         return None;
     }
     let open = at + source[at..].iter().position(|b| *b == b'>')? + 1;
     let close = open + find(&source[open..], b"</desc>")?;
     Some(&source[open..close])
+}
+
+/// The text of the stored rig element: the one `<desc id="vexel-rig"`.
+fn stored_text(source: &[u8]) -> Option<&[u8]> {
+    desc_text(source, b"<desc id=\"vexel-rig\"")
 }
 
 fn to_json(rig: &Rig) -> String {
@@ -143,7 +148,7 @@ fn rig_error(error: RigError) -> &'static str {
 }
 
 /// Whether `id`'s group lies inside the element `ancestor`.
-fn inside(app: &AppDocument, id: &str, ancestor: &str) -> bool {
+pub(crate) fn inside(app: &AppDocument, id: &str, ancestor: &str) -> bool {
     let mut current = id.to_owned();
     for _ in 0..4096 {
         let Ok(info) = app.document().element_get(&current) else {
@@ -159,7 +164,7 @@ fn inside(app: &AppDocument, id: &str, ancestor: &str) -> bool {
 }
 
 /// Whether the group or an ancestor has a `transform`, so its bounds are not in its own space.
-fn transformed(app: &AppDocument, id: &str) -> bool {
+pub(crate) fn transformed(app: &AppDocument, id: &str) -> bool {
     let mut current = id.to_owned();
     for _ in 0..4096 {
         let Ok(info) = app.document().element_get(&current) else {
@@ -273,6 +278,7 @@ pub(crate) fn check_rename(app: &AppDocument, old: &str, new: &str) -> Result<()
 /// Renames bone `old` to `new` in the stored rig (after the group itself was
 /// renamed). No-op when the document has no valid rig or `old` is not a bone.
 pub(crate) fn retarget(app: &mut AppDocument, old: &str, new: &str) -> Result<(), &'static str> {
+    super::mcp_mouth::retarget(app, old, new)?;
     let Ok(mut rig) = load(app) else {
         return Ok(());
     };
@@ -548,6 +554,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: Op) -> Result<McpOutcome, &'stati
         Op::Create(spec) => create(app, spec),
         Op::Pose(spec) => pose(app, spec),
         Op::Clip(call) => clip(app, call),
+        Op::Face(_) => Err("face tools need the MCP host"),
     }
 }
 
