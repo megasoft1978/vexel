@@ -11,7 +11,7 @@ use vexel_svg_animation::{Track, attribute_name, parse_owned};
 use vexel_xml::{XmlLimits, tokenize};
 
 /// Source bytes the track reader accepts (same bound as the animation decoder).
-const SOURCE_LIMIT: usize = 1 << 20;
+const SOURCE_LIMIT: usize = 4 << 20;
 
 /// One animated property of an element with its key times in seconds.
 #[derive(Clone, Debug, PartialEq)]

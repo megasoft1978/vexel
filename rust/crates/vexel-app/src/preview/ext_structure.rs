@@ -147,7 +147,11 @@ fn group_ids(
     Ok(ids)
 }
 
-pub(super) fn document(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<(), PreviewArgumentError> {
+pub(super) fn document(
+    doc: &JsonDocument<'_>,
+    args: usize,
+    tool: &str,
+) -> Result<(), PreviewArgumentError> {
     let value = doc
         .object_get(args, b"documentId")
         .and_then(|t| doc.decoded_string(t));

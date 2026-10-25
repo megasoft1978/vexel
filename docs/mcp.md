@@ -254,16 +254,88 @@ Resources expose current document information and rendering data supported by
 the active session. Tool results include structured JSON and a text fallback;
 rendering can also return an MCP image content block.
 
+## Fragments and `<use>` instances
+
+`element_add_fragment` (`parentId` is `"root"` or any element id, `xml` is one
+element of at most 64 KiB) inserts arbitrary allowed markup as the last child in
+one undoable edit and returns `elementIds`. Allowed elements: shapes, `g`,
+`defs`, `symbol`, `use`, `mask`, `clipPath`, `filter` and `fe*` primitives,
+gradients, `stop`, `pattern`, `marker`, `text`, `tspan`, `image`, `title`,
+`desc`. Rejected with a typed error: `script`, `foreignObject`, `style`, SMIL
+(`animate*`, `set`; use `animation_add`), `on*` attributes, any `href` that is
+not a local `#id` (except `data:image/` on `<image>`), any non-local `url(...)`,
+duplicate ids, `<use>` reference cycles. A fragment the renderer cannot draw
+is undone and refused (see the table), so the document always renders.
+
+`use_add` instantiates an existing element, group or `symbol` by reference:
+`{"refId":"star","x":40,"y":30,"id":"star-1","fill":"#00ff00","opacity":0.8,
+"transform":{...}}` (`parentId` defaults to `"root"`; `transform` is the
+`element_add` object, applied before `x`/`y`). It returns the new `elementId`.
+The instance is one element: it counts once toward the scene limit (the
+referenced content is counted when it is added; expansions are not counted by
+`SCENE_LIMIT`, which counts `id` attributes in the source). Expansion is bounded
+by the decoder (cumulative `<use>` reference bytes 16 MiB; cyclic references are
+a typed decode error, and `use_add`/`element_add_fragment` refuse cycles
+up front). The `use` is selectable, hit-testable and movable on the canvas,
+undoable, saved with the document, and a transform or opacity track targets its
+id. `fill`, `stroke` and `opacity` are inherited by referenced content that sets
+none of its own. `use_detach` (convert to a real copy) is not implemented: use
+`element_duplicate` on the referenced element.
+
+Measured by `rust/crates/vexel-app/tests/mcp_fragments.rs` (live preview,
+512x512 render):
+
+| construct | works | notes |
+| --- | --- | --- |
+| `<defs><filter>` with `feGaussianBlur` | yes | soft edges |
+| `feDropShadow` | yes | offset shadow renders |
+| `feColorMatrix` (hueRotate) | yes | |
+| `feTurbulence` | no | decoder: `UnsupportedFeTurbulence`; fragment is undone with an error |
+| `<symbol>` + `<use href x y>` | yes | |
+| `<use>` with `transform` and x/y | yes | |
+| `<mask>` | yes | |
+| `<clipPath>` with `<path>` children | yes | |
+| `mix-blend-mode` (attribute or style) | no | renderer: `Unsupported(OpacityGroup)`; fragment is undone with an error |
+| `stroke` on `<text>` | yes | outline paints |
+| `<image>` data URI | yes | `data:image/` only; external hrefs refused |
+| `<use>` cycles (self, A to B to A, symbol using its parent) | refused | typed errors; decoder also refuses cyclic sources |
+
 ## Performance
 
 `cargo test -p vexel-app --release --test mcp_bench -- --ignored --nocapture`
-builds 120 and 1024 elements (the scene cap) and 50 opacity tracks x 8 keys
+builds 120, 1024, 2048 and 4096 elements (the scene cap) and 50 opacity tracks x 8 keys
 through the headless rig, and prints per-tool and per-phase p50 / p95 ms. The
 rig measures handler cost only; it excludes the shell loop's wake/sleep latency.
 Phase timers (`vexel_app::profile`) are always on in the bench; `VEXEL_PROFILE=1`
 enables them for any run. When off, each phase costs one cached flag check.
 Phases nest: `edit_apply` contains `edit_validate` and `edit_ops`; `candidate_open`
 contains `scene_scan` and `scene_copy`.
+
+### Scene and source limits (raised 2026-10-25)
+
+`SCENE_LIMIT` is now 4096 elements (was 1024) and the live-preview source limit
+4 MiB (was 512 KiB; the native-timeline and animation-frame paths moved from
+1 MiB to 4 MiB with it). Measured with `mcp_bench` (release, Apple Silicon, one
+run; `element_add` p50 / p95 ms, edit recompose p50 / p95 ms where recompose is
+decode + render on the compose worker path):
+
+| elements | element_add | recompose (decode / render) | add_property_track | set_property_key | wall |
+| --- | --- | --- | --- | --- | --- |
+| 120 | 0.26 / 0.36 | 0.61 / 1.35 | | | 1.0 s |
+| 1024 | 0.95 / 1.75 | 3.3 / 5.7 | 1.27 / 1.71 | 1.31 / 2.04 | 5.3 s |
+| 2048 | 1.76 / 2.87 | 5.3 / 11.1 | | | 16.9 s |
+| 4096 | 2.77 / 5.12 | 10.1 / 20.7 (8.3 / 0.95) | 2.40 / 2.94 | 1.47 / 2.39 | 58.6 s |
+
+Edit recompose p50 at 4096 is 10 ms (target 100 ms); journal phases stay under
+0.5 ms (`journal_scene` 0.48, `journal_admit` 0.006); the bench process peaked at
+550 MB RSS across all four sizes. 4096 simple rects serialize to about 0.6 MB, so
+the 4 MiB source limit is headroom for path-heavy scenes; decode cost is linear
+in source bytes (about 8 ms per 0.6 MB), so a full 4 MiB source extrapolates to
+about 55 ms (not measured separately). The playback tick path was not re-measured
+(`native_play_bench` is unchanged). Responses stay small: `tree_get` and
+`element_query` page with `cursor` and `limit` (at most 512 per page, 64 KiB per
+reply); `export_svg` still refuses sources over 64 KiB (use `save_as`, or page
+the tree).
 
 Baseline (before optimization), p50 / p95 ms:
 
@@ -273,7 +345,7 @@ Baseline (before optimization), p50 / p95 ms:
 | native_timeline_add_property_track | 50 | 1.21 | 2.26 |
 | native_timeline_set_property_key | 400 | 1.71 | 3.20 |
 
-Total wall 0.80 s (idle machine). The scene cap is now 1024 elements; the
+Total wall 0.80 s (idle machine). The scene cap was 1024 elements then; the
 benchmark keeps 120 elements to stay inside the 600 requests/min session budget.
 
 After bulk keys, shared history snapshots and per-edit serialization removal

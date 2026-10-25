@@ -40,9 +40,7 @@ fn optional_number(
     key: &'static str,
 ) -> Result<Option<f64>, PreviewArgumentError> {
     doc.object_get(args, key.as_bytes())
-        .map(|token| {
-            number(doc, token).ok_or_else(|| invalid("use_add", key, "a finite number"))
-        })
+        .map(|token| number(doc, token).ok_or_else(|| invalid("use_add", key, "a finite number")))
         .transpose()
 }
 

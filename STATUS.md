@@ -5,12 +5,12 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 ## Current state 2026-10-21 (docs)
 
 - Changes since `v1.0.0-alpha`: see [CHANGELOG.md](CHANGELOG.md).
-- Live-preview MCP: 53 tools (`batch`, native timeline, `export_animation`
+- Live-preview MCP: 55 tools (`batch`, native timeline, `export_animation`
   gif/mp4/mov/apng/frames, `render_png`). Tool reference: [docs/mcp.md](docs/mcp.md).
 - Export: GIF, APNG, PNG frame sequence, MP4/MOV (H.264 or HEVC), HEVC with alpha (mov).
 - SVG: Q/T/S path commands and internal DOCTYPE general entities (hard limits) landed.
   Arc commands unsupported. Corpus: deferred gaps include columbiarivermap,
-  corsica, ideogram clip cap, france-osm. Attribute-value entities, Illustrator switch/foreignObject fallbacks, wrapped base64 and empty-media-type data URIs now decode; columbiarivermap and france-osm now render (corpus 23/39, measured 2026-10-25, was 21/39). Render caps raised with measurements: stroke step budget 4M to 6M (france-osm needs just over 4M; 1.6 s, peak RSS 1.50 GB), pattern tile area 1,048,576 to 8,388,608 px plus a new 128 MiB aggregate cap on live pattern tiles (columbiarivermap 0.9 s, 217 MB RSS). Still failing: corsica (duplicate element ids are rejected by vexel-svg-reference, then `svg:`-prefixed SVG elements are rejected; tspan placement itself is implemented), 4 unsupported, 10 limit_decode, 1 xml, 1 rss_exceeded (generated-inkscape_t2). SCENE_LIMIT/SOURCE_LIMIT unchanged (the corpus path uses a 32 MiB cap).
+  corsica, ideogram clip cap, france-osm. Attribute-value entities, Illustrator switch/foreignObject fallbacks, wrapped base64 and empty-media-type data URIs now decode; columbiarivermap and france-osm now render (corpus 23/39, measured 2026-10-25, was 21/39). Render caps raised with measurements: stroke step budget 4M to 6M (france-osm needs just over 4M; 1.6 s, peak RSS 1.50 GB), pattern tile area 1,048,576 to 8,388,608 px plus a new 128 MiB aggregate cap on live pattern tiles (columbiarivermap 0.9 s, 217 MB RSS). Still failing: corsica (duplicate element ids are rejected by vexel-svg-reference, then `svg:`-prefixed SVG elements are rejected; tspan placement itself is implemented), 4 unsupported, 10 limit_decode, 1 xml, 1 rss_exceeded (generated-inkscape_t2). The live-preview SCENE_LIMIT is now 4096 and SOURCE_LIMIT 4 MiB (measured, docs/mcp.md); the corpus path uses a 32 MiB cap. New live-preview tools `element_add_fragment` (allow-listed markup, cycle-safe) and `use_add` (`<use>` instances); feTurbulence and mix-blend-mode are not rendered (fragments using them are refused).
 - UI: rotate live preview, bezier easing editor, new app icon. Real-window e2e
   script [docs/e2e-ui.md](docs/e2e-ui.md) written, not yet run live.
 

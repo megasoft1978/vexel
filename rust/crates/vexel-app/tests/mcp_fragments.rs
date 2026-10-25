@@ -3,9 +3,9 @@
 mod common;
 
 use common::{Rig, element_id, no_grants};
-use vexel_app::preview::SCENE_LIMIT;
 use std::sync::atomic::AtomicBool;
 use vexel_app::animation::frame;
+use vexel_app::preview::SCENE_LIMIT;
 
 fn rig() -> Rig {
     Rig::new(no_grants())
@@ -61,20 +61,45 @@ fn boxed(fx: &str) -> String {
 
 #[test]
 fn filters_blur_dropshadow_colormatrix_work() {
-    let defs = |body: &str| format!(r##"<defs><filter id="f1" x="-50%" y="-50%" width="200%" height="200%">{body}</filter></defs>"##);
+    let defs = |body: &str| {
+        format!(
+            r##"<defs><filter id="f1" x="-50%" y="-50%" width="200%" height="200%">{body}</filter></defs>"##
+        )
+    };
     let mut rig = rig();
-    add_all(&mut rig, &[&defs(r##"<feDropShadow dx="30" dy="30" stdDeviation="0" flood-color="#0000ff"/>"##), &boxed(r##"filter="url(#f1)""##)]).ok();
+    add_all(
+        &mut rig,
+        &[
+            &defs(r##"<feDropShadow dx="30" dy="30" stdDeviation="0" flood-color="#0000ff"/>"##),
+            &boxed(r##"filter="url(#f1)""##),
+        ],
+    )
+    .ok();
     let img = render(&rig).unwrap();
     assert_eq!(at(&img, 125, 125), RED);
     assert_eq!(at(&img, 215, 215), BLUE, "shadow offset 30,30");
 
     let mut rig = self::rig();
-    add_all(&mut rig, &[&defs(r#"<feGaussianBlur stdDeviation="4"/>"#), &boxed(r##"filter="url(#f1)""##)]).ok();
+    add_all(
+        &mut rig,
+        &[
+            &defs(r#"<feGaussianBlur stdDeviation="4"/>"#),
+            &boxed(r##"filter="url(#f1)""##),
+        ],
+    )
+    .ok();
     let img = render(&rig).unwrap();
     assert_ne!(at(&img, 100, 125), RED, "blurred edge is soft");
 
     let mut rig = self::rig();
-    add_all(&mut rig, &[&defs(r#"<feColorMatrix type="hueRotate" values="90"/>"#), &boxed(r##"filter="url(#f1)""##)]).ok();
+    add_all(
+        &mut rig,
+        &[
+            &defs(r#"<feColorMatrix type="hueRotate" values="90"/>"#),
+            &boxed(r##"filter="url(#f1)""##),
+        ],
+    )
+    .ok();
     let img = render(&rig).unwrap();
     assert_ne!(at(&img, 125, 125), RED, "hue rotated");
 }
@@ -82,9 +107,22 @@ fn filters_blur_dropshadow_colormatrix_work() {
 #[test]
 fn turbulence_and_blend_modes_are_refused_and_rolled_back() {
     for (parts, name) in [
-        (vec![r##"<defs><filter id="f1"><feTurbulence baseFrequency="0.05"/></filter></defs>"##.to_owned(), boxed(r##"filter="url(#f1)""##)], "feTurbulence"),
-        (vec![boxed(r#"mix-blend-mode="multiply""#)], "mix-blend-mode attribute"),
-        (vec![boxed(r#"style="mix-blend-mode:multiply""#)], "mix-blend-mode style"),
+        (
+            vec![
+                r##"<defs><filter id="f1"><feTurbulence baseFrequency="0.05"/></filter></defs>"##
+                    .to_owned(),
+                boxed(r##"filter="url(#f1)""##),
+            ],
+            "feTurbulence",
+        ),
+        (
+            vec![boxed(r#"mix-blend-mode="multiply""#)],
+            "mix-blend-mode attribute",
+        ),
+        (
+            vec![boxed(r#"style="mix-blend-mode:multiply""#)],
+            "mix-blend-mode style",
+        ),
     ] {
         let mut rig = rig();
         let mut refused = None;
@@ -92,7 +130,11 @@ fn turbulence_and_blend_modes_are_refused_and_rolled_back() {
             let before = rig.state().source;
             let reply = fragment(&mut rig, "root", part);
             if reply.is_error {
-                assert!(reply.error().contains("does not support"), "{name}: {}", reply.body);
+                assert!(
+                    reply.error().contains("does not support"),
+                    "{name}: {}",
+                    reply.body
+                );
                 assert_eq!(rig.state().source, before, "{name}: edit undone");
                 refused = Some(());
             }
@@ -110,7 +152,11 @@ fn symbol_use_mask_clip_text_stroke_and_image_render() {
         r##"<use id="u" href="#sym" x="100" y="100" width="50" height="50"/>"##,
     ]).ok();
     let img = render(&rig).unwrap();
-    assert_eq!((at(&img, 125, 125), at(&img, 175, 125)), (RED, CLEAR), "symbol + use x/y");
+    assert_eq!(
+        (at(&img, 125, 125), at(&img, 175, 125)),
+        (RED, CLEAR),
+        "symbol + use x/y"
+    );
 
     let mut rig = self::rig();
     add_all(&mut rig, &[
@@ -121,13 +167,23 @@ fn symbol_use_mask_clip_text_stroke_and_image_render() {
     assert_eq!(at(&img, 125, 125), RED, "use transform + x/y");
 
     for (defs, attr) in [
-        (r##"<defs><mask id="m"><rect x="0" y="0" width="150" height="300" fill="#ffffff"/></mask></defs>"##, r##"mask="url(#m)""##),
-        (r##"<defs><clipPath id="c"><path d="M100 100 L150 100 L150 200 L100 200 Z"/></clipPath></defs>"##, r##"clip-path="url(#c)""##),
+        (
+            r##"<defs><mask id="m"><rect x="0" y="0" width="150" height="300" fill="#ffffff"/></mask></defs>"##,
+            r##"mask="url(#m)""##,
+        ),
+        (
+            r##"<defs><clipPath id="c"><path d="M100 100 L150 100 L150 200 L100 200 Z"/></clipPath></defs>"##,
+            r##"clip-path="url(#c)""##,
+        ),
     ] {
         let mut rig = self::rig();
         add_all(&mut rig, &[defs, &boxed(attr)]).ok();
         let img = render(&rig).unwrap();
-        assert_eq!((at(&img, 125, 125), at(&img, 175, 125)), (RED, CLEAR), "{attr}");
+        assert_eq!(
+            (at(&img, 125, 125), at(&img, 175, 125)),
+            (RED, CLEAR),
+            "{attr}"
+        );
     }
 
     let mut rig = self::rig();
@@ -174,17 +230,42 @@ fn use_add_counts_one_element_undoes_and_serializes() {
         rest[..rest.find(',').unwrap()].parse::<usize>().unwrap()
     };
     let base = count(&mut rig);
-    let id = element_id(rig.doc_tool("use_add", r##""refId":"star","x":200,"y":100,"fill":"#00ff00","opacity":0.5"##).ok());
-    assert_eq!(count(&mut rig), base + 1, "the instance is one element, not star + star-body");
+    let id = element_id(
+        rig.doc_tool(
+            "use_add",
+            r##""refId":"star","x":200,"y":100,"fill":"#00ff00","opacity":0.5"##,
+        )
+        .ok(),
+    );
+    assert_eq!(
+        count(&mut rig),
+        base + 1,
+        "the instance is one element, not star + star-body"
+    );
     let img = render(&rig).unwrap();
     assert_ne!(at(&img, 210, 110), CLEAR, "instance renders");
     assert_eq!(at(&img, 150, 110), CLEAR);
     let svg = String::from_utf8(rig.state().source).unwrap();
-    assert!(svg.contains(&format!(r##"<use id="{id}" href="#star" x="200" y="100" fill="#00ff00" opacity="0.5"/>"##)), "{svg}");
+    assert!(
+        svg.contains(&format!(
+            r##"<use id="{id}" href="#star" x="200" y="100" fill="#00ff00" opacity="0.5"/>"##
+        )),
+        "{svg}"
+    );
     // Transform object, explicit id, nested parent.
-    let named = element_id(rig.doc_tool("use_add", r##""refId":"star","id":"star-2","transform":{"rotate":45,"pivotX":15,"pivotY":15}"##).ok());
+    let named = element_id(
+        rig.doc_tool(
+            "use_add",
+            r##""refId":"star","id":"star-2","transform":{"rotate":45,"pivotX":15,"pivotY":15}"##,
+        )
+        .ok(),
+    );
     assert_eq!(named, "star-2");
-    assert!(String::from_utf8(rig.state().source).unwrap().contains("id=\"star-2\" href=\"#star\" transform=\"matrix("));
+    assert!(
+        String::from_utf8(rig.state().source)
+            .unwrap()
+            .contains("id=\"star-2\" href=\"#star\" transform=\"matrix(")
+    );
     rig.doc_tool("undo", "").ok();
     rig.doc_tool("undo", "").ok();
     assert_eq!(rig.state().source, before, "one undo per instance");
@@ -194,17 +275,24 @@ fn use_add_counts_one_element_undoes_and_serializes() {
 fn use_add_rejects_bad_requests_without_changes() {
     let mut rig = rig();
     star(&mut rig);
-    rig.doc_tool("use_add", r##""refId":"star","id":"dup""##).ok();
+    rig.doc_tool("use_add", r##""refId":"star","id":"dup""##)
+        .ok();
     let state = rig.state();
     for (extra, why) in [
         (r##""refId":"missing""##, "unknown ref"),
         (r##""refId":"star","id":"dup""##, "duplicate id"),
-        (r##""refId":"star","parentId":"star""##, "parent is the target"),
+        (
+            r##""refId":"star","parentId":"star""##,
+            "parent is the target",
+        ),
         (r##""refId":"star","parentId":"nope""##, "unknown parent"),
         (r##""refId":"star","opacity":2"##, "opacity range"),
         (r##""refId":"star","fill":"red""##, "paint form"),
         (r##""refId":"star","x":"1""##, "x type"),
-        (r##""refId":"star","transform":{"spin":1}"##, "transform member"),
+        (
+            r##""refId":"star","transform":{"spin":1}"##,
+            "transform member",
+        ),
     ] {
         let reply = rig.doc_tool("use_add", extra);
         assert!(reply.is_error, "{why}: {}", reply.body);
@@ -216,21 +304,43 @@ fn use_add_rejects_bad_requests_without_changes() {
 fn use_is_hit_testable_movable_and_animatable() {
     let mut rig = rig();
     star(&mut rig);
-    let id = element_id(rig.doc_tool("use_add", r##""refId":"star","x":200,"y":100"##).ok());
-    assert_eq!(rig.app.document().hit_test(210.0, 110.0).as_deref(), Some(id.as_str()));
+    let id = element_id(
+        rig.doc_tool("use_add", r##""refId":"star","x":200,"y":100"##)
+            .ok(),
+    );
+    assert_eq!(
+        rig.app.document().hit_test(210.0, 110.0).as_deref(),
+        Some(id.as_str())
+    );
     assert_eq!(rig.app.document().hit_test(10.0, 10.0), None);
     rig.app.edit(|doc| doc.translate(&id, 50.0, 0.0)).unwrap();
-    assert_eq!(rig.app.document().hit_test(260.0, 110.0).as_deref(), Some(id.as_str()));
-    for (track, property, value, end) in [("t", "transform", r##"{"pivot":[215,115]}"##, r##"{"translate":[100,0]}"##), ("o", "opacity", "1", "0")] {
+    assert_eq!(
+        rig.app.document().hit_test(260.0, 110.0).as_deref(),
+        Some(id.as_str())
+    );
+    for (track, property, value, end) in [
+        (
+            "t",
+            "transform",
+            r##"{"pivot":[215,115]}"##,
+            r##"{"translate":[100,0]}"##,
+        ),
+        ("o", "opacity", "1", "0"),
+    ] {
         let reply = rig.doc_tool(
             "native_timeline_add_property_track",
             &format!(r#""trackId":"{track}","targetId":"{id}","property":"{property}","valueType":"{}","interpolation":"linear","value":{value}"#, if property == "opacity" { "scalar" } else { "trs" }),
         );
         reply.ok();
-        rig.doc_tool("native_timeline_set_property_key", &format!(r#""trackId":"{track}","tick":24,"value":{end}"#)).ok();
+        rig.doc_tool(
+            "native_timeline_set_property_key",
+            &format!(r#""trackId":"{track}","tick":24,"value":{end}"#),
+        )
+        .ok();
     }
     let at0 = render(&rig).unwrap();
-    rig.doc_tool("animation_control", r#""action":"seek","timeMs":1000"#).ok();
+    rig.doc_tool("animation_control", r#""action":"seek","timeMs":1000"#)
+        .ok();
     assert!(render(&rig).is_ok());
     let _ = at0;
 }
@@ -243,7 +353,14 @@ fn scene_limit_counts_use_instances_as_one_element_each() {
     // `<g>` of each fragment gets an id and counts as one element too.
     let count = |rig: &mut Rig| -> usize {
         let body = rig.doc_tool("document_info", "").ok().to_owned();
-        body.split("\"elementCount\":").nth(1).unwrap().split(',').next().unwrap().parse().unwrap()
+        body.split("\"elementCount\":")
+            .nth(1)
+            .unwrap()
+            .split(',')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap()
     };
     let mut n = 0;
     loop {
@@ -252,14 +369,22 @@ fn scene_limit_counts_use_instances_as_one_element_each() {
             break;
         }
         let take = (room - 1).min(1000);
-        let uses: String = (n..n + take).map(|i| format!(r##"<use id="i{i}" href="#star"/>"##)).collect();
+        let uses: String = (n..n + take)
+            .map(|i| format!(r##"<use id="i{i}" href="#star"/>"##))
+            .collect();
         let reply = fragment(&mut rig, "root", &format!("<g>{uses}</g>"));
         assert!(!reply.is_error, "{n}+{take}: {}", reply.body);
         n += take;
     }
     assert_eq!(count(&mut rig), SCENE_LIMIT);
-    assert_eq!(rig.doc_tool("use_add", r##""refId":"star""##).error(), "preview scene limit reached");
-    assert_eq!(fragment(&mut rig, "root", r##"<g id="z"/>"##).error(), "preview scene limit reached");
+    assert_eq!(
+        rig.doc_tool("use_add", r##""refId":"star""##).error(),
+        "preview scene limit reached"
+    );
+    assert_eq!(
+        fragment(&mut rig, "root", r##"<g id="z"/>"##).error(),
+        "preview scene limit reached"
+    );
     assert!(render(&rig).is_ok(), "SCENE_LIMIT instances render");
 }
 
@@ -273,8 +398,16 @@ fn unsafe_fragments_and_use_cycles_are_refused_end_to_end() {
         ("root", r##"<script id="s">x</script>"##, "not allowed"),
         ("root", r##"<foreignObject id="f"/>"##, "not allowed"),
         ("root", r##"<g id="a" onclick="x()"/>"##, "on*"),
-        ("root", r##"<image id="i" href="http://example.com/a.png"/>"##, "local #id"),
-        ("root", r##"<rect id="r" fill="url(http://x/y#p)"/>"##, "local #id"),
+        (
+            "root",
+            r##"<image id="i" href="http://example.com/a.png"/>"##,
+            "local #id",
+        ),
+        (
+            "root",
+            r##"<rect id="r" fill="url(http://x/y#p)"/>"##,
+            "local #id",
+        ),
         ("root", r##"<use id="self" href="#self"/>"##, "cycle"),
         ("sy", r##"<use id="us" href="#host"/>"##, "cycle"),
     ] {
@@ -282,7 +415,10 @@ fn unsafe_fragments_and_use_cycles_are_refused_end_to_end() {
         assert!(reply.error().contains(want), "{xml}: {}", reply.body);
         assert_eq!(rig.state(), state, "{xml}");
     }
-    assert!(rig.doc_tool("use_add", r##""refId":"host","parentId":"sy""##).is_error);
+    assert!(
+        rig.doc_tool("use_add", r##""refId":"host","parentId":"sy""##)
+            .is_error
+    );
     assert_eq!(rig.state(), state);
 }
 
@@ -291,7 +427,26 @@ fn decoder_survives_a_cyclic_use_source() {
     // Cyclic sources cannot be built through the tools; the decoder and
     // renderer must still end (typed error or empty render), not recurse.
     let cyclic = br##"<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><g id="g"><rect width="8" height="8"/><use href="#g"/></g><use id="a" href="#b"/><use id="b" href="#a"/></svg>"##;
-    let outcome = frame::decode(cyclic)
-        .and_then(|scene| scene.render_sized(0.0, (64, 64), &AtomicBool::new(false)).map_err(Into::into));
-    assert!(outcome.is_err(), "a cyclic <use> source is a typed decode error");
+    let outcome = frame::decode(cyclic).and_then(|scene| {
+        scene
+            .render_sized(0.0, (64, 64), &AtomicBool::new(false))
+            .map_err(Into::into)
+    });
+    assert!(
+        outcome.is_err(),
+        "a cyclic <use> source is a typed decode error"
+    );
+}
+
+#[test]
+fn live_preview_lists_the_fragment_and_use_tools() {
+    let tools = rig().list_tools();
+    assert_eq!(
+        tools.len(),
+        55,
+        "53 earlier tools + element_add_fragment + use_add"
+    );
+    for name in ["element_add_fragment", "use_add"] {
+        assert!(tools.iter().any(|t| t == name), "{name}");
+    }
 }

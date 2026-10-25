@@ -133,10 +133,17 @@ fn run(elements: u32) {
         if i > 0 && i % SESSION_REQUESTS == 0 {
             rig = renew(rig, &dir);
         }
+        // 32 columns of 15 px cells up to 1024 elements, 64 columns of 8 px
+        // cells above, so every element stays inside the 512 px canvas.
+        let (cols, cell, size) = if elements > 1024 {
+            (64, 8, 6)
+        } else {
+            (32, 15, 20)
+        };
         let attrs = format!(
-            r##""parentId":"root","template":"rect","attributes":{{"x":"{}","y":"{}","width":"20","height":"20","fill":"#3366cc"}}"##,
-            (i % 32) * 15,
-            (i / 32) * 15
+            r##""parentId":"root","template":"rect","attributes":{{"x":"{}","y":"{}","width":"{size}","height":"{size}","fill":"#3366cc"}}"##,
+            (i % cols) * cell,
+            (i / cols) * cell
         );
         let reply = timed(&mut rig, &mut samples, "element_add", &attrs);
         ids.push(element_id(reply.ok()));
@@ -207,7 +214,7 @@ fn run(elements: u32) {
 #[test]
 #[ignore]
 fn build_scripted_scene() {
-    for elements in [120, 1024] {
+    for elements in [120, 1024, 2048, 4096] {
         run(elements);
     }
 }

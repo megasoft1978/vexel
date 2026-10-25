@@ -156,10 +156,9 @@ fn local_bounds(doc: &V1Document, id: &str) -> Option<Bounds> {
             let d = info.attributes.iter().find(|(key, _)| key == "d")?;
             path_bounds(&d.1)?
         }
-        ElementKind::Group
-        | ElementKind::Text
-        | ElementKind::Use
-        | ElementKind::Other => return None,
+        ElementKind::Group | ElementKind::Text | ElementKind::Use | ElementKind::Other => {
+            return None;
+        }
     };
     Some(bounds)
 }

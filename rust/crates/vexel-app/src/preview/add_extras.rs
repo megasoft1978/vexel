@@ -55,7 +55,10 @@ fn explicit_id(id: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(b))
 }
 
-pub(super) fn transform(doc: &JsonDocument<'_>, token: usize) -> Result<TransformSpec, PreviewArgumentError> {
+pub(super) fn transform(
+    doc: &JsonDocument<'_>,
+    token: usize,
+) -> Result<TransformSpec, PreviewArgumentError> {
     let form = "an object with number members translateX, translateY, rotate, pivotX, pivotY, scaleX, scaleY, skewX";
     let object = doc
         .token(token)
