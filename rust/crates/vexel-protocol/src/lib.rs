@@ -8,6 +8,7 @@ mod tools_batch;
 mod tools_native_bulk;
 mod tools_native_edit;
 mod tools_paint;
+mod tools_rig;
 mod tools_structure;
 
 use vexel_json::{JsonBuffer, JsonDocument};

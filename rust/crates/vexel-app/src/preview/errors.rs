@@ -71,6 +71,7 @@ const DOC_TOOL_PREFIXES: &[&str] = &[
     "element_set_",
     "gradient_",
     "clip_",
+    "rig_",
     "text_",
     "attribute_",
 ];

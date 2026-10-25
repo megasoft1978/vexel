@@ -4,6 +4,7 @@ use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, native_time
 use vexel_timeline::LoopMode;
 
 mod noise;
+pub(in crate::preview) mod rig;
 mod tracks;
 
 const VALUE_LIMIT: usize = 4096;
