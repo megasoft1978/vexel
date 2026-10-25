@@ -429,6 +429,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
             prepared.loop_mode,
         );
         let playing = self.controller.playing;
+        prepared.set_preview(playing);
         let last = prepared.duration_ticks.saturating_sub(1);
         if playing != self.was_playing {
             // Frames of the other size class are stale now.

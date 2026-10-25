@@ -12,6 +12,7 @@
 
 use super::clips::ClipStore;
 use super::diff::{Rect, device_rect};
+use super::layer_render::LayerRun;
 use super::layers::{Geo, composite_tile, composite_tile_blend, composite_tile_in, mask_layer};
 use super::shapes::{Entry, OwnedShape, Prepared, prepare};
 use std::cell::{OnceCell, RefCell};
@@ -134,12 +135,12 @@ pub(super) fn batch_runs<'e, 'v>(
 }
 
 /// One prepared scene: its entries and clips.
-struct Scene<'s, 'v, V, A> {
-    view: &'s SceneView<'v, V, A>,
-    entries: &'s [Entry<'v>],
-    clips: &'s [OnceCell<RenderClip<'s>>],
+pub(super) struct Scene<'s, 'v, V, A> {
+    pub(super) view: &'s SceneView<'v, V, A>,
+    pub(super) entries: &'s [Entry<'v>],
+    pub(super) clips: &'s [OnceCell<RenderClip<'s>>],
     /// Conservative pixel bounds of each scene shape.
-    bounds: &'s [Option<Rect>],
+    pub(super) bounds: &'s [Option<Rect>],
 }
 
 /// Union of the bounds of the scene shapes `indices`; `None` when none paints.
@@ -170,8 +171,8 @@ impl Only<'_> {
 
 pub(super) struct Renderer<'c> {
     pub(super) geo: Geo,
-    map: ViewMap,
-    cancel: &'c dyn Fn() -> bool,
+    pub(super) map: ViewMap,
+    pub(super) cancel: &'c dyn Fn() -> bool,
     tile_bytes: usize,
     scratch: usize,
     mask_depth: usize,
@@ -182,6 +183,9 @@ pub(super) struct Renderer<'c> {
     pub(super) only: Option<Only<'c>>,
     /// Transparent layers left by scissored batches, reused instead of allocated.
     spare: RefCell<Vec<Tile>>,
+    /// Preview playback: runs of shapes that moved rigidly are resampled from
+    /// cached bitmaps (see `layer_cache`). `None` is the exact renderer.
+    pub(super) layers: Option<LayerRun<'c>>,
 }
 
 impl<'c> Renderer<'c> {
@@ -201,6 +205,7 @@ impl<'c> Renderer<'c> {
             masks: 0,
             only: None,
             spare: RefCell::new(Vec::new()),
+            layers: None,
         })
     }
 }
@@ -250,7 +255,7 @@ impl Renderer<'_> {
     }
 
     /// C `reserve_scratch`: bytes of live layer tiles.
-    fn reserve(&mut self) -> Result<(), RenderError> {
+    pub(super) fn reserve(&mut self) -> Result<(), RenderError> {
         if self.tile_bytes > GROUP_SCRATCH_LIMIT - self.scratch {
             return Err(RenderError::LimitExceeded);
         }
@@ -258,7 +263,7 @@ impl Renderer<'_> {
         Ok(())
     }
 
-    fn release(&mut self) {
+    pub(super) fn release(&mut self) {
         self.scratch = self.scratch.saturating_sub(self.tile_bytes);
     }
 
@@ -342,6 +347,9 @@ impl Renderer<'_> {
         depth: usize,
         direct: bool,
     ) -> Result<(), RenderError> {
+        if self.layers.is_some() {
+            return self.range_planned(scene, range, parent, dest, depth);
+        }
         if depth > MAX_GROUP_DEPTH {
             return Err(RenderError::LimitExceeded);
         }
@@ -364,7 +372,7 @@ impl Renderer<'_> {
         self.flat(scene, cursor..range.end, dest, direct)
     }
 
-    fn group<V: ViewportRead, A: Copy>(
+    pub(super) fn group<V: ViewportRead, A: Copy>(
         &mut self,
         scene: &Scene<'_, '_, V, A>,
         index: usize,
@@ -408,30 +416,8 @@ impl Renderer<'_> {
         depth: usize,
     ) -> Result<(), RenderError> {
         let group = &scene.view.groups[index];
-        let mut layer = self.take_layer()?;
         let children_range = children.clone();
-        self.range(scene, children, Some(index), &mut layer, depth + 1, false)?;
-        if let Some(id) = group.filter {
-            let filter = scene.view.filter(id).ok_or(RenderError::InvalidGeometry)?;
-            let chain = filter
-                .primitives
-                .slice(scene.view.filter_primitives)
-                .ok_or(RenderError::InvalidGeometry)?;
-            // Filter scratch is capped by its own limit, on top of the live layers.
-            let available = vexel_render::filter::FILTER_SCRATCH_LIMIT;
-            apply_filter_chain(
-                layer.rgba_mut(),
-                &self.map,
-                filter,
-                chain,
-                available,
-                self.cancel,
-            )?;
-        }
-        if let Some(id) = group.mask {
-            let mask = scene.view.mask(id).ok_or(RenderError::InvalidGeometry)?;
-            self.mask(scene.view, mask, &mut layer)?;
-        }
+        let layer = self.layer_pixels(scene, index, children, depth)?;
         let _composite = crate::profile::phase("r.composite");
         // Filters spread pixels and masks reshape them; otherwise the layer
         // only holds what its shapes painted.
@@ -461,6 +447,43 @@ impl Renderer<'_> {
         Ok(())
     }
 
+    /// The group's children painted into a layer, filtered and masked: the
+    /// layer as it is composited into the parent.
+    pub(super) fn layer_pixels<V: ViewportRead, A: Copy>(
+        &mut self,
+        scene: &Scene<'_, '_, V, A>,
+        index: usize,
+        children: std::ops::Range<usize>,
+        depth: usize,
+    ) -> Result<Tile, RenderError> {
+        let group = &scene.view.groups[index];
+        let mut layer = self.take_layer()?;
+        self.range(scene, children, Some(index), &mut layer, depth + 1, false)?;
+        if let Some(id) = group.filter {
+            let filter = scene.view.filter(id).ok_or(RenderError::InvalidGeometry)?;
+            let chain = filter
+                .primitives
+                .slice(scene.view.filter_primitives)
+                .ok_or(RenderError::InvalidGeometry)?;
+            // Filter scratch is capped by its own limit, on top of the live layers.
+            let available = vexel_render::filter::FILTER_SCRATCH_LIMIT;
+            let _filter = crate::profile::phase("r.filter");
+            apply_filter_chain(
+                layer.rgba_mut(),
+                &self.map,
+                filter,
+                chain,
+                available,
+                self.cancel,
+            )?;
+        }
+        if let Some(id) = group.mask {
+            let mask = scene.view.mask(id).ok_or(RenderError::InvalidGeometry)?;
+            self.mask(scene.view, mask, &mut layer)?;
+        }
+        Ok(layer)
+    }
+
     /// C `apply_mask`: renders the mask content scene and multiplies it into `layer`.
     fn mask<V: ViewportRead, A: Copy>(
         &mut self,
@@ -479,7 +502,10 @@ impl Renderer<'_> {
                 .ok_or(RenderError::InvalidGeometry)?;
             let mut content = self.new_tile()?;
             self.mask_depth += 1;
+            // The mask's own scene has other shapes than the layer plan covers.
+            let layers = self.layers.take();
             let drawn = self.draw(&content_view, &mut content, true);
+            self.layers = layers;
             self.mask_depth -= 1;
             drawn?;
             mask_layer(layer, &content, mask, &self.geo, self.cancel)
@@ -489,7 +515,7 @@ impl Renderer<'_> {
     }
 
     /// Paints the plain run `range` (shapes of one parent) into `dest`.
-    fn flat<V: ViewportRead, A: Copy>(
+    pub(super) fn flat<V: ViewportRead, A: Copy>(
         &mut self,
         scene: &Scene<'_, '_, V, A>,
         range: std::ops::Range<usize>,
