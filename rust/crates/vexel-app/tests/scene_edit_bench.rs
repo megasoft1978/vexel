@@ -44,7 +44,11 @@ fn env_scene_edit_latency() {
     let group = ids(&source, "g").unwrap_or_else(|| leaf.clone());
     let before = rss_mib();
     let mut ms = Vec::new();
-    for i in 0..100 {
+    let edits: usize = std::env::var("EDITS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(100);
+    for i in 0..edits {
         let id = if i % 2 == 0 { &leaf } else { &group };
         let value = if i % 4 < 2 { "0.5" } else { "0.6" };
         let args = format!(r#""elementId":"{id}","name":"opacity","value":"{value}""#);
@@ -59,6 +63,7 @@ fn env_scene_edit_latency() {
     ms.sort_by(|a, b| a.total_cmp(b));
     println!(
         "edit+compose x100 (leaf {leaf}, group {group}): p50 {:.2} p95 {:.2} ms | rss {before:.0} -> {after:.0} MiB",
-        ms[50], ms[95]
+        ms[ms.len() / 2],
+        ms[ms.len() * 95 / 100]
     );
 }

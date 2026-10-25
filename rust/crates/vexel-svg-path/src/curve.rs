@@ -12,13 +12,19 @@ pub(crate) struct CurveCursor {
     stack: [Node; 17],
     len: usize,
     pending_edge: Option<[Point; 2]>,
+    /// Tolerance window that reproduces every flatness decision made so far:
+    /// accepted nodes need `tol >= acc_max`, subdivided ones `tol < sub_min`.
+    acc_max: f64,
+    sub_min: f64,
 }
 impl CurveCursor {
     pub fn new(points: [Point; 4]) -> Self {
         let mut stack = [Node { points: [Point { x: 0.0, y: 0.0 }; 4], depth: 0 }; 17];
         stack[0].points = points;
-        Self { stack, len: 1, pending_edge: None }
+        Self { stack, len: 1, pending_edge: None, acc_max: 0.0, sub_min: f64::INFINITY }
     }
+    /// `(lo, hi)`: the flatness range `lo <= tol < hi` giving identical output.
+    pub fn window(&self) -> (f64, f64) { (self.acc_max, self.sub_min) }
     pub fn kind(&self) -> WorkKind {
         if self.pending_edge.is_some() { WorkKind::Edge } else { WorkKind::Expansion }
     }
@@ -31,10 +37,13 @@ impl CurveCursor {
         }
         self.len = self.len.checked_sub(1).ok_or(ControlledError::Overflow)?;
         let Node { points: p, depth } = self.stack[self.len];
-        if point_segment_distance(p[1], p[0], p[3]).max(point_segment_distance(p[2], p[0], p[3])) <= flatness {
+        let dist = point_segment_distance(p[1], p[0], p[3]).max(point_segment_distance(p[2], p[0], p[3]));
+        if dist <= flatness {
+            self.acc_max = self.acc_max.max(dist);
             self.pending_edge = Some([p[0], p[3]]);
             return Ok(false);
         }
+        self.sub_min = self.sub_min.min(dist);
         if depth >= 16 { return Err(ControlledError::Original(failure(DiagnosticKind::Limit, offset))); }
         let a = midpoint(p[0], p[1]);
         let c = midpoint(p[1], p[2]);

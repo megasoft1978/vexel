@@ -186,7 +186,7 @@ struct Shared<'a, 'b, 'c> {
 const PARALLEL_MIN_PIXELS: u64 = 60_000;
 /// Rows per work item when a render is split across threads.
 const BAND_ROWS: usize = 16;
-const MAX_THREADS: usize = 8;
+const MAX_THREADS: usize = 16;
 
 /// [`render_shapes`] with optional per-shape pattern paints; `paints` is empty
 /// (all solid) or parallel to `shapes`.

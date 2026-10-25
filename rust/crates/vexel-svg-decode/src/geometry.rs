@@ -111,6 +111,44 @@ fn number(
         None => default.ok_or_else(|| error(ErrorKind::Unsupported, tokens[element].name.offset)),
     }
 }
+/// Path data through the local-space cache. `Ok(None)` means "parse directly"
+/// (uncacheable input, or a mapping failure that the direct parse reports).
+fn cached_path(
+    source: &[u8],
+    span: Span,
+    transform: Affine,
+    options: ParseOptions,
+    control: &mut dyn WorkControl,
+    offset: usize,
+) -> Result<Option<PathDocument>> {
+    if !vexel_geometry::affine_valid(transform) {
+        return Ok(None);
+    }
+    let tolerance = vexel_svg_path::transformed_tolerance(transform);
+    if let Some((mut path, charges)) = crate::path_cache::get(source, span, tolerance, options) {
+        // Account the hit exactly like the parse it replaces.
+        crate::path_cache::replay(&charges, control)
+            .map_err(|e| controlled_path_error(ControlledError::from(e), offset))?;
+        return Ok(crate::path_cache::map_edges(&mut path, transform).map(|()| path));
+    }
+    if !crate::path_cache::cacheable(span) {
+        return Ok(None);
+    }
+    let mut recorder = crate::path_cache::Recorder {
+        inner: control,
+        charges: Default::default(),
+    };
+    let (mut path, window) = vexel_svg_path::parse_path_local_controlled(
+        source,
+        span,
+        transform,
+        options,
+        &mut recorder,
+    )
+    .map_err(|e| controlled_path_error(e, offset))?;
+    crate::path_cache::put(source, span, window, options, &path, recorder.charges);
+    Ok(crate::path_cache::map_edges(&mut path, transform).map(|()| path))
+}
 pub fn element_geometry(
     source: &[u8],
     tokens: &[XmlToken],
@@ -153,13 +191,12 @@ pub fn element_geometry_controlled(
             end,
         };
         let options = path_options();
-        if let Some(path) = crate::path_cache::get(source, span, transform, options) {
+        if let Some(path) = cached_path(source, span, transform, options, control, d.offset)? {
             b.path = path;
             return Ok(b.finish(true, true, 0));
         }
         b.path = vexel_svg_path::parse_path_controlled(source, span, transform, options, control)
             .map_err(|e| controlled_path_error(e, d.offset))?;
-        crate::path_cache::put(source, span, transform, options, &b.path);
         return Ok(b.finish(true, true, 0));
     }
     if name == b"rect" {

@@ -702,14 +702,24 @@ Single-run noise: the smallest rows include GPU clock ramp-up.
 
 ## Parsed-path cache (lane t-pcache)
 
-`vexel-svg-decode::path_cache` keeps parsed and flattened `d` data across
-decodes (animation ticks, edits). Key: exact `d` bytes (hash, then byte
-verify), affine transform bits, parse options; a hit rebases the source
-provenance offsets, so results are identical to a fresh parse. Only `d` of at
-least 512 bytes is cached (short paths are cheap and dense scenes would only
-duplicate memory; `vexel-bench mem --check` baselines stay unchanged). Budget
-24 MiB of owned bytes with LRU eviction down to 16 MiB; entries above 2 MiB
-bypass. Limit: an animated ancestor transform changes the key of every
-descendant path (the transform is baked into the flattening), so those
-re-parse each tick. Benches: `VEXEL_BENCH_SCENE=<file>` with
-`native_play_bench env_scene_animate_playback` and `scene_edit_bench`.
+`vexel-svg-decode::path_cache` keeps parsed path data across decodes
+(animation ticks, edits), stored in path-local space. The parser flattens in
+local space and maps edge endpoints afterwards, so a hit maps the cached edges
+with the current transform (same `affine_map_point`): an animated ancestor
+translation/rotation never invalidates an entry. Flattening depends on the
+transform only through its tolerance; the parse records the tolerance window
+`lo <= tol < hi` that reproduces every curve decision (arcs pin the exact
+value), so a slow zoom keeps hitting. Key: exact `d` bytes (hash, then byte
+verify) and parse options. Rebased provenance offsets; mapping failures fall
+back to a direct parse for the exact typed error.
+
+Accounting: the fresh parse's per-`WorkKind` charges are stored and replayed
+through the caller's `WorkControl` (with checkpoints) on every hit, so work
+limits, cancellation and typed errors match an uncached decode.
+
+Bounds: only `d` of at least 512 bytes (short paths are cheap; dense scenes
+would only duplicate memory; `vexel-bench mem --check` baselines unchanged).
+24 MiB of owned bytes, LRU eviction down to 16 MiB; entries above 2 MiB bypass.
+Render bands may use up to 16 threads (was 8); output is byte-identical.
+Benches: `VEXEL_BENCH_SCENE=<file>` with `native_play_bench
+env_scene_animate_playback` and `scene_edit_bench`.

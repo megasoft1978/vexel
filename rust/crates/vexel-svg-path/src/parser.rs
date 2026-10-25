@@ -101,7 +101,11 @@ pub struct PathParseSession<'src> {
     phase: Phase,
     terminal_error: Option<ControlledError<Diagnostic>>,
     transform: Affine,
+    /// Emit edges in path-local space: flatness still follows `transform`.
+    local: bool,
     flatness: f64,
+    /// Flatness range that reproduces this parse (see [`Self::tolerance_window`]).
+    window: (f64, f64),
     max_commands: usize,
     max_edges: usize,
     max_numbers: usize,
@@ -126,7 +130,24 @@ pub struct PathParseSession<'src> {
     geometry_offset: usize,
     after_geometry: AfterGeometry,
 }
+/// Mapping used for local-space output: leaves in-range points unchanged.
+const LOCAL: Affine = Affine { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 };
+
 impl<'src> PathParseSession<'src> {
+    /// Flatness range `lo <= tol < hi` over which re-parsing the same path
+    /// gives the identical document (apart from the output transform). Valid
+    /// once the parse has finished.
+    pub fn tolerance_window(&self) -> (f64, f64) {
+        self.window
+    }
+    /// Emit edges in path-local space. Flattening decisions still follow the
+    /// session transform, so mapping the edges afterwards with that transform
+    /// gives the same document as a direct parse.
+    pub fn local_output(mut self) -> Self {
+        self.local = true;
+        self
+    }
+
     /// Borrow the checked span without inspecting its path bytes or allocating
     /// document storage. Options retain the accepted frozen-cap clamps.
     pub fn new(
@@ -155,7 +176,9 @@ impl<'src> PathParseSession<'src> {
             phase: Phase::Validate,
             terminal_error: None,
             transform,
+            local: false,
             flatness: 0.25,
+            window: (0.0, f64::INFINITY),
             max_commands: options.max_commands.min(MAX_PATH_COMMANDS),
             max_edges: options.max_edges.min(MAX_PATH_EDGES),
             max_numbers: options.max_numbers.min(MAX_PATH_NUMBERS),
@@ -392,11 +415,14 @@ impl<'src> PathParseSession<'src> {
                 let cursor = self.geometry.as_mut().ok_or(ControlledError::Overflow)?;
                 if cursor.advance(
                     &mut self.document.edges,
-                    self.transform,
+                    if self.local { LOCAL } else { self.transform },
                     self.flatness,
                     self.max_edges,
                     self.geometry_offset,
                 )? {
+                    // Arcs (None) pin the exact tolerance.
+                    let (lo, hi) = self.geometry.as_ref().and_then(GeometryCursor::window).unwrap_or((self.flatness, self.flatness.next_up()));
+                    self.window = (self.window.0.max(lo), self.window.1.min(hi));
                     self.geometry = None;
                     self.phase = match self.after_geometry {
                         AfterGeometry::Group => Phase::CompleteGroup,
@@ -641,6 +667,28 @@ pub fn parse_path_controlled(
         match session.step(256, control) {
             ControlledStep::Pending { .. } => (),
             ControlledStep::Complete(()) => return session.finish(),
+            ControlledStep::Failed(error) => return Err(error),
+        }
+    }
+}
+
+/// `parse_path_controlled` with edges left in path-local space (see
+/// [`PathParseSession::local_output`]).
+pub fn parse_path_local_controlled(
+    source: &[u8],
+    span: Span,
+    transform: Affine,
+    options: ParseOptions,
+    control: &mut dyn WorkControl,
+) -> Result<(PathDocument, (f64, f64)), ControlledError<Diagnostic>> {
+    let mut session = PathParseSession::new(source, span, transform, options)?.local_output();
+    loop {
+        match session.step(256, control) {
+            ControlledStep::Pending { .. } => (),
+            ControlledStep::Complete(()) => {
+                let window = session.tolerance_window();
+                return session.finish().map(|document| (document, window));
+            }
             ControlledStep::Failed(error) => return Err(error),
         }
     }

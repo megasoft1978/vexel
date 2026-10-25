@@ -12,7 +12,7 @@ use vexel_geometry::{Affine, Edge};
 use vexel_base::Span;
 
 pub use flatten::{append_edge, flatten_cubic, flatten_cubic_controlled, transformed_tolerance};
-pub use parser::{parse_path_controlled, PathParseSession};
+pub use parser::{parse_path_controlled, parse_path_local_controlled, PathParseSession};
 
 pub const MAX_PATH_COMMANDS: usize = 4 * 1024 * 1024;
 pub const MAX_PATH_EDGES: usize = 4 * 1024 * 1024;

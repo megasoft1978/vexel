@@ -91,6 +91,12 @@ impl GeometryCursor {
             Self::Arc(cursor) => cursor.advance(edges, transform, max_edges, offset),
         }
     }
+    /// Flatness range `(lo, hi)` (`lo <= tol < hi`) over which this cursor's
+    /// output is unchanged; `None` for an arc, whose step count follows the
+    /// exact tolerance.
+    pub fn window(&self) -> Option<(f64, f64)> {
+        match self { Self::Line(..) => Some((0.0, f64::INFINITY)), Self::Curve(cursor) => Some(cursor.window()), Self::Arc(_) => None }
+    }
     pub fn arc(edges: &mut Vec<Edge>, from: Point, values: [f64; 7], to: Point, flatness: f64, max_edges: usize, offset: usize)
         -> Result<Option<Self>, ControlledError<Diagnostic>> {
         Ok(match ArcCursor::prepare(edges, from, values[0], values[1], values[2], values[3] == 1.0, values[4] == 1.0, to, flatness, max_edges, offset)? {

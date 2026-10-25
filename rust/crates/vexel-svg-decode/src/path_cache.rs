@@ -1,11 +1,22 @@
 //! Process-wide cache of parsed path data, so an unchanged `d` attribute is not
-//! re-parsed and re-flattened on every decode (animation ticks, edits).
+//! re-tokenized and re-flattened on every decode (animation ticks, edits).
 //!
-//! Key: the exact `d` bytes (hashed, then verified byte-for-byte), the affine
-//! transform bits and the parse options: the same inputs that determine the
-//! parse. The parsed document carries absolute source offsets as provenance;
-//! a hit rebases them to the requesting element's offset, so the result is
-//! identical to a fresh parse. Only successful parses of `d` values of at least `MIN_D_BYTES` are stored.
+//! Entries hold the path in LOCAL space. The parser flattens in local space and
+//! only maps each edge endpoint through the transform afterwards; the
+//! transform enters the flattening solely through its tolerance. So the key is
+//! the exact `d` bytes (hashed, then verified byte-for-byte) and the parse
+//! options. The tolerance is not part of the key but a validity window: the
+//! parse records the range of tolerances that reproduce all of its curve
+//! flattening decisions (arcs pin the exact value), so a slowly zooming
+//! ancestor keeps hitting. An animated ancestor translation or rotation never
+//! invalidates an entry: a hit maps the cached edges with the current
+//! transform (the same `affine_map_point` the parser uses). The document
+//! carries absolute source offsets as provenance; a hit rebases them to the
+//! requesting element's offset. A hit is also accounted: the fresh parse's
+//! per-kind work charges are stored and replayed through the caller's
+//! `WorkControl`, so limits, cancellation and typed errors match an uncached
+//! parse. Only successful parses of `d` values of at least `MIN_D_BYTES` are
+//! stored.
 //!
 //! Memory is bounded: entries are charged by owned bytes (`d` copy plus the
 //! document vectors). When the total exceeds `CAP_BYTES` the least recently
@@ -13,8 +24,8 @@
 //! document above `MAX_ENTRY_BYTES` is never cached.
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
-use vexel_base::Span;
-use vexel_geometry::{Affine, Edge};
+use vexel_base::{Span, Stop, WorkControl, WorkKind};
+use vexel_geometry::{Affine, Edge, affine_map_point};
 use vexel_svg_path::{ParseOptions, PathDocument};
 
 /// Total cache budget (owned bytes) and the level eviction drains down to.
@@ -30,11 +41,48 @@ const MAX_ENTRY_BYTES: usize = 2 * 1024 * 1024;
 struct Key {
     hash: u64,
     len: usize,
-    transform: [u64; 6],
     options: [usize; 3],
 }
 
+/// Work charged by the fresh parse, per `WorkKind`. A hit replays it through
+/// the caller's control, so limits, cancellation and typed errors behave as
+/// for an uncached parse.
+pub(crate) type Charges = [u64; WorkKind::ALL.len()];
+
+/// Forwards to the real control while totalling what the parse charged.
+pub(crate) struct Recorder<'a> {
+    pub inner: &'a mut dyn WorkControl,
+    pub charges: Charges,
+}
+
+impl WorkControl for Recorder<'_> {
+    fn charge(&mut self, kind: WorkKind, units: u64) -> Result<(), Stop> {
+        self.inner.charge(kind, units)?;
+        let slot = &mut self.charges[kind as usize];
+        *slot = slot.saturating_add(units);
+        Ok(())
+    }
+    fn checkpoint(&mut self) -> Result<(), Stop> {
+        self.inner.checkpoint()
+    }
+}
+
+/// Charges a hit's recorded totals (and a checkpoint) to `control`.
+pub(crate) fn replay(charges: &Charges, control: &mut dyn WorkControl) -> Result<(), Stop> {
+    control.checkpoint()?;
+    for kind in WorkKind::ALL {
+        let units = charges[kind as usize];
+        if units != 0 {
+            control.charge(kind, units)?;
+        }
+    }
+    control.checkpoint()
+}
+
 struct Entry {
+    charges: Charges,
+    /// Flatness range `lo <= tol < hi` this entry's flattening is valid for.
+    window: (f64, f64),
     d: Box<[u8]>,
     /// Absolute offset of `d` in the source the document was parsed from.
     base: usize,
@@ -69,11 +117,10 @@ fn hash(bytes: &[u8]) -> u64 {
     h ^ (h >> 32)
 }
 
-fn key(d: &[u8], t: Affine, o: ParseOptions) -> Key {
+fn key(d: &[u8], o: ParseOptions) -> Key {
     Key {
         hash: hash(d),
         len: d.len(),
-        transform: [t.a, t.b, t.c, t.d, t.e, t.f].map(f64::to_bits),
         options: [o.max_commands, o.max_edges, o.max_numbers],
     }
 }
@@ -109,28 +156,40 @@ fn rebase(doc: &PathDocument, from: usize, to: usize) -> PathDocument {
     out
 }
 
-/// Returns the cached document for these inputs, rebased to `span.start`.
-pub(crate) fn get(source: &[u8], span: Span, t: Affine, o: ParseOptions) -> Option<PathDocument> {
+/// Returns the cached local-space document, rebased to `span.start`.
+pub(crate) fn get(
+    source: &[u8],
+    span: Span,
+    tolerance: f64,
+    o: ParseOptions,
+) -> Option<(PathDocument, Charges)> {
     let d = source
         .get(span.start..span.end)
         .filter(|d| d.len() >= MIN_D_BYTES)?;
-    let k = key(d, t, o);
-    let (doc, base) = {
+    let k = key(d, o);
+    let (doc, base, charges) = {
         let mut c = cache().lock().ok()?;
         c.clock += 1;
         let clock = c.clock;
         let e = c.map.get_mut(&k)?;
-        if *e.d != *d {
+        if *e.d != *d || tolerance < e.window.0 || tolerance >= e.window.1 {
             return None;
         }
         e.used = clock;
-        (e.doc.clone(), e.base)
+        (e.doc.clone(), e.base, e.charges)
     };
-    Some(rebase(&doc, base, span.start))
+    Some((rebase(&doc, base, span.start), charges))
 }
 
-/// Stores a successful parse of `source[span]`.
-pub(crate) fn put(source: &[u8], span: Span, t: Affine, o: ParseOptions, doc: &PathDocument) {
+/// Stores a successful local-space parse of `source[span]`.
+pub(crate) fn put(
+    source: &[u8],
+    span: Span,
+    window: (f64, f64),
+    o: ParseOptions,
+    doc: &PathDocument,
+    charges: Charges,
+) {
     let Some(d) = source
         .get(span.start..span.end)
         .filter(|d| d.len() >= MIN_D_BYTES)
@@ -141,12 +200,14 @@ pub(crate) fn put(source: &[u8], span: Span, t: Affine, o: ParseOptions, doc: &P
     if bytes > MAX_ENTRY_BYTES {
         return;
     }
-    let k = key(d, t, o);
+    let k = key(d, o);
     let entry_doc = Arc::new(doc.clone());
     let Ok(mut c) = cache().lock() else { return };
     c.clock += 1;
     let used = c.clock;
     let entry = Entry {
+        charges,
+        window,
         d: d.into(),
         base: span.start,
         doc: entry_doc,
@@ -178,4 +239,20 @@ pub(crate) fn put(source: &[u8], span: Span, t: Affine, o: ParseOptions, doc: &P
 /// Cached bytes (for tests and diagnostics).
 pub fn cached_bytes() -> usize {
     cache().lock().map_or(0, |c| c.bytes)
+}
+
+/// Maps a local-space document's edges through `t` in place. `None` when a
+/// point fails the parser's mapping rules; callers then parse directly to get
+/// the exact typed error.
+pub(crate) fn map_edges(doc: &mut PathDocument, t: Affine) -> Option<()> {
+    for e in &mut doc.edges {
+        e.a = affine_map_point(t, e.a)?;
+        e.b = affine_map_point(t, e.b)?;
+    }
+    Some(())
+}
+
+/// Whether a `d` span is long enough to be worth caching.
+pub(crate) fn cacheable(span: Span) -> bool {
+    span.end.saturating_sub(span.start) >= MIN_D_BYTES
 }

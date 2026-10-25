@@ -92,3 +92,215 @@ fn cache_stays_bounded() {
     }
     assert!(cached_bytes() <= 24 * 1024 * 1024);
 }
+
+// ---- accounting: a hit is charged exactly like the parse it replaces ----
+
+use vexel_base::{Stop, WorkControl, WorkKind};
+
+/// Total-work meter with an optional cap and a cancel flag.
+struct Meter {
+    cap: u64,
+    used: u64,
+    checkpoints: u32,
+    cancel: bool,
+}
+
+impl Meter {
+    fn new(cap: u64) -> Self {
+        Self {
+            cap,
+            used: 0,
+            checkpoints: 0,
+            cancel: false,
+        }
+    }
+}
+
+impl WorkControl for Meter {
+    fn charge(&mut self, _: WorkKind, units: u64) -> Result<(), Stop> {
+        self.used += units;
+        if self.used > self.cap {
+            Err(Stop::Limit)
+        } else {
+            Ok(())
+        }
+    }
+    fn checkpoint(&mut self) -> Result<(), Stop> {
+        self.checkpoints += 1;
+        if self.cancel {
+            Err(Stop::Canceled)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+fn run(source: &str, meter: &mut Meter) -> Result<usize, String> {
+    let bytes = source.as_bytes();
+    let (tokens, _) = tokenize(bytes, XmlLimits::default());
+    let element = (0..tokens.len())
+        .find(|&i| tokens[i].local_name.slice(bytes) == Some(b"path".as_slice()))
+        .unwrap();
+    let t = Affine {
+        a: 1.0,
+        b: 0.0,
+        c: 0.0,
+        d: 1.0,
+        e: 0.0,
+        f: 0.0,
+    };
+    vexel_svg_decode::element_geometry_controlled(bytes, &tokens, element, t, [100.0, 100.0], meter)
+        .map(|g| g.path.edges.len())
+        .map_err(|e| format!("{:?}", e.kind))
+}
+
+fn unique_path(tag: u32) -> String {
+    let d: String = (0..90)
+        .map(|k| format!("L{} {} ", tag + k, k * 3 + 1))
+        .collect();
+    format!("<svg><path d=\"M0 0 {d}\"/></svg>")
+}
+
+#[test]
+fn hit_fails_like_a_fresh_parse_under_a_small_budget() {
+    let src = unique_path(9001);
+    let mut open = Meter::new(u64::MAX);
+    let fresh_ok = run(&src, &mut open).unwrap();
+    let full = open.used;
+    assert!(full > 0);
+    // Cached now: a budget below the fresh cost must fail identically to an
+    // uncached run of the same source (a never-cached 1-byte-longer variant
+    // is not comparable, so compare against the cold failure recorded on a
+    // sibling source parsed before it was cached).
+    let cold = unique_path(9002);
+    let mut tiny = Meter::new(full / 2);
+    let cold_err = run(&cold, &mut tiny).unwrap_err();
+    let mut tiny = Meter::new(full / 2);
+    let hit_err = run(&src, &mut tiny).unwrap_err();
+    assert_eq!(hit_err, cold_err);
+    // And the same budget that suffices for the fresh parse suffices for a hit.
+    let mut exact = Meter::new(full);
+    assert_eq!(run(&src, &mut exact), Ok(fresh_ok));
+    assert_eq!(exact.used, full, "hit charges exactly the fresh totals");
+}
+
+#[test]
+fn cancellation_fires_on_a_hit() {
+    let src = unique_path(9100);
+    run(&src, &mut Meter::new(u64::MAX)).unwrap();
+    let mut meter = Meter::new(u64::MAX);
+    meter.cancel = true;
+    assert!(run(&src, &mut meter).is_err());
+    assert!(meter.checkpoints >= 1);
+}
+
+#[test]
+fn many_repeated_cached_paths_stay_under_the_aggregate_cap() {
+    let src = unique_path(9200);
+    let mut probe = Meter::new(u64::MAX);
+    run(&src, &mut probe).unwrap();
+    let per = probe.used;
+    let mut meter = Meter::new(per * 1000);
+    let mut done = 0;
+    for _ in 0..1500 {
+        if run(&src, &mut meter).is_err() {
+            break;
+        }
+        done += 1;
+    }
+    assert_eq!(done, 1000, "work cap applies across repeated cached parses");
+}
+
+#[test]
+fn twenty_random_ancestor_transforms_match_fresh_decodes() {
+    let src = format!(
+        "<svg><path d=\"{} A 20 10 30 1 0 90 40 a 5 5 0 0 1 9 9 Q 1 2 3 4 T 5 6\"/></svg>",
+        long_d()
+    );
+    let bytes = src.as_bytes();
+    let (tokens, _) = tokenize(bytes, XmlLimits::default());
+    let element = (0..tokens.len())
+        .find(|&i| tokens[i].local_name.slice(bytes) == Some(b"path".as_slice()))
+        .unwrap();
+    let d = attribute(bytes, &tokens, element, b"d", None).unwrap();
+    let span = Span {
+        start: d.offset,
+        end: d.end().unwrap(),
+    };
+    let mut seed = 0x2545_F491_4F6C_DD1Du64;
+    let mut next = move || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let (mut failures, mut successes) = (0, 0);
+    for _ in 0..20 {
+        let angle = next() * std::f64::consts::TAU;
+        let scale = 0.05 + next() * 9000.0f64.min(40.0 + next() * 8000.0);
+        let t = Affine {
+            a: scale * angle.cos(),
+            b: scale * angle.sin(),
+            c: -scale * angle.sin() * (0.5 + next()),
+            d: scale * angle.cos() * (0.5 + next()),
+            e: next() * 2000.0 - 1000.0,
+            f: next() * 2000.0 - 1000.0,
+        };
+        let fresh = vexel_svg_path::parse_path(bytes, span, t, vexel_svg_decode::path_options());
+        let got = element_geometry(bytes, &tokens, element, t, [100.0, 100.0]).map(|g| g.path);
+        match (fresh, got) {
+            (Ok(f), Ok(g)) => {
+                assert_eq!(g, f);
+                successes += 1;
+            }
+            (Err(_), Err(_)) => failures += 1,
+            (f, g) => panic!("fresh {f:?} vs cached {g:?}"),
+        }
+    }
+    assert!(successes > 5, "{successes} ok / {failures} err");
+}
+
+#[test]
+fn slow_zoom_and_pan_sequence_matches_fresh_parses() {
+    let d: String = (0..160)
+        .map(|k| {
+            let x = f64::from(k) * 7.31;
+            format!(
+                "C{} {} {} {} {} {} ",
+                x + 3.3,
+                40.7 - x * 0.1,
+                x + 9.9,
+                90.1,
+                x + 14.3,
+                20.5 + x * 0.3
+            )
+        })
+        .collect();
+    let src = format!("<svg><path d=\"M0 0 {d}\"/></svg>");
+    let bytes = src.as_bytes();
+    let (tokens, _) = tokenize(bytes, XmlLimits::default());
+    let element = (0..tokens.len())
+        .find(|&i| tokens[i].local_name.slice(bytes) == Some(b"path".as_slice()))
+        .unwrap();
+    let dspan = attribute(bytes, &tokens, element, b"d", None).unwrap();
+    let span = Span {
+        start: dspan.offset,
+        end: dspan.end().unwrap(),
+    };
+    for step in 0..300 {
+        let zoom = 0.585 + f64::from(step) * 0.0004;
+        let (sin, cos) = (f64::from(step) * 0.001).sin_cos();
+        let t = Affine {
+            a: zoom * cos,
+            b: zoom * sin,
+            c: -zoom * sin,
+            d: zoom * cos,
+            e: f64::from(step) * 0.37,
+            f: -3.0,
+        };
+        let fresh =
+            vexel_svg_path::parse_path(bytes, span, t, vexel_svg_decode::path_options()).unwrap();
+        let got = element_geometry(bytes, &tokens, element, t, [100.0, 100.0]).unwrap();
+        assert_eq!(got.path, fresh, "step {step}");
+    }
+}
