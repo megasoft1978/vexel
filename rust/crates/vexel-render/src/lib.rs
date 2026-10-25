@@ -50,6 +50,7 @@ pub use group::{
 pub use mask::RenderMask;
 pub use pattern::{
     PATTERN_MAX_AXIS, PATTERN_MAX_INSTANCES, PATTERN_MAX_PIXELS, PATTERN_MAX_TILE_EXTENT,
+    PATTERN_MAX_TOTAL_BYTES,
     PatternPaint, PatternPaintShape, PatternTileSpec, from_scene_shape_with_pattern,
     pattern_pixel_size, render_pattern_shapes, render_pattern_tile, render_pattern_tiles,
 };
