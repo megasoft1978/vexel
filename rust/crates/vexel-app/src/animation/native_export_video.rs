@@ -153,12 +153,13 @@ impl NativeExportSource {
         let assets = self.drawing_assets();
         let quality = quality_level(req.quality.unwrap_or(DEFAULT_QUALITY));
         let fps = f64::from(tps) / stride as f64;
-        let bit_rate = req.bit_rate.unwrap_or_else(|| {
-            quality_bit_rate(
-                req.quality.unwrap_or(DEFAULT_QUALITY),
-                u64::from(width) * u64::from(height),
-                fps,
-            )
+        let level = req.quality.unwrap_or(DEFAULT_QUALITY);
+        // Maximum quality stays on the encoder's constant-quality mode, which
+        // is deterministic; explicit-rate encodes depend on how the frames
+        // arrive (parallel vs serial rendering), so lower levels use a rate.
+        let bit_rate = req.bit_rate.or_else(|| {
+            (level < 1.0)
+                .then(|| quality_bit_rate(level, u64::from(width) * u64::from(height), fps))
         });
         let mut writer = VideoWriter::create(VideoSpec {
             path: req.path.clone(),
@@ -168,7 +169,7 @@ impl NativeExportSource {
             timescale: tps as i32,
             background: req.background,
             alpha: req.alpha,
-            bit_rate: Some(bit_rate),
+            bit_rate,
             quality: Some(quality),
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
