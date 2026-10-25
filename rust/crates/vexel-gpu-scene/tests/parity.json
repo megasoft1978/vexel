@@ -1,0 +1,9 @@
+{
+  "note": "GPU vs CPU frozen thresholds (fractions of pixels, mean abs error in 0..1). Tighten only; never above the ADR-0035 bounds.",
+  "fill": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
+  "linear": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
+  "radial": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
+  "exception_cap": {"over_2": 0.0002, "over_16": 0.0001, "mae": 0.001},
+  "exceptions_note": "Frames where a star horizontal edge pair lies within 1/4096 px of a sample row, so vertex rounding flips a span of about 56 px; identical in the pure-Rust reference (GPU is byte-equal to it), so an encoder precision effect, not a kernel one. Each is capped by exception_cap.",
+  "exceptions": ["linear:305", "linear:310"]
+}

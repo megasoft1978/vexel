@@ -23,6 +23,7 @@ pub mod input;
 pub mod layout;
 pub mod policy;
 pub mod reference;
+pub mod run;
 
 #[cfg(test)]
 mod bench;
