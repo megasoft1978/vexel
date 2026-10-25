@@ -148,3 +148,25 @@ fn inpaint_rebuilds_a_gradient_hole() {
         TraceError::BadRegion
     );
 }
+
+#[test]
+fn inpaint_rejects_oversized_or_nearly_full_masks() {
+    // Over 4 million masked pixels.
+    let (w, h) = (2100, 2100);
+    let px = vec![200u8; w * h * 4];
+    let img = Rgba::new(w, h, &px).unwrap();
+    let mut mask = vec![true; w * h];
+    mask[0] = false;
+    assert_eq!(inpaint(&img, &mask), Err(TraceError::MaskTooLarge));
+    // Under 1% of the image left known.
+    let (w, h) = (100, 100);
+    let px = vec![200u8; w * h * 4];
+    let img = Rgba::new(w, h, &px).unwrap();
+    let mut mask = vec![true; w * h];
+    mask[0] = false;
+    assert_eq!(inpaint(&img, &mask), Err(TraceError::MaskTooLarge));
+    // A modest hole still works.
+    mask = vec![false; w * h];
+    mask[5050] = true;
+    assert!(inpaint(&img, &mask).is_ok());
+}

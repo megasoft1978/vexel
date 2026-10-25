@@ -3,7 +3,7 @@
 //! front, after Telea 2004), each taking an inverse-square-distance average of
 //! the known pixels around it.
 
-use super::{Rgba, TraceError};
+use super::{MAX_INPAINT_PIXELS, Rgba, TraceError};
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
@@ -15,14 +15,18 @@ pub fn inpaint(img: &Rgba<'_>, mask: &[bool]) -> Result<Vec<u8>, TraceError> {
     if mask.len() != w * h || mask.iter().all(|&m| m) {
         return Err(TraceError::BadRegion);
     }
+    let masked = mask.iter().filter(|&&m| m).count();
+    if masked > MAX_INPAINT_PIXELS || (w * h - masked) * 100 < w * h {
+        return Err(TraceError::MaskTooLarge);
+    }
     let mut out = img.data.to_vec();
     let mut known: Vec<bool> = mask.iter().map(|&m| !m).collect();
     let mut dist = vec![u32::MAX; w * h];
     let mut heap: BinaryHeap<Reverse<(u32, u32)>> = BinaryHeap::new();
-    let neighbours = |i: usize| -> Vec<(usize, u32)> {
+    let neighbours = |i: usize| -> [Option<(usize, u32)>; 8] {
         let (x, y) = ((i % w) as i64, (i / w) as i64);
-        let mut v = Vec::with_capacity(8);
-        for (dx, dy) in [
+        let mut v = [None; 8];
+        for (slot, (dx, dy)) in v.iter_mut().zip([
             (-1, 0),
             (1, 0),
             (0, -1),
@@ -31,10 +35,10 @@ pub fn inpaint(img: &Rgba<'_>, mask: &[bool]) -> Result<Vec<u8>, TraceError> {
             (1, -1),
             (-1, 1),
             (1, 1),
-        ] {
+        ]) {
             let (nx, ny) = (x + dx, y + dy);
             if nx >= 0 && ny >= 0 && (nx as usize) < w && (ny as usize) < h {
-                v.push((
+                *slot = Some((
                     ny as usize * w + nx as usize,
                     if dx != 0 && dy != 0 { 14 } else { 10 },
                 ));
@@ -46,6 +50,7 @@ pub fn inpaint(img: &Rgba<'_>, mask: &[bool]) -> Result<Vec<u8>, TraceError> {
         if mask[i] {
             let d = neighbours(i)
                 .into_iter()
+                .flatten()
                 .filter(|&(j, _)| known[j])
                 .map(|(_, c)| c)
                 .min();
@@ -63,7 +68,7 @@ pub fn inpaint(img: &Rgba<'_>, mask: &[bool]) -> Result<Vec<u8>, TraceError> {
         let px = estimate(&out, &known, w, h, i);
         out[i * 4..i * 4 + 4].copy_from_slice(&px);
         known[i] = true;
-        for (j, cost) in neighbours(i) {
+        for (j, cost) in neighbours(i).into_iter().flatten() {
             if mask[j] && !known[j] && d + cost < dist[j] {
                 dist[j] = d + cost;
                 heap.push(Reverse((dist[j], j as u32)));

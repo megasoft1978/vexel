@@ -26,6 +26,8 @@ pub const MAX_PIXELS: usize = 16 * 1024 * 1024;
 /// Most palette colours.
 pub const MAX_COLOURS: usize = 64;
 /// Most traced contours across all layers.
+/// Most masked pixels one inpaint call rebuilds.
+pub const MAX_INPAINT_PIXELS: usize = 4_000_000;
 pub const MAX_CONTOURS: usize = 60_000;
 /// Most path-data bytes across all layers.
 pub const MAX_OUTPUT_BYTES: usize = 3 * 1024 * 1024;
@@ -43,6 +45,8 @@ pub enum TraceError {
     OutputTooLarge,
     /// A seed, polygon or mask argument is invalid.
     BadRegion,
+    /// Inpaint mask covers over [`MAX_INPAINT_PIXELS`] pixels or leaves under 1% known.
+    MaskTooLarge,
 }
 
 impl TraceError {
@@ -55,6 +59,9 @@ impl TraceError {
             }
             Self::OutputTooLarge => "image trace output too large; raise tolerance or minArea",
             Self::BadRegion => "image seeds, polygons or mask do not fit the image",
+            Self::MaskTooLarge => {
+                "image inpaint mask too large; mask at most 4 million pixels and leave 1% of the image unmasked"
+            }
         }
     }
 }
