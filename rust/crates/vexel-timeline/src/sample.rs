@@ -6,6 +6,19 @@ use vexel_base::Span;
 pub use crate::easing::{ease_value, Ease};
 use crate::noise::Noise;
 
+/// One libm `sin` or `cos` per call. Pairing them on the same argument lets
+/// optimized Apple builds merge them into `__sincos_stret`, whose `sin` can
+/// differ by one ulp from `f64::sin`. `inline(never)` prevents the merge.
+#[inline(never)]
+fn sin_unpaired(angle: f64) -> f64 {
+    angle.sin()
+}
+
+#[inline(never)]
+fn cos_unpaired(angle: f64) -> f64 {
+    angle.cos()
+}
+
 /// Translate/rotate/scale/skew transform with a pivot; components interpolate independently.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Trs {
@@ -23,7 +36,8 @@ impl Trs {
     /// SVG style matrix `[a, b, c, d, e, f]` for
     /// `M = T(tx,ty) * T(pivot) * R * SkewX * S * T(-pivot)`.
     pub fn to_matrix(&self) -> [f64; 6] {
-        let (sin, cos) = self.rotation_deg.to_radians().sin_cos();
+        let angle = self.rotation_deg.to_radians();
+        let (sin, cos) = (sin_unpaired(angle), cos_unpaired(angle));
         let tan = self.skew_x_deg.to_radians().tan();
         let a = cos * self.sx;
         let b = sin * self.sx;
@@ -474,5 +488,18 @@ mod clamp_tests {
             unreachable!()
         };
         assert!(t.tx.is_finite() && t.ty == 1e9 && t.rotation_deg == 5.0);
+    }
+}
+
+#[cfg(test)]
+mod unpaired_trig_tests {
+    use super::*;
+
+    #[test]
+    fn unpaired_trig_matches_std_bits() {
+        for angle in [0.0, 0.3, 1.0, 2.5, -4.25, 6.0] {
+            assert_eq!(sin_unpaired(angle).to_bits(), f64::sin(angle).to_bits());
+            assert_eq!(cos_unpaired(angle).to_bits(), f64::cos(angle).to_bits());
+        }
     }
 }

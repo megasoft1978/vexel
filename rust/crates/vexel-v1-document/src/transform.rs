@@ -1,6 +1,19 @@
 use crate::{ElementKind, V1Document, V1DocumentError, numeric_text};
 use vexel_document_edit::HistoryAction;
 
+/// One libm `sin` or `cos` per call. Pairing them on the same argument lets
+/// optimized Apple builds merge them into `__sincos_stret`, whose `sin` can
+/// differ by one ulp from `f64::sin`. `inline(never)` prevents the merge.
+#[inline(never)]
+fn sin_unpaired(angle: f64) -> f64 {
+    angle.sin()
+}
+
+#[inline(never)]
+fn cos_unpaired(angle: f64) -> f64 {
+    angle.cos()
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TransformSpec {
     pub translate: (f64, f64),
@@ -28,7 +41,7 @@ impl TransformSpec {
             self.rotate_deg.to_radians(),
             self.skew_x_deg.to_radians().tan(),
         );
-        let (cos, sin) = (r.cos(), r.sin());
+        let (cos, sin) = (cos_unpaired(r), sin_unpaired(r));
         let (a, b, c, d) = (
             cos * self.scale.0,
             sin * self.scale.0,
@@ -132,7 +145,8 @@ impl V1Document {
         if text.starts_with("rotate(") {
             let v =
                 parse_list_fn(text, "rotate", 3).ok_or(V1DocumentError::UnsupportedTransform)?;
-            let (c, s) = (v[0].to_radians().cos(), v[0].to_radians().sin());
+            let angle = v[0].to_radians();
+            let (c, s) = (cos_unpaired(angle), sin_unpaired(angle));
             let (x, y) = (*v.get(1).unwrap_or(&0.), *v.get(2).unwrap_or(&0.));
             return Ok([c, s, -s, c, x - c * x + s * y, y - s * x - c * y]);
         }
@@ -167,4 +181,17 @@ fn parse_list_fn(text: &str, name: &str, max: usize) -> Option<Vec<f64>> {
         .map(|s| s.parse::<f64>().ok().filter(|n| n.is_finite()))
         .collect();
     vals.filter(|v| !v.is_empty() && v.len() <= max)
+}
+
+#[cfg(test)]
+mod unpaired_trig_tests {
+    use super::*;
+
+    #[test]
+    fn unpaired_trig_matches_std_bits() {
+        for angle in [0.0, 0.3, 1.0, 2.5, -4.25, 6.0] {
+            assert_eq!(sin_unpaired(angle).to_bits(), f64::sin(angle).to_bits());
+            assert_eq!(cos_unpaired(angle).to_bits(), f64::cos(angle).to_bits());
+        }
+    }
 }

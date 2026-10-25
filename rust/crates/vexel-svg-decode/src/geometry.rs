@@ -1,5 +1,6 @@
 //! Owned primitive/custom geometry. Only authored path data produces path metadata.
 use crate::source::{attribute, charge};
+use crate::transform::{cos_unpaired, sin_unpaired};
 use vexel_base::{ControlledError, Span, WorkControl, WorkKind};
 use vexel_geometry::{Affine, Point};
 use vexel_scene::{Diagnostic, ErrorKind, LimitKind, Result};
@@ -470,8 +471,8 @@ pub fn element_geometry_controlled(
                 Point { x: cx + rx, y: cy }
             } else {
                 Point {
-                    x: cx + rx * theta.cos(),
-                    y: cy + ry * theta.sin(),
+                    x: cx + rx * cos_unpaired(theta),
+                    y: cy + ry * sin_unpaired(theta),
                 }
             };
             if !crate::point_bounded(next) {
