@@ -85,12 +85,39 @@ fn cache_stays_bounded() {
         e: 0.0,
         f: 0.0,
     };
-    for i in 0..4000 {
+    // About 32 KiB per entry: enough to pass the cap and force eviction.
+    for i in 0..6000 {
         let d: String = (0..200).map(|k| format!("L{} {} ", i + k, k * 3)).collect();
         let src = format!("<svg><path d=\"M0 0 {d}\"/></svg>");
         geometry_of(&src, t);
     }
     assert!(cached_bytes() <= 128 * 1024 * 1024);
+}
+
+/// A dense shot re-parses about 1100 paths (31 MiB) per tick; a cache smaller
+/// than that working set evicts each entry just before its reuse.
+#[test]
+fn cache_holds_a_cartoon_shot_working_set() {
+    let t = Affine {
+        a: 1.0,
+        b: 0.0,
+        c: 0.0,
+        d: 1.0,
+        e: 0.0,
+        f: 0.0,
+    };
+    let sources: Vec<String> = (0..1300)
+        .map(|i| {
+            let d: String = (0..200)
+                .map(|k| format!("L{} {} ", i * 7 + k, k * 3 + 1))
+                .collect();
+            format!("<svg><path d=\"M0 0 {d}\"/></svg>")
+        })
+        .collect();
+    for src in &sources {
+        geometry_of(src, t);
+    }
+    assert!(cached_bytes() >= 40 * 1024 * 1024, "{}", cached_bytes());
 }
 
 // ---- accounting: a hit is charged exactly like the parse it replaces ----
