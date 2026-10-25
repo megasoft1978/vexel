@@ -6,7 +6,7 @@ use std::path::Path;
 use std::time::Instant;
 
 use vexel_app::animation::playback::ManualClock;
-use vexel_app::compose::{gpu_frames, gpu_last_decision, set_gpu_display};
+use vexel_app::compose::{gpu_frames, gpu_last_decision, set_gpu_display, set_gpu_display_policy};
 use vexel_app::native_animation::NativeAnimationHost;
 use vexel_app::preview::Control;
 use vexel_app::session::AppDocument;
@@ -26,7 +26,8 @@ fn synthetic_doc(kind: &str, count: u32) -> AppDocument {
     let mut svg = String::from(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"512\" height=\"512\" viewBox=\"0 0 512 512\"><defs>",
     );
-    let stops = "<stop offset=\"0\" stop-color=\"#e63946\"/><stop offset=\"1\" stop-color=\"#1d3557\"/>";
+    let stops =
+        "<stop offset=\"0\" stop-color=\"#e63946\"/><stop offset=\"1\" stop-color=\"#1d3557\"/>";
     for g in 0..8 {
         svg.push_str(&format!(
             "<linearGradient id=\"l{g}\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">{stops}</linearGradient><radialGradient id=\"r{g}\" cx=\"0.5\" cy=\"0.5\" r=\"0.6\" fx=\"0.4\" fy=\"0.45\">{stops}</radialGradient>"
@@ -51,7 +52,10 @@ fn synthetic_doc(kind: &str, count: u32) -> AppDocument {
         ));
     }
     svg.push_str("</svg>");
-    let path = std::env::temp_dir().join(format!("vexel-gpu-{kind}-{count}-{}.svg", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "vexel-gpu-{kind}-{count}-{}.svg",
+        std::process::id()
+    ));
     std::fs::write(&path, svg).unwrap();
     let mut doc = AppDocument::new(512, 512).unwrap();
     doc.open_path(&path).unwrap();
@@ -111,7 +115,7 @@ fn run(doc: &AppDocument, size: u32, ticks: u32) -> (f64, String, u64) {
 #[test]
 #[ignore]
 fn eligibility_of_demo_scenes() {
-    set_gpu_display(Some(true));
+    set_gpu_display_policy();
     for path in [
         "/private/tmp/vexel-demo/walk_home.vexel",
         "/private/tmp/vexel-demo/logo.vexel",
@@ -147,8 +151,10 @@ fn gpu_vs_cpu_playback_ticks() {
             let (cpu, _, _) = run(&doc, 900, 24);
             set_gpu_display(Some(true));
             let (gpu, last, frames) = run(&doc, 900, 24);
+            set_gpu_display_policy();
+            let (pol, plast, pframes) = run(&doc, 900, 24);
             println!(
-                "tick 900px {kind} {count}: cpu {cpu:.2} ms gpu {gpu:.2} ms ({last}, gpu frames {frames})"
+                "tick 900px {kind} {count}: cpu {cpu:.2} ms | gpu forced {gpu:.2} ms ({last}, {frames} gpu frames) | policy {pol:.2} ms ({plast}, {pframes} gpu frames)"
             );
         }
     }

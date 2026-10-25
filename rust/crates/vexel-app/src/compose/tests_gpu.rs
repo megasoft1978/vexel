@@ -33,14 +33,25 @@ impl Lcg {
 
 /// Seeded scene: filled paths with solid, linear and radial paints.
 fn scene_svg(seed: u64, count: usize, w: u32, h: u32, kinds: &str) -> Vec<u8> {
+    scene_svg_scaled(seed, count, w, h, kinds, 1.0)
+}
+
+fn scene_svg_scaled(seed: u64, count: usize, w: u32, h: u32, kinds: &str, scale: f64) -> Vec<u8> {
     let mut rng = Lcg(seed);
     let mut svg = format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" viewBox=\"0 0 {w} {h}\"><defs>"
     );
     for g in 0..8 {
-        let units = if g % 2 == 0 { "" } else { " gradientUnits=\"userSpaceOnUse\"" };
+        let units = if g % 2 == 0 {
+            ""
+        } else {
+            " gradientUnits=\"userSpaceOnUse\""
+        };
         let spread = ["pad", "reflect", "repeat", "pad"][g % 4];
-        let (x1, y1) = (rng.next() * f64::from(w) * 0.5, rng.next() * f64::from(h) * 0.5);
+        let (x1, y1) = (
+            rng.next() * f64::from(w) * 0.5,
+            rng.next() * f64::from(h) * 0.5,
+        );
         let stops = "<stop offset=\"0\" stop-color=\"#e63946\"/><stop offset=\"0.5\" stop-color=\"#f1fa8c\" stop-opacity=\"0.8\"/><stop offset=\"1\" stop-color=\"#1d3557\"/>";
         if units.is_empty() {
             svg += &format!(
@@ -59,7 +70,7 @@ fn scene_svg(seed: u64, count: usize, w: u32, h: u32, kinds: &str) -> Vec<u8> {
     svg += "</defs>";
     for i in 0..count {
         let (cx, cy) = (rng.next() * f64::from(w), rng.next() * f64::from(h));
-        let r = 6.0 + rng.next() * f64::from(w.min(h)) * 0.08;
+        let r = (6.0 + rng.next() * f64::from(w.min(h)) * 0.08) * scale;
         let n = 3 + (rng.next() * 5.0) as usize;
         let mut d = String::new();
         for k in 0..n {
@@ -83,7 +94,11 @@ fn scene_svg(seed: u64, count: usize, w: u32, h: u32, kinds: &str) -> Vec<u8> {
             ("linear", _) | ("mixed", 1) => format!("fill=\"url(#l{})\"", i % 8),
             _ => format!("fill=\"url(#r{})\"", i % 8),
         };
-        let rule = if i % 7 == 0 { " fill-rule=\"evenodd\"" } else { "" };
+        let rule = if i % 7 == 0 {
+            " fill-rule=\"evenodd\""
+        } else {
+            ""
+        };
         svg += &format!("<path d=\"{d}Z\" {kind}{rule}/>");
     }
     svg += "</svg>";
@@ -118,10 +133,18 @@ fn metrics(a: &[u8], b: &[u8]) -> (f64, f64, f64) {
         let m = p.iter().zip(q).map(|(x, y)| x.abs_diff(*y)).max().unwrap();
         o2 += usize::from(m > 2);
         o16 += usize::from(m > 16);
-        sum += p.iter().zip(q).map(|(x, y)| u64::from(x.abs_diff(*y))).sum::<u64>();
+        sum += p
+            .iter()
+            .zip(q)
+            .map(|(x, y)| u64::from(x.abs_diff(*y)))
+            .sum::<u64>();
     }
     let px = (a.len() / 4) as f64;
-    (o2 as f64 / px, o16 as f64 / px, sum as f64 / (a.len() as f64 * 255.0))
+    (
+        o2 as f64 / px,
+        o16 as f64 / px,
+        sum as f64 / (a.len() as f64 * 255.0),
+    )
 }
 
 #[test]
@@ -152,7 +175,7 @@ fn export_paths_do_not_reference_the_route() {
         if name.ends_with("tests_gpu.rs") {
             continue;
         }
-        if text.contains("gpu_route") {
+        if text.contains("gpu_route") && !name.starts_with("tests/gpu_route_report") {
             route.push(name.clone());
         }
         if text.contains("DiffCache::display") {
@@ -182,7 +205,9 @@ fn export_paths_do_not_reference_the_route() {
     // Forcing the route is for benches and tests only, never library code.
     for name in &force {
         assert!(
-            name.starts_with("tests/") || name.ends_with("gpu_route.rs") || name.ends_with("mod.rs"),
+            name.starts_with("tests/")
+                || name.ends_with("gpu_route.rs")
+                || name.ends_with("mod.rs"),
             "{name} forces the GPU route"
         );
     }
@@ -334,6 +359,38 @@ fn gpu_frames_match_cpu_within_adr_bounds() {
 }
 
 #[test]
+fn policy_sends_light_scenes_and_warm_caches_to_the_cpu() {
+    let _g = serial();
+    gpu_reset_latch();
+    let light = scene_svg(30, 40, 200, 150, "solid");
+    let heavy = scene_svg_scaled(31, 300, 900, 900, "linear", 2.0);
+    set_gpu_display_policy();
+    let mut cache = DiffCache::display();
+    let a = frame(&light, 200, 150, &mut cache);
+    assert_eq!(super::gpu_route::last_decision(), Decision::Cpu("light"));
+    assert_eq!(a, cpu_frame(&light, 200, 150));
+    // Heavy gradient scene: GPU on a cold cache, then a CPU full render that
+    // seeds the diff state, then the differential path.
+    let mut cache = DiffCache::display();
+    let first = frame(&heavy, 900, 900, &mut cache);
+    let d1 = super::gpu_route::last_decision();
+    assert!(matches!(d1, Decision::Gpu | Decision::NoDevice), "{d1:?}");
+    if d1 == Decision::Gpu {
+        let second = frame(&heavy, 900, 900, &mut cache);
+        assert_eq!(super::gpu_route::last_decision(), Decision::Cpu("diff"));
+        assert_eq!(second, cpu_frame(&heavy, 900, 900));
+        let (o2, _, mae) = metrics(&first.rgba, &second.rgba);
+        assert!(o2 <= PARITY_OVER_2_MAX_FRACTION && mae <= PARITY_MEAN_ABS_ERROR_MAX);
+        let third = frame(&heavy, 900, 900, &mut cache);
+        assert_eq!(super::gpu_route::last_decision(), Decision::Cpu("diff"));
+        assert_eq!(third, second);
+    } else {
+        assert!(!require_gpu(), "VEXEL_REQUIRE_GPU=1 but no Metal device");
+    }
+    set_gpu_display(None);
+}
+
+#[test]
 fn switching_gpu_and_cpu_never_mixes_cache_state() {
     let _g = serial();
     gpu_reset_latch();
@@ -342,7 +399,9 @@ fn switching_gpu_and_cpu_never_mixes_cache_state() {
     let mut b = scene_svg(20, 120, w, h, "mixed");
     // Edit: move one shape so a differential render would patch a region.
     let text = String::from_utf8(b.clone()).unwrap();
-    b = text.replacen("<path d=\"M", "<path transform=\"translate(9 4)\" d=\"M", 1).into_bytes();
+    b = text
+        .replacen("<path d=\"M", "<path transform=\"translate(9 4)\" d=\"M", 1)
+        .into_bytes();
     let mut cache = DiffCache::display();
     // GPU (or CPU without device) -> CPU -> GPU -> CPU, each against a fresh CPU render.
     let steps: [(Option<bool>, &[u8]); 5] = [
@@ -356,28 +415,45 @@ fn switching_gpu_and_cpu_never_mixes_cache_state() {
         let got = with_gpu(*force, || frame(svg, w, h, &mut cache));
         let used_gpu = super::gpu_route::last_decision() == Decision::Gpu;
         if force == &Some(false) {
-            assert_eq!(got, cpu_frame(svg, w, h), "step {n} must equal a fresh CPU render");
+            assert_eq!(
+                got,
+                cpu_frame(svg, w, h),
+                "step {n} must equal a fresh CPU render"
+            );
         } else if used_gpu {
             let (o2, _, mae) = metrics(&got.rgba, &cpu_frame(svg, w, h).rgba);
-            assert!(o2 <= PARITY_OVER_2_MAX_FRACTION && mae <= PARITY_MEAN_ABS_ERROR_MAX, "step {n}");
+            assert!(
+                o2 <= PARITY_OVER_2_MAX_FRACTION && mae <= PARITY_MEAN_ABS_ERROR_MAX,
+                "step {n}"
+            );
         }
     }
 }
 
-/// Release bench: `cargo test -p vexel-app --release --lib gpu_vs_cpu_static -- --ignored --nocapture`
+/// Release sweep: `cargo test -p vexel-app --release --lib gpu_vs_cpu_crossover -- --ignored --nocapture`
 #[test]
 #[ignore]
-fn gpu_vs_cpu_static_compose() {
+fn gpu_vs_cpu_crossover() {
     let _g = serial();
     gpu_reset_latch();
     for kind in ["solid", "linear", "radial"] {
-        for count in [1000usize, 5000] {
-            let svg = scene_svg(77, count, 900, 900, kind);
+        for (count, scale) in [
+            (300usize, 0.5),
+            (300, 1.0),
+            (300, 2.0),
+            (300, 4.0),
+            (1000, 0.5),
+            (1000, 1.0),
+            (1000, 2.0),
+            (5000, 0.5),
+            (5000, 1.0),
+        ] {
+            let svg = scene_svg_scaled(77, count, 900, 900, kind, scale);
             let mut row = Vec::new();
             for force in [false, true] {
-                let mut cache = DiffCache::display();
                 let mut times = Vec::new();
                 for _ in 0..7 {
+                    let mut cache = DiffCache::display();
                     let t = std::time::Instant::now();
                     let _ = with_gpu(Some(force), || frame(&svg, 900, 900, &mut cache));
                     times.push(t.elapsed().as_secs_f64() * 1000.0);
@@ -386,7 +462,8 @@ fn gpu_vs_cpu_static_compose() {
                 row.push(times[times.len() / 2]);
             }
             println!(
-                "static 900px {kind} {count}: cpu {:.2} ms gpu {:.2} ms ({:?})",
+                "static 900px {kind} n={count} scale={scale}: work {:.2} Mpx | cpu {:.2} ms gpu {:.2} ms ({:?})",
+                super::gpu_route::last_work() / 1e6,
                 row[0],
                 row[1],
                 super::gpu_route::last_decision()

@@ -24,6 +24,9 @@ use vexel_scene::{SceneView, ViewportRead};
 pub struct DiffCache {
     /// Display caches may take the GPU route (see `gpu_route`); exports never do.
     gpu: bool,
+    /// The previous frame came from the GPU: the next one is a CPU full
+    /// render that seeds the differential state.
+    gpu_last: bool,
     disabled: bool,
     prev: Option<Prev>,
     partials: u32,
@@ -47,6 +50,16 @@ impl DiffCache {
     /// frame must be a full render.
     pub(super) fn invalidate(&mut self) {
         self.prev = None;
+        self.gpu_last = true;
+    }
+
+    /// Whether this frame is worth a GPU full render: nothing to diff against
+    /// (cold cache) or a scene that proved undiffable. A frame right after a
+    /// GPU frame is not: the CPU full render seeds the differential state so
+    /// mostly-static playback stays on the cheap differential path.
+    pub(super) fn gpu_candidate(&mut self) -> bool {
+        let after_gpu = std::mem::take(&mut self.gpu_last);
+        self.disabled || (self.prev.is_none() && !after_gpu)
     }
 
     /// Frames so far that repainted only part of the scene.

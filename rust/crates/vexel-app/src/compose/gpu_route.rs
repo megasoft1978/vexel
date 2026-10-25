@@ -26,7 +26,7 @@
 //! Errors go to the debug profile (`gpu.error`, `gpu.latched`), not stderr.
 
 use super::diff::DiffCache;
-use super::gpu_adapter::lower;
+use super::gpu_adapter::{Lowered, lower};
 use super::render_scene::{Drawn, geo};
 use super::shapes::{Entry, prepare};
 use std::cell::{Cell, RefCell};
@@ -40,7 +40,8 @@ use vexel_render::{PreserveAspect, ViewBox};
 use vexel_scene::{PaintKind, SceneView, ViewportRead};
 
 static OPTED_IN: AtomicBool = AtomicBool::new(false);
-/// 0 = follow opt-in, 1 = forced off, 2 = forced on (tests and benches).
+/// 0 = follow opt-in, 1 = forced off, 2 = forced on without the cost and cache
+/// heuristics (tests), 3 = on with the shell's heuristics (benches).
 static OVERRIDE: AtomicU8 = AtomicU8::new(0);
 static FRAMES: AtomicU64 = AtomicU64::new(0);
 static SESSION: Mutex<Session> = Mutex::new(Session::new());
@@ -64,7 +65,16 @@ pub enum Decision {
     Error,
 }
 
+/// Estimated CPU work (weighted pixels) below which the CPU is faster than a
+/// GPU launch; calibrated in `tests_gpu::gpu_vs_cpu_crossover`.
+const MIN_GPU_WORK: f64 = 2.0e6;
+
+fn forced() -> bool {
+    OVERRIDE.load(Ordering::SeqCst) == 2
+}
+
 thread_local! {
+    static LAST_WORK: Cell<f64> = const { Cell::new(0.0) };
     static LAST: Cell<Decision> = const { Cell::new(Decision::None) };
 }
 
@@ -77,13 +87,24 @@ pub fn last_decision() -> Decision {
     LAST.with(Cell::get)
 }
 
+/// Work estimate of the last lowered scene on this thread.
+pub fn last_work() -> f64 {
+    LAST_WORK.with(Cell::get)
+}
+
 /// GPU frames rendered by this process.
 pub fn gpu_frames() -> u64 {
     FRAMES.load(Ordering::Relaxed)
 }
 
-/// Forces the route on or off (`None`: follow the shell's opt-in). For tests
-/// and benches; the `VEXEL_GPU=0` switch and the latch still apply.
+/// The shell's policy with the route on, for benches (`VEXEL_GPU=0` and the
+/// latch still apply).
+pub fn set_gpu_display_policy() {
+    OVERRIDE.store(3, Ordering::SeqCst);
+}
+
+/// Forces the route on or off (`None`: follow the shell's opt-in). Forced on
+/// skips the cost and cache heuristics so tests see every eligible frame.
 pub fn set_gpu_display(force: Option<bool>) {
     OVERRIDE.store(
         match force {
@@ -119,15 +140,13 @@ where
 fn env_on() -> bool {
     use std::sync::OnceLock;
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| {
-        env_enables_gpu(std::env::var(ENV_SWITCH).ok().as_deref())
-    })
+    *ON.get_or_init(|| env_enables_gpu(std::env::var(ENV_SWITCH).ok().as_deref()))
 }
 
 fn active() -> bool {
     let wanted = match OVERRIDE.load(Ordering::SeqCst) {
         1 => false,
-        2 => true,
+        2 | 3 => true,
         _ => OPTED_IN.load(Ordering::SeqCst),
     };
     wanted && env_on() && !lock_session().latch.is_off()
@@ -236,9 +255,11 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
     if scene.shapes.is_empty() {
         return Some("empty");
     }
-    if scene.groups.iter().any(|g| {
-        g.opacity != 1.0 || g.filter.is_some() || g.mask.is_some() || g.blend_mode != 0
-    }) {
+    if scene
+        .groups
+        .iter()
+        .any(|g| g.opacity != 1.0 || g.filter.is_some() || g.mask.is_some() || g.blend_mode != 0)
+    {
         return Some("group");
     }
     for shape in scene.shapes {
@@ -248,8 +269,7 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
         if shape.image.is_some() {
             return Some("image");
         }
-        if shape.stroke_paint.is_some() || (shape.stroke.rgba[3] != 0 && shape.stroke.width > 0.0)
-        {
+        if shape.stroke_paint.is_some() || (shape.stroke.rgba[3] != 0 && shape.stroke.width > 0.0) {
             return Some("stroke");
         }
         if let Some(paint) = shape.fill_paint.and_then(|i| scene.fill_paints.get(i))
@@ -281,16 +301,29 @@ pub(super) fn try_render<V: ViewportRead, A: Copy>(
         note(Decision::Off);
         return None;
     }
+    if !cache.gpu_candidate() && !forced() {
+        note(Decision::Cpu("diff"));
+        return None;
+    }
     if let Some(why) = prescan(scene) {
         note(Decision::Cpu(why));
         return None;
     }
     let entries = prepare(scene).ok()?;
     let geometry = geo(view, aspect, tile);
-    let Some(gpu_scene) = lower(&entries, &geometry, tile.width(), tile.height()) else {
+    let Some(Lowered {
+        scene: gpu_scene,
+        work,
+    }) = lower(&entries, &geometry, tile.width(), tile.height())
+    else {
         note(Decision::Cpu("lowering"));
         return None;
     };
+    LAST_WORK.with(|w| w.set(work));
+    if work < MIN_GPU_WORK && !forced() {
+        note(Decision::Cpu("light"));
+        return None;
+    }
     if let Capability::Unsupported(reason) = classify(&gpu_scene) {
         note(Decision::Unsupported(reason));
         return None;

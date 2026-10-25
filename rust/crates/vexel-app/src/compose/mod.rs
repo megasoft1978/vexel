@@ -30,11 +30,11 @@ mod worker;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
-mod tests_gpu;
-#[cfg(test)]
 mod tests_chrome;
 #[cfg(test)]
 mod tests_dirty;
+#[cfg(test)]
+mod tests_gpu;
 #[cfg(test)]
 mod tests_image;
 #[cfg(test)]
@@ -52,7 +52,7 @@ pub use diff::DiffCache;
 pub use error::{ComposeError, Disclosure};
 pub use gpu_route::{
     Decision as GpuDecision, app_launch, gpu_frames, last_decision as gpu_last_decision,
-    reset_latch as gpu_reset_latch, set_gpu_display, status as gpu_status,
+    reset_latch as gpu_reset_latch, set_gpu_display, set_gpu_display_policy, status as gpu_status,
 };
 pub use launch::{Launch, parse_launch, parse_launch_with_home};
 pub use open::{OpenError, open_path};

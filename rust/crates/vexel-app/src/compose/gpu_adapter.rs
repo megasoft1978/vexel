@@ -20,8 +20,15 @@ fn affine(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Affine {
 }
 
 /// Lowers prepared entries (document space) to a device-space GPU scene.
-pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -> Option<GpuScene> {
+/// A lowered scene and its estimated CPU raster work (weighted covered pixels).
+pub(super) struct Lowered {
+    pub scene: GpuScene,
+    pub work: f64,
+}
+
+pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -> Option<Lowered> {
     let mut scene = GpuScene::new(width, height);
+    let mut work = 0.0;
     let (cw, ch) = (geo.view.width * geo.scale_x, geo.view.height * geo.scale_y);
     scene.content_rect = [
         geo.offset_x.max(0.0),
@@ -40,7 +47,8 @@ pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -
         if s.fill_pattern
             || s.stroke_pattern
             || s.stroke_gradient.is_some()
-            || s.stroke.is_some_and(|st| st.rgba[3] != 0 && st.width > 0.0) {
+            || s.stroke.is_some_and(|st| st.rgba[3] != 0 && st.width > 0.0)
+        {
             return None;
         }
         if !s.filled || s.edges.is_empty() {
@@ -51,15 +59,38 @@ pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -
             None if s.fill_rgba[3] == 0 => continue,
             None => GpuPaint::Solid(s.fill_rgba),
         };
+        let edges = segments(s, geo);
+        work += bbox_area(&edges, width, height)
+            * match paint {
+                GpuPaint::Solid(_) => 1.0,
+                _ => GRADIENT_WEIGHT,
+            };
         scene.nodes.push(GpuNode::Shape(GpuShape {
-            edges: segments(s, geo),
+            edges,
             evenodd: s.evenodd,
             fill: Some(paint),
             stroke: None,
             clips: Vec::new(),
         }));
     }
-    Some(scene)
+    Some(Lowered { scene, work })
+}
+
+/// Weight of a gradient pixel against a solid one in the CPU work estimate.
+pub(super) const GRADIENT_WEIGHT: f64 = 3.0;
+
+/// Pixels of the canvas the shape's bounding box covers.
+fn bbox_area(edges: &[GpuSegment], width: u32, height: u32) -> f64 {
+    let (mut l, mut t, mut r, mut b) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+    for e in edges {
+        l = l.min(e.x0).min(e.x1);
+        r = r.max(e.x0).max(e.x1);
+        t = t.min(e.y0).min(e.y1);
+        b = b.max(e.y0).max(e.y1);
+    }
+    let w = (r.min(f64::from(width)) - l.max(0.0)).max(0.0);
+    let h = (b.min(f64::from(height)) - t.max(0.0)).max(0.0);
+    w * h
 }
 
 /// Device-space segments, every subpath closed explicitly.
@@ -267,6 +298,9 @@ mod metal {
                     .device
                     .dispatch(&self.pipelines[&key], &refs, r.grid, r.threads_per_group)
                     .map_err(map)?;
+                if let Some(gpu) = timing.gpu {
+                    crate::profile::record("gpu.kernel", gpu.as_secs_f64() * 1000.0);
+                }
                 crate::profile::record("gpu.run", start.elapsed().as_secs_f64() * 1000.0);
                 let read = Instant::now();
                 let output = buffers.last().ok_or(GpuError::BufferAlloc)?;
