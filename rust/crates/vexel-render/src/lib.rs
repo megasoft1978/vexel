@@ -15,6 +15,7 @@
 //! then unspecified and the caller should discard the tile.
 
 mod adapter;
+pub mod blend;
 mod bounds;
 mod clip;
 mod clip_rows;

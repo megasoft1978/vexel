@@ -98,7 +98,54 @@ fn blend_component(source: f64, backdrop: f64, mode: u8) -> f64 {
                 backdrop
             }
         }
+        5 => hard_light(source, backdrop),
+        6 => {
+            if backdrop == 0.0 {
+                0.0
+            } else if source >= 1.0 {
+                1.0
+            } else {
+                (backdrop / (1.0 - source)).min(1.0)
+            }
+        }
+        7 => {
+            if backdrop >= 1.0 {
+                1.0
+            } else if source <= 0.0 {
+                0.0
+            } else {
+                1.0 - ((1.0 - backdrop) / source).min(1.0)
+            }
+        }
+        8 => hard_light(backdrop, source),
+        9 => soft_light(source, backdrop),
+        10 => (source - backdrop).abs(),
+        11 => source + backdrop - 2.0 * source * backdrop,
         _ => source,
+    }
+}
+
+/// W3C `HardLight(cb, cs)`.
+fn hard_light(backdrop: f64, source: f64) -> f64 {
+    if source <= 0.5 {
+        backdrop * 2.0 * source
+    } else {
+        let s = 2.0 * source - 1.0;
+        backdrop + s - backdrop * s
+    }
+}
+
+/// W3C `SoftLight(cb, cs)`.
+fn soft_light(source: f64, backdrop: f64) -> f64 {
+    if source <= 0.5 {
+        backdrop - (1.0 - 2.0 * source) * backdrop * (1.0 - backdrop)
+    } else {
+        let d = if backdrop <= 0.25 {
+            ((16.0 * backdrop - 12.0) * backdrop + 4.0) * backdrop
+        } else {
+            backdrop.sqrt()
+        };
+        backdrop + (2.0 * source - 1.0) * (d - backdrop)
     }
 }
 

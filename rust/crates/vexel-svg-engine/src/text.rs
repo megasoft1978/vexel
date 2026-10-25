@@ -6,7 +6,8 @@
 //! the advance, per-glyph `x/y/dx/dy` lists and word spacing in
 //! `text_path_geometry_at`. Layout comes from an injected
 //! [`TextLayoutProvider`]; without one the engine keeps returning `Unsupported`.
-//! Solid fill and solid stroke (with dashes) are published; paint servers and
+//! Solid fill and solid stroke (width, join, cap, miter, dashes) are published;
+//! `paint-order: stroke` becomes two shapes (outline, then fill); paint servers and
 //! clip paths on text stay typed `Unsupported`, as does `textPath`.
 //!
 //! A `<tspan>` takes at most one value per x/y/dx/dy; absolute x/y start a new
@@ -286,20 +287,36 @@ pub(crate) fn decode(
                         control,
                     )?;
                 }
-                let mut colors = Vec::new();
-                colors
-                    .try_reserve_exact(path.edges.len())
-                    .map_err(|_| fail(ErrorKind::OutOfMemory, offset))?;
-                colors.resize(path.edges.len(), style.fill);
-                builder.append_shape(
-                    request.scene,
-                    ShapeInput {
-                        shape,
-                        path,
-                        edge_colors: colors,
-                    },
-                    control,
-                )?;
+                // `paint-order: stroke` (the outlined-title idiom) is published
+                // as two shapes, stroke first, so every renderer sees plain
+                // fill-over-stroke order and no paint-order shape.
+                let split =
+                    style.stroke.paint_order == 1 && shape.filled && style.stroke.rgba[3] != 0;
+                shape.stroke.paint_order = 0;
+                let mut pieces = Vec::new();
+                if split {
+                    let mut outline = shape.clone();
+                    outline.filled = false;
+                    pieces.push((outline, path.clone()));
+                    shape.stroke.rgba[3] = 0;
+                }
+                pieces.push((shape, path));
+                for (shape, path) in pieces {
+                    let mut colors = Vec::new();
+                    colors
+                        .try_reserve_exact(path.edges.len())
+                        .map_err(|_| fail(ErrorKind::OutOfMemory, offset))?;
+                    colors.resize(path.edges.len(), style.fill);
+                    builder.append_shape(
+                        request.scene,
+                        ShapeInput {
+                            shape,
+                            path,
+                            edge_colors: colors,
+                        },
+                        control,
+                    )?;
+                }
             }
         }
         let next_x = start_x + advance + spaces as f64 * values.word_spacing;

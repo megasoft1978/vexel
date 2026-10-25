@@ -58,7 +58,6 @@ fn referenced_marker_decodes_with_one_instance() {
 #[test]
 fn unsupported_primitives_keep_typed_errors() {
     for (name, kind) in [
-        ("feTurbulence", ErrorKind::UnsupportedFeTurbulence),
         ("feDisplacementMap", ErrorKind::UnsupportedFeDisplacementMap),
         ("feConvolveMatrix", ErrorKind::UnsupportedFeConvolveMatrix),
         ("feImage", ErrorKind::UnsupportedFeImage),

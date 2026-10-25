@@ -345,7 +345,30 @@ pub enum FilterKind {
     Merge,
     ColorMatrix,
     DropShadow,
+    /// `feTurbulence`: `values[0..2]` base frequency, `values[2]` octaves,
+    /// `values[3]` seed; `mode` bit 0 = `turbulence` (else `fractalNoise`),
+    /// bit 1 = `stitchTiles="stitch"`.
+    Turbulence,
 }
+/// `mix-blend-mode` names indexed by [`OpacityGroup::blend_mode`] (and by
+/// `feBlend` `mode`); the first five codes predate the full set.
+pub const BLEND_MODE_NAMES: [&[u8]; 13] = [
+    b"normal",
+    b"multiply",
+    b"screen",
+    b"darken",
+    b"lighten",
+    b"overlay",
+    b"color-dodge",
+    b"color-burn",
+    b"hard-light",
+    b"soft-light",
+    b"difference",
+    b"exclusion",
+    b"plus-lighter",
+];
+/// Largest valid blend-mode code.
+pub const MAX_BLEND_MODE: u8 = 12;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FilterInput {
     Previous,

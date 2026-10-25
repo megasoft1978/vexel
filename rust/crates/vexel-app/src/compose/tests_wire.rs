@@ -246,7 +246,7 @@ fn pixel(frame: &Frame, x: u32, y: u32) -> [u8; 4] {
 #[test]
 fn unsupported_filter_primitive_stays_a_typed_error() {
     let svg = wrap(
-        "<defs><filter id='f'><feTurbulence baseFrequency='0.1'/></filter></defs>\
+        "<defs><filter id='f'><feDisplacementMap scale='3'/></filter></defs>\
          <rect width='30' height='30' fill='red' filter='url(#f)'/>",
     );
     match composed(&svg, 40, 40) {
@@ -256,7 +256,7 @@ fn unsupported_filter_primitive_stays_a_typed_error() {
             element,
         }) => {
             assert_eq!(feature, "filter");
-            assert_eq!(element.as_deref(), Some("feTurbulence"));
+            assert_eq!(element.as_deref(), Some("feDisplacementMap"));
         }
         other => panic!("expected Unsupported(filter), got {other:?}"),
     }

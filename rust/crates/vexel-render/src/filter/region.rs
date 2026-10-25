@@ -23,6 +23,40 @@ pub(super) fn alpha_bounds(rgba: &[u8], width: usize, height: usize) -> Option<[
     found.then(|| [min_x as f64, min_y as f64, max_x as f64, max_y as f64])
 }
 
+/// Filter region in device pixels `[min_x, min_y, max_x, max_y]`; `source` is
+/// the pre-filter alpha bounds.
+pub(super) fn device_region(view: &ViewMap, filter: &Filter, source: [f64; 4]) -> [f64; 4] {
+    let mut region = [0.0f64; 4];
+    if !filter.custom_region || filter.filter_units_object_bounding_box {
+        let box_width = source[2] - source[0];
+        let box_height = source[3] - source[1];
+        region[0] = source[0] + filter.region[0] * box_width;
+        region[1] = source[1] + filter.region[1] * box_height;
+        region[2] = region[0] + filter.region[2] * box_width;
+        region[3] = region[1] + filter.region[3] * box_height;
+    } else {
+        region[0] = view.offset_x + (filter.region[0] - view.view.x) * view.scale_x;
+        region[1] = view.offset_y + (filter.region[1] - view.view.y) * view.scale_y;
+        region[2] = region[0] + filter.region[2] * view.scale_x;
+        region[3] = region[1] + filter.region[3] * view.scale_y;
+    }
+    region
+}
+
+/// Filter region as user-space `[x, y, width, height]` (stitchTiles tile).
+pub(super) fn user_region(view: &ViewMap, filter: &Filter, source: Option<[f64; 4]>) -> [f64; 4] {
+    let Some(source) = source else {
+        return [view.view.x, view.view.y, view.view.width, view.view.height];
+    };
+    let r = device_region(view, filter, source);
+    [
+        view.view.x + (r[0] - view.offset_x) / view.scale_x,
+        view.view.y + (r[1] - view.offset_y) / view.scale_y,
+        (r[2] - r[0]) / view.scale_x,
+        (r[3] - r[1]) / view.scale_y,
+    ]
+}
+
 /// Clears every pixel whose centre lies outside the filter region.
 ///
 /// `objectBoundingBox` (and the default region) is relative to the
@@ -39,20 +73,7 @@ pub(super) fn clip(
         rgba.fill(0);
         return;
     };
-    let mut region = [0.0f64; 4];
-    if !filter.custom_region || filter.filter_units_object_bounding_box {
-        let box_width = source[2] - source[0];
-        let box_height = source[3] - source[1];
-        region[0] = source[0] + filter.region[0] * box_width;
-        region[1] = source[1] + filter.region[1] * box_height;
-        region[2] = region[0] + filter.region[2] * box_width;
-        region[3] = region[1] + filter.region[3] * box_height;
-    } else {
-        region[0] = view.offset_x + (filter.region[0] - view.view.x) * view.scale_x;
-        region[1] = view.offset_y + (filter.region[1] - view.view.y) * view.scale_y;
-        region[2] = region[0] + filter.region[2] * view.scale_x;
-        region[3] = region[1] + filter.region[3] * view.scale_y;
-    }
+    let region = device_region(view, filter, source);
     for y in 0..height {
         let sample_y = y as f64 + 0.5;
         for x in 0..width {

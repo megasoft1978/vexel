@@ -54,13 +54,13 @@ fn filter_merge_and_matrix_defaults() {
 }
 #[test]
 fn unsupported_filter_keeps_specific_error() {
-    let xml = b"<svg style='fill:url(#f)'><filter id='f'><feTurbulence/></filter></svg>";
+    let xml = b"<svg style='fill:url(#f)'><filter id='f'><feMorphology/></filter></svg>";
     let (tokens, value, element) = parsed(xml, b"url(#f)");
     assert_eq!(
         parse_filter_with_budget(xml, &tokens, value, element)
             .unwrap_err()
             .kind,
-        ErrorKind::UnsupportedFeTurbulence
+        ErrorKind::UnsupportedFeMorphology
     );
 }
 #[test]

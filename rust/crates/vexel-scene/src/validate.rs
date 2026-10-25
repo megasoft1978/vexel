@@ -442,7 +442,8 @@ pub(crate) fn filter(
             }
         }
         let mode_cap = match p.kind {
-            FilterKind::Blend => 4,
+            FilterKind::Blend => MAX_BLEND_MODE,
+            FilterKind::Turbulence => 3,
             FilterKind::Composite => 6,
             FilterKind::ColorMatrix => 3,
             _ => 0,
@@ -482,7 +483,7 @@ fn group_view<V: ViewportRead, A: Copy>(
     control: &mut dyn WorkControl,
 ) -> Result<()> {
     value.shapes.require(scene.shapes.len(), 0)?;
-    if !value.opacity.is_finite() || !(0.0..=1.0).contains(&value.opacity) || value.blend_mode > 4 {
+    if !value.opacity.is_finite() || !(0.0..=1.0).contains(&value.opacity) || value.blend_mode > MAX_BLEND_MODE {
         return Err(invalid(0));
     }
     if let Some(filter) = value.filter {

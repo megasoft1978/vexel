@@ -35,6 +35,8 @@ mod tests_chrome;
 #[cfg(test)]
 mod tests_dirty;
 #[cfg(test)]
+mod tests_effects;
+#[cfg(test)]
 mod tests_gpu;
 #[cfg(test)]
 mod tests_image;
