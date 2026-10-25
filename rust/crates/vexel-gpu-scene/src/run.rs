@@ -151,7 +151,11 @@ impl<B: ComputeBackend> GpuRasterizer<B> {
             source: &self.source,
             entry: KERNEL_ENTRY,
             inputs: &inputs,
-            grid: (e.header.tiles_x * TILE_SIZE, e.header.tiles_y * TILE_SIZE, 1),
+            grid: (
+                e.header.tiles_x * TILE_SIZE,
+                e.header.tiles_y * TILE_SIZE,
+                1,
+            ),
             threads_per_group: (TILE_SIZE, TILE_SIZE, 1),
         };
         let backend = self

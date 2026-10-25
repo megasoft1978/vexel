@@ -590,10 +590,59 @@ are not collected because they would need counters in the raster crates.
 
 ## GPU display rasterizer (ADR-0035)
 
-Stub. The Metal compute rasterizer (`vexel-gpu-scene` layout, kernels in
-`vexel-platform-apple`) is not wired in yet; no GPU numbers are recorded.
-Spike numbers (tile-binned vs per-shape, M5 Max) are in
-`spikes/metal-raster/README.md`. Planned measurements: end-to-end display frame
-ms on the committed bench scenes against the CPU path, encode/upload/kernel
-split, and the parity suite result against the ADR-0035 tolerances (pixels over
-2/255 <= 0.02%, over 16/255 <= 0.002%, mean abs error <= 0.001).
+Kernel `vexel-gpu-scene/shaders/raster.metal` (one 16x16 threadgroup per tile,
+one thread per pixel, per-tile edge ranges in threadgroup memory, integer
+fixed-point crossing test, f32 gradients, integer compositing), driven through
+`vexel_gpu_scene::run::GpuRasterizer` and a `ComputeBackend`. Spike numbers
+(tile-binned vs per-shape, M5 Max) are in `spikes/metal-raster/README.md`.
+
+Parity (`cargo test -p vexel-gpu-scene --test gpu_parity`, `VEXEL_REQUIRE_GPU=1`):
+
+- GPU vs the pure-Rust reference (`reference.rs`): byte-equal on every seeded
+  scene (solid, linear, radial, mixed; straight and premultiplied output).
+- GPU vs the `vexel-render` CPU rasterizer, 12 seeds at 256 / 900 / 1024 px per
+  paint kind, thresholds frozen in `tests/parity.json`. Worst frame: fill 0.0102%
+  over 2/255, 0.00033% over 16/255, mae 2.1e-6; radial 0.0163%, 0.0005%, 3.6e-6;
+  linear 0.0173%, 0.0059% (two frames above the ADR 0.002%, see below), 7.0e-6.
+- Two linear frames (seeds 305, 310) exceed the ADR over-16 bound (0.0059% vs
+  0.002%): a pentagram whose horizontal edge pair is within 1/4096 px of a
+  sample row, so the encoder's vertex rounding moves a span of about 56 pixels
+  by one sample row. Identical in the reference; listed as capped exceptions in
+  `parity.json`.
+
+Timing (release, M-series Mac, p50 of 5 runs, 3 for 20000 shapes or 2048 px;
+`cargo test --release -p vexel-gpu-scene --test gpu_parity bench -- --ignored
+--nocapture`). CPU = `vexel-render` on the same seeded polygons (identity
+view, one thread). End-to-end = encode + bin + upload + dispatch + readback
+(premultiplied output); kernel = GPU-reported execution time.
+
+| profile | px | shapes | CPU p50 ms | GPU end-to-end p50 ms | GPU kernel p50 ms | speedup (e2e) | speedup (kernel) |
+|---|---|---|---|---|---|---|---|
+| Fill | 900 | 500 | 2.4 | 3.2 | 2.04 | 0.8x | 1x |
+| Fill | 900 | 2000 | 8.0 | 5.1 | 3.39 | 1.6x | 2x |
+| Fill | 900 | 5000 | 19.6 | 9.7 | 6.28 | 2.0x | 3x |
+| Fill | 900 | 20000 | 84.0 | 27.6 | 16.73 | 3.0x | 5x |
+| Fill | 2048 | 500 | 2.8 | 2.4 | 0.45 | 1.2x | 6x |
+| Fill | 2048 | 2000 | 8.6 | 4.4 | 1.76 | 1.9x | 5x |
+| Fill | 2048 | 5000 | 21.4 | 11.2 | 7.14 | 1.9x | 3x |
+| Fill | 2048 | 20000 | 85.4 | 28.7 | 16.75 | 3.0x | 5x |
+| Linear | 900 | 500 | 9.7 | 1.8 | 0.77 | 5.5x | 13x |
+| Linear | 900 | 2000 | 38.6 | 6.3 | 4.69 | 6.1x | 8x |
+| Linear | 900 | 5000 | 96.0 | 11.0 | 7.63 | 8.7x | 13x |
+| Linear | 900 | 20000 | 374.7 | 40.9 | 30.44 | 9.2x | 12x |
+| Linear | 2048 | 500 | 9.8 | 2.4 | 0.75 | 4.1x | 13x |
+| Linear | 2048 | 2000 | 38.1 | 5.6 | 2.92 | 6.8x | 13x |
+| Linear | 2048 | 5000 | 95.6 | 11.7 | 7.45 | 8.2x | 13x |
+| Linear | 2048 | 20000 | 381.5 | 40.7 | 29.45 | 9.4x | 13x |
+| Radial | 900 | 500 | 15.4 | 6.8 | 5.46 | 2.3x | 3x |
+| Radial | 900 | 2000 | 61.2 | 9.7 | 6.92 | 6.3x | 9x |
+| Radial | 900 | 5000 | 149.5 | 16.2 | 11.30 | 9.2x | 13x |
+| Radial | 900 | 20000 | 593.4 | CPU fallback (Unsupported(TooManyEdges)) | | | |
+| Radial | 2048 | 500 | 17.6 | 8.3 | 5.77 | 2.1x | 3x |
+| Radial | 2048 | 2000 | 68.3 | 10.9 | 7.30 | 6.3x | 9x |
+| Radial | 2048 | 5000 | 167.8 | 18.6 | 12.01 | 9.0x | 14x |
+| Radial | 2048 | 20000 | 666.8 | CPU fallback (Unsupported(TooManyEdges)) | | | |
+
+`CPU fallback (Unsupported(TooManyEdges))`: the 20000 large radial polygons
+exceed the tile edge-pool budget, so the app would render them on the CPU.
+Single-run noise: the smallest rows include GPU clock ramp-up.
