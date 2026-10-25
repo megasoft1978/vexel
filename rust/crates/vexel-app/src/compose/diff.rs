@@ -37,7 +37,15 @@ impl DiffCache {
     pub fn disabled(&self) -> bool {
         self.disabled
     }
+
+    /// Forgets an undiffable verdict: the next document may be diffable.
+    pub(crate) fn rearm(&mut self) {
+        self.disabled = false;
+    }
 }
+
+/// Past this many edges in a scene the previous shapes are not kept (memory).
+const MAX_KEPT_EDGES: usize = 1_500_000;
 
 struct Prev {
     width: u32,
@@ -276,6 +284,7 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
     tile: &mut Tile,
     cancel: &dyn Fn() -> bool,
     cache: &mut DiffCache,
+    with_shapes: bool,
 ) -> Result<Drawn, RenderError> {
     let (width, height) = (tile.width(), tile.height());
     let mut renderer = Renderer::new(view_box, aspect, tile, cancel)?;
@@ -284,7 +293,7 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
         cache.disabled = true;
         cache.prev = None;
         renderer.draw_entries(view, &entries, tile)?;
-        return Ok(drawn_of(entries));
+        return Ok(drawn_of(entries, with_shapes));
     }
     let ctx = plan(view, &entries)?;
     let bounds: Vec<Option<Rect>> = entries
@@ -342,6 +351,17 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
         _ => renderer.draw_entries(view, &entries, tile)?,
     }
 
+    let kept: usize = entries
+        .iter()
+        .map(|e| match e {
+            Entry::Draw(p) => p.shape.edges.len(),
+            Entry::Skip(_) => 0,
+        })
+        .sum();
+    if kept > MAX_KEPT_EDGES {
+        cache.prev = None;
+        return Ok(drawn_of(entries, with_shapes));
+    }
     let frame = tile.rgba().to_vec();
     let keys = entries
         .iter()
@@ -360,14 +380,16 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
         bounds,
         ctx,
     });
-    Ok(drawn_of(entries))
+    Ok(drawn_of(entries, with_shapes))
 }
 
-fn drawn_of(entries: Vec<Entry<'_>>) -> Drawn {
+fn drawn_of(entries: Vec<Entry<'_>>, with_shapes: bool) -> Drawn {
     let mut drawn = Drawn::default();
     for (scene_index, entry) in entries.into_iter().enumerate() {
-        if let Entry::Skip(kind) = entry {
-            drawn.skipped.push(Skipped { scene_index, kind });
+        match entry {
+            Entry::Skip(kind) => drawn.skipped.push(Skipped { scene_index, kind }),
+            Entry::Draw(p) if with_shapes => drawn.shapes.push(p.shape),
+            Entry::Draw(_) => {}
         }
     }
     drawn

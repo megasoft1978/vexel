@@ -5,7 +5,7 @@
 //! any in-flight composition cancel at its next checkpoint; results of older
 //! generations are never delivered.
 
-use super::{ComposeError, Composed, compose_document_owned};
+use super::{ComposeError, Composed, DiffCache, compose_document_cached};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{Builder, JoinHandle};
@@ -102,6 +102,8 @@ impl Drop for ComposeWorker {
 }
 
 fn run(shared: &Shared) {
+    // Frames the worker composed stay for the next edit: only changed shapes repaint.
+    let mut cache = DiffCache::default();
     loop {
         let job = {
             let mut slot = lock(&shared.job);
@@ -119,7 +121,14 @@ fn run(shared: &Shared) {
             shared.shutdown.load(Ordering::SeqCst)
                 || shared.latest.load(Ordering::SeqCst) != job.generation
         };
-        let result = compose_document_owned(job.bytes.clone(), job.width, job.height, &superseded);
+        cache.rearm();
+        let result = compose_document_cached(
+            job.bytes.clone(),
+            job.width,
+            job.height,
+            &superseded,
+            &mut cache,
+        );
         if !superseded() {
             let mut done = lock(&shared.done);
             if shared.latest.load(Ordering::SeqCst) == job.generation {
