@@ -420,6 +420,8 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "image_trace",
     "image_segment",
     "image_inpaint",
+    "document_import",
+    "scene_apply",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -454,6 +456,7 @@ fn preview_extra_tools() -> impl Iterator<Item = &'static ToolSchema> {
         .chain(super::tools_face::FACE_TOOLS)
         .chain(super::tools_batch::BATCH_TOOLS)
         .chain(super::tools_image::IMAGE_TOOLS)
+        .chain(super::tools_scene::SCENE_TOOLS)
 }
 
 pub fn tool_schemas() -> Result<Vec<u8>, ProtocolError> {
@@ -624,6 +627,17 @@ pub(super) fn validate_arguments(
         if tool.name == "native_timeline_tracks_set" && field == "tracks" {
             let count = doc.token(value).map_or(0, |t| t.child_count);
             if !(1..=super::tools_native_bulk::MAX_TRACKS).contains(&count) {
+                return Err(ToolValidationError::InvalidArguments);
+            }
+        }
+        if tool.name == "scene_apply" && matches!(field, "elements" | "tracks") {
+            let count = doc.token(value).map_or(0, |t| t.child_count);
+            let max = if field == "tracks" {
+                super::tools_native_bulk::MAX_TRACKS
+            } else {
+                super::tools_scene::MAX_ELEMENTS
+            };
+            if !(1..=max).contains(&count) {
                 return Err(ToolValidationError::InvalidArguments);
             }
         }

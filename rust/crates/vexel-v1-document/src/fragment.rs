@@ -52,7 +52,17 @@ impl V1Document {
         parent: &str,
         xml: &[u8],
     ) -> Result<Vec<String>, V1DocumentError> {
-        if xml.is_empty() || xml.len() > MAX_FRAGMENT_BYTES {
+        self.add_fragment_limited(parent, xml, MAX_FRAGMENT_BYTES)
+    }
+
+    /// `add_fragment` with a caller-chosen size cap (document import).
+    pub(crate) fn add_fragment_limited(
+        &mut self,
+        parent: &str,
+        xml: &[u8],
+        limit: usize,
+    ) -> Result<Vec<String>, V1DocumentError> {
+        if xml.is_empty() || xml.len() > limit {
             return Err(V1DocumentError::InvalidAnimationFragment);
         }
         let parent_node = self.fragment_parent(parent)?;

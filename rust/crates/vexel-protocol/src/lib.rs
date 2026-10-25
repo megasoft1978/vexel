@@ -12,6 +12,7 @@ mod tools_paint;
 mod tools_face;
 mod tools_image;
 mod tools_rig;
+mod tools_scene;
 mod tools_structure;
 
 use vexel_json::{JsonBuffer, JsonDocument};

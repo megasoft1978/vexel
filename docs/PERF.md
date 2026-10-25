@@ -917,3 +917,11 @@ test `trace::tests_village` (`cargo test -p vexel-app --release --lib village --
 Defaults matter: tolerance 1.0 with minArea 30-300 exceeds the 3 MiB output cap on
 this painted art (the layer-union stack repeats shared boundaries), so the tool
 defaults to tolerance 1.5 and minArea = pixels/12000.
+## scene_apply (2026-10-25)
+
+600 rects plus 100 opacity tracks (2 keys each), release, headless MCP rig
+(`cargo test -p vexel-app --release --test mcp_scene_bench -- --ignored --nocapture`),
+3 runs: old path (3 `batch` calls of 200 `element_add` + one `native_timeline_tracks_set`)
+231 / 217 / 217 ms; `scene_apply` one call 237 / 235 / 232 ms. No speedup in
+compute (both run the same per-element edits); the call count drops from 4 to 1
+and the result is atomic.

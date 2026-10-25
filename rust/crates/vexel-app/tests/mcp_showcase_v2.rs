@@ -37,7 +37,7 @@ fn walking_character_at_sunset_live_preview_native_gif() {
     let project = dir.text("sunset.vexel");
     let mut rig = Rig::new(policy_for(&[&dir.0]));
     let names = rig.list_tools();
-    assert_eq!(names.len(), 72);
+    assert_eq!(names.len(), 74);
 
     let sky = add(
         &mut rig,
