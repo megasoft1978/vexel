@@ -32,7 +32,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 5;
+pub const LAYOUT_VERSION: u32 = 6;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -40,12 +40,12 @@ pub const SAMPLES_PER_AXIS: u32 = 4;
 pub const SAMPLE_COUNT: u32 = SAMPLES_PER_AXIS * SAMPLES_PER_AXIS;
 /// Sample centres within a pixel per axis; equals `vexel_render` `SAMPLE_LOCATIONS`.
 pub const SAMPLE_LOCATIONS: [f32; 4] = [0.125, 0.375, 0.625, 0.875];
-/// Fractional bits of [`GpuEdge`] coordinates (1/4096 pixel).
-pub const EDGE_FIXED_SHIFT: u32 = 12;
+/// Fractional bits of [`GpuEdge`] coordinates (1/65536 pixel).
+pub const EDGE_FIXED_SHIFT: u32 = 16;
 /// Largest absolute device coordinate (pixels) the fixed-point edges hold:
 /// `MAX_COORDINATE << EDGE_FIXED_SHIFT` is 2^30, and the crossing products
 /// of two such differences stay inside `i64`.
-pub const MAX_COORDINATE: u32 = 262_144;
+pub const MAX_COORDINATE: u32 = 16_384;
 
 pub const MAX_SHAPES: u32 = 262_144;
 pub const MAX_EDGES: u32 = 4_194_304;
@@ -272,10 +272,10 @@ mod tests {
 
     #[test]
     fn fixed_point() {
-        assert_eq!(to_fixed(1.5), Some(6144));
+        assert_eq!(to_fixed(1.5), Some(3 << (EDGE_FIXED_SHIFT - 1)));
         assert_eq!(
             to_fixed(f64::from(MAX_COORDINATE)),
-            Some(1 << (EDGE_FIXED_SHIFT + 18))
+            Some((MAX_COORDINATE as i32) << EDGE_FIXED_SHIFT)
         );
         assert_eq!(to_fixed(f64::NAN), None);
         assert_eq!(to_fixed(1e30), None);

@@ -601,14 +601,11 @@ Parity (`cargo test -p vexel-gpu-scene --test gpu_parity`, `VEXEL_REQUIRE_GPU=1`
 - GPU vs the pure-Rust reference (`reference.rs`): byte-equal on every seeded
   scene (solid, linear, radial, mixed; straight and premultiplied output).
 - GPU vs the `vexel-render` CPU rasterizer, 12 seeds at 256 / 900 / 1024 px per
-  paint kind, thresholds frozen in `tests/parity.json`. Worst frame: fill 0.0102%
-  over 2/255, 0.00033% over 16/255, mae 2.1e-6; radial 0.0163%, 0.0005%, 3.6e-6;
-  linear 0.0173%, 0.0059% (two frames above the ADR 0.002%, see below), 7.0e-6.
-- Two linear frames (seeds 305, 310) exceed the ADR over-16 bound (0.0059% vs
-  0.002%): a pentagram whose horizontal edge pair is within 1/4096 px of a
-  sample row, so the encoder's vertex rounding moves a span of about 56 pixels
-  by one sample row. Identical in the reference; listed as capped exceptions in
-  `parity.json`.
+  paint kind, thresholds frozen in `tests/parity.json`. Worst frame: fill 0.0020%
+  over 2/255, 0.00016% over 16/255, mae 1.0e-6; radial 0.0020%, 0%, 6.1e-7;
+  linear 0.0013%, 0%, 2.2e-7 (layout v6, `EDGE_FIXED_SHIFT = 16`; the earlier
+  shift 12 had two linear frames above the ADR over-16 bound, see ADR-0035
+  addendum). No exceptions.
 
 Timing (release, M-series Mac, p50 of 5 runs, 3 for 20000 shapes or 2048 px;
 `cargo test --release -p vexel-gpu-scene --test gpu_parity bench -- --ignored

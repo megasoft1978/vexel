@@ -194,17 +194,7 @@ fn gpu_matches_cpu_within_frozen_bounds() {
             );
             let over = m.over_2 > bounds.0 || m.over_16 > bounds.1 || m.mae > bounds.2;
             if over {
-                // Documented exceptions only (tests/parity.json), each capped.
-                let id = format!("\"{name}:{}\"", 300 + k);
-                let cap = frozen("exception_cap");
-                if !include_str!("parity.json").contains(&id)
-                    || m.over_2 > bounds.0
-                    || m.over_16 > cap.1
-                    || m.mae > bounds.2
-                {
-                    failures.push(format!("{name} seed {}: {m:?}", 300 + k));
-                }
-                println!("exception {name} seed {}", 300 + k);
+                failures.push(format!("{name} seed {}: {m:?}", 300 + k));
             }
             worst = (
                 worst.0.max(m.over_2),

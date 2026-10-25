@@ -60,7 +60,7 @@ only after the parity suite passes against them.
 
 Interface changes decided by the coordinator after the encoder lane's
 measurements (`docs/gpu-interface-requests.md`); the header and
-`shaders/layout.h` carry layout version 5.
+`shaders/layout.h` carry layout version 5 (precision change in the addendum below: version 6).
 
 - **Edge precision: integer fixed point, `EDGE_FIXED_SHIFT = 12`**
   (1/4096 px), `MAX_COORDINATE = 262144` px (`classify` rejects larger
@@ -95,3 +95,18 @@ measurements (`docs/gpu-interface-requests.md`); the header and
   unclipped per tile; `classify` budgets them (`MAX_CLIP_EDGE_WORK`,
   `MAX_CLIP_RECORDS`). Rendering them is the clip lane's work; until then
   clipped scenes classify as `Unsupported(Clips)`.
+- **Edge precision raised to `EDGE_FIXED_SHIFT = 16` (layout v6)**, with
+  `MAX_COORDINATE = 16384` px (equal to `MAX_CANVAS_AXIS`; `classify` sends
+  larger coordinates to the CPU). The CPU decides "edge spans this sample row"
+  with exact `f64` vertices; at shift 12 a vertex within 1/8192 px of a sample
+  row rounded to the other side, moving a span of tens of pixels by one sample
+  row (linear seeds 305 and 310, 0.0059% over 16/255 against the 0.002% bound;
+  identical in the reference, so an encoder effect). Shift 16 makes such
+  events 16x rarer, the same `i64` crossing math, no struct change, no kernel
+  cost. Measured: all 12 seeds x fill/linear/radial at 256/900/1024 meet the
+  ADR bounds with no exceptions (worst over 16/255: fill 0.00016%, linear and
+  radial 0%), GPU still byte-equal to the reference. Rejected: shift 14
+  (`unsnapped_scenes_meet_adr_bounds` seed 109 had one pixel over 16/255 on
+  a 49152 pixel frame, which already exceeds 0.002%), and per-edge or `i64`
+  vertices (larger `GpuEdge`, more bandwidth) because 16 bits suffices. The
+  `parity.json` exceptions are removed.
