@@ -4,13 +4,14 @@
 
 use super::mcp::{McpHost, McpOutcome, SOURCE_LIMIT, source, stable_ids};
 use super::{AppDocument, check_room};
-use crate::preview::native_timeline::{NativeOp, mcp_rig::RIG_ID};
+use crate::preview::native_timeline::{NativeOp, mcp_rig::RIG_ID, settings};
 use crate::project_session::SessionEditError;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use vexel_json::{JsonDocument, JsonType};
 use vexel_mcp_access::AccessError;
+use vexel_timeline::EditLimits;
 use vexel_v1_document::{
     ElementKind, PreparedImport, V1DocumentError, prepare_import, valid_prefix,
 };
@@ -211,14 +212,32 @@ impl McpHost {
             prepare_import(bundle.scene_svg, &prefix, op.transform).map_err(import_error)?;
         let source = source(app)?;
         let ids = stable_ids(&source).len();
-        if ids + prepared.source_ids.len() + 1 > crate::preview::SCENE_LIMIT {
+        // Id-less elements count too: one per `<` opening when that is more.
+        let openings = prepared
+            .xml
+            .windows(2)
+            .filter(|w| w[0] == b'<' && w[1].is_ascii_alphabetic())
+            .count();
+        let elements = prepared.source_ids.len().max(openings);
+        if ids + elements + 1 > crate::preview::SCENE_LIMIT {
             return Err("preview scene limit reached");
         }
         if source.len() + prepared.xml.len() > SOURCE_LIMIT {
             return Err("preview source limit reached");
         }
+        let host_tps = app
+            .native_timeline_candidate(settings(), EditLimits::default())
+            .map_err(|_| "unsupported native timeline")?
+            .view()
+            .map_err(|_| "unsupported native timeline")?
+            .ticks_per_second();
         let tracks = if op.include_timeline {
-            super::mcp_import_tracks::property_tracks(&bundle, &prepared.source_ids, &prefix)?
+            super::mcp_import_tracks::property_tracks(
+                &bundle,
+                &prepared.source_ids,
+                &prefix,
+                host_tps,
+            )?
         } else {
             Vec::new()
         };
@@ -235,6 +254,9 @@ impl McpHost {
                 }
                 let merged = merge_rig(stored_rig(&source).as_deref(), imported)
                     .ok_or("document_import: the file's rig is not valid")?;
+                if source.len() + prepared.xml.len() + merged.len() > SOURCE_LIMIT {
+                    return Err("preview source limit reached");
+                }
                 Some(merged)
             }
             _ => None,
@@ -263,7 +285,11 @@ impl McpHost {
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"operation\":\"document_import\",\"groupId\":\"{}\",\"idPrefix\":\"{prefix}\",\"elements\":{},\"tracks\":{track_count},\"rigBones\":{bones}}}",
             prepared.group_id,
-            prepared.source_ids.len()
+            prepared
+                .source_ids
+                .iter()
+                .filter(|id| id.as_str() != RIG_ID)
+                .count()
         )))
     }
 

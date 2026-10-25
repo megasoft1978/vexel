@@ -7,6 +7,7 @@ mod rig_support;
 use common::{Dir, Rig, fixture, policy_for};
 use rig_support::{Stick, build, rig_args};
 use std::collections::HashSet;
+use std::fs;
 use std::sync::atomic::AtomicBool;
 use vexel_app::animation::frame;
 use vexel_project::{BundleInput, encode};
@@ -238,5 +239,60 @@ fn a_saved_character_file_imports_twice_and_renders() {
     let all = ids(&rig);
     assert!(
         all.iter().any(|id| id.starts_with("p1_")) && all.iter().any(|id| id.starts_with("p2_"))
+    );
+}
+
+#[test]
+fn id_less_elements_count_against_the_scene_limit() {
+    let dir = Dir::new();
+    let mut svg =
+        String::from(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">"#);
+    for _ in 0..4200 {
+        svg.push_str(r#"<rect x="1" y="1" width="2" height="2"/>"#);
+    }
+    svg.push_str("</svg>");
+    let path = dir.file("many.vexel");
+    fs::write(&path, bundle(&svg)).unwrap();
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let before = rig.state();
+    let reply = rig.doc_tool("document_import", &path_arg(path.to_str().unwrap()));
+    assert!(reply.error().contains("scene limit"), "{}", reply.body);
+    assert_eq!(rig.state(), before);
+}
+
+#[test]
+fn key_ticks_rescale_to_the_host_rate() {
+    let dir = Dir::new();
+    let (path, _stick) = saved_stick(&dir);
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    rig.doc_tool(
+        "native_timeline_set_duration",
+        r#""durationTicks":48,"ticksPerSecond":30"#,
+    )
+    .ok();
+    rig.doc_tool("document_import", &path_arg(&path)).ok();
+    // The file's tick 12 at 24 ticks per second is tick 15 at 30.
+    let timeline = rig.doc_tool("native_timeline_get", "").ok().to_owned();
+    assert!(timeline.contains(r#""tick":15"#), "{timeline}");
+    assert!(!timeline.contains(r#""tick":12"#), "{timeline}");
+}
+
+#[test]
+fn reply_elements_count_skips_the_rig() {
+    let dir = Dir::new();
+    let (path, _stick) = saved_stick(&dir);
+    let mut rig = Rig::new(policy_for(&[&dir.0]));
+    let reply = rig
+        .doc_tool(
+            "document_import",
+            &format!(r#"{},"idPrefix":"a_","includeRig":true"#, path_arg(&path)),
+        )
+        .ok()
+        .to_owned();
+    let source = String::from_utf8(rig.app.source_bytes().unwrap()).unwrap();
+    let expected = source.matches(" id=\"a_").count();
+    assert!(
+        reply.contains(&format!(r#""elements":{expected},"#)),
+        "{reply}"
     );
 }

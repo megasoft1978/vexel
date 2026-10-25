@@ -21,13 +21,24 @@ fn member(object: &[u8], key: &[u8]) -> Result<Option<Vec<u8>>, &'static str> {
         .map(<[u8]>::to_vec))
 }
 
+/// `tick` of a timeline at `from` ticks per second, on one at `to`, rounded
+/// to the nearest tick and clamped to `u32::MAX`.
+fn rescale(tick: u32, from: u32, to: u32) -> Result<u32, &'static str> {
+    if from == 0 {
+        return Err(BAD);
+    }
+    let scaled = (u64::from(tick) * u64::from(to) + u64::from(from) / 2) / u64::from(from);
+    Ok(u32::try_from(scaled).unwrap_or(u32::MAX))
+}
+
 /// The property tracks of `bundle`'s timeline (drawing, audio and camera
-/// tracks are left out), ids and targets prefixed. Empty when the file has
-/// no timeline.
+/// tracks are left out), ids and targets prefixed, key ticks rescaled from
+/// the file's rate to `host_tps`. Empty when the file has no timeline.
 pub(super) fn property_tracks(
     bundle: &BundleView<'_>,
     source_ids: &[String],
     prefix: &str,
+    host_tps: u32,
 ) -> Result<Vec<NativeTrack>, &'static str> {
     let source = bundle.timeline_json;
     if source.is_empty() {
@@ -59,28 +70,30 @@ pub(super) fn property_tracks(
         for item in 0..track.item_count {
             items.push(view.item_at(index, item).ok_or(BAD)?);
         }
-        let Some((first, rest)) = items.split_first() else {
+        let Some(first) = items.first() else {
             continue;
         };
-        let key = |item: &vexel_timeline::ItemView<'_>| -> Result<PropertyKey, &'static str> {
+        let mut keys: Vec<PropertyKey> = Vec::with_capacity(items.len());
+        for (position, item) in items.iter().enumerate() {
+            let tick = rescale(item.tick, view.ticks_per_second(), host_tps)?;
+            // The tick-zero value carries no ease; a key at the same tick adds it.
+            if position == 0 && tick == 0 && item.ease.is_none() {
+                continue;
+            }
+            // Rescaling can fold neighbouring keys onto one tick: the first wins.
+            if keys.last().is_some_and(|k| k.tick == tick) {
+                continue;
+            }
             let ease = if item.ease.is_some() {
                 member(&source[item.source.start..item.source.end], b"ease")?
             } else {
                 None
             };
-            Ok(PropertyKey {
-                tick: item.tick,
+            keys.push(PropertyKey {
+                tick,
                 value: item.value_json.ok_or(BAD)?.to_vec(),
                 ease,
-            })
-        };
-        let mut keys = Vec::with_capacity(rest.len() + 1);
-        // The tick-zero value carries no ease; a key at the same tick adds it.
-        if first.ease.is_some() || first.tick != 0 {
-            keys.push(key(first)?);
-        }
-        for item in rest {
-            keys.push(key(item)?);
+            });
         }
         let noise = if view.track_noise(index).is_some() {
             member(track.payload_json, b"noise")?
