@@ -97,10 +97,11 @@ fn library_target_links_and_lists_routed_tools() {
     // render_png is routed since WO-RUST-V1-PNG-01.
     // Eleven native_timeline_* tools are routed since the V1 native MCP slice.
     // Twenty-three document, paint, query and timeline-edit tools follow the V1 advanced-animation work.
-    // Plus native_timeline_set_duration, element_reparent and batch.
+    // Plus native_timeline_set_duration, element_reparent and batch, plus
+    // element_add_fragment and use_add.
     assert_eq!(
         names.len(),
-        ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1 + 1 + 1
+        ROUTED.len() + ORIGINAL.len() + 1 + 11 + 23 + 1 + 1 + 1 + 2
     );
     assert!(names.iter().any(|n| n == "render_png"));
 }
