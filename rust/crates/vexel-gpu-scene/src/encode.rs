@@ -13,12 +13,17 @@
 //!   non-zero and even-odd). Edges left of the sample never count.
 //! * `GpuShape::z` equals the index; shapes that paint nothing (transparent
 //!   solid, invalid gradient, no edges, off canvas) are dropped.
+//! * Clips: a shape's chain is the clip arcs of its enclosing groups (every
+//!   group, layered or not, as the CPU `group.rs`) followed by its own. Each
+//!   distinct `Arc` becomes one link of child records whose edges (absolute
+//!   canvas fixed point, spanning at least one sample row) are stored once
+//!   after the tile pools; identical chains share their records.
 //! * The header's content range is the CPU content rectangle in sample units.
 
 use crate::bin::{Binned, Binner, spans_sample_row};
 use crate::classify::{MAX_GRADIENT_STOPS, analyze, has_layer, is_layered};
 use crate::error::{GpuError, UnsupportedReason};
-use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
+use crate::input::{GpuClipPath, GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
 use crate::layout::{
     self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, GpuClip, GpuEdge, GpuSceneHeader, GpuStop,
     GpuTile, GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, MAX_FRAMES, PAINT_LINEAR, PAINT_RADIAL,
@@ -26,6 +31,8 @@ use crate::layout::{
     to_fixed,
 };
 use crate::strokes::StrokeBinner;
+use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const FIXED_ONE: f32 = (1u32 << layout::EDGE_FIXED_SHIFT) as f32;
@@ -68,6 +75,7 @@ pub struct Encoder {
     binned: Binned,
     src: Vec<GpuEdge>,
     strokes: StrokeBinner,
+    clip_edges: Vec<GpuEdge>,
 }
 
 impl Encoder {
@@ -120,13 +128,21 @@ impl Encoder {
             binned,
             src,
             strokes,
+            clip_edges,
         } = self;
+        clip_edges.clear();
         binner.reset(tiles_x, tiles_y, clip);
         binner.reserve(stats.tile_entries as usize, stats.tile_entries as usize * 3);
         let mut ctx = Walk {
             binner,
             src,
             strokes,
+            clips: ClipBuilder {
+                edges: clip_edges,
+                links: HashMap::new(),
+                chains: HashMap::new(),
+                groups: Vec::new(),
+            },
             out,
             tiles_x,
             tiles_y,
@@ -172,7 +188,97 @@ impl Encoder {
         std::mem::swap(&mut binned.edges, &mut out.edges);
         std::mem::swap(&mut binned.tiles, &mut out.tiles);
         std::mem::swap(&mut binned.entries, &mut out.tile_list);
+        // Clip child edges follow the tile pools.
+        let offset = out.edges.len() as u32;
+        for c in &mut out.clips {
+            c.edge_start += offset;
+        }
+        out.edges.extend_from_slice(clip_edges);
+        if out.edges.len() > layout::MAX_EDGES as usize {
+            return Err(GpuError::Encode(UnsupportedReason::TooManyEdges));
+        }
+        out.header.edge_count = out.edges.len() as u32;
+        out.header.clip_count = out.clips.len() as u32;
         Ok(())
+    }
+}
+
+/// Clip links and chains of one frame, deduplicated by `Arc` identity.
+struct ClipBuilder<'a> {
+    /// Child edges (absolute canvas fixed point), appended after the tile pools.
+    edges: &'a mut Vec<GpuEdge>,
+    /// Child records of each clip link (edge starts relative to `edges`).
+    links: HashMap<*const GpuClipPath, Vec<GpuClip>>,
+    /// `(clip_start, clip_count)` of each distinct chain.
+    chains: HashMap<Vec<*const GpuClipPath>, (u32, u32)>,
+    /// Clips of the groups enclosing the current node, outermost first.
+    groups: Vec<Arc<GpuClipPath>>,
+}
+
+impl ClipBuilder<'_> {
+    /// Child records of the chain `group_clips + shape_clips`: `(start,
+    /// count)` in links, `(0, 0)` when unclipped.
+    fn chain(&mut self, out: &mut Vec<GpuClip>, shape_clips: &[Arc<GpuClipPath>]) -> Result<(u32, u32), GpuError> {
+        let links: Vec<Arc<GpuClipPath>> = self.groups.iter().chain(shape_clips).cloned().collect();
+        if links.is_empty() {
+            return Ok((0, 0));
+        }
+        let key: Vec<*const GpuClipPath> = links.iter().map(|c| Arc::as_ptr(c)).collect();
+        if let Some(&hit) = self.chains.get(&key) {
+            return Ok(hit);
+        }
+        let start = out.len() as u32;
+        for link in &links {
+            let ptr = Arc::as_ptr(link);
+            if !self.links.contains_key(&ptr) {
+                let records = self.build_link(link)?;
+                self.links.insert(ptr, records);
+            }
+            out.extend_from_slice(&self.links[&ptr]);
+        }
+        if out.len() > layout::MAX_CLIP_RECORDS as usize {
+            return Err(GpuError::Encode(UnsupportedReason::TooManyClips));
+        }
+        let hit = (start, links.len() as u32);
+        self.chains.insert(key, hit);
+        Ok(hit)
+    }
+
+    /// One link: the union of its children that can ever cover a sample; an
+    /// empty union is one record without edges.
+    fn build_link(&mut self, link: &GpuClipPath) -> Result<Vec<GpuClip>, GpuError> {
+        let mut records = Vec::new();
+        for child in &link.children {
+            let start = self.edges.len() as u32;
+            for seg in &child.edges {
+                let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
+                let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
+                    return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
+                };
+                let edge = GpuEdge { x0, y0, x1, y1 };
+                if spans_sample_row(&edge) {
+                    self.edges.push(edge);
+                }
+            }
+            let edge_count = self.edges.len() as u32 - start;
+            if edge_count > 0 {
+                records.push(GpuClip {
+                    edge_start: start,
+                    edge_count,
+                    fill_rule: if child.evenodd {
+                        FILL_EVENODD
+                    } else {
+                        FILL_NONZERO
+                    },
+                    union_size: 0,
+                });
+            }
+        }
+        if records.is_empty() {
+            records.push(GpuClip::default());
+        }
+        records[0].union_size = records.len() as u32;
+        Ok(records)
     }
 }
 
@@ -181,6 +287,7 @@ struct Walk<'a> {
     binner: &'a mut Binner,
     src: &'a mut Vec<GpuEdge>,
     strokes: &'a mut StrokeBinner,
+    clips: ClipBuilder<'a>,
     out: &'a mut Encoded,
     tiles_x: u32,
     tiles_y: u32,
@@ -203,17 +310,27 @@ impl Walk<'_> {
         for node in nodes {
             match node {
                 GpuNode::Shape(shape) => self.shape(shape)?,
-                GpuNode::Group(g) if !is_layered(g) => self.nodes(&g.children)?,
+                GpuNode::Group(g) if !is_layered(g) => {
+                    let outer = self.clips.groups.len();
+                    self.clips.groups.extend(g.clips.iter().cloned());
+                    let result = self.nodes(&g.children);
+                    self.clips.groups.truncate(outer);
+                    result?;
+                }
                 GpuNode::Group(g) => {
                     if g.children.is_empty() {
                         continue;
                     }
+                    let outer = self.clips.groups.len();
+                    self.clips.groups.extend(g.clips.iter().cloned());
                     self.close_run();
                     let id = self.out.groups.len() as u32;
                     self.out.groups.push(opacity_table(g.opacity));
                     self.frames.push(id);
                     self.groups_open += 1;
-                    self.nodes(&g.children)?;
+                    let result = self.nodes(&g.children);
+                    self.clips.groups.truncate(outer);
+                    result?;
                     self.close_run();
                     self.groups_open -= 1;
                     self.frames.pop();
@@ -298,6 +415,7 @@ impl Walk<'_> {
         if fill.is_none() && stroke.is_none() {
             return Ok(());
         }
+        let (clip_start, clip_count) = ctx.clips.chain(&mut out.clips, &shape.clips)?;
         let mut flags = 0;
         let (mut paint_kind, mut color_rgba, mut gradient_index) = (PAINT_SOLID, 0, u32::MAX);
         if let Some((paint, _)) = fill {
@@ -341,8 +459,8 @@ impl Walk<'_> {
             edge_start: 0,
             edge_count: if fill.is_some() { src.len() as u32 } else { 0 },
             gradient_index,
-            clip_start: 0,
-            clip_count: 0,
+            clip_start,
+            clip_count,
             group_depth: groups_open,
             frame_count,
             frames,
@@ -649,23 +767,6 @@ mod tests {
                 .shapes
                 .iter()
                 .all(|s| s.frame_count == 0)
-        );
-    }
-
-    #[test]
-    fn clipped_group_does_not_encode() {
-        let mut scene = GpuScene::new(16, 16);
-        scene.nodes = vec![GpuNode::Group(crate::input::GpuGroup {
-            opacity: 0.5,
-            clips: vec![crate::input::GpuClipPath {
-                edges: rect(0.0, 0.0, 4.0, 4.0),
-                evenodd: false,
-            }],
-            children: vec![leaf(1.0)],
-        })];
-        assert_eq!(
-            encode(&scene).unwrap_err(),
-            GpuError::Encode(UnsupportedReason::Clips)
         );
     }
 

@@ -205,6 +205,38 @@ static inline bool vx_gradient(
     return true;
 }
 
+// Crossing tests of `n` chunk edges for this thread's 16 samples. The edge
+// coordinates are relative to the origin (ox, oy) (fixed point): the tile
+// origin for tile-local fill edges would be 0, for clip child edges (absolute
+// canvas coordinates) the tile origin. Mirrors reference.rs `covers`.
+static inline void vx_accumulate(
+    threadgroup const GpuEdge* chunk, uint n, int ox, int oy, uint2 lid,
+    thread int* wind, thread uint& parity)
+{
+    for (uint i = 0; i < n; i++) {
+        GpuEdge g = chunk[i];
+        long dy = long(g.y1) - long(g.y0);
+        for (uint sy = 0; sy < 4u; sy++) {
+            int py = oy + int((lid.y * 4u + sy) * VX_SAMPLE_UNIT + VX_SAMPLE_UNIT / 2);
+            bool spans = (g.y0 <= py && g.y1 > py) || (g.y1 <= py && g.y0 > py);
+            if (!spans) {
+                continue;
+            }
+            long dyn = long(py) - long(g.y0);
+            long dx = long(g.x1) - long(g.x0);
+            for (uint sx = 0; sx < 4u; sx++) {
+                int px = ox + int((lid.x * 4u + sx) * VX_SAMPLE_UNIT + VX_SAMPLE_UNIT / 2);
+                long num = (long(g.x0) - long(px)) * dy + dyn * dx;
+                if ((dy > 0 && num > 0) || (dy < 0 && num < 0)) {
+                    uint s = sy * 4u + sx;
+                    wind[s] += dy > 0 ? 1 : -1;
+                    parity ^= 1u << s;
+                }
+            }
+        }
+    }
+}
+
 kernel void vx_raster(
     constant GpuSceneHeader& h [[buffer(0)]],
     device const GpuShape* shapes [[buffer(1)]],
@@ -215,8 +247,9 @@ kernel void vx_raster(
     device const GpuStop* stops [[buffer(6)]],
     device const GpuGroup* groups [[buffer(7)]],
     device const GpuStrokePrim* prims [[buffer(8)]],
-    constant VxMode& mode [[buffer(9)]],
-    device uint* out [[buffer(10)]],
+    device const GpuClip* clips [[buffer(9)]],
+    constant VxMode& mode [[buffer(10)]],
+    device uint* out [[buffer(11)]],
     uint2 tg [[threadgroup_position_in_grid]],
     uint2 lid [[thread_position_in_threadgroup]],
     uint lin [[thread_index_in_threadgroup]])
@@ -270,28 +303,7 @@ kernel void vx_raster(
                 chunk[lin] = edges[entry.edge_start + base + lin];
             }
             threadgroup_barrier(mem_flags::mem_threadgroup);
-            for (uint i = 0; i < n; i++) {
-                GpuEdge g = chunk[i];
-                long dy = long(g.y1) - long(g.y0);
-                for (uint sy = 0; sy < 4u; sy++) {
-                    int py = int((lid.y * 4u + sy) * VX_SAMPLE_UNIT + VX_SAMPLE_UNIT / 2);
-                    bool spans = (g.y0 <= py && g.y1 > py) || (g.y1 <= py && g.y0 > py);
-                    if (!spans) {
-                        continue;
-                    }
-                    long dyn = long(py) - long(g.y0);
-                    long dx = long(g.x1) - long(g.x0);
-                    for (uint sx = 0; sx < 4u; sx++) {
-                        int px = int((lid.x * 4u + sx) * VX_SAMPLE_UNIT + VX_SAMPLE_UNIT / 2);
-                        long num = (long(g.x0) - long(px)) * dy + dyn * dx;
-                        if ((dy > 0 && num > 0) || (dy < 0 && num < 0)) {
-                            uint s = sy * 4u + sx;
-                            wind[s] += dy > 0 ? 1 : -1;
-                            parity ^= 1u << s;
-                        }
-                    }
-                }
-            }
+            vx_accumulate(chunk, n, 0, 0, lid, wind, parity);
         }
         // Stroke coverage: one bit per sample, set on the first primitive hit.
         uint smask = 0u;
@@ -321,6 +333,42 @@ kernel void vx_raster(
                 }
             }
         }
+        // Clip chain: inside every link, a link being the union of its
+        // children (each with its own rule). Uniform across the threadgroup
+        // (the chain belongs to the shape), so the barriers are safe.
+        uint cmask = 0xFFFFu;
+        if (shape.clip_count > 0u) {
+            int ox = int(tg.x * VX_TILE_SIZE) << VX_EDGE_FIXED_SHIFT;
+            int oy = int(tg.y * VX_TILE_SIZE) << VX_EDGE_FIXED_SHIFT;
+            uint at = shape.clip_start;
+            for (uint link = 0; link < shape.clip_count; link++) {
+                uint size = clips[at].union_size;
+                uint link_mask = 0u;
+                for (uint k = 0; k < size; k++) {
+                    GpuClip c = clips[at + k];
+                    int cw[VX_SAMPLE_COUNT];
+                    uint cp = 0u;
+                    for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
+                        cw[s] = 0;
+                    }
+                    for (uint base = 0; base < c.edge_count; base += VX_EDGE_CHUNK) {
+                        uint n = min(uint(VX_EDGE_CHUNK), c.edge_count - base);
+                        threadgroup_barrier(mem_flags::mem_threadgroup);
+                        if (lin < n) {
+                            chunk[lin] = edges[c.edge_start + base + lin];
+                        }
+                        threadgroup_barrier(mem_flags::mem_threadgroup);
+                        vx_accumulate(chunk, n, ox, oy, lid, cw, cp);
+                    }
+                    for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
+                        bool hit = c.fill_rule == VX_FILL_EVENODD ? ((cp >> s) & 1u) != 0u : cw[s] != 0;
+                        link_mask |= hit ? (1u << s) : 0u;
+                    }
+                }
+                cmask &= link_mask;
+                at += size;
+            }
+        }
         if (!inside) {
             continue;
         }
@@ -331,8 +379,9 @@ kernel void vx_raster(
             if (((inside_mask >> s) & 1u) == 0u) {
                 continue;
             }
-            bool covered = evenodd ? ((parity >> s) & 1u) != 0u : wind[s] != 0;
-            bool stroked = ((smask >> s) & 1u) != 0u;
+            bool clipped_in = ((cmask >> s) & 1u) != 0u;
+            bool covered = clipped_in && (evenodd ? ((parity >> s) & 1u) != 0u : wind[s] != 0);
+            bool stroked = clipped_in && ((smask >> s) & 1u) != 0u;
             uint4 sample = uint4(0u);
             for (uint pass = 0; pass < 2u; pass++) {
                 uint kind = pass == 0u ? shape.paint_kind : shape.stroke_paint_kind;

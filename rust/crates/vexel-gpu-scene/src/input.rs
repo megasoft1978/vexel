@@ -28,6 +28,8 @@
 //! * `content_rect` is the `ViewMap` content rectangle in device pixels
 //!   (`[x0, y0, x1, y1]`); meet letterboxing makes it smaller than the canvas.
 
+use std::sync::Arc;
+
 /// One flattened line segment in device pixels.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GpuSegment {
@@ -133,12 +135,31 @@ pub struct GpuStroke {
     pub joins: Vec<GpuStrokeJoin>,
 }
 
-/// One clip path (union of its filled children under one rule) in device
-/// space. A chain of them is an intersection. Not rendered yet.
+/// One filled child of a clip path with its own fill rule (device space,
+/// closed rings, like [`GpuShape::edges`]).
 #[derive(Debug, Clone, PartialEq)]
-pub struct GpuClipPath {
+pub struct GpuClipChild {
     pub edges: Vec<GpuSegment>,
     pub evenodd: bool,
+}
+
+/// One clip path in device space: the UNION of its filled children, each
+/// under its own rule (a clip with no children contains nothing). A chain of
+/// clip paths (`RenderClip` parent chain, group clips, shape clip) is an
+/// INTERSECTION. Clips are shared by `Arc`: the encoder stores the edges of
+/// one `Arc` once however many shapes use it.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct GpuClipPath {
+    pub children: Vec<GpuClipChild>,
+}
+
+impl GpuClipPath {
+    /// A clip of one child.
+    pub fn single(edges: Vec<GpuSegment>, evenodd: bool) -> Self {
+        Self {
+            children: vec![GpuClipChild { edges, evenodd }],
+        }
+    }
 }
 
 /// A leaf shape.
@@ -149,14 +170,16 @@ pub struct GpuShape {
     pub fill: Option<GpuPaint>,
     pub stroke: Option<GpuStroke>,
     /// Clip chain, outermost first (empty when unclipped).
-    pub clips: Vec<GpuClipPath>,
+    pub clips: Vec<Arc<GpuClipPath>>,
 }
 
-/// An opacity group. Not rendered yet (`Unsupported(Groups)`).
+/// An opacity group. Its clips apply to every shape below it, exactly like
+/// the CPU (`group.rs`: the clip joins each child's chain; the group layer
+/// itself is not clipped), whether or not the group is layered.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GpuGroup {
     pub opacity: f64,
-    pub clips: Vec<GpuClipPath>,
+    pub clips: Vec<Arc<GpuClipPath>>,
     pub children: Vec<GpuNode>,
 }
 

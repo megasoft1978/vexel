@@ -2,10 +2,14 @@
 //! the layout budgets? The supported set grows lane by lane; today it is solid,
 //! linear and radial fills (any content rectangle, as letterboxed frames) and
 //! opacity groups up to `MAX_GROUP_DEPTH` and strokes (segments, caps, joins,
-//! dashes as exported by the CPU) within the primitive budget; no clips.
+//! dashes as exported by the CPU) within the primitive budget, and clip chains
+//! (unions of filled children, intersected along the chain, on shapes and
+//! groups) within the clip budgets.
 
 use crate::error::{Capability, UnsupportedReason as Reason};
-use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuStroke};
+use crate::input::{GpuClipPath, GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuStroke};
+use std::collections::HashSet;
+use std::sync::Arc;
 use crate::layout::{
     MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
     MAX_STOPS, MAX_STROKE_PRIMS, MAX_TILE_LIST, TILE_SIZE,
@@ -48,6 +52,14 @@ pub(crate) struct Stats {
     pub stroke_work: u64,
 }
 
+/// Clip links seen so far (counted once however many shapes share them) and
+/// the group clips enclosing the current node.
+#[derive(Default)]
+struct ClipState {
+    seen: HashSet<*const GpuClipPath>,
+    groups: Vec<Arc<GpuClipPath>>,
+}
+
 /// Classifies `scene`; `Supported` scenes are guaranteed to encode.
 pub fn classify(scene: &GpuScene) -> Capability {
     match analyze(scene) {
@@ -61,18 +73,8 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
     let tiles_x = u64::from(scene.width.div_ceil(TILE_SIZE));
     let tiles_y = u64::from(scene.height.div_ceil(TILE_SIZE));
     let mut stats = Stats::default();
-    let mut clipped = false;
-    walk(
-        &scene.nodes,
-        0,
-        [tiles_x, tiles_y],
-        &mut stats,
-        &mut clipped,
-    )?;
-    if clipped {
-        // Within every budget, but the clip lane has not landed: CPU renders it.
-        return Err(Reason::Clips);
-    }
+    let mut clips = ClipState::default();
+    walk(&scene.nodes, 0, [tiles_x, tiles_y], &mut stats, &mut clips)?;
     Ok(stats)
 }
 
@@ -96,7 +98,7 @@ fn walk(
     depth: u32,
     tiles_xy: [u64; 2],
     stats: &mut Stats,
-    clipped: &mut bool,
+    clips: &mut ClipState,
 ) -> Result<(), Reason> {
     let [tiles_x, tiles_y] = tiles_xy;
     for node in nodes {
@@ -105,11 +107,8 @@ fn walk(
                 if !g.opacity.is_finite() || !(0.0..=1.0).contains(&g.opacity) {
                     return Err(Reason::InvalidScene);
                 }
-                if g.clips.len() > MAX_CLIP_CHAIN as usize {
+                if clips.groups.len() + g.clips.len() > MAX_CLIP_CHAIN as usize {
                     return Err(Reason::ClipChainTooLong);
-                }
-                if !g.clips.is_empty() {
-                    *clipped = true;
                 }
                 if g.children.is_empty() {
                     continue;
@@ -122,18 +121,23 @@ fn walk(
                 if layered {
                     stats.groups += 1;
                 }
-                walk(&g.children, inner, tiles_xy, stats, clipped)?;
+                let outer = clips.groups.len();
+                clips.groups.extend(g.clips.iter().cloned());
+                let result = walk(&g.children, inner, tiles_xy, stats, clips);
+                clips.groups.truncate(outer);
+                result?;
                 continue;
             }
             GpuNode::Shape(shape) => shape,
         };
-        if shape.clips.len() > MAX_CLIP_CHAIN as usize {
+        if clips.groups.len() + shape.clips.len() > MAX_CLIP_CHAIN as usize {
             return Err(Reason::ClipChainTooLong);
         }
         if let Some(stroke) = &shape.stroke {
-            stroke_budget(stats, stroke, tiles_x, tiles_y)?;
-            if shape.fill.is_none() && !shape.clips.is_empty() {
-                *clipped = true;
+            let bounds = stroke_budget(stats, stroke, tiles_x, tiles_y)?;
+            if let Some(bounds) = bounds {
+                let tiles = tile_count(bounds, tiles_x, tiles_y);
+                clip_budget(stats, clips, shape, tiles)?;
             }
         }
         let Some(paint) = &shape.fill else { continue };
@@ -173,9 +177,8 @@ fn walk(
         if stats.edge_tile_work > MAX_EDGE_TILE_WORK {
             return Err(Reason::TooManyEdges);
         }
-        if !shape.clips.is_empty() {
-            clip_budget(stats, shape, tiles)?;
-            *clipped = true;
+        if shape.stroke.is_none() {
+            clip_budget(stats, clips, shape, tiles)?;
         }
     }
     Ok(())
@@ -189,7 +192,7 @@ fn stroke_budget(
     stroke: &GpuStroke,
     tiles_x: u64,
     tiles_y: u64,
-) -> Result<(), Reason> {
+) -> Result<Option<[f64; 4]>, Reason> {
     if !strokes::stroke_valid(stroke) || strokes::invert(&stroke.transform).is_none() {
         return Err(Reason::InvalidScene);
     }
@@ -197,7 +200,7 @@ fn stroke_budget(
         return Err(Reason::TooManyStrokePrims);
     }
     let Some((_, work, bounds)) = strokes::estimate(stroke, tiles_x as u32, tiles_y as u32) else {
-        return Ok(());
+        return Ok(None);
     };
     stats.stroke_work += work;
     if stats.stroke_work > u64::from(MAX_STROKE_PRIMS) {
@@ -207,7 +210,7 @@ fn stroke_budget(
     if stats.tile_entries > u64::from(MAX_TILE_LIST) {
         return Err(Reason::TooManyTileEntries);
     }
-    Ok(())
+    Ok(Some(bounds))
 }
 
 fn check_canvas(scene: &GpuScene) -> Result<(), Reason> {
@@ -224,21 +227,33 @@ fn check_canvas(scene: &GpuScene) -> Result<(), Reason> {
     Ok(())
 }
 
-/// Clip budget math of one shape covering `tiles` tiles: one child record per
-/// chain link until the input can express unions (`GpuClipPath` is a single
-/// filled child today), clip edges count toward [`MAX_EDGES`], and the clip
-/// work is `clip edges * tiles`.
-fn clip_budget(stats: &mut Stats, shape: &GpuShape, tiles: u64) -> Result<(), Reason> {
+/// Clip budget math of one shape covering `tiles` tiles (a shape with a fill
+/// and a stroke is charged for the larger stroke-or-fill tile count only
+/// once, through the fill). The chain is the enclosing group clips plus the
+/// shape's own. Records (one per child, at least one per link) and edges are
+/// counted once per shared `Arc`; the clip work is the chain's edges times
+/// the shape's tiles, per shape.
+fn clip_budget(
+    stats: &mut Stats,
+    state: &mut ClipState,
+    shape: &GpuShape,
+    tiles: u64,
+) -> Result<(), Reason> {
     let mut chain_edges = 0u64;
-    for clip in &shape.clips {
-        check_points(&clip.edges)?;
-        chain_edges += clip.edges.len() as u64;
+    for clip in state.groups.iter().chain(&shape.clips) {
+        let edges: u64 = clip.children.iter().map(|c| c.edges.len() as u64).sum();
+        if state.seen.insert(Arc::as_ptr(clip)) {
+            for child in &clip.children {
+                check_points(&child.edges)?;
+            }
+            stats.clip_records += clip.children.len().max(1) as u64;
+            stats.edges += edges;
+        }
+        chain_edges += edges;
     }
-    stats.clip_records += shape.clips.len() as u64;
     if stats.clip_records > u64::from(MAX_CLIP_RECORDS) {
         return Err(Reason::TooManyClips);
     }
-    stats.edges += chain_edges;
     if stats.edges > u64::from(MAX_EDGES) {
         return Err(Reason::TooManyEdges);
     }
@@ -435,14 +450,10 @@ mod tests {
         );
 
         let mut clipped = fill(square(0.0, 0.0, 4.0));
-        clipped.clips.push(GpuClipPath {
-            edges: square(0.0, 0.0, 2.0),
-            evenodd: false,
-        });
-        assert_eq!(
-            classify(&scene_with(clipped)),
-            Capability::Unsupported(Reason::Clips)
-        );
+        clipped
+            .clips
+            .push(Arc::new(GpuClipPath::single(square(0.0, 0.0, 2.0), false)));
+        assert_eq!(classify(&scene_with(clipped)), Capability::Supported);
 
         let mut grouped = GpuScene::new(8, 8);
         grouped.nodes.push(GpuNode::Group(GpuGroup {
@@ -463,10 +474,8 @@ mod tests {
         for _ in 0..shapes {
             let mut s = fill(square(0.0, 0.0, f64::from(canvas)));
             for _ in 0..chain {
-                s.clips.push(GpuClipPath {
-                    edges: clip_edges.clone(),
-                    evenodd: false,
-                });
+                s.clips
+                    .push(Arc::new(GpuClipPath::single(clip_edges.clone(), false)));
             }
             scene.nodes.push(GpuNode::Shape(s));
         }
@@ -476,11 +485,10 @@ mod tests {
     #[test]
     fn clip_budgets() {
         let clip = square(2.0, 2.0, 30.0);
-        // Within budget: only the missing clip lane makes it unsupported.
         for chain in 1..=MAX_CLIP_CHAIN as usize {
             assert_eq!(
                 classify(&clipped_scene(64, chain, 1, clip.clone())),
-                Capability::Unsupported(Reason::Clips)
+                Capability::Supported
             );
         }
         assert_eq!(
@@ -519,7 +527,7 @@ mod tests {
         };
         assert_eq!(
             classify(&clipped_scene(1024, 1, 1, busy(30_000))),
-            Capability::Unsupported(Reason::Clips)
+            Capability::Supported
         );
         assert_eq!(
             classify(&clipped_scene(1024, 1, 1, busy(40_000))),
@@ -535,6 +543,39 @@ mod tests {
             classify(&clipped_scene(64, 1, 1, bad)),
             Capability::Unsupported(Reason::InvalidScene)
         );
+    }
+
+    #[test]
+    fn group_clips_extend_the_chain_and_shared_clips_count_once() {
+        let clip = Arc::new(GpuClipPath::single(square(2.0, 2.0, 30.0), false));
+        let shape = |extra: usize| {
+            let mut s = fill(square(0.0, 0.0, 64.0));
+            s.clips = vec![clip.clone(); extra];
+            GpuNode::Shape(s)
+        };
+        let group = |links: usize, children: Vec<GpuNode>| {
+            GpuNode::Group(GpuGroup {
+                opacity: 1.0,
+                clips: vec![clip.clone(); links],
+                children,
+            })
+        };
+        let mut scene = GpuScene::new(64, 64);
+        scene.nodes = vec![group(2, vec![shape(2)])];
+        assert_eq!(classify(&scene), Capability::Supported);
+        scene.nodes = vec![group(2, vec![shape(3)])];
+        assert_eq!(
+            classify(&scene),
+            Capability::Unsupported(Reason::ClipChainTooLong)
+        );
+        scene.nodes = vec![group(3, vec![group(2, vec![])])];
+        assert_eq!(
+            classify(&scene),
+            Capability::Unsupported(Reason::ClipChainTooLong)
+        );
+        // One Arc shared by 20,000 shapes is one record, not 20,000.
+        scene.nodes = (0..20_000).map(|_| shape(4)).collect();
+        assert_eq!(classify(&scene), Capability::Supported);
     }
 
     #[test]

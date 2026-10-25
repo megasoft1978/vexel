@@ -90,6 +90,10 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                         &mut stroke_masks,
                     );
                 }
+                if shape.clip_count > 0 {
+                    apply_clip(e, shape, [x_px0, y_px0], [x_end, y_end], &mut masks);
+                    apply_clip(e, shape, [x_px0, y_px0], [x_end, y_end], &mut stroke_masks);
+                }
                 shade(
                     e,
                     shape,
@@ -138,6 +142,57 @@ fn covers(edges: &[GpuEdge], px: i32, py: i32, evenodd: bool) -> bool {
         }
     }
     if evenodd { parity } else { winding != 0 }
+}
+
+/// Clears the bits of `masks` (one `u16` per pixel of the tile, bit `sy * 4 +
+/// sx` per sample) whose sample lies outside the shape's clip chain: the
+/// per-sample clip test of the CPU (`RenderClip::contains` for every link).
+fn apply_clip(
+    e: &Encoded,
+    shape: &layout::GpuShape,
+    origin: [usize; 2],
+    end: [usize; 2],
+    masks: &mut [u16],
+) {
+    for y in origin[1]..end[1] {
+        for x in origin[0]..end[0] {
+            let at = (y - origin[1]) * TILE_SIZE as usize + (x - origin[0]);
+            for i in 0..SAMPLE_COUNT as usize {
+                if masks[at] & (1 << i) == 0 {
+                    continue;
+                }
+                // Absolute canvas fixed point, like the clip child edges.
+                let px = ((x * 4 + i % 4) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
+                let py = ((y * 4 + i / 4) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
+                if !clip_contains(e, shape, px, py) {
+                    masks[at] &= !(1 << i);
+                }
+            }
+        }
+    }
+}
+
+/// True when the sample is inside every link of the chain; a link is the
+/// union of its children, each with its own rule.
+fn clip_contains(e: &Encoded, shape: &layout::GpuShape, px: i32, py: i32) -> bool {
+    let mut at = shape.clip_start as usize;
+    for _ in 0..shape.clip_count {
+        let size = e.clips[at].union_size as usize;
+        let inside = e.clips[at..at + size].iter().any(|c| {
+            let edges = &e.edges[c.edge_start as usize..][..c.edge_count as usize];
+            let spanning: Vec<GpuEdge> = edges
+                .iter()
+                .copied()
+                .filter(|g| spans_row(g, py))
+                .collect();
+            covers(&spanning, px, py, c.fill_rule == FILL_EVENODD)
+        });
+        if !inside {
+            return false;
+        }
+        at += size;
+    }
+    true
 }
 
 /// Source-over of one shape's coverage masks onto the pixel buffer.
