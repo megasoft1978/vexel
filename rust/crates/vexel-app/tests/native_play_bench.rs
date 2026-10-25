@@ -1,10 +1,12 @@
 //! Release bench: switch to Animate, then play 96 native ticks.
 //! `cargo test -p vexel-app --release --test native_play_bench -- --ignored --nocapture`
 
+use std::cell::Cell;
 use std::path::Path;
+use std::rc::Rc;
 use std::time::Instant;
 
-use vexel_app::animation::playback::{ManualClock, MonotonicClock};
+use vexel_app::animation::playback::{LoopClock, ManualClock, MonotonicClock};
 use vexel_app::native_animation::NativeAnimationHost;
 use vexel_app::preview::Control;
 use vexel_app::session::AppDocument;
@@ -78,8 +80,21 @@ fn pct(v: &mut [f64], p: f64) -> f64 {
     v[((v.len() - 1) as f64 * p).round() as usize]
 }
 
+/// Clock the bench sets by hand: `VEXEL_BENCH_PLAY=1` plays (preview frames,
+/// which may use the layer cache); otherwise ticks are seeked (exact stills).
+#[derive(Clone, Default)]
+struct BenchClock(Rc<Cell<f64>>);
+
+impl LoopClock for BenchClock {
+    fn now_seconds(&self) -> f64 {
+        self.0.get()
+    }
+}
+
 fn run(label: &str, doc: &AppDocument, size: u32) {
-    let mut host = NativeAnimationHost::new(ManualClock::default());
+    let clock = BenchClock::default();
+    let play = std::env::var_os("VEXEL_BENCH_PLAY").is_some_and(|v| v != "0");
+    let mut host = NativeAnimationHost::new(clock.clone());
     let t = Instant::now();
     let first = host.snapshot(doc, None);
     println!(
@@ -96,7 +111,14 @@ fn run(label: &str, doc: &AppDocument, size: u32) {
     let (mut snap, mut tick, mut got, mut hashes) = (vec![], vec![], 0, vec![]);
     for i in 0..ticks {
         let seconds = f64::from(i) / 24.0;
-        let _ = host.mcp_control(doc, Control::Seek(seconds), true);
+        if play {
+            if i == 0 {
+                let _ = host.mcp_control(doc, Control::Play, true);
+            }
+            clock.0.set((f64::from(i) + 0.5) / 24.0);
+        } else {
+            let _ = host.mcp_control(doc, Control::Seek(seconds), true);
+        }
         let t = Instant::now();
         let _ = host.snapshot(doc, None);
         snap.push(ms(t));

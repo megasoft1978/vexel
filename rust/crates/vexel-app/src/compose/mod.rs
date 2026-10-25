@@ -15,6 +15,11 @@ mod gpu_adapter;
 mod gpu_route;
 mod inflate;
 mod launch;
+mod layer_cache;
+mod layer_geom;
+mod layer_plan;
+mod layer_render;
+mod layer_warp;
 mod layers;
 mod open;
 mod png;
@@ -41,6 +46,8 @@ mod tests_gpu;
 #[cfg(test)]
 mod tests_image;
 #[cfg(test)]
+mod tests_layers;
+#[cfg(test)]
 mod tests_open;
 #[cfg(test)]
 mod tests_parity;
@@ -58,6 +65,7 @@ pub use gpu_route::{
     reset_latch as gpu_reset_latch, set_gpu_display, set_gpu_display_policy, status as gpu_status,
 };
 pub use launch::{Launch, parse_launch, parse_launch_with_home};
+pub use layer_cache::{DEFAULT_BUDGET as LAYER_BUDGET, LayerStats};
 pub use open::{OpenError, open_path};
 pub use pointer::PointMap;
 pub use present::{DocumentView, blit_document, fill, status_text};

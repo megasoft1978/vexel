@@ -12,6 +12,8 @@
 //! Scenes with masks, filters, patterns or images are never diffed (their
 //! pixels depend on other pixels or on tiles that are not compared).
 
+use super::layer_cache::{DEFAULT_BUDGET, LayerCache, LayerStats};
+use super::layer_render::try_layers;
 use super::layers::Geo;
 use super::render_scene::{Drawn, Only, Renderer, Skipped, batch_runs};
 use super::shapes::{Entry, OwnedShape, prepare};
@@ -30,6 +32,10 @@ pub struct DiffCache {
     disabled: bool,
     prev: Option<Prev>,
     partials: u32,
+    /// Preview layer cache of a display cache (see `layer_cache`).
+    pub(super) layers: Option<LayerCache>,
+    /// Frames may use resampled layers (playback); stills are always exact.
+    pub(super) preview: bool,
 }
 
 impl DiffCache {
@@ -38,8 +44,37 @@ impl DiffCache {
     pub fn display() -> Self {
         Self {
             gpu: true,
+            layers: Some(LayerCache::new(DEFAULT_BUDGET)),
             ..Self::default()
         }
+    }
+
+    /// Lets frames use resampled layers (playback preview); `false` renders
+    /// every frame exactly. Only display caches have layers at all.
+    pub fn set_preview(&mut self, on: bool) {
+        if self.preview != on
+            && let Some(layers) = &mut self.layers
+        {
+            layers.reset_motion();
+        }
+        self.preview = on;
+    }
+
+    /// Caps the bytes held by preview layers.
+    pub fn set_layer_budget(&mut self, bytes: usize) {
+        if let Some(layers) = &mut self.layers {
+            layers.budget = bytes;
+        }
+    }
+
+    /// Counters of the preview layer cache, if this is a display cache.
+    pub fn layer_stats(&self) -> Option<LayerStats> {
+        self.layers.as_ref().map(LayerCache::stats)
+    }
+
+    /// Forgets the previous exact frame: the current one holds resampled pixels.
+    pub(super) fn forget_exact_frame(&mut self) {
+        self.prev = None;
     }
 
     pub(super) fn gpu_allowed(&self) -> bool {
@@ -325,8 +360,27 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
 ) -> Result<Drawn, RenderError> {
     let (width, height) = (tile.width(), tile.height());
     let mut renderer = Renderer::new(view_box, aspect, tile, cancel)?;
+    let ph = crate::profile::phase("d.prepare");
     let entries = prepare(view)?;
-    if cache.disabled || !eligible(view, &entries) {
+    drop(ph);
+    let view_key = [
+        view_box.x.to_bits(),
+        view_box.y.to_bits(),
+        view_box.width.to_bits() ^ view_box.height.to_bits().rotate_left(17),
+        aspect.map_or(0, |a| {
+            mix_f(
+                mix_f(mix(u64::from(a.none), u64::from(a.slice)), a.align_x),
+                a.align_y,
+            )
+        }),
+    ];
+    let diff_ok = !cache.disabled && eligible(view, &entries);
+    if try_layers(
+        cache, view, &entries, view_box, aspect, view_key, diff_ok, tile, cancel,
+    )? {
+        return Ok(drawn_of(entries, with_shapes));
+    }
+    if !diff_ok {
         cache.disabled = true;
         cache.prev = None;
         renderer.draw_entries(view, &entries, tile)?;
@@ -340,17 +394,6 @@ pub(crate) fn render_scene_diff<V: ViewportRead, A: Copy>(
             Entry::Skip(_) => None,
         })
         .collect();
-    let view_key = [
-        view_box.x.to_bits(),
-        view_box.y.to_bits(),
-        view_box.width.to_bits() ^ view_box.height.to_bits().rotate_left(17),
-        aspect.map_or(0, |a| {
-            mix_f(
-                mix_f(mix(u64::from(a.none), u64::from(a.slice)), a.align_x),
-                a.align_y,
-            )
-        }),
-    ];
     let clips = clip_hash(view);
     let usable = cache.prev.as_ref().filter(|p| {
         p.width == width

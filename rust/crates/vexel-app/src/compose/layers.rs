@@ -28,7 +28,7 @@ impl Geo {
 }
 
 /// C `composite_source_over`: straight-alpha RGBA8, integer arithmetic.
-fn source_over(destination: &mut [u8], source: [u8; 4]) {
+pub(super) fn source_over(destination: &mut [u8], source: [u8; 4]) {
     let source_alpha = u32::from(source[3]);
     if source_alpha == 0 {
         return;
@@ -52,7 +52,7 @@ fn source_over(destination: &mut [u8], source: [u8; 4]) {
 
 /// Layer alpha of every source alpha: `alpha / 255 * opacity` capped at 1,
 /// back to a byte; 0 means the pixel changes nothing.
-fn alpha_table(opacity: f64) -> [u8; 256] {
+pub(super) fn alpha_table(opacity: f64) -> [u8; 256] {
     let mut table = [0u8; 256];
     for (source, slot) in table.iter_mut().enumerate() {
         let alpha = (source as f64 / 255.0 * opacity).min(1.0);
@@ -67,7 +67,7 @@ fn alpha_table(opacity: f64) -> [u8; 256] {
 const ALPHA_OF_FOUR: u128 = 0xFF00_0000_FF00_0000_FF00_0000_FF00_0000;
 
 /// One row of [`composite_tile`]: source-over of `src` onto `dst`.
-fn composite_row(dst_row: &mut [u8], src_row: &[u8], table: &[u8; 256]) {
+pub(super) fn composite_row(dst_row: &mut [u8], src_row: &[u8], table: &[u8; 256]) {
     let blend = |dst: &mut [u8], src: &[u8]| {
         for (dst, src) in dst.chunks_exact_mut(4).zip(src.chunks_exact(4)) {
             // A transparent source pixel never changes the destination.

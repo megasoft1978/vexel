@@ -4,6 +4,7 @@
 //! are fixed for a revision, so ticks reuse them instead of re-deriving them.
 //! Any edit changes the state revision and the host drops the whole value.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 use vexel_timeline::{DetachedTimeline, LoopMode};
@@ -29,6 +30,8 @@ pub struct Prepared {
     derived: OnceLock<Result<Derived, NativeFrameError>>,
     /// Previous frame for differential repainting; one render runs at a time.
     diff: Mutex<DiffCache>,
+    /// Frames are for playback preview: they may resample cached layers.
+    preview: AtomicBool,
 }
 
 struct Derived {
@@ -60,7 +63,14 @@ impl Prepared {
             timeline,
             derived: OnceLock::new(),
             diff: Mutex::new(DiffCache::display()),
+            preview: AtomicBool::new(false),
         })
+    }
+
+    /// Playback frames may resample cached layers; stills (paused, scrubbed,
+    /// exported) stay exact. Takes effect with the next render.
+    pub fn set_preview(&self, on: bool) {
+        self.preview.store(on, Ordering::Relaxed);
     }
 
     fn derived(&self) -> Result<&Derived, NativeFrameError> {
@@ -98,6 +108,7 @@ impl Prepared {
             .diff
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
+        cache.set_preview(self.preview.load(Ordering::Relaxed));
         render_native_frame_cached(
             &self.source,
             Some(&derived.index),
