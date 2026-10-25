@@ -10,3 +10,5 @@ publish.workspace = true
 
 [dev-dependencies]
 vexel-render = { path = "../vexel-render" }
+vexel-raster = { path = "../vexel-raster" }
+vexel-scene = { path = "../vexel-scene" }

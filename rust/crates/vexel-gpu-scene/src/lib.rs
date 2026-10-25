@@ -14,8 +14,29 @@
 //! the render crate at run time; the app lowers its `RenderNode` tree into
 //! this crate's types.
 
+pub mod bin;
+mod bytes;
+mod classify;
+mod encode;
 mod error;
+pub mod input;
 pub mod layout;
 pub mod policy;
+pub mod reference;
 
+#[cfg(test)]
+mod bench;
+
+pub use bytes::{
+    clip_bytes, edge_bytes, gradient_bytes, header_bytes, list_bytes, shape_bytes, stop_bytes,
+    tile_bytes,
+};
+pub use classify::{
+    MAX_CANVAS_AXIS, MAX_COORDINATE, MAX_EDGE_TILE_WORK, MAX_GRADIENT_STOPS, classify,
+};
+pub use encode::{Encoded, encode, pack_rgba};
 pub use error::{Capability, GpuError, UnsupportedReason};
+pub use input::{
+    GpuCap, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoin, GpuNode, GpuPaint, GpuScene,
+    GpuSegment, GpuShape, GpuSpread, GpuStroke,
+};

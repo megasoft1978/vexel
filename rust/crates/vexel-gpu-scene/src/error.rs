@@ -20,6 +20,16 @@ pub enum UnsupportedReason {
     TooManyGradientStops,
     /// Canvas larger than the GPU path's texture or buffer budget.
     CanvasTooLarge,
+    /// Stroked shape; supported by a later lane.
+    Strokes,
+    /// Opacity group; supported by a later lane.
+    Groups,
+    /// Clipped shape; supported by a later lane.
+    Clips,
+    /// Content rectangle smaller than the canvas (meet letterboxing).
+    Letterbox,
+    /// Non-finite or out-of-range coordinates, matrices or canvas size.
+    InvalidScene,
 }
 
 /// Result of classifying a scene before any GPU work.
