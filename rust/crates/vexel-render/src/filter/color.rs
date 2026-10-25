@@ -217,6 +217,19 @@ pub(super) fn composite_pixel(primitive: &FilterPrimitive, a: &[u8], b: &[u8], o
 
 const LUMINANCE: [f64; 3] = [0.2126, 0.7152, 0.0722];
 
+/// One libm `sin` or `cos` per call. Pairing them on the same argument lets
+/// optimized Apple builds merge them into `__sincos_stret`, whose `sin` can
+/// differ by one ulp from `f64::sin`. `inline(never)` prevents the merge.
+#[inline(never)]
+fn sin_unpaired(angle: f64) -> f64 {
+    angle.sin()
+}
+
+#[inline(never)]
+fn cos_unpaired(angle: f64) -> f64 {
+    angle.cos()
+}
+
 fn matrix_for(primitive: &FilterPrimitive) -> [f64; 20] {
     let mut matrix = [0.0f64; 20];
     match primitive.mode {
@@ -236,7 +249,7 @@ fn matrix_for(primitive: &FilterPrimitive) -> [f64; 20] {
         }
         2 => {
             let angle = primitive.values[0] * (std::f64::consts::PI / 180.0);
-            let (s, c) = (angle.sin(), angle.cos());
+            let (s, c) = (sin_unpaired(angle), cos_unpaired(angle));
             matrix[0] = 0.213 + c * 0.787 - s * 0.213;
             matrix[1] = 0.715 - c * 0.715 - s * 0.715;
             matrix[2] = 0.072 - c * 0.072 + s * 0.928;
@@ -323,6 +336,14 @@ pub(super) fn color_matrix(
 mod tests {
     use super::*;
     use vexel_scene::FilterInput;
+
+    #[test]
+    fn unpaired_trig_matches_std_bits() {
+        for angle in [0.0, 0.3, 1.0, 2.5, -4.25, 6.0] {
+            assert_eq!(sin_unpaired(angle).to_bits(), f64::sin(angle).to_bits());
+            assert_eq!(cos_unpaired(angle).to_bits(), f64::cos(angle).to_bits());
+        }
+    }
 
     fn primitive(mode: u8) -> FilterPrimitive {
         FilterPrimitive {

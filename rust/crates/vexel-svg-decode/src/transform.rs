@@ -5,6 +5,19 @@ use vexel_xml::{XmlSpan, XmlToken};
 pub fn affine_inverse(matrix: Affine) -> Option<Affine> {
     vexel_svg_values::affine_inverse(matrix)
 }
+/// One libm `sin` or `cos` per call. Pairing them on the same argument lets
+/// optimized Apple builds merge them into `__sincos_stret`, whose `sin` can
+/// differ by one ulp from `f64::sin`. `inline(never)` prevents the merge.
+#[inline(never)]
+pub(crate) fn sin_unpaired(angle: f64) -> f64 {
+    angle.sin()
+}
+
+#[inline(never)]
+pub(crate) fn cos_unpaired(angle: f64) -> f64 {
+    angle.cos()
+}
+
 fn fail(span: XmlSpan) -> Diagnostic {
     Diagnostic {
         kind: ErrorKind::Unsupported,
@@ -113,8 +126,8 @@ pub fn parse_transform_controlled(
             }
             _ => {
                 let angle = v[0] * 0.017453292519943295;
-                let cosine = angle.cos();
-                let sine = angle.sin();
+                let cosine = cos_unpaired(angle);
+                let sine = sin_unpaired(angle);
                 op = Affine {
                     a: cosine,
                     b: sine,
@@ -178,5 +191,18 @@ impl WorkControl for NoStop {
     }
     fn checkpoint(&mut self) -> std::result::Result<(), vexel_base::Stop> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unpaired_trig_matches_std_bits() {
+        for angle in [0.0, 0.3, 1.0, 2.5, -4.25, 6.0] {
+            assert_eq!(sin_unpaired(angle).to_bits(), f64::sin(angle).to_bits());
+            assert_eq!(cos_unpaired(angle).to_bits(), f64::cos(angle).to_bits());
+        }
     }
 }
