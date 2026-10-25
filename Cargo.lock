@@ -257,6 +257,7 @@ dependencies = [
  "vexel-base",
  "vexel-geometry",
  "vexel-gif",
+ "vexel-gpu-scene",
  "vexel-json",
  "vexel-mcp-access",
  "vexel-mcp-stdio",

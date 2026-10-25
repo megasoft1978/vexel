@@ -61,7 +61,7 @@ pub(crate) fn render_scene<V: ViewportRead, A: Copy>(
 }
 
 /// C `map_viewport`, the same mapping `ViewMap::from_viewbox` applies.
-fn geo(view: ViewBox, aspect: Option<PreserveAspect>, tile: &Tile) -> Geo {
+pub(super) fn geo(view: ViewBox, aspect: Option<PreserveAspect>, tile: &Tile) -> Geo {
     let aspect = aspect.unwrap_or(PreserveAspect::MID_MEET);
     let (width, height) = (f64::from(tile.width()), f64::from(tile.height()));
     let mut scale_x = width / view.width;

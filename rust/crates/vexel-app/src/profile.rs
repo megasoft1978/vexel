@@ -50,6 +50,15 @@ impl Drop for Phase {
     }
 }
 
+/// Records an externally measured duration (milliseconds) under `name`.
+pub fn record(name: &'static str, ms: f64) {
+    if enabled()
+        && let Ok(mut samples) = SAMPLES.lock()
+    {
+        samples.entry(name).or_default().push(ms);
+    }
+}
+
 /// Removes and returns all recorded samples, keyed by phase name.
 pub fn take() -> BTreeMap<&'static str, Vec<f64>> {
     SAMPLES

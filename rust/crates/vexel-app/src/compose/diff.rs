@@ -22,12 +22,33 @@ use vexel_scene::{SceneView, ViewportRead};
 /// Per-revision state of the differential renderer.
 #[derive(Default)]
 pub struct DiffCache {
+    /// Display caches may take the GPU route (see `gpu_route`); exports never do.
+    gpu: bool,
     disabled: bool,
     prev: Option<Prev>,
     partials: u32,
 }
 
 impl DiffCache {
+    /// A cache for a display path (compose worker, playback): the only kind
+    /// of cache whose frames may be rendered on the GPU.
+    pub fn display() -> Self {
+        Self {
+            gpu: true,
+            ..Self::default()
+        }
+    }
+
+    pub(super) fn gpu_allowed(&self) -> bool {
+        self.gpu
+    }
+
+    /// Forgets the previous frame: a GPU frame replaced it, so the next CPU
+    /// frame must be a full render.
+    pub(super) fn invalidate(&mut self) {
+        self.prev = None;
+    }
+
     /// Frames so far that repainted only part of the scene.
     pub fn partial_frames(&self) -> u32 {
         self.partials

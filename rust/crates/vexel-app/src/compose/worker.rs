@@ -103,7 +103,7 @@ impl Drop for ComposeWorker {
 
 fn run(shared: &Shared) {
     // Frames the worker composed stay for the next edit: only changed shapes repaint.
-    let mut cache = DiffCache::default();
+    let mut cache = DiffCache::display();
     loop {
         let job = {
             let mut slot = lock(&shared.job);

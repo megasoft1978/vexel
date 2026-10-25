@@ -11,6 +11,8 @@ mod clips;
 mod decode;
 mod diff;
 mod error;
+mod gpu_adapter;
+mod gpu_route;
 mod inflate;
 mod launch;
 mod layers;
@@ -27,6 +29,8 @@ mod worker;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_gpu;
 #[cfg(test)]
 mod tests_chrome;
 #[cfg(test)]
@@ -46,6 +50,10 @@ pub use decode::MAX_SVG_BYTES;
 pub(crate) use decode::{Gate, SessionError, install_text, run};
 pub use diff::DiffCache;
 pub use error::{ComposeError, Disclosure};
+pub use gpu_route::{
+    Decision as GpuDecision, app_launch, gpu_frames, last_decision as gpu_last_decision,
+    reset_latch as gpu_reset_latch, set_gpu_display, status as gpu_status,
+};
 pub use launch::{Launch, parse_launch, parse_launch_with_home};
 pub use open::{OpenError, open_path};
 pub use pointer::PointMap;
@@ -206,9 +214,12 @@ fn compose_owned(
     let mut tile = blank_tile(tile_width, tile_height)?;
     let ph = crate::profile::phase("c.render");
     let drawn = match cache {
-        Some(cache) => {
-            diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache, with_ids)?
-        }
+        Some(cache) => match gpu_route::try_render(&scene, view, aspect, &mut tile, cache) {
+            Some(drawn) => drawn,
+            None => {
+                diff::render_scene_diff(&scene, view, aspect, &mut tile, cancel, cache, with_ids)?
+            }
+        },
         None => render_scene(&scene, view, aspect, &mut tile, false, cancel)?,
     };
     drop(ph);

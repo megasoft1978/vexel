@@ -59,7 +59,7 @@ impl Prepared {
             candidate: candidate.clone(),
             timeline,
             derived: OnceLock::new(),
-            diff: Mutex::default(),
+            diff: Mutex::new(DiffCache::display()),
         })
     }
 

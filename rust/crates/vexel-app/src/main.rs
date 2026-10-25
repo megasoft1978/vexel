@@ -38,7 +38,7 @@ use vexel_platform_apple::{
 const MCP_CANVAS: (u32, u32) = (preview::CANVAS_SIZE, preview::CANVAS_SIZE);
 
 fn main() {
-    let result = match compose::parse_launch(std::env::args_os().skip(1)) {
+    let result = match compose::app_launch(std::env::args_os().skip(1)) {
         // One process, one window: the shell also serves the MCP preview
         // requests through the shared document session.
         compose::Launch::McpPreview { open, grants } => run(open, Some(grants)),
