@@ -105,7 +105,7 @@ fn run(doc: &AppDocument, size: u32, ticks: u32) -> (f64, String, u64) {
         let t = Instant::now();
         let frame = host.tick(doc, (size, size));
         times.push(ms(t));
-        if frame.is_some() {
+        if frame.is_some() && last.is_empty() {
             last = format!("{:?}", gpu_last_decision());
         }
     }
@@ -129,15 +129,29 @@ fn eligibility_of_demo_scenes() {
         }
         let mut doc = AppDocument::new(512, 512).unwrap();
         doc.open_path(path).unwrap();
-        let (t, last, gpu) = run(&doc, 900, 12);
+        let mut cpu = [0.0f64; 3];
+        let mut pol = [0.0f64; 3];
+        let mut last = String::new();
+        for round in 0..3 {
+            set_gpu_display(Some(false));
+            cpu[round] = run(&doc, 900, 24).0;
+            set_gpu_display_policy();
+            let (t, l, _) = run(&doc, 900, 24);
+            pol[round] = t;
+            last = l;
+        }
         println!(
-            "eligibility {}: decision {last} gpu_frames {gpu} p50 tick {t:.2} ms",
-            path.file_name().unwrap().to_string_lossy()
+            "eligibility {}: first decision {last} | p50 tick cpu {:?} policy {:?} ms",
+            path.file_name().unwrap().to_string_lossy(),
+            cpu.map(|v| (v * 100.0).round() / 100.0),
+            pol.map(|v| (v * 100.0).round() / 100.0)
         );
     }
-    let stroked = synthetic_doc("solid", 1000);
-    let (_, last, _) = run(&stroked, 900, 4);
-    println!("eligibility synthetic solid 1000: decision {last}");
+    for kind in ["solid", "linear", "radial"] {
+        let doc = synthetic_doc(kind, 1000);
+        let (_, last, _) = run(&doc, 900, 4);
+        println!("eligibility synthetic {kind} 1000: first decision {last}");
+    }
     set_gpu_display(None);
 }
 
