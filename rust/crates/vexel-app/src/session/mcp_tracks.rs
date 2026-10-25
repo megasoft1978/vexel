@@ -57,8 +57,16 @@ fn add_many(app: &mut AppDocument, tracks: &[NativeTrack]) -> Result<bool, Faile
         })
         .collect();
     let failure = Cell::new(None);
+    let last = tracks
+        .iter()
+        .flat_map(|t| t.keys.iter().map(|k| k.tick))
+        .max();
     app.edit_timeline(settings(), EditLimits::default(), |c| {
-        c.add_property_tracks(&bulk, &failure)
+        let grown = super::mcp_extend::grown(c, last)?;
+        grown
+            .as_ref()
+            .unwrap_or(c)
+            .add_property_tracks(&bulk, &failure)
     })
     .map_err(|e| (failure.get(), e))
 }
@@ -86,6 +94,11 @@ pub(super) fn add_one(app: &mut AppDocument, track: &NativeTrack) -> Result<bool
             &track.name,
         )?;
         in_keys.set(true);
+        if let Some(grown) =
+            super::mcp_extend::grown(&edited, track.keys.iter().map(|k| k.tick).max())?
+        {
+            edited = grown;
+        }
         for key in &track.keys {
             edited = edited.set_property_key_with_ease(
                 &track.track_id,

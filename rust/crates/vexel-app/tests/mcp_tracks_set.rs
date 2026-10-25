@@ -90,7 +90,7 @@ fn rejection_names_the_track_and_changes_nothing() {
             "tracks[2]",
         ),
         (
-            vec![entry("late", &ids[1], r#"{"tick":900,"value":1}"#)],
+            vec![entry("late", &ids[1], r#"{"tick":100000,"value":1}"#)],
             "tracks[0]",
         ),
         (
