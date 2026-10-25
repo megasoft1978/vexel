@@ -723,3 +723,41 @@ would only duplicate memory; `vexel-bench mem --check` baselines unchanged).
 Render bands may use up to 16 threads (was 8); output is byte-identical.
 Benches: `VEXEL_BENCH_SCENE=<file>` with `native_play_bench
 env_scene_animate_playback` and `scene_edit_bench`.
+
+## Preview layer cache (lane l4-cache)
+
+Playback preview only (`DiffCache::display` with `set_preview(true)`, set by
+the native host while playing). Exports, `render_png`, MCP and paused stills
+render exactly; `tests_layers.rs` asserts byte equality for those paths.
+
+- Runs of consecutive shapes that moved by one common affine map since the
+  previous frame (animated camera) are rasterised once into a bitmap (region
+  = bounds limited to canvas plus 25% margin) and resampled bilinearly in
+  premultiplied space. A run is verified every tick against its reference
+  (paint, nested group params, authored path numbers, ends of the outline)
+  and rebuilt when scale leaves 0.94..1.06, rotation exceeds 15 deg, content
+  would leave the bitmap, or content changed (backoff on thrash).
+- Runs with clips, patterns, images or skipped shapes, and groups with
+  filter / mask / blend never resample. A filtered group that stands still,
+  or whose filter ignores its content (turbulence grain), caches its filter
+  output and is reused exactly.
+- Budget 256 MiB (bitmaps plus reference shapes), LRU, layers used this frame
+  are never evicted; over-budget layers are not stored (tested).
+- Tolerance (test): mean abs error < 2/255 per channel, < 2% of pixels off by
+  more than 64, against the exact render.
+- Bench: `VEXEL_BENCH_PLAY=1 VEXEL_BENCH_SCENE=<file> cargo test --release -p
+  vexel-app --test native_play_bench env_scene_animate_playback -- --ignored
+  --nocapture` (without PLAY ticks are seeked stills = exact).
+
+Tick p50, 900 px, release, shared machine (load average 7-12, noisy):
+
+| scene | before | after |
+|---|---|---|
+| shot1 | 64 ms | 50 ms |
+| s3 | 56 ms | 48 ms |
+| s4 | 146 ms | 129 ms |
+| s9 | 62 ms | 55 ms |
+| background | 6.6 ms | 7.4 ms (no camera motion, cache idle; noise) |
+
+Remaining on shot1 (35 ms render): animated blur 9 ms, blend composites,
+painting moving characters; decode 13 ms (s4: 106 ms, path-cache misses).

@@ -46,6 +46,8 @@ mod tests_gpu;
 #[cfg(test)]
 mod tests_image;
 #[cfg(test)]
+mod tests_layers;
+#[cfg(test)]
 mod tests_open;
 #[cfg(test)]
 mod tests_parity;
