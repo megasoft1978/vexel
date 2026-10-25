@@ -5,7 +5,7 @@ use crate::animation::playback::LoopClock;
 use crate::compose::Frame;
 use crate::file_ui::FileUi;
 use crate::native_timeline::interaction::{Key, Phase};
-use crate::native_timeline::layout::{Hit, TimelineLayout};
+use crate::native_timeline::layout::Hit;
 use crate::native_timeline::model::TimelineModel;
 use crate::native_timeline::presentation::{
     PresentationAction, TimelineMode, TimelinePresentation,
@@ -216,7 +216,42 @@ impl<C: LoopClock> NativeAnimationHost<C> {
     ) -> Result<NativeTimelineSnapshot, NativeAnimationError> {
         self.observe_revision(document.state_revision());
         self.controller.set_selected_target(selected_target);
-        self.controller.snapshot(document)
+        let snapshot = self.controller.snapshot(document)?;
+        self.presentation
+            .interaction
+            .note_selection(&snapshot.tracks);
+        Ok(snapshot)
+    }
+
+    /// A wheel event over the footer. On the SMIL surface the SMIL panel
+    /// scrolls its rows; on the native surface the track list scrolls
+    /// vertically. True when something moved.
+    pub fn wheel(
+        &mut self,
+        (smil, document): (&mut crate::timeline::Timeline, &AppDocument),
+        selected_target: Option<&str>,
+        (footer, event): (vexel_ui::Rect, &vexel_platform_apple::ScrollEvent),
+    ) -> bool {
+        if self.surface() == TimelineSurface::Smil {
+            return smil
+                .wheel(footer, event.logical, event.delta.y)
+                .unwrap_or(false);
+        }
+        let (x, y) = event.logical;
+        let Ok(snapshot) = self.snapshot(document, selected_target.map(str::to_owned)) else {
+            return false;
+        };
+        let model = TimelineModel::from_snapshot(&snapshot);
+        let layout = self.presentation.interaction.layout(footer, &model);
+        let over = x >= footer.x as i32
+            && y >= footer.y as i32
+            && x < footer.x.saturating_add(footer.width) as i32
+            && y < footer.y.saturating_add(footer.height) as i32;
+        over && self.presentation.interaction.scroll_points(
+            event.delta.y,
+            &layout,
+            model.tracks.len(),
+        )
     }
 
     pub fn prepare_document(
@@ -249,8 +284,7 @@ impl<C: LoopClock> NativeAnimationHost<C> {
         }
         let snapshot = self.snapshot(files.document(), selected_target)?;
         let model = TimelineModel::from_snapshot(&snapshot);
-        let viewport = self.presentation.interaction.viewport(&model);
-        let layout = TimelineLayout::new(panel, &model, viewport);
+        let layout = self.presentation.interaction.layout(panel, &model);
         if self.presentation.mode == TimelineMode::SvgSmil
             && !self.pointer_capture
             && !matches!(

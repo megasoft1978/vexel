@@ -5,9 +5,11 @@ mod args;
 mod bench;
 mod bundle;
 mod ci_policy;
+mod notarize;
 mod plist;
 mod release;
 mod runner;
+mod sign;
 
 use args::{Command, USAGE};
 use runner::{Invocation, Runner, SystemRunner, run_checked};
@@ -51,6 +53,47 @@ fn out_dir(root: &Path, out: Option<PathBuf>) -> Result<PathBuf, String> {
     Ok(dir)
 }
 
+/// Flag value, else `VEXEL_SIGN_IDENTITY`; empty counts as unset.
+fn identity(flag: Option<String>) -> Option<String> {
+    flag.or_else(|| env::var("VEXEL_SIGN_IDENTITY").ok())
+        .filter(|v| !v.is_empty())
+}
+
+/// Release build + bundle layout (ad-hoc signed; callers re-sign with an identity).
+fn build_bundle(
+    runner: &mut dyn Runner,
+    root: &Path,
+    out: &Path,
+    icon: Option<PathBuf>,
+    bundle_id: Option<String>,
+    display_name: Option<String>,
+) -> Result<bundle::BundlePlan, String> {
+    let cargo = toolchain_and_cache(runner, root)?;
+    let icon = icon.unwrap_or_else(|| root.join(bundle::ICON_SOURCE));
+    bundle::require_icon(&icon)?;
+    let plan = bundle::plan(out, &icon)?;
+    let bundle_id_env = env::var("VEXEL_BUNDLE_ID").ok();
+    let display_name_env = env::var("VEXEL_DISPLAY_NAME").ok();
+    run_checked(runner, &bundle::release_build(root, &cargo))?;
+    bundle::assemble(
+        runner,
+        &plan,
+        &bundle::built_binary(&cargo),
+        &root.join("resources/en.lproj/Localizable.strings"),
+        &icon,
+        env!("CARGO_PKG_VERSION"),
+        bundle_id
+            .as_deref()
+            .or(bundle_id_env.as_deref())
+            .unwrap_or(crate::plist::BUNDLE_ID),
+        display_name
+            .as_deref()
+            .or(display_name_env.as_deref())
+            .unwrap_or("Vexel"),
+    )?;
+    Ok(plan)
+}
+
 fn prepare_cache(cargo: &bundle::CargoEnv) -> Result<(), String> {
     for dir in [&cargo.home, &cargo.tmp] {
         fs::create_dir_all(dir).map_err(|_| {
@@ -90,32 +133,57 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             icon,
             bundle_id,
             display_name,
+            sign_identity,
         } => {
-            let cargo = toolchain_and_cache(runner, &root)?;
             let out = out_dir(&root, out)?;
-            let icon = icon.unwrap_or_else(|| root.join(bundle::ICON_SOURCE));
-            bundle::require_icon(&icon)?;
-            let plan = bundle::plan(&out, &icon)?;
-            let bundle_id_env = env::var("VEXEL_BUNDLE_ID").ok();
-            let display_name_env = env::var("VEXEL_DISPLAY_NAME").ok();
-            run_checked(runner, &bundle::release_build(&root, &cargo))?;
-            bundle::assemble(
+            let identity = identity(sign_identity);
+            let plan = build_bundle(runner, &root, &out, icon, bundle_id, display_name)?;
+            if let Some(identity) = &identity {
+                sign::sign_bundle(runner, &plan, identity)?;
+            }
+            println!("bundle: {}", plan.app.display());
+            Ok(())
+        }
+        Command::Release {
+            out,
+            icon,
+            bundle_id,
+            display_name,
+            sign_identity,
+        } => {
+            let identity = identity(sign_identity)
+                .ok_or("release requires --sign-identity or VEXEL_SIGN_IDENTITY")?;
+            let out = out_dir(&root, out)?;
+            let plan = build_bundle(runner, &root, &out, icon, bundle_id, display_name)?;
+            sign::sign_bundle(runner, &plan, &identity)?;
+            let profile = env::var("VEXEL_NOTARY_PROFILE").ok();
+            let notarized = sign::finish_release(
                 runner,
                 &plan,
-                &bundle::built_binary(&cargo),
-                &root.join("resources/en.lproj/Localizable.strings"),
-                &icon,
+                &out,
                 env!("CARGO_PKG_VERSION"),
-                bundle_id
-                    .as_deref()
-                    .or(bundle_id_env.as_deref())
-                    .unwrap_or(crate::plist::BUNDLE_ID),
-                display_name
-                    .as_deref()
-                    .or(display_name_env.as_deref())
-                    .unwrap_or("Vexel"),
+                &identity,
+                profile.as_deref(),
             )?;
-            println!("bundle: {}", plan.app.display());
+            println!(
+                "release: {}",
+                if notarized {
+                    "notarized and stapled"
+                } else {
+                    "signed, NOT notarized"
+                }
+            );
+            Ok(())
+        }
+        Command::Package { out } => {
+            let a =
+                sign::package_artifacts(runner, &out_dir(&root, out)?, env!("CARGO_PKG_VERSION"))?;
+            println!(
+                "dmg: {}\nzip: {}\nsha256: {}",
+                a.dmg.display(),
+                a.zip.display(),
+                a.sha256.display()
+            );
             Ok(())
         }
         Command::Dmg { out } => {
@@ -138,10 +206,9 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             run_checked(runner, &bench::release_build(&root, &cargo))?;
             bench::run_binary(&bench::binary(&cargo), &args, &root)
         }
-        Command::Notarize { path, execute } => release::notarize(
+        Command::Notarize { path, execute } => notarize::notarize(
             &path,
             execute,
-            env::var("VEXEL_SIGN_IDENTITY").ok().as_deref(),
             env::var("VEXEL_NOTARY_PROFILE").ok().as_deref(),
             runner,
         ),

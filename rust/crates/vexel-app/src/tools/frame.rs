@@ -74,6 +74,25 @@ pub fn compose(outer: &Matrix, inner: &Matrix) -> Matrix {
     ]
 }
 
+/// Moves a shape by a document delta. Plain shapes use `V1Document::translate`;
+/// a shape that already carries a non-translation transform (after rotate or
+/// scale) gets the translation pre-multiplied onto its matrix instead.
+pub fn translate_shape(
+    doc: &mut V1Document,
+    id: &str,
+    dx: f64,
+    dy: f64,
+) -> Result<(), V1DocumentError> {
+    match doc.translate(id, dx, dy) {
+        Err(V1DocumentError::UnsupportedTransform) => {
+            let old = doc.get_transform_matrix(id)?;
+            let moved = compose(&[1.0, 0.0, 0.0, 1.0, dx, dy], &old);
+            doc.set_transform(id, &decompose(&moved)?)
+        }
+        other => other,
+    }
+}
+
 /// Rotation by `degrees` about the document point `pivot`.
 pub fn rotation_about(degrees: f64, pivot: (f64, f64)) -> Matrix {
     TransformSpec {

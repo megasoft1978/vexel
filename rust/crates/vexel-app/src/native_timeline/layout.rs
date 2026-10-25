@@ -20,6 +20,8 @@ pub const CONTROL_SIZE: u32 = 28;
 const CONTROL_GAP: u32 = 4;
 /// Room kept at the right end of each row for the duplicate and delete icons.
 pub const ROW_GUTTER: u32 = 56;
+/// Width of the vertical scroll thumb at the right edge of the rows band.
+pub const SCROLL_THUMB_W: u32 = 4;
 /// The key bar needs this much panel width and height to be shown.
 pub const KEYBAR_MIN_WIDTH: u32 = 460;
 pub const KEYBAR_MIN_HEIGHT: u32 = 150;
@@ -203,6 +205,8 @@ pub struct TimelineLayout {
     pub lane_left: f64,
     pub lane_right: f64,
     pub viewport: Viewport,
+    /// Index of the first track row drawn at the top of `rows` (vertical scroll).
+    pub first_row: usize,
 }
 
 impl TimelineLayout {
@@ -308,7 +312,46 @@ impl TimelineLayout {
             lane_left,
             lane_right,
             viewport,
+            first_row: 0,
         }
+    }
+
+    /// Whole track rows that fit in the rows band.
+    pub fn visible_rows(&self) -> usize {
+        (self.rows.height / TRACK_HEIGHT) as usize
+    }
+
+    /// Largest `first_row` for `total` tracks.
+    pub fn max_first_row(&self, total: usize) -> usize {
+        total.saturating_sub(self.visible_rows())
+    }
+
+    /// The same layout scrolled so row `first_row` is at the top (clamped).
+    pub fn scrolled(mut self, first_row: usize, total: usize) -> Self {
+        self.first_row = first_row.min(self.max_first_row(total));
+        self
+    }
+
+    /// Scrollbar thumb at the right edge of the rows band when `total` tracks
+    /// exceed the visible rows; its length is the visible share and its
+    /// position follows `first_row`.
+    pub fn scroll_thumb(&self, total: usize) -> Option<Rect> {
+        let visible = self.visible_rows();
+        if visible == 0 || total <= visible || self.rows.height < 8 {
+            return None;
+        }
+        let area = self.rows.height - 4;
+        let len = (area as usize * visible / total).max(16) as u32;
+        let len = len.min(area);
+        let max = (total - visible) as u32;
+        let offset = (area - len) * (self.first_row.min(max as usize) as u32) / max;
+        let right = self.panel.x.saturating_add(self.panel.width);
+        Some(rect(
+            right.saturating_sub(SCROLL_THUMB_W + 2),
+            self.rows.y + 2 + offset,
+            SCROLL_THUMB_W,
+            len,
+        ))
     }
 
     pub fn lane_x(&self, tick: u32) -> f64 {
@@ -349,10 +392,14 @@ impl TimelineLayout {
     }
 
     pub fn row_rect(&self, index: usize) -> Rect {
+        let Some(slot) = index.checked_sub(self.first_row) else {
+            // Scrolled above the band: no visible area.
+            return rect(self.rows.x, self.rows.y, self.rows.width, 0);
+        };
         let y = self
             .rows
             .y
-            .saturating_add((index as u32).saturating_mul(TRACK_HEIGHT));
+            .saturating_add((slot as u32).saturating_mul(TRACK_HEIGHT));
         let height = self
             .rows
             .y
@@ -434,7 +481,8 @@ impl TimelineLayout {
             return Hit::Ruler;
         }
         if inside(self.rows, x, y) {
-            let index = ((y as u32).saturating_sub(self.rows.y) / TRACK_HEIGHT) as usize;
+            let index =
+                self.first_row + ((y as u32).saturating_sub(self.rows.y) / TRACK_HEIGHT) as usize;
             let Some(track) = model.tracks.get(index) else {
                 return Hit::Empty;
             };

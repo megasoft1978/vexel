@@ -1,7 +1,7 @@
 //! Ruler, track rows, keys and playhead of the native timeline.
 
 use super::interaction::{DragPreview, InteractionState};
-use super::layout::{Hit, TRACK_HEIGHT, TimelineLayout};
+use super::layout::{Hit, SCROLL_THUMB_W, TRACK_HEIGHT, TimelineLayout};
 use super::model::TimelineModel;
 use super::naming;
 use super::paint::{diamond, fit, hover_row, rect};
@@ -111,7 +111,8 @@ pub(super) fn paint_tracks(
     let t = c.tokens;
     let visible_rows = (l.rows.height / TRACK_HEIGHT) as usize;
     let hovered_row = hover_row(s.hover);
-    for (index, track) in m.tracks.iter().enumerate().take(visible_rows) {
+    let rows = m.tracks.iter().enumerate().skip(l.first_row);
+    for (index, track) in rows.take(visible_rows) {
         let row = l.row_rect(index);
         if row.height == 0 {
             continue;
@@ -140,8 +141,12 @@ pub(super) fn paint_tracks(
     // Divider between the name column and the lanes.
     let rows_h = visible_rows as u32 * TRACK_HEIGHT;
     if rows_h > 0 && m.tracks.len() > 0 {
-        let h = rows_h.min((m.tracks.len() as u32) * TRACK_HEIGHT);
+        let shown = m.tracks.len().saturating_sub(l.first_row) as u32;
+        let h = rows_h.min(shown * TRACK_HEIGHT);
         c.paint_rect(rect(l.panel.x + l.name_width, l.rows.y, 1, h), t.separator);
+    }
+    if let Some(thumb) = l.scroll_thumb(m.tracks.len()) {
+        c.paint_round(thumb, SCROLL_THUMB_W / 2, t.text_tertiary, 0, 0);
     }
     paint_notices(c, l, m);
     if let Some(preview) = s.drag_preview {

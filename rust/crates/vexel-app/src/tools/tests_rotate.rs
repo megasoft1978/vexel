@@ -206,4 +206,85 @@ mod compose {
         assert_near(centre.0, 70.0);
         assert_near(centre.1, 40.0);
     }
+
+    fn assert_moved(m: &[f64; 6], from: &[f64; 6], dx: f64, dy: f64) {
+        for i in 0..4 {
+            assert_near(m[i], from[i]);
+        }
+        assert_near(m[4], from[4] + dx);
+        assert_near(m[5], from[5] + dy);
+    }
+
+    #[test]
+    fn moving_a_rotated_shape_composes_the_translation_and_undoes() {
+        let mut doc = with(RECT);
+        let mut c = ToolController::new();
+        rotate_by(&mut c, &mut doc, 30.0);
+        let before = doc.get_transform_matrix("r").unwrap();
+        let source = src(&doc);
+        let count = doc.history_count();
+        c.select_id(&doc, "r").unwrap();
+        assert_eq!(
+            drag(&mut c, &mut doc, (30.0, 30.0), (50.0, 40.0)),
+            Ok(Outcome::Committed)
+        );
+        assert_eq!(doc.history_count(), count + 1, "one undoable edit");
+        let moved = doc.get_transform_matrix("r").unwrap();
+        assert_moved(&moved, &before, 20.0, 10.0);
+        let after = src(&doc);
+        doc.undo().unwrap();
+        assert_eq!(src(&doc), source);
+        doc.redo().unwrap();
+        assert_eq!(src(&doc), after);
+    }
+
+    #[test]
+    fn moving_after_rotating_twice_and_nudging_works() {
+        let mut doc = with(RECT);
+        let mut c = ToolController::new();
+        rotate_by(&mut c, &mut doc, 30.0);
+        rotate_by(&mut c, &mut doc, 25.0);
+        doc.history_boundary();
+        let before = doc.get_transform_matrix("r").unwrap();
+        let source = src(&doc);
+        let cursor = doc.history_cursor();
+        assert_eq!(
+            drag(&mut c, &mut doc, (30.0, 30.0), (20.0, 45.0)),
+            Ok(Outcome::Committed)
+        );
+        assert_moved(
+            &doc.get_transform_matrix("r").unwrap(),
+            &before,
+            -10.0,
+            15.0,
+        );
+        doc.history_boundary();
+        let moved = doc.get_transform_matrix("r").unwrap();
+        assert_eq!(c.key(Key::Nudge(1, 0), &mut doc), Ok(Outcome::Committed));
+        assert_moved(&doc.get_transform_matrix("r").unwrap(), &moved, 1.0, 0.0);
+        assert_eq!(doc.history_cursor(), cursor + 2);
+        let after = src(&doc);
+        doc.undo().unwrap();
+        doc.undo().unwrap();
+        assert_eq!(src(&doc), source);
+        doc.redo().unwrap();
+        doc.redo().unwrap();
+        assert_eq!(src(&doc), after);
+    }
+
+    #[test]
+    fn dragging_a_handle_of_a_rotated_shape_moves_it_without_error() {
+        let mut doc = with(RECT);
+        let mut c = ToolController::new();
+        rotate_by(&mut c, &mut doc, 30.0);
+        let frame = shape_frame(&doc, "r").unwrap();
+        let corner = (frame.bounds.2, frame.bounds.3);
+        let before = doc.get_transform_matrix("r").unwrap();
+        let result = drag(&mut c, &mut doc, corner, (corner.0 + 10.0, corner.1 + 10.0));
+        assert!(result.is_ok(), "{result:?}");
+        let after = doc.get_transform_matrix("r").unwrap();
+        for i in 0..4 {
+            assert_near(after[i], before[i]);
+        }
+    }
 }
