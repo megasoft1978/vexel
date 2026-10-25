@@ -555,3 +555,18 @@ fn glyph_outline_closure_and_command_range_validation_inputs_are_owned() {
         vexel_geometry::Point { x: 1., y: 5. }
     );
 }
+
+#[test]
+fn wrapped_base64_and_empty_media_type_are_accepted() {
+    let source = b"data:;base64,AQ\n ID";
+    let uri = XmlSpan {
+        offset: 0,
+        length: source.len(),
+    };
+    let payload = parse_data_uri(source, uri).unwrap();
+    assert_eq!(payload.mime, vexel_svg_media::ImageMime::Png);
+    assert_eq!(
+        decode_base64(source, payload.encoded, &mut NoStop).unwrap(),
+        [1, 2, 3]
+    );
+}

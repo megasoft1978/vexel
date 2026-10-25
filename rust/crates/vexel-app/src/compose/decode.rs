@@ -65,7 +65,17 @@ impl MediaProvider for Gate {
         control: &mut dyn WorkControl,
     ) -> Result<ImagePixels, MediaError> {
         control.checkpoint().map_err(|_| MediaError::Limit)?;
-        super::png::decode(encoded)
+        // The PNG decoder yields straight alpha; `ImagePixels` is premultiplied.
+        let mut pixels = super::png::decode(encoded)?;
+        for px in pixels.rgba.chunks_exact_mut(4) {
+            let a = u32::from(px[3]);
+            if a != 255 {
+                for c in &mut px[..3] {
+                    *c = ((u32::from(*c) * a + 127) / 255) as u8;
+                }
+            }
+        }
+        Ok(pixels)
     }
 }
 
@@ -174,6 +184,14 @@ pub(crate) fn decode_owned(
             valid_up_to: error.valid_up_to(),
         });
     }
+    // Entity references in attribute values are expanded up front (XML 1.0
+    // 3.3.3). A refused document keeps its source so the lexical pass reports
+    // the typed error.
+    let owner = match vexel_xml::expand_attribute_entities(bytes) {
+        Ok(Some(expanded)) if expanded.len() <= MAX_SVG_BYTES => Arc::new(expanded),
+        _ => owner,
+    };
+    let bytes = owner.as_slice();
     let mut control = CancelControl { cancel };
     let diag = |d| from_diagnostic(d, bytes);
     let document =

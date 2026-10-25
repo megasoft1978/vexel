@@ -10,7 +10,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 - Export: GIF, APNG, PNG frame sequence, MP4/MOV (H.264 or HEVC), HEVC with alpha (mov).
 - SVG: Q/T/S path commands and internal DOCTYPE general entities (hard limits) landed.
   Arc commands unsupported. Corpus: deferred gaps include columbiarivermap,
-  corsica, ideogram clip cap, france-osm. Corpus not re-counted since these changes.
+  corsica, ideogram clip cap, france-osm. Attribute-value entities, Illustrator switch/foreignObject fallbacks, wrapped base64 and empty-media-type data URIs now decode; columbiarivermap moves from unsupported to limit_render (image tile cap PATTERN_MAX_PIXELS in vexel-render). corsica (tspan placement) and france-osm (limit_render) remain. Corpus full count not re-run (21/39 last counted); SCENE_LIMIT/SOURCE_LIMIT unchanged (the corpus path uses a 32 MiB cap).
 - UI: rotate live preview, bezier easing editor, new app icon. Real-window e2e
   script [docs/e2e-ui.md](docs/e2e-ui.md) written, not yet run live.
 
