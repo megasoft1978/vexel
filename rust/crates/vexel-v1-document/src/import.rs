@@ -4,6 +4,7 @@
 //! The result is one fragment that `V1Document::add_import` inserts through
 //! the same allow-list checks as `element_add_fragment`.
 
+use crate::transform::{cos_unpaired, sin_unpaired};
 use crate::{V1Document, V1DocumentError, validate_stable_id};
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -16,6 +17,8 @@ pub const MAX_IMPORT_BYTES: usize = 4 * 1024 * 1024;
 /// Longest id prefix.
 const MAX_PREFIX_BYTES: usize = 64;
 const RIG_TAG: &[u8] = b"<desc id=\"vexel-rig\"";
+/// Group ids the rig and mouth steps own; an import may not declare them.
+const RESERVED_IDS: [&str; 2] = ["vexel-rig", "vexel-mouths"];
 
 /// A scene ready to insert: the fragment, the ids it declares (original and
 /// prefixed) and the remapped rig JSON when the source stored one.
@@ -186,7 +189,8 @@ fn trs_matrix(trs: [f64; 5]) -> Result<String, V1DocumentError> {
         return Err(V1DocumentError::InvalidGeometry);
     }
     let [tx, ty, rot, sx, sy] = trs;
-    let (sin, cos) = rot.to_radians().sin_cos();
+    let angle = rot.to_radians();
+    let (sin, cos) = (sin_unpaired(angle), cos_unpaired(angle));
     let m = [cos * sx, sin * sx, -sin * sy, cos * sy, tx, ty];
     Ok(m.map(|v| format!("{}", v + 0.0)).join(" "))
 }
@@ -214,6 +218,9 @@ pub fn prepare_import(
     }
     .to_owned();
     validate_stable_id(&group_id)?;
+    if RESERVED_IDS.contains(&group_id.as_str()) {
+        return Err(V1DocumentError::InvalidStableId);
+    }
     if find(svg, b"<!ENTITY").is_some() {
         return Err(V1DocumentError::ExternalReference);
     }
@@ -248,6 +255,12 @@ pub fn prepare_import(
             if offset < inner_start || offset >= inner_end {
                 continue;
             }
+            // The allow-list decodes entities and strips comments before it
+            // checks a value, but the prefix rewrite below scans raw bytes.
+            // Refuse the forms where the two disagree.
+            if name != "d" && (find(value, b"&#").is_some() || find(value, b"/*").is_some()) {
+                return Err(V1DocumentError::ExternalReference);
+            }
             if name == "id" {
                 sites.push(offset);
                 source_ids.push(String::from_utf8_lossy(value).into_owned());
@@ -262,6 +275,12 @@ pub fn prepare_import(
             stack.push(item);
             child = document_view_next_sibling(model, item);
         }
+    }
+    if source_ids
+        .iter()
+        .any(|id| RESERVED_IDS.contains(&format!("{prefix}{id}").as_str()))
+    {
+        return Err(V1DocumentError::InvalidStableId);
     }
     sites.sort_unstable();
     sites.dedup();

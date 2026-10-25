@@ -96,6 +96,54 @@ fn hostile_files_are_refused() {
 }
 
 #[test]
+fn encoded_or_commented_references_are_refused() {
+    // The allow-list decodes `&#...;` and strips `/*...*/`; the prefix rewrite
+    // does neither, so these would resolve to unprefixed document ids.
+    let wrap = |inner: &str| {
+        format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">{inner}</svg>"#)
+    };
+    for inner in [
+        r#"<rect id="r" fill="url(&#35;g1)" width="1" height="1"/>"#,
+        r#"<rect id="r" fill="url(&#x23;g1)" width="1" height="1"/>"#,
+        r#"<use id="u" href="&#35;g1"/>"#,
+        r#"<rect id="r" fill="url/**/(#g1)" width="1" height="1"/>"#,
+        r#"<rect id="r" style="fill:url/**/(#g1)" width="1" height="1"/>"#,
+    ] {
+        assert_eq!(
+            prepare_import(wrap(inner).as_bytes(), "h_", None).unwrap_err(),
+            V1DocumentError::ExternalReference,
+            "{inner}"
+        );
+    }
+}
+
+#[test]
+fn reserved_group_ids_are_refused() {
+    let wrap = |inner: &str| {
+        format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">{inner}</svg>"#)
+    };
+    let rect = |id: &str| wrap(&format!(r#"<rect id="{id}" width="1" height="1"/>"#));
+    assert_eq!(
+        prepare_import(SAMPLE, "vexel-rig", None).unwrap_err(),
+        V1DocumentError::InvalidStableId
+    );
+    assert_eq!(
+        prepare_import(SAMPLE, "vexel-mouths_", None).unwrap_err(),
+        V1DocumentError::InvalidStableId
+    );
+    // Prefix plus source id forms the reserved name.
+    assert_eq!(
+        prepare_import(rect("mouths").as_bytes(), "vexel-", None).unwrap_err(),
+        V1DocumentError::InvalidStableId
+    );
+    assert_eq!(
+        prepare_import(rect("rig").as_bytes(), "vexel-", None).unwrap_err(),
+        V1DocumentError::InvalidStableId
+    );
+    assert!(prepare_import(rect("torso").as_bytes(), "vexel-", None).is_ok());
+}
+
+#[test]
 fn prefix_rules() {
     assert!(valid_prefix("kira_") && valid_prefix("a.b-c") && valid_prefix("_x"));
     assert!(
