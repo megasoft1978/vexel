@@ -115,6 +115,8 @@ fn mix_f(h: u64, v: f64) -> u64 {
     mix(h, v.to_bits())
 }
 
+/// Hash of what the renderer reads from the clips. The owner transform handle
+/// is not read (it also differs between decodes of identical documents).
 fn clip_hash<V: ViewportRead, A: Copy>(view: &SceneView<'_, V, A>) -> u64 {
     let mut h = mix(0xcbf2_9ce4_8422_2325, view.clips.len() as u64);
     for clip in view.clips {
@@ -122,13 +124,14 @@ fn clip_hash<V: ViewportRead, A: Copy>(view: &SceneView<'_, V, A>) -> u64 {
             h = mix_f(mix_f(mix_f(mix_f(h, e.a.x), e.a.y), e.b.x), e.b.y);
         }
         for byte in format!(
-            "{:?}{:?}{:?}{:?}{:?}{:?}{:?}",
+            "{:?}{:?}{:?}{:?}{:?}",
             clip.geometry.shapes,
             clip.parent,
-            clip.owner_node,
-            clip.owner_before_suffix,
             clip.object_bounding_box,
-            clip.bounds,
+            // Bounds only matter for object-bounding-box clips (and must be finite).
+            clip.object_bounding_box
+                .then_some(clip.bounds)
+                .ok_or(clip.bounds.iter().all(|v| v.is_finite())),
             clip.user_inverse
         )
         .bytes()
