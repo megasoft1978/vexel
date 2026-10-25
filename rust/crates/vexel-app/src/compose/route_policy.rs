@@ -50,6 +50,8 @@ pub(super) enum Verdict<R> {
     /// Lowers and classifies; `work` is the CPU raster work estimate.
     Gpu {
         work: f64,
+        /// GPU cost beyond the per-shape entries (clips), in entries.
+        extra_entries: f64,
     },
     Cpu(&'static str),
     Unsupported(R),
@@ -61,6 +63,7 @@ pub(super) struct Load {
     pub canvas_px: f64,
     pub work: f64,
     pub entries: usize,
+    pub extra_entries: f64,
     pub dirty_px: f64,
     pub dirty_shapes: usize,
     /// The diff cache holds a CPU frame to patch.
@@ -115,7 +118,7 @@ impl Load {
     fn gpu_raw(&self) -> f64 {
         GPU_BASE_MS
             + GPU_NS_PER_PX * 1e-6 * self.canvas_px
-            + GPU_US_PER_ENTRY * 1e-3 * self.entries as f64
+            + GPU_US_PER_ENTRY * 1e-3 * (self.entries as f64 + self.extra_entries)
     }
 }
 
@@ -233,6 +236,7 @@ mod tests {
             canvas_px: 810_000.0,
             work,
             entries,
+            extra_entries: 0.0,
             dirty_px,
             dirty_shapes,
             warm: true,

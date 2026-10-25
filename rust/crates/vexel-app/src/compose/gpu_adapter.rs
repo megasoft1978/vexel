@@ -2,22 +2,24 @@
 //! lowered to `vexel-gpu-scene` input structs, and the Metal compute backend.
 //!
 //! Solid and gradient fills and strokes (caps, joins, dashes, as the CPU
-//! exports them) of unclipped shapes lower (inside opacity groups too;
+//! exports them) lower, with their clip chains (inside opacity groups too;
 //! filters, masks, patterns and blend modes do not); anything
 //! else returns `None` and the frame renders on the CPU. Pure value
 //! conversion, no GPU calls, so the lowering is testable without a device.
 
 use super::layers::Geo;
+use std::collections::HashMap;
+use std::sync::Arc;
 use super::shapes::{Entry, OwnedShape};
-use vexel_geometry::{Affine, affine_compose};
+use vexel_geometry::{Affine, affine_compose, affine_valid};
 use vexel_gpu_scene::input::{
-    GpuCap, GpuColorStop, GpuGradient, GpuGroup, GpuJoinKind, GpuPaint, GpuScene, GpuSegment,
+    GpuCap, GpuClipChild, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoinKind, GpuPaint, GpuScene, GpuSegment,
     GpuShape, GpuSpread, GpuStroke, GpuStrokeJoin, GpuStrokeSegment,
 };
 use vexel_gpu_scene::{GpuNode, MAX_GRADIENT_STOPS};
 use vexel_render::export::{JoinKind, StrokeExport, export_stroke};
 use vexel_render::{FlatEdge, GradientRef};
-use vexel_scene::{Linecap, OpacityGroup, PaintKind, PaintStop, Spread};
+use vexel_scene::{Clip, Linecap, OpacityGroup, PaintKind, PaintStop, Spread};
 
 fn affine(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Affine {
     Affine { a, b, c, d, e, f }
@@ -28,11 +30,15 @@ fn affine(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Affine {
 pub(super) struct Lowered {
     pub scene: GpuScene,
     pub work: f64,
+    /// Extra GPU cost of clipping in tile-entry equivalents
+    /// ([`CLIP_VISIT_ENTRIES`] per clip edge visit of a tile thread group).
+    pub extra_entries: f64,
 }
 
 pub(super) fn lower(
     entries: &[Entry<'_>],
     groups: &[OpacityGroup],
+    clips: &[Clip],
     geo: &Geo,
     width: u32,
     height: u32,
@@ -51,11 +57,15 @@ pub(super) fn lower(
         geo,
         size: (width, height),
         work: 0.0,
+        clips,
+        clip_cache: HashMap::new(),
+        clip_visits: 0.0,
     };
     scene.nodes = lowering.range(0..entries.len(), None, 0)?;
     Some(Lowered {
         scene,
         work: lowering.work,
+        extra_entries: lowering.clip_visits * CLIP_VISIT_ENTRIES,
     })
 }
 
@@ -65,7 +75,18 @@ struct Lowering<'a, 'e> {
     geo: &'a Geo,
     size: (u32, u32),
     work: f64,
+    clips: &'a [Clip],
+    /// Lowered clip paths by scene clip index (shared by every shape using one).
+    clip_cache: HashMap<usize, Arc<GpuClipPath>>,
+    /// Sum over clipped shapes of (chain edges) x (tiles the shape covers).
+    clip_visits: f64,
 }
+
+/// GPU cost of one clip edge visit by one tile thread group, in tile-entry
+/// equivalents of the route policy model (calibrated in PERF.md, GPU clips).
+pub(super) const CLIP_VISIT_ENTRIES: f64 = 0.0;
+/// CPU work weight of a clipped pixel per clip link (CPU clip rows are cheap).
+const CLIP_WEIGHT: f64 = 0.25;
 
 impl Lowering<'_, '_> {
     /// The shapes `range` whose parent group is `parent`, in paint order
@@ -125,7 +146,7 @@ impl Lowering<'_, '_> {
             let Entry::Draw(p) = entry else {
                 return None;
             };
-            if p.image.is_some() || p.fill.is_some() || p.stroke.is_some() || p.clip.is_some() {
+            if p.image.is_some() || p.fill.is_some() || p.stroke.is_some() {
                 return None;
             }
             let s = &p.shape;
@@ -163,12 +184,16 @@ impl Lowering<'_, '_> {
             if fill.is_none() && stroke.is_none() {
                 continue;
             }
+            let clips = self.chain(p.clip)?;
+            if !clips.is_empty() {
+                self.clip_cost(&clips, &edges, stroke.as_ref());
+            }
             nodes.push(GpuNode::Shape(GpuShape {
                 edges,
                 evenodd: s.evenodd,
                 fill,
                 stroke,
-                clips: Vec::new(),
+                clips,
             }));
         }
         Some(())
@@ -176,6 +201,94 @@ impl Lowering<'_, '_> {
 }
 
 impl Lowering<'_, '_> {
+    /// The clip chain of a shape (outermost parent first) lowered to device
+    /// space; `None` when a clip cannot lower (the frame renders on the CPU).
+    fn chain(&mut self, clip: Option<usize>) -> Option<Vec<Arc<GpuClipPath>>> {
+        let mut out = Vec::new();
+        let mut at = clip;
+        while let Some(index) = at {
+            if out.len() > 64 {
+                return None;
+            }
+            out.push(self.clip_path(index)?);
+            at = self.clips.get(index)?.parent.map(|p| p.index());
+        }
+        out.reverse();
+        Some(out)
+    }
+
+    /// One clip of the table: its filled children with their rules, in device
+    /// pixels. The CPU maps a sample (document space) with `user_inverse` into
+    /// the clip's local space (then, for bounding-box units, into the unit
+    /// box) and tests the local edges; the edges are mapped the other way.
+    fn clip_path(&mut self, index: usize) -> Option<Arc<GpuClipPath>> {
+        if let Some(hit) = self.clip_cache.get(&index) {
+            return Some(hit.clone());
+        }
+        let clip = self.clips.get(index)?;
+        let b = clip.bounds;
+        if b.iter().any(|v| !v.is_finite()) {
+            return None;
+        }
+        let nothing = !affine_valid(clip.user_inverse)
+            || (clip.object_bounding_box && (b[2] <= b[0] || b[3] <= b[1]));
+        let mut path = GpuClipPath::default();
+        if !nothing {
+            let forward = invert(clip.user_inverse)?;
+            let geo = self.geo;
+            let map = |x: f64, y: f64| {
+                let (x, y) = if clip.object_bounding_box {
+                    (b[0] + x * (b[2] - b[0]), b[1] + y * (b[3] - b[1]))
+                } else {
+                    (x, y)
+                };
+                geo.to_device(
+                    forward.a * x + forward.c * y + forward.e,
+                    forward.b * x + forward.d * y + forward.f,
+                )
+            };
+            for child in clip.geometry.shapes.iter().filter(|c| c.filled) {
+                let range = child.edges.first..child.edges.end()?;
+                let edges = clip.geometry.edges.get(range)?;
+                path.children.push(GpuClipChild {
+                    edges: edges
+                        .iter()
+                        .map(|e| {
+                            let e = FlatEdge::from(*e);
+                            let (x0, y0) = map(e.x0, e.y0);
+                            let (x1, y1) = map(e.x1, e.y1);
+                            GpuSegment { x0, y0, x1, y1 }
+                        })
+                        .collect(),
+                    evenodd: child.evenodd,
+                });
+            }
+        }
+        let path = Arc::new(path);
+        self.clip_cache.insert(index, path.clone());
+        Some(path)
+    }
+
+    /// Route cost of a clipped shape: CPU work for the clip tests and the GPU
+    /// clip visits (chain edges x tiles the shape's box covers).
+    fn clip_cost(&mut self, clips: &[Arc<GpuClipPath>], fill: &[GpuSegment], stroke: Option<&GpuStroke>) {
+        let (width, height) = self.size;
+        let area = if fill.is_empty() {
+            // Stroke-only: the whole canvas is the safe over-estimate.
+            let _ = stroke;
+            f64::from(width) * f64::from(height)
+        } else {
+            bbox_area(fill, width, height)
+        };
+        let tiles = (area / 256.0).ceil().max(1.0);
+        let edges: usize = clips
+            .iter()
+            .map(|c| c.children.iter().map(|k| k.edges.len()).sum::<usize>())
+            .sum();
+        self.work += area * CLIP_WEIGHT * clips.len() as f64;
+        self.clip_visits += edges as f64 * tiles;
+    }
+
     /// The stroke of `s` as the CPU builds it (`export_stroke`), lowered to
     /// device space; `Ok(None)`-like `Some(None)` when the shape paints none,
     /// `None` when the stroke cannot lower (the frame renders on the CPU).
@@ -227,6 +340,26 @@ fn stroke_area(e: &StrokeExport, scale: f64, size: (u32, u32)) -> f64 {
     let w = (r.min(f64::from(size.0)) - l.max(0.0) + grow).max(0.0);
     let h = (b.min(f64::from(size.1)) - t.max(0.0) + grow).max(0.0);
     w * h
+}
+
+/// Inverse of an affine matrix; `None` when singular or not finite.
+fn invert(m: Affine) -> Option<Affine> {
+    let det = m.a * m.d - m.b * m.c;
+    if !det.is_finite() || det.abs() < 1e-300 {
+        return None;
+    }
+    let r = Affine {
+        a: m.d / det,
+        b: -m.b / det,
+        c: -m.c / det,
+        d: m.a / det,
+        e: (m.c * m.f - m.d * m.e) / det,
+        f: (m.b * m.e - m.a * m.f) / det,
+    };
+    [r.a, r.b, r.c, r.d, r.e, r.f]
+        .iter()
+        .all(|v| v.is_finite())
+        .then_some(r)
 }
 
 fn cap(c: Linecap) -> GpuCap {

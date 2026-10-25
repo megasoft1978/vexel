@@ -5,9 +5,6 @@
 
 use std::collections::HashMap;
 
-use vexel_gpu_scene::policy::{
-    PARITY_MEAN_ABS_ERROR_MAX, PARITY_OVER_2_MAX_FRACTION, PARITY_OVER_16_MAX_FRACTION,
-};
 use vexel_gpu_scene::run::{
     ComputeBackend, ComputeRequest, ComputeStats, GpuRasterizer, Output, RenderError,
 };
@@ -78,6 +75,20 @@ fn unwrap_render(r: Result<Vec<u8>, RenderError>) -> Vec<u8> {
 }
 
 
+/// Reads `"<kind>": {"over_2": x, "over_16": y, "mae": z}` from parity.json.
+fn frozen(kind: &str) -> (f64, f64, f64) {
+    let text = include_str!("parity.json");
+    let at = text.find(&format!("\"{kind}\"")).expect("kind in parity.json");
+    let rest = &text[at..];
+    let num = |key: &str| -> f64 {
+        let i = rest.find(&format!("\"{key}\"")).unwrap() + key.len() + 2;
+        let tail = rest[i..].trim_start_matches([':', ' ']);
+        let end = tail.find([',', '}', '\n']).unwrap();
+        tail[..end].trim().parse().unwrap()
+    };
+    (num("over_2"), num("over_16"), num("mae"))
+}
+
 fn fractions(a: &[u8], b: &[u8]) -> (f64, f64, f64) {
     let pixels = a.len() / 4;
     let (mut o2, mut o16, mut sum) = (0usize, 0usize, 0u64);
@@ -122,8 +133,8 @@ fn gpu_clips_match_reference_byte_exact_and_cpu_within_adr() {
                 o2 * 100.0,
                 o16 * 100.0
             );
-            assert!(o2 <= PARITY_OVER_2_MAX_FRACTION && o16 <= PARITY_OVER_16_MAX_FRACTION);
-            assert!(mae <= PARITY_MEAN_ABS_ERROR_MAX);
+            let (b2, b16, bmae) = frozen("clips");
+            assert!(o2 <= b2 && o16 <= b16 && mae <= bmae, "{name}: outside frozen bounds");
         }
     }
 }

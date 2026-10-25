@@ -330,9 +330,6 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
         return Some("group");
     }
     for shape in scene.shapes {
-        if shape.clip.is_some() {
-            return Some("clip");
-        }
         if shape.image.is_some() {
             return Some("image");
         }
@@ -362,17 +359,27 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
 fn judge(
     entries: &[Entry<'_>],
     groups: &[vexel_scene::OpacityGroup],
+    clips: &[vexel_scene::Clip],
     geometry: &Geo,
     tile: &Tile,
 ) -> (Verdict<UnsupportedReason>, Option<GpuScene>) {
-    let Some(Lowered { scene, work }) =
-        lower(entries, groups, geometry, tile.width(), tile.height())
+    let Some(Lowered {
+        scene,
+        work,
+        extra_entries,
+    }) = lower(entries, groups, clips, geometry, tile.width(), tile.height())
     else {
         return (Verdict::Cpu("lowering"), None);
     };
     match classify(&scene) {
         Capability::Unsupported(reason) => (Verdict::Unsupported(reason), None),
-        _ => (Verdict::Gpu { work }, Some(scene)),
+        _ => (
+            Verdict::Gpu {
+                work,
+                extra_entries,
+            },
+            Some(scene),
+        ),
     }
 }
 
@@ -425,13 +432,16 @@ pub(super) fn try_render<V: ViewportRead, A: Copy>(
             t.verdict = Some((n, age + 1, v));
             v
         } else {
-            let (v, scene) = judge(&entries, scene.groups, &geometry, tile);
+            let (v, scene) = judge(&entries, scene.groups, scene.clips, &geometry, tile);
             lowered = scene;
             t.verdict = Some((entries.len(), 0, v));
             v
         };
-        let work = match verdict {
-            Verdict::Gpu { work } => work,
+        let (work, extra_entries) = match verdict {
+            Verdict::Gpu {
+                work,
+                extra_entries,
+            } => (work, extra_entries),
             Verdict::Cpu(why) => {
                 note(Decision::Cpu(why));
                 t.policy.force_cpu();
@@ -450,6 +460,7 @@ pub(super) fn try_render<V: ViewportRead, A: Copy>(
             canvas_px: f64::from(w) * f64::from(h),
             work,
             entries: cur.len(),
+            extra_entries,
             dirty_px,
             dirty_shapes,
             warm: !cold && !t.last_gpu && !cache.disabled(),
@@ -474,7 +485,7 @@ pub(super) fn try_render<V: ViewportRead, A: Copy>(
     }
     let gpu_scene = match lowered {
         Some(s) => s,
-        None => match judge(&entries, scene.groups, &geometry, tile) {
+        None => match judge(&entries, scene.groups, scene.clips, &geometry, tile) {
             (_, Some(s)) => s,
             (Verdict::Unsupported(r), None) => {
                 note(Decision::Unsupported(r));
