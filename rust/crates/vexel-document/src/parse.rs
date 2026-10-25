@@ -110,6 +110,7 @@ fn parse_core<C: FnMut() -> bool>(source: &[u8], source_limit: usize, storage_li
     }
 
     let mut stream = XmlTokenStream::new(source, storage_limit).map_err(|_| parse_error(DocumentError::OutOfMemory, XmlDiagnostic::default()))?;
+    stream.reserve_token_hint(source.len() / 13 + 16);
     if stream.token_storage_bytes() > storage_limit
         || stream.open_name_storage_bytes() > MAX_OPEN_NAME_BYTES
     {
