@@ -127,7 +127,8 @@ mod tests {
             timescale: TS,
             background: [255, 255, 255],
             alpha: false,
-            bit_rate: Some(20_000_000),
+            bit_rate: None,
+            quality: Some(1.0),
         })
         .expect("create");
         for i in 0..N {
@@ -183,7 +184,8 @@ mod tests {
             timescale: TS,
             background: [200, 40, 40],
             alpha: false,
-            bit_rate: Some(2_000_000),
+            bit_rate: None,
+            quality: Some(1.0),
         })
         .unwrap();
         for i in 0..4 {
@@ -207,7 +209,8 @@ mod tests {
             timescale: TS,
             background: [255, 255, 255],
             alpha: true,
-            bit_rate: Some(4_000_000),
+            bit_rate: None,
+            quality: Some(1.0),
         }
     }
 
@@ -264,6 +267,7 @@ mod tests {
             background: [0; 3],
             alpha: false,
             bit_rate: None,
+            quality: None,
         };
         assert!(VideoWriter::create(spec(63, 64)).is_err());
         assert!(VideoWriter::create(spec(8192, 64)).is_err());

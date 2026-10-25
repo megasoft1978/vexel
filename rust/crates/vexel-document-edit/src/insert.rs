@@ -7,7 +7,10 @@ use crate::{
 };
 use std::borrow::Cow;
 use vexel_xml::TokenKind;
-pub const XML_FRAGMENT_LIMIT: usize = MAX_FRAGMENT_BYTES;
+/// Largest XML fragment `insert_xml_fragment` accepts (1 MiB).
+pub const XML_FRAGMENT_LIMIT: usize = 1024 * 1024;
+/// Bound for generated template/text markup (unchanged 64 KiB).
+const TEMPLATE_LIMIT: usize = MAX_FRAGMENT_BYTES;
 const TEMPLATE_ATTRIBUTE_LIMIT: usize = 128;
 const AUTO_ID_ATTEMPTS: usize = 4096;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -189,7 +192,7 @@ impl Editor {
             return Err(EditError::InvalidArgument);
         }
         let info = self.handle_index(parent)?.node(parent)?;
-        let mut markup = alloc::vector(XML_FRAGMENT_LIMIT)?;
+        let mut markup = alloc::vector(TEMPLATE_LIMIT)?;
         markup.push(b'<');
         markup.extend_from_slice(kind.tag());
         append_attributes(&mut markup, attributes)?;
@@ -221,7 +224,7 @@ impl Editor {
         if attributes.len() > TEMPLATE_ATTRIBUTE_LIMIT {
             return Err(EditError::Limit);
         }
-        let mut markup = alloc::vector(XML_FRAGMENT_LIMIT)?;
+        let mut markup = alloc::vector(TEMPLATE_LIMIT)?;
         markup.extend_from_slice(b"<text");
         append_attributes(&mut markup, attributes)?;
         // Match bounded text_fragment_append before committing one command.
@@ -257,7 +260,7 @@ impl Editor {
                 .ok_or(EditError::Limit)?;
             if total
                 > if template {
-                    XML_FRAGMENT_LIMIT
+                    TEMPLATE_LIMIT
                 } else {
                     XML_FRAGMENT_LIMIT + 4096
                 }
@@ -295,7 +298,7 @@ impl Editor {
     }
 }
 fn bounded_append(out: &mut Vec<u8>, bytes: &[u8]) -> Result<(), EditError> {
-    if out.len() > XML_FRAGMENT_LIMIT || bytes.len() > XML_FRAGMENT_LIMIT - out.len() {
+    if out.len() > TEMPLATE_LIMIT || bytes.len() > TEMPLATE_LIMIT - out.len() {
         return Err(EditError::Limit);
     }
     out.extend_from_slice(bytes);
@@ -317,7 +320,7 @@ fn append_attributes(
             .checked_add(encoded.len())
             .and_then(|n| n.checked_add(4))
             .ok_or(EditError::Limit)?;
-        if addition > XML_FRAGMENT_LIMIT - out.len() {
+        if addition > TEMPLATE_LIMIT - out.len() {
             return Err(EditError::Limit);
         }
         bounded_append(out, b" ")?;

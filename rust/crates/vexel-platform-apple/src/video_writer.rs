@@ -61,8 +61,12 @@ pub struct VideoSpec {
     /// Encode HEVC with alpha (`.mov` + HEVC only); frames are premultiplied and
     /// `background` is ignored.
     pub alpha: bool,
-    /// Average bit rate; `None` picks a size-based default.
+    /// Average bit rate in bits per second. When set the encoder runs in
+    /// bit-rate mode and `quality` is ignored.
     pub bit_rate: Option<u32>,
+    /// Constant-quality level 0..1 (encoder `AVVideoQualityKey`), used when
+    /// `bit_rate` is `None`; `None` means 1.0. Deterministic.
+    pub quality: Option<f64>,
 }
 
 /// Video writer failure.
@@ -179,12 +183,12 @@ impl VideoWriter {
                 },
                 "codec",
             )?;
-            let bit_rate = spec
-                .bit_rate
-                .unwrap_or_else(|| w.saturating_mul(h).saturating_mul(6).max(1_000_000));
             let n_w = NSNumber::new_u32(w);
             let n_h = NSNumber::new_u32(h);
-            let n_br = NSNumber::new_u32(bit_rate);
+            let n_rc = match spec.bit_rate {
+                Some(rate) => NSNumber::new_u32(rate),
+                None => NSNumber::new_f64(spec.quality.unwrap_or(1.0).clamp(0.0, 1.0)),
+            };
             let color = dict(
                 &[
                     unavailable(AVVideoColorPrimariesKey, "key")?,
@@ -197,13 +201,14 @@ impl VideoWriter {
                     unavailable(AVVideoYCbCrMatrix_ITU_R_709_2, "value")?,
                 ],
             );
-            let n_q = NSNumber::new_f64(1.0);
             let compression = dict(
-                &[
-                    unavailable(AVVideoAverageBitRateKey, "key")?,
-                    unavailable(AVVideoQualityKey, "key")?,
-                ],
-                &[&n_br, &n_q],
+                // Either key, never both: with a quality key the encoder
+                // ignores the bit rate.
+                &[match spec.bit_rate {
+                    Some(_) => unavailable(AVVideoAverageBitRateKey, "key")?,
+                    None => unavailable(AVVideoQualityKey, "key")?,
+                }],
+                &[&n_rc],
             );
             let settings = dict(
                 &[

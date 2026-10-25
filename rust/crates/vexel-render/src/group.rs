@@ -22,7 +22,7 @@ use std::ops::Range;
 use vexel_raster::Tile;
 
 /// Group scratch budget (C `GROUP_SCRATCH_LIMIT`): bytes of live layer tiles.
-pub const GROUP_SCRATCH_LIMIT: usize = 64 * 1024 * 1024;
+pub const GROUP_SCRATCH_LIMIT: usize = 192 * 1024 * 1024;
 /// Most mask instances in one scene (C `SHAPE_MASK_MAX_INSTANCES`).
 pub const MAX_MASK_INSTANCES: usize = 1024;
 /// Deepest mask-in-mask nesting rendered (C `context->mask_depth >= 8`).

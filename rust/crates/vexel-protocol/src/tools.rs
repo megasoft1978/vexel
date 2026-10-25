@@ -113,8 +113,8 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "element_add_fragment",
-        description: "Add one validated XML element fragment as a child of an element.",
-        properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\"},\"xml\":{\"type\":\"string\",\"maxLength\":65536}}",
+        description: "Add one validated XML element fragment (at most 1 MiB) as a child of an element.",
+        properties: "{\"documentId\":{\"type\":\"string\"},\"parentId\":{\"type\":\"string\"},\"xml\":{\"type\":\"string\",\"maxLength\":1048576}}",
         required: "documentId,parentId,xml",
         fields: "documentId:string;parentId:string;xml:string",
     },
@@ -452,7 +452,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         let description = if preview && tool.name == "element_add" {
             element_add_description()
         } else if preview && tool.name == "export_animation" {
-            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency, alpha true keeps transparency (mov with hevc only; background is ignored). apng writes an animated PNG (path ends .png or .apng) of one loop, keeping alpha unless background is given; loops is the play count (default forever). frames writes one PNG per sampled tick into the path's directory: path is name_####.png (4+ #) or a name prefix without extension (name_0000.png...); it refuses to overwrite and caps at 1440 frames. apng and frames take fps, width and height (together) and background, and need a native timeline.".to_owned()
+            "Export the live preview loop inside a granted directory. gif (fps 1-30, duration 0.01-10 seconds) works for any animation. mp4 and mov (H.264 or HEVC) need a native timeline and export its whole loop; fps defaults to the timeline tick rate, extension must match format, width and height go up to 4096 and must be given together, quality (0-1, default 0.5; constant-quality mode, encoder level 0.6 + 0.4*quality, so size also scales with resolution, fps and content) and bitrate (kbps) are alternatives, loops repeats the loop, background (#rrggbb) fills transparency, alpha true keeps transparency (mov with hevc only; background is ignored). apng writes an animated PNG (path ends .png or .apng) of one loop, keeping alpha unless background is given; loops is the play count (default forever). frames writes one PNG per sampled tick into the path's directory: path is name_####.png (4+ #) or a name prefix without extension (name_0000.png...); it refuses to overwrite and caps at 1440 frames. apng and frames take fps, width and height (together) and background, and need a native timeline.".to_owned()
         } else if preview && tool.name == "render_png" {
             "Render the open document to a PNG file inside a granted directory. Optional time is in SECONDS (tick / ticksPerSecond; 0 to the timeline length, default 0), not ticks; a time past the end of the timeline is rejected.".to_owned()
         } else {

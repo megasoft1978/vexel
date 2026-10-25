@@ -441,3 +441,72 @@ fn live_preview_lists_the_fragment_and_use_tools() {
         assert!(tools.iter().any(|t| t == name), "{name}");
     }
 }
+
+#[test]
+fn element_reorder_works_on_fragment_groups() {
+    let mut rig = rig();
+    let rect = rig.add_rect(10, 10, "#ff0000");
+    let reply = fragment(
+        &mut rig,
+        "root",
+        r##"<g id="fg"><rect id="fg-1" width="5" height="5"/></g>"##,
+    );
+    assert!(!reply.is_error, "{}", reply.error());
+    for (target, before) in [(&rect, true), (&rect, false)] {
+        let reply = rig.doc_tool(
+            "element_reorder",
+            &format!(r#""elementId":"fg","targetId":"{target}","before":{before}"#),
+        );
+        assert!(!reply.is_error, "before={before}: {}", reply.error());
+    }
+}
+
+/// `<g id="{id}"><title>xxx</title></g>` of exactly `len` bytes.
+fn padded_group(id: &str, len: usize) -> String {
+    let wrap = format!(r#"<g id="{id}"><title></title></g>"#);
+    format!(
+        r#"<g id="{id}"><title>{}</title></g>"#,
+        "x".repeat(len - wrap.len())
+    )
+}
+
+#[test]
+fn fragment_size_limit_is_one_mib() {
+    const MIB: usize = 1024 * 1024;
+    let mut rig = rig();
+    let ok = padded_group("big", MIB);
+    assert_eq!(ok.len(), MIB);
+    let reply = fragment(&mut rig, "root", &ok);
+    assert!(!reply.is_error, "1 MiB accepted: {}", reply.error());
+    let over = padded_group("big2", MIB + 1);
+    let reply = fragment(&mut rig, "root", &over);
+    assert!(reply.is_error, "1 MiB + 1 refused");
+    assert!(
+        reply.error().contains("at most 1048576 bytes"),
+        "{}",
+        reply.error()
+    );
+    assert!(
+        !rig.app
+            .source_bytes()
+            .unwrap()
+            .windows(4)
+            .any(|w| w == b"big2")
+    );
+}
+
+#[test]
+fn element_reorder_moves_groups_larger_than_64_kib() {
+    let mut rig = rig();
+    for (id, len) in [("ga", 100 * 1024), ("gb", 200 * 1024), ("gc", 1000)] {
+        let reply = fragment(&mut rig, "root", &padded_group(id, len));
+        assert!(!reply.is_error, "{id}: {}", reply.error());
+    }
+    for (id, target, before) in [("gc", "ga", true), ("ga", "gb", false), ("gb", "gc", true)] {
+        let reply = rig.doc_tool(
+            "element_reorder",
+            &format!(r#""elementId":"{id}","targetId":"{target}","before":{before}"#),
+        );
+        assert!(!reply.is_error, "{id}: {}", reply.error());
+    }
+}

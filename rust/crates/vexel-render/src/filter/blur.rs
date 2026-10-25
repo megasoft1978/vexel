@@ -34,6 +34,17 @@ fn radius_of(sigma: f64) -> Result<i32, RenderError> {
     Ok(radius as i32)
 }
 
+/// Kernel visits per pixel of the exact blur.
+pub(super) fn exact_per_pixel(radius_x: i32, radius_y: i32) -> usize {
+    (2 * radius_x + 1) as usize + (2 * radius_y + 1) as usize
+}
+
+/// True when the exact kernel fits [`super::FILTER_WORK_LIMIT`] for `pixels`;
+/// larger blurs use the O(pixels) box approximation.
+pub(super) fn is_exact(pixels: usize, radius_x: i32, radius_y: i32) -> bool {
+    pixels.saturating_mul(exact_per_pixel(radius_x, radius_y)) <= super::FILTER_WORK_LIMIT
+}
+
 /// Gaussian blur of straight RGBA `input` into `output`; `work` holds
 /// `width * height * 4` floats.
 pub(super) fn blur(
@@ -46,6 +57,9 @@ pub(super) fn blur(
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
     let (radius_x, radius_y) = (radius_of(sigma.0)?, radius_of(sigma.1)?);
+    if !is_exact(width * height, radius_x, radius_y) {
+        return super::boxblur::blur(input, output, width, height, sigma, work, control);
+    }
     let (weights_x, weights_y) = (weights(sigma.0, radius_x), weights(sigma.1, radius_y));
     let total_x: f64 = weights_x.iter().sum();
     let total_y: f64 = weights_y.iter().sum();

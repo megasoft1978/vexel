@@ -417,7 +417,8 @@ impl Renderer<'_> {
                 .primitives
                 .slice(scene.view.filter_primitives)
                 .ok_or(RenderError::InvalidGeometry)?;
-            let available = GROUP_SCRATCH_LIMIT - self.scratch;
+            // Filter scratch is capped by its own limit, on top of the live layers.
+            let available = vexel_render::filter::FILTER_SCRATCH_LIMIT;
             apply_filter_chain(
                 layer.rgba_mut(),
                 &self.map,

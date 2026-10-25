@@ -16,6 +16,7 @@
 //! true is [`RenderError::Cancelled`]. On any error the layer is unchanged.
 
 mod blur;
+mod boxblur;
 mod color;
 mod region;
 mod turbulence;
@@ -24,10 +25,19 @@ use crate::{RenderError, ViewMap};
 use color::{composite_pixel, linear_table, source_over, srgb_table};
 use vexel_scene::{Filter, FilterInput, FilterKind, FilterPrimitive};
 
-/// C `FILTER_SCRATCH_LIMIT`: total scratch bytes of one filter application.
-pub const FILTER_SCRATCH_LIMIT: usize = 64 * 1024 * 1024;
-/// C `FILTER_WORK_LIMIT`: weighted pixel visits of one filter application.
+/// Hard cap on the total scratch bytes of one filter application (the C
+/// limit was 64 MiB; raised with the region-bounded window, see below).
+pub const FILTER_SCRATCH_LIMIT: usize = 768 * 1024 * 1024;
+/// C `FILTER_WORK_LIMIT`: weighted pixel visits up to which a blur uses the
+/// exact Gaussian kernel. Larger blurs use the O(pixels) box approximation
+/// ([`boxblur`]), so the exact outputs are unchanged.
 pub const FILTER_WORK_LIMIT: usize = 50_000_000;
+/// Hard cap on the weighted pixel visits of one whole filter application.
+pub const FILTER_TOTAL_WORK_LIMIT: usize = 2_000_000_000;
+/// Hard cap on the pixels one filter application works on (16 Mpx). The work
+/// window is the filter region plus the reach of the chain, clipped to the
+/// layer, not the whole canvas.
+pub const MAX_FILTER_PIXELS: usize = 16 * 1024 * 1024;
 /// C `SVG_SHAPE_MAX_FILTER_PRIMITIVES`.
 pub const MAX_FILTER_PRIMITIVES: usize = 16;
 /// Largest scaled `stdDeviation` (C `values[0|1] > 32`).
@@ -93,29 +103,120 @@ pub fn apply_filter_chain(
             return Err(RenderError::LimitExceeded);
         }
     }
+    // Everything outside the filter region is cleared at the end, and a
+    // pixel only depends on inputs within the summed reach of the chain, so
+    // the work is bounded to the region plus that reach.
+    let region = bounds.map(|b| region::device_region(view, filter, b));
+    let tile = region::user_region(view, filter, bounds);
+    let [x0, y0, x1, y1] = window_of(&scaled, region, width, height);
+    let (window_w, window_h) = (x1 - x0, y1 - y0);
+    let pixels = window_w * window_h;
+    if pixels == 0 {
+        layer.fill(0);
+        return Ok(());
+    }
+    if pixels > MAX_FILTER_PIXELS {
+        return Err(RenderError::LimitExceeded);
+    }
     check_work(&scaled, pixels)?;
     let has_alpha = chain.iter().any(uses_alpha_input);
     let has_shadow = chain.iter().any(|p| p.kind == FilterKind::DropShadow);
-    let float_bytes = pixels
-        .checked_mul(4 * std::mem::size_of::<f32>())
-        .ok_or(RenderError::LimitExceeded)?;
-    let mut scratch = (chain.len() + 1 + usize::from(has_alpha))
+    let byte_count = pixels * 4;
+    let float_bytes = pixels * 4 * std::mem::size_of::<f32>();
+    let full = window_w == width && window_h == height;
+    // results + graphic + alpha + source copy + finished, f32 work, shadow
+    let mut scratch = (chain.len() + 2 + usize::from(has_alpha) + usize::from(!full))
         .checked_mul(byte_count)
         .and_then(|bytes| bytes.checked_add(float_bytes))
         .ok_or(RenderError::LimitExceeded)?;
     if has_shadow {
-        scratch = scratch
-            .checked_add(pixels)
-            .ok_or(RenderError::LimitExceeded)?;
+        scratch += pixels;
     }
     if scratch > FILTER_SCRATCH_LIMIT || scratch > available_scratch {
         return Err(RenderError::LimitExceeded);
     }
+    let local_view = ViewMap {
+        width: window_w as u32,
+        height: window_h as u32,
+        offset_x: view.offset_x - x0 as f64,
+        offset_y: view.offset_y - y0 as f64,
+        ..*view
+    };
+    let local_region = region.map(|r| [r[0] - x0 as f64, r[1] - y0 as f64, r[2] - x0 as f64, r[3] - y0 as f64]);
+    if full {
+        let finished = run_chain(layer, &local_view, filter, &scaled, local_region, tile, has_alpha, has_shadow, control)?;
+        layer.copy_from_slice(&finished);
+        return Ok(());
+    }
+    let mut source = reserve(byte_count)?;
+    for y in y0..y1 {
+        source.extend_from_slice(&layer[(y * width + x0) * 4..(y * width + x1) * 4]);
+    }
+    let finished = run_chain(&source, &local_view, filter, &scaled, local_region, tile, has_alpha, has_shadow, control)?;
+    layer.fill(0);
+    for (row, line) in finished.chunks_exact(window_w * 4).enumerate() {
+        let at = ((y0 + row) * width + x0) * 4;
+        layer[at..at + window_w * 4].copy_from_slice(line);
+    }
+    Ok(())
+}
 
+/// Pixel window `[x0, y0, x1, y1)` the chain must be evaluated on: the
+/// filter `region` grown by the summed blur/offset reach, clipped to the layer.
+fn window_of(chain: &[FilterPrimitive], region: Option<[f64; 4]>, width: usize, height: usize) -> [usize; 4] {
+    let Some(r) = region else {
+        return [0; 4];
+    };
+    if !r.iter().all(|v| v.is_finite()) {
+        return [0, 0, width, height];
+    }
+    let (mut reach_x, mut reach_y) = (1.0f64, 1.0f64);
+    for p in chain {
+        let v = &p.values;
+        match p.kind {
+            FilterKind::GaussianBlur => {
+                reach_x += (3.0 * v[0]).ceil();
+                reach_y += (3.0 * v[1]).ceil();
+            }
+            FilterKind::DropShadow => {
+                reach_x += (3.0 * v[0]).ceil() + v[2].abs().ceil() + 1.0;
+                reach_y += (3.0 * v[1]).ceil() + v[3].abs().ceil() + 1.0;
+            }
+            FilterKind::Offset => {
+                reach_x += v[2].abs().ceil() + 1.0;
+                reach_y += v[3].abs().ceil() + 1.0;
+            }
+            _ => {}
+        }
+    }
+    let lo = |v: f64, limit: usize| v.floor().clamp(0.0, limit as f64) as usize;
+    let hi = |v: f64, limit: usize| v.ceil().clamp(0.0, limit as f64) as usize;
+    let (x0, y0) = (lo(r[0] - reach_x, width), lo(r[1] - reach_y, height));
+    let (x1, y1) = (hi(r[2] + reach_x, width).max(x0), hi(r[3] + reach_y, height).max(y0));
+    [x0, y0, x1, y1]
+}
+
+/// Evaluates the chain on `source` (`view.width() x view.height()` straight
+/// RGBA8) and returns the sRGB result clipped to `region`.
+#[allow(clippy::too_many_arguments)]
+fn run_chain(
+    source: &[u8],
+    view: &ViewMap,
+    filter: &Filter,
+    scaled: &[FilterPrimitive],
+    region: Option<[f64; 4]>,
+    tile: [f64; 4],
+    has_alpha: bool,
+    has_shadow: bool,
+    control: &dyn Fn() -> bool,
+) -> Result<Vec<u8>, RenderError> {
+    let (width, height) = (view.width() as usize, view.height() as usize);
+    let pixels = width * height;
+    let byte_count = pixels * 4;
     let linear = linear_table();
     let linear_rgb = filter.linear_rgb;
     let mut graphic = reserve(byte_count)?;
-    graphic.extend_from_slice(layer);
+    graphic.extend_from_slice(source);
     if linear_rgb {
         for pixel in graphic.chunks_exact_mut(4) {
             for c in &mut pixel[..3] {
@@ -148,7 +249,7 @@ pub fn apply_filter_chain(
     results
         .try_reserve_exact(scaled.len())
         .map_err(|_| RenderError::LimitExceeded)?;
-    for _ in &scaled {
+    for _ in scaled {
         let mut surface = reserve(byte_count)?;
         surface.resize(byte_count, 0);
         results.push(surface);
@@ -243,7 +344,7 @@ pub fn apply_filter_chain(
                     seed: primitive.values[3] as i64,
                     turbulence: primitive.mode & 1 != 0,
                     stitch: primitive.mode & 2 != 0,
-                    tile: region::user_region(view, filter, bounds),
+                    tile,
                 };
                 turbulence::render(&params, view, output);
             }
@@ -272,9 +373,8 @@ pub fn apply_filter_chain(
             }
         }
     }
-    region::clip(&mut finished, width, height, view, filter, bounds);
-    layer.copy_from_slice(&finished);
-    Ok(())
+    region::clip(&mut finished, width, height, region);
+    Ok(finished)
 }
 
 fn reserve(bytes: usize) -> Result<Vec<u8>, RenderError> {
@@ -292,7 +392,9 @@ fn uses_alpha_input(primitive: &FilterPrimitive) -> bool {
         || primitive.merge_inputs[..count].contains(&FilterInput::Alpha)
 }
 
-/// C `filter_work`: weighted pixel visits, bounded by [`FILTER_WORK_LIMIT`].
+/// Weighted pixel visits of the chain: bounded by [`FILTER_TOTAL_WORK_LIMIT`].
+/// A blur costs its exact kernel visits while those fit [`FILTER_WORK_LIMIT`],
+/// else the flat box-blur cost.
 fn check_work(chain: &[FilterPrimitive], pixels: usize) -> Result<(), RenderError> {
     let mut total = 0usize;
     for primitive in chain {
@@ -307,7 +409,12 @@ fn check_work(chain: &[FilterPrimitive], pixels: usize) -> Result<(), RenderErro
                 {
                     return Err(RenderError::LimitExceeded);
                 }
-                (2.0 * rx + 1.0) as usize + (2.0 * ry + 1.0) as usize
+                let (rx, ry) = (rx as i32, ry as i32);
+                if blur::is_exact(pixels, rx, ry) {
+                    blur::exact_per_pixel(rx, ry)
+                } else {
+                    boxblur::BOX_COST_PER_PIXEL
+                }
             }
             FilterKind::Merge => usize::from(primitive.merge_count),
             FilterKind::Turbulence => (primitive.values[2] as usize).max(1),
@@ -316,7 +423,7 @@ fn check_work(chain: &[FilterPrimitive], pixels: usize) -> Result<(), RenderErro
         total = pixels
             .checked_mul(per_pixel)
             .and_then(|amount| total.checked_add(amount))
-            .filter(|total| *total <= FILTER_WORK_LIMIT)
+            .filter(|total| *total <= FILTER_TOTAL_WORK_LIMIT)
             .ok_or(RenderError::LimitExceeded)?;
     }
     Ok(())

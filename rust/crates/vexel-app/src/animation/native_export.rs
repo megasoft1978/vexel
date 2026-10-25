@@ -213,7 +213,10 @@ impl NativeExportSource {
         let ticks: Vec<u32> = loop_steps.into_iter().step_by(stride).collect();
         let viewport = svg_viewport(Arc::clone(&self.source), &|| false)
             .map_err(NativeExportError::Viewport)?;
-        let (width, height) = (viewport.output_width, viewport.output_height);
+        let (width, height) = fit_total_pixels(
+            (viewport.output_width, viewport.output_height),
+            ticks.len() as u64,
+        );
         if (u64::from(width) * u64::from(height)).saturating_mul(ticks.len() as u64)
             > MAX_TOTAL_PIXELS
         {
@@ -271,6 +274,19 @@ impl NativeExportSource {
             height,
         })
     }
+}
+
+/// Scales `(width, height)` down, keeping the aspect ratio, until `frames`
+/// frames fit the encoder's [`MAX_TOTAL_PIXELS`]; unchanged when they already do.
+/// A large document therefore exports as a smaller GIF instead of failing.
+pub(super) fn fit_total_pixels((width, height): (u32, u32), frames: u64) -> (u32, u32) {
+    let total = u64::from(width) * u64::from(height) * frames.max(1);
+    if total <= MAX_TOTAL_PIXELS {
+        return (width, height);
+    }
+    let scale = (MAX_TOTAL_PIXELS as f64 / total as f64).sqrt();
+    let fit = |v: u32| ((f64::from(v) * scale).floor() as u32).max(1);
+    (fit(width), fit(height))
 }
 
 /// Frame geometry for rendering the document viewport at `width` x `height`.

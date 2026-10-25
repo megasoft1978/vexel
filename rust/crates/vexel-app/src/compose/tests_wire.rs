@@ -355,28 +355,42 @@ fn oversize_filter_blur_returns_the_typed_limit_error() {
 
 #[test]
 fn oversize_filter_surface_returns_the_typed_limit_error() {
-    let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='3000' height='3000'>\
-         <defs><filter id='f'><feGaussianBlur stdDeviation='1'/></filter></defs>\
-         <g filter='url(#f)'><rect width='20' height='20' fill='red'/></g></svg>";
+    // A full 4096 x 4096 (16 Mpx) opaque layer through eight blurs exceeds the
+    // aggregate filter work and scratch caps; one blur on it would not.
+    let blurs = "<feGaussianBlur stdDeviation='1'/>".repeat(8);
+    let svg = format!(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='4096' height='4096'>\
+         <defs><filter id='f'>{blurs}</filter></defs>\
+         <g filter='url(#f)'><rect width='4096' height='4096' fill='red'/></g></svg>"
+    );
     assert_eq!(
-        compose_svg(svg.as_bytes(), 3000, 3000),
+        compose_svg(svg.as_bytes(), 4096, 4096),
         Err(ComposeError::LimitRender)
     );
 }
 
 #[test]
-fn layer_memory_is_bounded_by_the_scratch_limit() {
-    // A masked group holds its layer and the mask content layer at once; on a
-    // 3000x3000 canvas that is 72 MB, over the 64 MiB group scratch bound.
+fn filter_on_a_small_region_of_a_large_canvas_renders() {
     let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='3000' height='3000'>\
-         <defs><mask id='m'><rect width='3000' height='3000' fill='white'/></mask></defs>\
-         <g mask='url(#m)'><rect width='20' height='20' fill='red'/></g></svg>";
+         <defs><filter id='f'><feGaussianBlur stdDeviation='1'/></filter></defs>\
+         <g filter='url(#f)'><rect width='20' height='20' fill='red'/></g></svg>";
+    assert!(compose_svg(svg.as_bytes(), 3000, 3000).is_ok());
+}
+
+#[test]
+fn layer_memory_is_bounded_by_the_scratch_limit() {
+    // Two nested opacity groups and a masked group hold five 64 MiB layers on
+    // a 4096x4096 canvas, over the 192 MiB group scratch bound.
+    let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='4096' height='4096'>\
+         <defs><mask id='m'><rect width='4096' height='4096' fill='white'/></mask></defs>\
+         <g opacity='0.5'><g opacity='0.5'><g mask='url(#m)'>\
+         <rect width='20' height='20' fill='red'/></g></g></g></svg>";
     assert_eq!(
-        compose_svg(svg.as_bytes(), 3000, 3000),
+        compose_svg(svg.as_bytes(), 4096, 4096),
         Err(ComposeError::LimitRender)
     );
     // The same group on a small canvas is fine.
-    let small = svg.replace("3000", "100");
+    let small = svg.replace("4096", "100");
     assert!(compose_svg(small.as_bytes(), 100, 100).is_ok());
 }
 

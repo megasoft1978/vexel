@@ -29,8 +29,8 @@ pub struct NativeVideoRequest {
     /// Keep transparency (HEVC with alpha, `.mov`); `background` is ignored.
     pub alpha: bool,
     pub bit_rate: Option<u32>,
-    /// Quality 0..1 used to derive the bit rate when `bit_rate` is `None`;
-    /// both `None` picks the encoder's size-based default.
+    /// Quality 0..1 (see [`quality_level`]) used when `bit_rate` is `None`;
+    /// both `None` uses [`DEFAULT_QUALITY`].
     pub quality: Option<f64>,
     /// Target frames per second; `None` (or above the tick rate) shows one
     /// frame per tick. Frames are every `round(ticks_per_second / fps)`-th tick.
@@ -39,15 +39,20 @@ pub struct NativeVideoRequest {
     pub loops: u32,
 }
 
-/// Bits per pixel per frame at quality 0 and 1.
-const BPP_LOW: f64 = 0.02;
-const BPP_HIGH: f64 = 0.3;
+/// Quality used when the caller gives neither `quality` nor `bit_rate`.
+pub(crate) const DEFAULT_QUALITY: f64 = 0.5;
 
-/// Bit rate for `quality` (clamped to 0..1) at the output size and frame rate.
-fn quality_bit_rate(quality: f64, width: u32, height: u32, frames_per_second: f64) -> u32 {
-    let bpp = BPP_LOW + (BPP_HIGH - BPP_LOW) * quality.clamp(0.0, 1.0);
-    let rate = f64::from(width) * f64::from(height) * frames_per_second * bpp;
-    rate.clamp(250_000.0, 200_000_000.0) as u32
+/// Encoder constant-quality level (`AVVideoQualityKey`, 0..1) for the
+/// tool's `quality` argument (clamped to 0..1). Pure so it is testable
+/// without encoding.
+///
+/// Linear from 0.6 (quality 0, smallest) to 1.0 (quality 1, near lossless):
+/// VideoToolbox's H.264/HEVC size does not fall monotonically below about
+/// 0.6. File size grows with pixel count and fps on its own at constant
+/// quality.
+pub(crate) fn quality_level(quality: f64) -> f64 {
+    let q = quality.clamp(0.0, 1.0);
+    0.6 + 0.4 * q
 }
 
 /// A finished video and what it contains.
@@ -132,10 +137,7 @@ impl NativeExportSource {
         }
         let geometry = svg_geometry(&viewport, width, height);
         let assets = self.drawing_assets();
-        let bit_rate = req.bit_rate.or_else(|| {
-            req.quality
-                .map(|q| quality_bit_rate(q, width, height, f64::from(tps) / stride as f64))
-        });
+        let quality = quality_level(req.quality.unwrap_or(DEFAULT_QUALITY));
         let mut writer = VideoWriter::create(VideoSpec {
             path: req.path.clone(),
             width,
@@ -144,7 +146,8 @@ impl NativeExportSource {
             timescale: tps as i32,
             background: req.background,
             alpha: req.alpha,
-            bit_rate,
+            bit_rate: req.bit_rate,
+            quality: Some(quality),
         })?;
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
         render_ordered(

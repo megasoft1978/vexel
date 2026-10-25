@@ -54,7 +54,19 @@ const HASH_ONLY_OPS: [Op; 8] = [
 /// covered by the `tick_*` cases.
 const EXPORT_PROFILES: [&str; 3] = ["fill", "opac", "mix"];
 
+/// The cartoon profile is one fixed ~500 element scene: open, render and tick.
+fn included_cartoon(op: Op, n: usize) -> bool {
+    n == 500
+        && matches!(
+            op,
+            Op::OpenDecode | Op::Render(512) | Op::Render(2048) | Op::Tick(512)
+        )
+}
+
 fn included(level: Level, op: Op, profile: Profile, n: usize) -> bool {
+    if profile == Profile::Cartoon {
+        return included_cartoon(op, n);
+    }
     let export = matches!(op, Op::ExportGif | Op::ExportApng | Op::ExportMp4);
     if export && !EXPORT_PROFILES.contains(&profile.name()) {
         return false;
