@@ -35,6 +35,32 @@ static inline uint4 vx_source_over(uint4 d, uint4 s) {
     return uint4(rgb, (alpha_num + 127u) / 255u);
 }
 
+// Closes frames above `keep`: each layer pixel is composited into the frame
+// below (or the canvas pixel) with the group's per-alpha opacity table
+// (run frames: opacity 1), as vexel-render group.rs composite_layer.
+static inline void vx_close(
+    thread uint4* layer, thread uint* ids, thread uint& open, uint keep,
+    thread uint4& pixel, device const GpuGroup* groups)
+{
+    while (open > keep) {
+        open--;
+        uint4 s = layer[open];
+        uint a = s.w;
+        if ((ids[open] & VX_FRAME_RUN) == 0u) {
+            a = (groups[ids[open]].lut[a >> 2] >> ((a & 3u) * 8u)) & 255u;
+        }
+        if (a == 0u) {
+            continue;
+        }
+        uint4 src = uint4(s.xyz, a);
+        if (open == 0u) {
+            pixel = vx_source_over(pixel, src);
+        } else {
+            layer[open - 1u] = vx_source_over(layer[open - 1u], src);
+        }
+    }
+}
+
 static inline float vx_spread(float t, uint mode) {
     if (mode == VX_SPREAD_PAD) {
         return t;
@@ -130,8 +156,9 @@ kernel void vx_raster(
     device const GpuTileEntry* list [[buffer(4)]],
     device const GpuGradient* gradients [[buffer(5)]],
     device const GpuStop* stops [[buffer(6)]],
-    constant VxMode& mode [[buffer(7)]],
-    device uint* out [[buffer(8)]],
+    device const GpuGroup* groups [[buffer(7)]],
+    constant VxMode& mode [[buffer(8)]],
+    device uint* out [[buffer(9)]],
     uint2 tg [[threadgroup_position_in_grid]],
     uint2 lid [[thread_position_in_threadgroup]],
     uint lin [[thread_index_in_threadgroup]])
@@ -154,9 +181,24 @@ kernel void vx_raster(
         inside_mask |= ok ? (1u << s) : 0u;
     }
 
+    // Open frames (layered groups and shape runs): ids and their layer pixels.
+    uint4 layer[VX_MAX_FRAMES];
+    uint ids[VX_MAX_FRAMES];
+    uint open = 0u;
+
     for (uint e = 0; e < tile.list_count; e++) {
         GpuTileEntry entry = list[tile.list_start + e];
         GpuShape shape = shapes[entry.shape];
+        uint shared = 0u;
+        while (shared < open && shared < shape.frame_count && ids[shared] == shape.frames[shared]) {
+            shared++;
+        }
+        vx_close(layer, ids, open, shared, pixel, groups);
+        for (uint i = shared; i < shape.frame_count; i++) {
+            ids[i] = shape.frames[i];
+            layer[i] = uint4(0u);
+        }
+        open = shape.frame_count;
         int wind[VX_SAMPLE_COUNT];
         uint parity = 0u;
         for (uint s = 0; s < VX_SAMPLE_COUNT; s++) {
@@ -221,8 +263,13 @@ kernel void vx_raster(
             continue;
         }
         uint4 src = uint4((acc + alpha_sum / 2u) / alpha_sum, (alpha_sum + VX_SAMPLE_COUNT / 2u) / VX_SAMPLE_COUNT);
-        pixel = vx_source_over(pixel, src);
+        if (open == 0u) {
+            pixel = vx_source_over(pixel, src);
+        } else {
+            layer[open - 1u] = vx_source_over(layer[open - 1u], src);
+        }
     }
+    vx_close(layer, ids, open, 0u, pixel, groups);
     if (inside) {
         if (mode.premultiply != 0u) {
             pixel.xyz = (pixel.xyz * pixel.w + 127u) / 255u;

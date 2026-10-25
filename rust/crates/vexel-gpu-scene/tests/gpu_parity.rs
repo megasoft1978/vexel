@@ -215,13 +215,101 @@ const ADR: Bounds = (
 
 #[test]
 fn frozen_thresholds_not_looser_than_adr() {
-    for name in ["fill", "linear", "radial"] {
+    for name in ["fill", "linear", "radial", "groups"] {
         let b = frozen(name);
         assert!(
             b.0 <= ADR.0 && b.1 <= ADR.1 && b.2 <= ADR.2,
             "{name}: {b:?}"
         );
     }
+}
+
+/// Group scenes: (seed, shapes, w, h, max depth).
+const GROUP_CASES: [(u64, usize, u32, u32, u32); 6] = [
+    (61, 80, 256, 192, 1),
+    (62, 160, 333, 250, 2),
+    (63, 240, 512, 384, 3),
+    (64, 300, 512, 384, 4),
+    (65, 400, 900, 675, 4),
+    (66, 500, 1024, 768, 3),
+];
+
+fn group_case(seed: u64, count: usize, w: u32, h: u32, depth: u32, solid: bool) -> (Vec<Spec>, Vec<Node>) {
+    let mut s = specs(seed, count * 2, f64::from(w), f64::from(h));
+    if solid {
+        s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));
+    }
+    s.truncate(count);
+    let nodes = group_tree(seed, s.len(), depth);
+    (s, nodes)
+}
+
+/// Kernel equals the reference byte for byte on solid-fill group scenes (the
+/// layer stack is integer only); mixed fills are bounded by the ADR.
+#[test]
+fn gpu_groups_match_reference() {
+    let Some(mut g) = gpu() else { return };
+    for (seed, count, w, h, depth) in GROUP_CASES {
+        for solid in [true, false] {
+            let (s, nodes) = group_case(seed, count, w, h, depth, solid);
+            let scene = group_scene(&s, &nodes, w, h);
+            let enc = encode(&scene).unwrap();
+            let got = unwrap_render(g.render(&scene, Output::Straight));
+            let expected = reference::render_straight(&enc);
+            let m = compare(&got, &expected);
+            let diffs = got.iter().zip(&expected).filter(|(a, b)| a != b).count();
+            println!(
+                "group ref seed {seed} {w}x{h} depth<={depth} solid={solid} groups={}: differing bytes {diffs} max {}",
+                enc.groups.len(),
+                m.max_diff
+            );
+            if solid {
+                assert_eq!(diffs, 0, "solid group scenes must be byte exact");
+            }
+            assert!(m.over_2 <= PARITY_OVER_2_MAX_FRACTION, "{m:?}");
+            assert!(m.over_16 <= PARITY_OVER_16_MAX_FRACTION, "{m:?}");
+            assert!(m.mae <= PARITY_MEAN_ABS_ERROR_MAX, "{m:?}");
+        }
+    }
+}
+
+#[test]
+fn gpu_groups_match_cpu_within_frozen_bounds() {
+    let Some(mut g) = gpu() else { return };
+    let bounds = frozen("groups");
+    for (seed, count, w, h, depth) in GROUP_CASES {
+        let (s, nodes) = group_case(seed, count, w, h, depth, false);
+        let scene = group_scene(&s, &nodes, w, h);
+        let cpu = group_cpu(&s, &nodes, w, h);
+        let got = unwrap_render(g.render(&scene, Output::Straight));
+        let m = compare(&got, &cpu);
+        println!(
+            "group cpu seed {seed} {w}x{h} depth<={depth}: >2/255={:.5}% >16/255={:.5}% mae={:.7} max={}",
+            m.over_2 * 100.0,
+            m.over_16 * 100.0,
+            m.mae,
+            m.max_diff
+        );
+        assert!(
+            m.over_2 <= bounds.0 && m.over_16 <= bounds.1 && m.mae <= bounds.2,
+            "seed {seed}: {m:?}"
+        );
+    }
+}
+
+#[test]
+fn groups_deterministic_over_ten_runs() {
+    let Some(mut g) = gpu() else { return };
+    let (s, nodes) = group_case(64, 300, 512, 384, 4, false);
+    let scene = group_scene(&s, &nodes, 512, 384);
+    let mut hashes = Vec::new();
+    for _ in 0..10 {
+        let px = unwrap_render(g.render(&scene, Output::Premultiplied));
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        px.hash(&mut h);
+        hashes.push(h.finish());
+    }
+    assert!(hashes.windows(2).all(|p| p[0] == p[1]), "{hashes:?}");
 }
 
 #[test]

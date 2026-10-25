@@ -1,8 +1,12 @@
 use vexel_gpu_scene::input::{
-    GpuColorStop, GpuGradient, GpuPaint, GpuScene, GpuSegment, GpuSpread,
+    GpuColorStop, GpuGradient, GpuGroup, GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape,
+    GpuSpread,
 };
 use vexel_raster::Tile;
-use vexel_render::{Affine, FlatEdge, GradientRef, RenderShape, ViewBox, ViewMap, render_shapes};
+use vexel_render::{
+    Affine, FlatEdge, GradientRef, RenderGroup, RenderNode, RenderShape, ViewBox, ViewMap,
+    render_groups, render_shapes,
+};
 use vexel_scene::{Paint, PaintKind, PaintStop, Spread, TableRange};
 
 struct Lcg(u64);
@@ -282,6 +286,21 @@ fn cpu_render_view(
     offset: (f64, f64),
     scale: f64,
 ) -> Vec<u8> {
+    cpu_draw(specs, w, h, vb, offset, scale, &|shapes, view, tile| {
+        render_shapes(shapes, view, tile, &|| false).unwrap()
+    })
+}
+
+/// [`cpu_render_view`] with the drawing step supplied (flat or group tree).
+fn cpu_draw(
+    specs: &[Spec],
+    w: u32,
+    h: u32,
+    vb: ViewBox,
+    offset: (f64, f64),
+    scale: f64,
+    draw: &dyn Fn(&[RenderShape<'_>], ViewMap, &mut Tile),
+) -> Vec<u8> {
     let base = Paint {
         kind: PaintKind::Linear,
         spread: Spread::Pad,
@@ -363,7 +382,7 @@ fn cpu_render_view(
         .collect();
     let view = ViewMap::from_viewbox(vb, w, h, None).unwrap();
     let mut tile = Tile::from_owned_rgba(w, h, vec![0; w as usize * h as usize * 4]).unwrap();
-    render_shapes(&shapes, view, &mut tile, &|| false).unwrap();
+    draw(&shapes, view, &mut tile);
     tile.rgba().to_vec()
 }
 
@@ -396,3 +415,4 @@ fn compare(a: &[u8], b: &[u8]) -> Metrics {
     }
 }
 
+include!("groups.rs");

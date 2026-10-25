@@ -2,5 +2,6 @@
   "note": "GPU vs CPU frozen thresholds (fractions of pixels, mean abs error in 0..1). Tighten only; never above the ADR-0035 bounds.",
   "fill": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
   "linear": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
-  "radial": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001}
+  "radial": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001},
+  "groups": {"over_2": 0.0002, "over_16": 0.00002, "mae": 0.001}
 }
