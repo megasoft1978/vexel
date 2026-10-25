@@ -14,6 +14,16 @@ pub(super) fn timeline_source(
     loop_mode: &str,
     flip: u32,
 ) -> NativeExportSource {
+    timeline_source_with(SCENE.to_vec(), tps, duration, loop_mode, flip)
+}
+
+fn timeline_source_with(
+    scene: Vec<u8>,
+    tps: u32,
+    duration: u32,
+    loop_mode: &str,
+    flip: u32,
+) -> NativeExportSource {
     let timeline = format!(
         r#"{{"schema":"vexel.animation","version":1,"ticks_per_second":{tps},"duration_ticks":{duration},"fps":{{"numerator":{tps},"denominator":1}},"loop":"{loop_mode}","onion":{{"before":0,"after":0,"opacity":0}},"tracks":[{{"id":"paint","kind":"property","target":"shape","visible":true,"property":"fill","value_type":"rgba","interpolation":"step","keys":[{{"tick":0,"value":[1,0,0,1]}},{{"tick":{flip},"value":[0,1,0,1]}}]}}]}}"#
     );
@@ -35,7 +45,7 @@ pub(super) fn timeline_source(
         EditLimits::default(),
     )
     .expect("fixture timeline");
-    NativeExportSource::new(SCENE.to_vec(), candidate)
+    NativeExportSource::new(scene, candidate)
 }
 
 fn request(name: &str, size: Option<(u32, u32)>) -> NativeVideoRequest {
@@ -149,4 +159,48 @@ fn video_export_accepts_quality_in_place_of_a_bit_rate() {
         assert!(is_mp4(&req.path));
     }
     let _ = std::fs::remove_file(&req.path);
+}
+
+#[test]
+fn quality_bit_rate_scales_with_quality_size_and_fps_and_clamps() {
+    use crate::animation::native_export_video::{DEFAULT_QUALITY, quality_bit_rate};
+    let (lo, mid, hi) = (
+        quality_bit_rate(0.0, 1920, 1080, 30.0),
+        quality_bit_rate(0.5, 1920, 1080, 30.0),
+        quality_bit_rate(1.0, 1920, 1080, 30.0),
+    );
+    assert!(lo < mid && mid < hi);
+    let default = quality_bit_rate(DEFAULT_QUALITY, 1920, 1080, 30.0);
+    assert!((12_000_000..=16_000_000).contains(&default), "{default}");
+    assert!(quality_bit_rate(0.5, 1920, 1080, 60.0) > mid);
+    assert!(quality_bit_rate(0.5, 960, 540, 30.0) < mid);
+    assert_eq!(quality_bit_rate(0.0, 2, 2, 1.0), 250_000);
+    assert_eq!(quality_bit_rate(1.0, 4096, 4096, 120.0), 200_000_000);
+    assert_eq!(quality_bit_rate(9.0, 1920, 1080, 30.0), hi);
+}
+
+#[test]
+fn video_export_file_size_orders_with_quality() {
+    let mut rects = String::new();
+    for i in 0..400u32 {
+        let (x, y) = (i % 20 * 12, i / 20 * 12);
+        rects += &format!(
+            r##"<rect x="{x}" y="{y}" width="11" height="11" fill="#{:06x}"/>"##,
+            i.wrapping_mul(2_654_435_761) & 0xff_ffff
+        );
+    }
+    let svg = format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240"><rect id="shape" width="240" height="240" fill="#ff0000"/>{rects}</svg>"##
+    );
+    let src = timeline_source_with(svg.into_bytes(), 30, 30, "loop", 15);
+    let mut req = request("size-order.mp4", Some((480, 480)));
+    req.bit_rate = None;
+    let mut sizes = Vec::new();
+    for quality in [0.0, 0.5, 1.0] {
+        req.quality = Some(quality);
+        src.export_video(&req).unwrap();
+        sizes.push(std::fs::metadata(&req.path).unwrap().len());
+        let _ = std::fs::remove_file(&req.path);
+    }
+    assert!(sizes[0] < sizes[1] && sizes[1] < sizes[2], "{sizes:?}");
 }

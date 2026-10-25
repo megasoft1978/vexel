@@ -19,7 +19,7 @@ use objc2_av_foundation::{
     AVFileTypeMPEG4, AVFileTypeQuickTimeMovie, AVMediaTypeVideo, AVVideoAverageBitRateKey,
     AVVideoCodecKey, AVVideoCodecTypeH264, AVVideoCodecTypeHEVC, AVVideoCodecTypeHEVCWithAlpha,
     AVVideoColorPrimaries_ITU_R_709_2, AVVideoColorPrimariesKey, AVVideoColorPropertiesKey,
-    AVVideoCompressionPropertiesKey, AVVideoHeightKey, AVVideoQualityKey,
+    AVVideoCompressionPropertiesKey, AVVideoHeightKey,
     AVVideoTransferFunction_ITU_R_709_2, AVVideoTransferFunctionKey, AVVideoWidthKey,
     AVVideoYCbCrMatrix_ITU_R_709_2, AVVideoYCbCrMatrixKey,
 };
@@ -197,13 +197,11 @@ impl VideoWriter {
                     unavailable(AVVideoYCbCrMatrix_ITU_R_709_2, "value")?,
                 ],
             );
-            let n_q = NSNumber::new_f64(1.0);
             let compression = dict(
-                &[
-                    unavailable(AVVideoAverageBitRateKey, "key")?,
-                    unavailable(AVVideoQualityKey, "key")?,
-                ],
-                &[&n_br, &n_q],
+                // Bit rate only: a quality key would override it and make the
+                // encoder ignore the requested rate.
+                &[unavailable(AVVideoAverageBitRateKey, "key")?],
+                &[&n_br],
             );
             let settings = dict(
                 &[
