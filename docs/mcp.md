@@ -182,7 +182,19 @@ then apply it to a shape or group with `element_set_clip`. Use
 a clash with an existing id is rejected), `opacity` (0-1), `transform`
 (`translateX`, `translateY`, `rotate`, `pivotX`, `pivotY`, `scaleX`, `scaleY`,
 `skewX`) and `gradientId` (+ `paint`: `fill` default or `stroke`), all applied in
-the same undoable edit. `element_group` accepts `elementIds[]` (1-64 siblings of
+the same undoable edit. Limits of `element_add`: `rect` and `ellipse` may lie
+partly or wholly outside the canvas (every edge within +-1000000 of the origin;
+width and height must stay positive); a `path` `d` is at most 256 KiB and 16384
+segments (arcs unsupported); path `fill`/`stroke` and line `stroke` take
+`#rrggbb`, short `#rgb` (expanded to `#rrggbb`) or `none`; a `path` also takes
+`stroke-linecap` (`butt|round|square`), `stroke-linejoin` (`miter|round|bevel`)
+and `fill-rule` (`nonzero|evenodd`); `rect`/`ellipse` may omit `fill` when
+`gradientId` is given (the gradient is the fill, or the stroke with `paint`).
+`attribute_set` with `name` `id` renames any element, groups included
+(`value` 1-64 characters `[A-Za-z0-9_.-]` starting with a letter or `_`, not used
+by another element): `href="#id"` and `url(#id)` references and native timeline
+tracks that target the element follow, and one undo reverts all of it.
+`element_group` accepts `elementIds[]` (1-1024 siblings of
 one parent) to wrap several elements in one group, and `element_reparent`
 (`elementId`, `parentId`, optional `index`) moves an element into another group
 or back to `"root"` in one edit (ancestor transforms are not compensated). Use
@@ -293,7 +305,10 @@ is undone and refused (see the table), so the document always renders.
 `use_add` instantiates an existing element, group or `symbol` by reference:
 `{"refId":"star","x":40,"y":30,"id":"star-1","fill":"#00ff00","opacity":0.8,
 "transform":{...}}` (`parentId` defaults to `"root"`; `transform` is the
-`element_add` object, applied before `x`/`y`). It returns the new `elementId`.
+`element_add` object). `x`/`y` move the instance in the parent's space and the
+transform (scale, rotation) acts about the instance origin at `x`,`y`: with a
+transform they are folded into the matrix translation, so `scaleX: 0.5` with
+`x: 100` puts the origin at 100 and halves the size around it. It returns the new `elementId`.
 The instance is one element: it counts once toward the scene limit (the
 referenced content is counted when it is added; expansions are not counted by
 `SCENE_LIMIT`, which counts `id` attributes in the source). Expansion is bounded
@@ -313,12 +328,13 @@ Measured by `rust/crates/vexel-app/tests/mcp_fragments.rs` (live preview,
 | `<defs><filter>` with `feGaussianBlur` | yes | soft edges |
 | `feDropShadow` | yes | offset shadow renders |
 | `feColorMatrix` (hueRotate) | yes | |
-| `feTurbulence` | no | decoder: `UnsupportedFeTurbulence`; fragment is undone with an error |
+| `feTurbulence` | yes | renders (see docs/svg-effects.md) |
 | `<symbol>` + `<use href x y>` | yes | |
 | `<use>` with `transform` and x/y | yes | |
 | `<mask>` | yes | |
 | `<clipPath>` with `<path>` children | yes | |
-| `mix-blend-mode` (attribute or style) | no | renderer: `Unsupported(OpacityGroup)`; fragment is undone with an error |
+| `mix-blend-mode` (attribute or style) | yes | blends against the parent layer (docs/svg-effects.md) |
+| `filter`/`mask`/`clip-path`/paint `url(#id)` naming no element | refused | error names the undefined reference kind (for example `undefined filter reference`); define the target first or in the same fragment |
 | `stroke` on `<text>` | yes | outline paints |
 | `<image>` data URI | yes | `data:image/` only; external hrefs refused |
 | `<use>` cycles (self, A to B to A, symbol using its parent) | refused | typed errors; decoder also refuses cyclic sources |

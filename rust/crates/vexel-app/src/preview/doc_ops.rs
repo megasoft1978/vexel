@@ -2,6 +2,7 @@
 //! query) onto the live `AppDocument`. Each family lives in its own module.
 
 mod ext_use;
+mod fragment_refs;
 
 use super::{Operation, PreviewArgumentError, ext_attr, ext_paint, ext_query, ext_structure};
 use crate::session::{AppDocument, McpOutcome};

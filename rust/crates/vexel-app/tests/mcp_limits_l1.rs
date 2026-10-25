@@ -189,3 +189,24 @@ fn element_group_wraps_up_to_1024_ids_and_rejects_more() {
     );
     assert!(ok.ok().contains("elementId"));
 }
+
+#[test]
+fn fragment_with_an_undefined_filter_says_so() {
+    let mut rig = rig();
+    add(
+        &mut rig,
+        "rect",
+        r##""x":"1","y":"1","width":"9","height":"9","fill":"#112233""##,
+        "",
+    )
+    .ok();
+    let before = rig.state();
+    let reply = rig.doc_tool(
+        "element_add_fragment",
+        r##""parentId":"root","xml":"<rect id=\"r\" x=\"10\" y=\"10\" width=\"20\" height=\"20\" fill=\"#ff0000\" filter=\"url(#nope)\"/>""##,
+    );
+    assert!(reply.is_error);
+    assert!(reply.body.contains("undefined filter"), "{}", reply.body);
+    assert!(!reply.body.contains("mix-blend-mode"), "{}", reply.body);
+    assert_eq!(rig.state().source, before.source, "edit undone");
+}
