@@ -7,8 +7,7 @@ use crate::error::{Capability, UnsupportedReason as Reason};
 use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape};
 use crate::layout::{
     MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
-    MAX_STOPS,
-    MAX_TILE_LIST, TILE_SIZE,
+    MAX_STOPS, MAX_TILE_LIST, TILE_SIZE,
 };
 
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
@@ -60,7 +59,13 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
     let tiles_y = u64::from(scene.height.div_ceil(TILE_SIZE));
     let mut stats = Stats::default();
     let mut clipped = false;
-    walk(&scene.nodes, 0, [tiles_x, tiles_y], &mut stats, &mut clipped)?;
+    walk(
+        &scene.nodes,
+        0,
+        [tiles_x, tiles_y],
+        &mut stats,
+        &mut clipped,
+    )?;
     if clipped {
         // Within every budget, but the clip lane has not landed: CPU renders it.
         return Err(Reason::Clips);

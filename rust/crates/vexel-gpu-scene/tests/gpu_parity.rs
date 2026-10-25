@@ -234,7 +234,14 @@ const GROUP_CASES: [(u64, usize, u32, u32, u32); 6] = [
     (66, 500, 1024, 768, 3),
 ];
 
-fn group_case(seed: u64, count: usize, w: u32, h: u32, depth: u32, solid: bool) -> (Vec<Spec>, Vec<Node>) {
+fn group_case(
+    seed: u64,
+    count: usize,
+    w: u32,
+    h: u32,
+    depth: u32,
+    solid: bool,
+) -> (Vec<Spec>, Vec<Node>) {
     let mut s = specs(seed, count * 2, f64::from(w), f64::from(h));
     if solid {
         s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));

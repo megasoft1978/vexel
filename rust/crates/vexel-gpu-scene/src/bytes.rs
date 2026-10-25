@@ -3,7 +3,8 @@
 
 use crate::encode::Encoded;
 use crate::layout::{
-    GpuClip, GpuEdge, GpuGradient, GpuGroup, GpuSceneHeader, GpuShape, GpuStop, GpuTile, GpuTileEntry,
+    GpuClip, GpuEdge, GpuGradient, GpuGroup, GpuSceneHeader, GpuShape, GpuStop, GpuTile,
+    GpuTileEntry,
 };
 
 fn u(out: &mut Vec<u8>, v: u32) {

@@ -224,7 +224,11 @@ impl Frames {
             let i = self.open.len() - 1;
             let id = self.open.pop().unwrap();
             let (below, above) = self.layers.split_at_mut(i);
-            let dest = if i == 0 { &mut self.base } else { &mut below[i - 1] };
+            let dest = if i == 0 {
+                &mut self.base
+            } else {
+                &mut below[i - 1]
+            };
             let lut = (id & layout::FRAME_RUN == 0).then(|| &e.groups[id as usize].lut);
             for (d, s) in dest.iter_mut().zip(above[0].iter()) {
                 let a = match lut {
@@ -246,8 +250,9 @@ impl Frames {
         for y in origin[1]..end[1] {
             for x in origin[0]..end[0] {
                 let o = (y * width + x) * 4;
-                out[o..o + 4]
-                    .copy_from_slice(&self.base[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])]);
+                out[o..o + 4].copy_from_slice(
+                    &self.base[(y - origin[1]) * TILE_SIZE as usize + (x - origin[0])],
+                );
             }
         }
     }

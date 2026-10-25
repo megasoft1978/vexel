@@ -1,7 +1,8 @@
 //! Adapters for the GPU display route (ADR-0035): the prepared render shapes
 //! lowered to `vexel-gpu-scene` input structs, and the Metal compute backend.
 //!
-//! Only solid and gradient fills of unclipped, unstroked shapes lower; anything
+//! Only solid and gradient fills of unclipped, unstroked shapes lower (inside
+//! opacity groups too; filters, masks and blend modes do not); anything
 //! else returns `None` and the frame renders on the CPU. Pure value
 //! conversion, no GPU calls, so the lowering is testable without a device.
 
@@ -9,11 +10,11 @@ use super::layers::Geo;
 use super::shapes::{Entry, OwnedShape};
 use vexel_geometry::{Affine, affine_compose};
 use vexel_gpu_scene::input::{
-    GpuColorStop, GpuGradient, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuSpread,
+    GpuColorStop, GpuGradient, GpuGroup, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuSpread,
 };
 use vexel_gpu_scene::{GpuNode, MAX_GRADIENT_STOPS};
 use vexel_render::{FlatEdge, GradientRef};
-use vexel_scene::{PaintKind, PaintStop, Spread};
+use vexel_scene::{OpacityGroup, PaintKind, PaintStop, Spread};
 
 fn affine(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Affine {
     Affine { a, b, c, d, e, f }
@@ -26,9 +27,14 @@ pub(super) struct Lowered {
     pub work: f64,
 }
 
-pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -> Option<Lowered> {
+pub(super) fn lower(
+    entries: &[Entry<'_>],
+    groups: &[OpacityGroup],
+    geo: &Geo,
+    width: u32,
+    height: u32,
+) -> Option<Lowered> {
     let mut scene = GpuScene::new(width, height);
-    let mut work = 0.0;
     let (cw, ch) = (geo.view.width * geo.scale_x, geo.view.height * geo.scale_y);
     scene.content_rect = [
         geo.offset_x.max(0.0),
@@ -36,44 +42,121 @@ pub(super) fn lower(entries: &[Entry<'_>], geo: &Geo, width: u32, height: u32) -
         (geo.offset_x + cw).min(f64::from(width)),
         (geo.offset_y + ch).min(f64::from(height)),
     ];
-    for entry in entries {
-        let Entry::Draw(p) = entry else {
-            return None;
-        };
-        if p.image.is_some() || p.fill.is_some() || p.stroke.is_some() || p.clip.is_some() {
+    let mut lowering = Lowering {
+        entries,
+        groups,
+        geo,
+        size: (width, height),
+        work: 0.0,
+    };
+    scene.nodes = lowering.range(0..entries.len(), None, 0)?;
+    Some(Lowered {
+        scene,
+        work: lowering.work,
+    })
+}
+
+struct Lowering<'a, 'e> {
+    entries: &'a [Entry<'e>],
+    groups: &'a [OpacityGroup],
+    geo: &'a Geo,
+    size: (u32, u32),
+    work: f64,
+}
+
+impl Lowering<'_, '_> {
+    /// The shapes `range` whose parent group is `parent`, in paint order
+    /// (`render_scene` `range`). Opacity-1 groups are transparent and join the
+    /// surrounding nodes; a group with a filter, mask or blend mode is not
+    /// representable.
+    fn range(
+        &mut self,
+        range: std::ops::Range<usize>,
+        parent: Option<usize>,
+        depth: usize,
+    ) -> Option<Vec<GpuNode>> {
+        if depth > 64 {
             return None;
         }
-        let s = &p.shape;
-        if s.fill_pattern
-            || s.stroke_pattern
-            || s.stroke_gradient.is_some()
-            || s.stroke.is_some_and(|st| st.rgba[3] != 0 && st.width > 0.0)
-        {
-            return None;
+        let mut nodes = Vec::new();
+        let mut cursor = range.start;
+        for (index, group) in self.groups.iter().enumerate() {
+            if group.parent.map(|g| g.index()) != parent {
+                continue;
+            }
+            let (first, end) = (group.shapes.first, group.shapes.end()?);
+            if first < cursor || end > range.end || first > end {
+                return None;
+            }
+            self.flat(cursor..first, &mut nodes)?;
+            cursor = end;
+            if first == end {
+                continue;
+            }
+            if group.filter.is_some()
+                || group.mask.is_some()
+                || group.blend_mode != 0
+                || !group.opacity.is_finite()
+                || !(0.0..=1.0).contains(&group.opacity)
+            {
+                return None;
+            }
+            let children = self.range(first..end, Some(index), depth + 1)?;
+            if group.opacity == 1.0 {
+                nodes.extend(children);
+            } else {
+                nodes.push(GpuNode::Group(GpuGroup {
+                    opacity: group.opacity,
+                    clips: Vec::new(),
+                    children,
+                }));
+            }
         }
-        if !s.filled || s.edges.is_empty() {
-            continue;
-        }
-        let paint = match &s.fill_gradient {
-            Some(_) => gradient(s.as_render().fill_gradient?, geo)?,
-            None if s.fill_rgba[3] == 0 => continue,
-            None => GpuPaint::Solid(s.fill_rgba),
-        };
-        let edges = segments(s, geo);
-        work += bbox_area(&edges, width, height)
-            * match paint {
-                GpuPaint::Solid(_) => 1.0,
-                _ => GRADIENT_WEIGHT,
-            };
-        scene.nodes.push(GpuNode::Shape(GpuShape {
-            edges,
-            evenodd: s.evenodd,
-            fill: Some(paint),
-            stroke: None,
-            clips: Vec::new(),
-        }));
+        self.flat(cursor..range.end, &mut nodes)?;
+        Some(nodes)
     }
-    Some(Lowered { scene, work })
+
+    fn flat(&mut self, range: std::ops::Range<usize>, nodes: &mut Vec<GpuNode>) -> Option<()> {
+        let (geo, (width, height)) = (self.geo, self.size);
+        for entry in self.entries.get(range)? {
+            let Entry::Draw(p) = entry else {
+                return None;
+            };
+            if p.image.is_some() || p.fill.is_some() || p.stroke.is_some() || p.clip.is_some() {
+                return None;
+            }
+            let s = &p.shape;
+            if s.fill_pattern
+                || s.stroke_pattern
+                || s.stroke_gradient.is_some()
+                || s.stroke.is_some_and(|st| st.rgba[3] != 0 && st.width > 0.0)
+            {
+                return None;
+            }
+            if !s.filled || s.edges.is_empty() {
+                continue;
+            }
+            let paint = match &s.fill_gradient {
+                Some(_) => gradient(s.as_render().fill_gradient?, geo)?,
+                None if s.fill_rgba[3] == 0 => continue,
+                None => GpuPaint::Solid(s.fill_rgba),
+            };
+            let edges = segments(s, geo);
+            self.work += bbox_area(&edges, width, height)
+                * match paint {
+                    GpuPaint::Solid(_) => 1.0,
+                    _ => GRADIENT_WEIGHT,
+                };
+            nodes.push(GpuNode::Shape(GpuShape {
+                edges,
+                evenodd: s.evenodd,
+                fill: Some(paint),
+                stroke: None,
+                clips: Vec::new(),
+            }));
+        }
+        Some(())
+    }
 }
 
 /// Weight of a gradient pixel against a solid one in the CPU work estimate.

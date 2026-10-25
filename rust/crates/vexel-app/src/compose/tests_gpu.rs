@@ -358,6 +358,108 @@ fn gpu_frames_match_cpu_within_adr_bounds() {
     assert_eq!(checked, 4);
 }
 
+/// `scene_svg` with its paths wrapped in nested `<g opacity>` groups up to
+/// `depth` levels (deterministic nesting and opacities), plus opacity-1 groups.
+fn group_svg(seed: u64, count: usize, w: u32, h: u32, kinds: &str, depth: usize) -> Vec<u8> {
+    let svg = String::from_utf8(scene_svg(seed, count, w, h, kinds)).unwrap();
+    let (head, body) = svg.split_once("</defs>").unwrap();
+    let body = body.strip_suffix("</svg>").unwrap();
+    let mut out = format!("{head}</defs>");
+    let mut open = 0usize;
+    for (i, path) in body.split_inclusive("/>").enumerate() {
+        match i % 6 {
+            0 | 3 if open < depth => {
+                let opacity = [0.3, 0.55, 0.8, 1.0, 0.15][(i / 3 + open) % 5];
+                out += &format!("<g opacity=\"{opacity}\">");
+                open += 1;
+            }
+            5 if open > 0 => {
+                out += "</g>";
+                open -= 1;
+            }
+            _ => {}
+        }
+        out += path;
+    }
+    out += &"</g>".repeat(open);
+    out += "</svg>";
+    out.into_bytes()
+}
+
+#[test]
+fn group_frames_match_cpu_within_adr_bounds() {
+    let _g = serial();
+    gpu_reset_latch();
+    let mut checked = 0;
+    for (seed, kind, w, h, depth) in [
+        (40, "solid", 400, 300, 1),
+        (41, "mixed", 400, 300, 2),
+        (42, "linear", 640, 300, 3),
+        (43, "mixed", 900, 900, 4),
+    ] {
+        let svg = group_svg(seed, 240, w, h, kind, depth);
+        let cpu = cpu_frame(&svg, w, h);
+        let mut cache = DiffCache::display();
+        let got = with_gpu(Some(true), || frame(&svg, w, h, &mut cache));
+        match super::gpu_route::last_decision() {
+            Decision::Gpu => {}
+            Decision::NoDevice => {
+                assert!(!require_gpu(), "VEXEL_REQUIRE_GPU=1 but no Metal device");
+                return;
+            }
+            other => panic!("{kind} {w}x{h} depth {depth}: {other:?}"),
+        }
+        let (o2, o16, mae) = metrics(&got.rgba, &cpu.rgba);
+        println!(
+            "parity groups {kind} {w}x{h} depth {depth}: >2={o2:.6} >16={o16:.6} mae={mae:.7}"
+        );
+        assert!(o2 <= PARITY_OVER_2_MAX_FRACTION, "{kind}: >2/255 {o2}");
+        assert!(o16 <= PARITY_OVER_16_MAX_FRACTION, "{kind}: >16/255 {o16}");
+        assert!(mae <= PARITY_MEAN_ABS_ERROR_MAX, "{kind}: mae {mae}");
+        checked += 1;
+    }
+    assert_eq!(checked, 4);
+}
+
+#[test]
+fn filtered_masked_and_too_deep_groups_stay_on_the_cpu() {
+    let _g = serial();
+    gpu_reset_latch();
+    let head = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\" viewBox=\"0 0 64 64\"><defs><filter id=\"f\"><feGaussianBlur stdDeviation=\"2\"/></filter><mask id=\"m\"><rect width=\"32\" height=\"64\" fill=\"#fff\"/></mask></defs>";
+    let shape = "<rect x=\"8\" y=\"8\" width=\"40\" height=\"40\" fill=\"#336699\"/>";
+    let mut cases: Vec<(String, Decision)> = vec![
+        (
+            format!("{head}<g opacity=\"0.5\" filter=\"url(#f)\">{shape}</g></svg>"),
+            Decision::Cpu("group"),
+        ),
+        (
+            format!("{head}<g opacity=\"0.5\" mask=\"url(#m)\">{shape}</g></svg>"),
+            Decision::Cpu("group"),
+        ),
+    ];
+    let nest = |n: usize| {
+        format!(
+            "{head}{}{shape}{}</svg>",
+            "<g opacity=\"0.9\">".repeat(n),
+            "</g>".repeat(n)
+        )
+    };
+    cases.push((
+        nest(5),
+        Decision::Unsupported(vexel_gpu_scene::UnsupportedReason::GroupTooDeep),
+    ));
+    for (svg, want) in cases {
+        let mut cache = DiffCache::display();
+        let got = with_gpu(Some(true), || frame(svg.as_bytes(), 64, 64, &mut cache));
+        let decision = super::gpu_route::last_decision();
+        if decision == Decision::NoDevice {
+            continue;
+        }
+        assert_eq!(decision, want, "{svg}");
+        assert_eq!(got, cpu_frame(svg.as_bytes(), 64, 64));
+    }
+}
+
 #[test]
 fn policy_sends_light_scenes_and_warm_caches_to_the_cpu() {
     let _g = serial();

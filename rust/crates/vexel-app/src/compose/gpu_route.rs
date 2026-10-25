@@ -256,11 +256,12 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
     if scene.shapes.is_empty() {
         return Some("empty");
     }
-    if scene
-        .groups
-        .iter()
-        .any(|g| g.opacity != 1.0 || g.filter.is_some() || g.mask.is_some() || g.blend_mode != 0)
-    {
+    if scene.groups.iter().any(|g| {
+        g.filter.is_some()
+            || g.mask.is_some()
+            || g.blend_mode != 0
+            || !(0.0..=1.0).contains(&g.opacity)
+    }) {
         return Some("group");
     }
     for shape in scene.shapes {
@@ -315,7 +316,13 @@ pub(super) fn try_render<V: ViewportRead, A: Copy>(
     let Some(Lowered {
         scene: gpu_scene,
         work,
-    }) = lower(&entries, &geometry, tile.width(), tile.height())
+    }) = lower(
+        &entries,
+        scene.groups,
+        &geometry,
+        tile.width(),
+        tile.height(),
+    )
     else {
         note(Decision::Cpu("lowering"));
         return None;

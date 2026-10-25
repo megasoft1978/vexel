@@ -20,9 +20,9 @@ use crate::classify::{MAX_GRADIENT_STOPS, analyze, has_layer, is_layered};
 use crate::error::{GpuError, UnsupportedReason};
 use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
 use crate::layout::{
-    self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, MAX_FRAMES, GpuClip, GpuEdge, GpuSceneHeader, GpuStop, GpuTile,
-    GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, PAINT_LINEAR, PAINT_RADIAL, PAINT_SOLID,
-    SPREAD_PAD, SPREAD_REFLECT, SPREAD_REPEAT, TILE_SIZE, to_fixed,
+    self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, GpuClip, GpuEdge, GpuSceneHeader, GpuStop,
+    GpuTile, GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, MAX_FRAMES, PAINT_LINEAR, PAINT_RADIAL,
+    PAINT_SOLID, SPREAD_PAD, SPREAD_REFLECT, SPREAD_REPEAT, TILE_SIZE, to_fixed,
 };
 use std::time::{Duration, Instant};
 
@@ -241,8 +241,11 @@ impl Walk<'_> {
     }
 
     fn add(&mut self, shape: &GpuShape, paint: &GpuPaint) -> Result<(), GpuError> {
-        let (frames, frame_count, groups_open) =
-            (self.frames_array(), self.frames.len() as u32, self.groups_open);
+        let (frames, frame_count, groups_open) = (
+            self.frames_array(),
+            self.frames.len() as u32,
+            self.groups_open,
+        );
         let ctx = self;
         let (src, out) = (&mut *ctx.src, &mut *ctx.out);
         let paint_ok = match paint {
@@ -569,7 +572,13 @@ mod tests {
         assert_eq!((lut(0, 255), lut(0, 0), lut(1, 255)), (128, 0, 64));
         // No layered group: straight painting, empty chains.
         scene.nodes = vec![leaf(1.0), group(1.0, vec![leaf(6.0)])];
-        assert!(encode(&scene).unwrap().shapes.iter().all(|s| s.frame_count == 0));
+        assert!(
+            encode(&scene)
+                .unwrap()
+                .shapes
+                .iter()
+                .all(|s| s.frame_count == 0)
+        );
     }
 
     #[test]

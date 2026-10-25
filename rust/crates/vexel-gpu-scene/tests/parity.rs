@@ -590,7 +590,13 @@ fn group_scenes_match_cpu_within_adr() {
         let nodes = group_tree(seed, count, max_depth);
         let scene = group_scene(&s, &nodes, w, h);
         let cpu = group_cpu(&s, &nodes, w, h);
-        check_against(&format!("groups seed {seed} depth<={max_depth}"), &s, &scene, &cpu, ADR);
+        check_against(
+            &format!("groups seed {seed} depth<={max_depth}"),
+            &s,
+            &scene,
+            &cpu,
+            ADR,
+        );
     }
 }
 
@@ -615,7 +621,9 @@ fn deep_groups_fall_back() {
         let want = if depth <= 4 {
             vexel_gpu_scene::Capability::Supported
         } else {
-            vexel_gpu_scene::Capability::Unsupported(vexel_gpu_scene::UnsupportedReason::GroupTooDeep)
+            vexel_gpu_scene::Capability::Unsupported(
+                vexel_gpu_scene::UnsupportedReason::GroupTooDeep,
+            )
         };
         assert_eq!(vexel_gpu_scene::classify(&scene), want, "depth {depth}");
     }
