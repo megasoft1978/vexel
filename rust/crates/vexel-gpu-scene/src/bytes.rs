@@ -3,8 +3,8 @@
 
 use crate::encode::Encoded;
 use crate::layout::{
-    GpuClip, GpuEdge, GpuGradient, GpuGroup, GpuSceneHeader, GpuShape, GpuStop, GpuTile,
-    GpuStrokePrim, GpuTileEntry,
+    GpuClip, GpuEdge, GpuGradient, GpuGroup, GpuSceneHeader, GpuShape, GpuStop, GpuStrokePrim,
+    GpuTile, GpuTileEntry,
 };
 
 fn u(out: &mut Vec<u8>, v: u32) {
@@ -112,7 +112,13 @@ pub fn tile_bytes(tiles: &[GpuTile]) -> Vec<u8> {
 pub fn list_bytes(list: &[GpuTileEntry]) -> Vec<u8> {
     let mut o = Vec::with_capacity(list.len() * 20);
     for e in list {
-        for v in [e.shape, e.edge_start, e.edge_count, e.prim_start, e.prim_count] {
+        for v in [
+            e.shape,
+            e.edge_start,
+            e.edge_count,
+            e.prim_start,
+            e.prim_count,
+        ] {
             u(&mut o, v);
         }
     }

@@ -336,8 +336,14 @@ fn prescan<V: ViewportRead, A: Copy>(scene: &SceneView<'_, V, A>) -> Option<&'st
         if shape.image.is_some() {
             return Some("image");
         }
-        if shape.stroke_paint.is_some() || (shape.stroke.rgba[3] != 0 && shape.stroke.width > 0.0) {
-            return Some("stroke");
+        if let Some(paint) = shape.stroke_paint.and_then(|i| scene.stroke_paints.get(i))
+            && (paint.pattern.is_some()
+                || !matches!(
+                    paint.kind,
+                    PaintKind::Solid | PaintKind::Linear | PaintKind::Radial
+                ))
+        {
+            return Some("pattern");
         }
         if let Some(paint) = shape.fill_paint.and_then(|i| scene.fill_paints.get(i))
             && (paint.pattern.is_some()

@@ -299,10 +299,10 @@ fn latched_session_turns_the_route_off() {
 fn ineligible_scenes_stay_on_the_cpu_with_identical_bytes() {
     let _g = serial();
     gpu_reset_latch();
-    let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect x="4" y="4" width="40" height="40" fill="#336699" stroke="#000" stroke-width="3"/></svg>"##;
+    let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><pattern id="p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#f00"/></pattern></defs><rect x="4" y="4" width="40" height="40" fill="#336699" stroke="url(#p)" stroke-width="3"/></svg>"##;
     let mut cache = DiffCache::display();
     let got = with_gpu(Some(true), || frame(svg, 64, 64, &mut cache));
-    assert_eq!(super::gpu_route::last_decision(), Decision::Cpu("stroke"));
+    assert_eq!(super::gpu_route::last_decision(), Decision::Cpu("pattern"));
     assert_eq!(got, cpu_frame(svg, 64, 64));
 }
 
@@ -571,5 +571,89 @@ fn gpu_vs_cpu_crossover() {
                 super::gpu_route::last_decision()
             );
         }
+    }
+}
+
+/// Stroked test scene; `mask` bit 0 gradient strokes, 1 dashes, 2 transforms, 3 fills.
+fn stroked_svg(mask: u32) -> Vec<u8> {
+    stroked_svg_n(mask, 60)
+}
+
+fn stroked_svg_n(mask: u32, count: usize) -> Vec<u8> {
+    let mut body = String::new();
+    let mut rng = Lcg(77);
+    let joins = ["miter", "round", "bevel"];
+    let caps = ["butt", "round", "square"];
+    for i in 0..count {
+        let (x, y) = (rng.next() * 80.0, rng.next() * 60.0);
+        let w = 0.4 + rng.next() * 5.0;
+        let dash = if i % 4 == 0 && mask & 2 != 0 {
+            " stroke-dasharray=\"3 2\""
+        } else {
+            ""
+        };
+        let stroke = if i % 5 == 0 && mask & 1 != 0 {
+            "url(#g)"
+        } else {
+            "#2a6"
+        };
+        let fill = if i % 3 == 0 && mask & 8 != 0 {
+            "#fc8"
+        } else {
+            "none"
+        };
+        let tf = if i % 6 == 0 && mask & 4 != 0 {
+            " transform=\"rotate(20 50 50) scale(1.1 0.8)\""
+        } else {
+            ""
+        };
+        body += &format!(
+            "<path d=\"M{x:.1} {y:.1} L{:.1} {:.1} L{:.1} {:.1} Z\" fill=\"{fill}\" stroke=\"{stroke}\" stroke-width=\"{w:.2}\" stroke-linejoin=\"{}\" stroke-linecap=\"{}\"{dash}{tf}/>",
+            x + 5.0 + rng.next() * 25.0,
+            y + rng.next() * 15.0,
+            x + rng.next() * 15.0,
+            y + 5.0 + rng.next() * 25.0,
+            joins[i % 3],
+            // Dashed square caps stay on the CPU (see gpu_adapter).
+            caps[(i / 3) % if dash.is_empty() { 3 } else { 2 }],
+        );
+    }
+    format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><defs><linearGradient id=\"g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e63946\"/><stop offset=\"1\" stop-color=\"#1d3557\"/></linearGradient></defs>{body}</svg>"
+    )
+    .into_bytes()
+}
+
+/// Strokes (solid and gradient, all joins and caps, dashes, transforms, a
+/// letterboxed view box) through the whole app pipeline against the CPU.
+#[test]
+fn stroked_frames_match_cpu_within_adr_bounds() {
+    let _g = serial();
+    gpu_reset_latch();
+    for mask in [0u32, 1, 2, 4, 8, 15] {
+        let svg = stroked_svg(mask);
+        let (w, h) = (900, 640);
+        let cpu = cpu_frame(&svg, w, h);
+        let mut cache = DiffCache::display();
+        let got = with_gpu(Some(true), || frame(&svg, w, h, &mut cache));
+        match super::gpu_route::last_decision() {
+            Decision::Gpu => {}
+            Decision::NoDevice => {
+                assert!(!require_gpu(), "VEXEL_REQUIRE_GPU=1 but no Metal device");
+                return;
+            }
+            other => panic!("stroked scene {mask}: {other:?}"),
+        }
+        let (o2, o16, mae) = metrics(&got.rgba, &cpu.rgba);
+        println!("parity strokes mask {mask} {w}x{h}: >2={o2:.6} >16={o16:.6} mae={mae:.7}");
+        assert!(
+            o2 <= PARITY_OVER_2_MAX_FRACTION,
+            "stroke {mask} >2/255 {o2}"
+        );
+        assert!(
+            o16 <= PARITY_OVER_16_MAX_FRACTION,
+            "stroke {mask} >16/255 {o16}"
+        );
+        assert!(mae <= PARITY_MEAN_ABS_ERROR_MAX, "stroke {mask} mae {mae}");
     }
 }

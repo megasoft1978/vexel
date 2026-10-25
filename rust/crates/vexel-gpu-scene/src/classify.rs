@@ -6,11 +6,11 @@
 
 use crate::error::{Capability, UnsupportedReason as Reason};
 use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuStroke};
-use crate::strokes;
 use crate::layout::{
     MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
     MAX_STOPS, MAX_STROKE_PRIMS, MAX_TILE_LIST, TILE_SIZE,
 };
+use crate::strokes;
 
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
 /// crossing products stay far inside range below it.

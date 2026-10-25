@@ -218,13 +218,33 @@ fn render_shape<'a>(
 
 /// CPU render (straight RGBA8, identity view) and the GPU scene of the same cases.
 pub fn stroke_scene(cases: &[StrokeCase], w: u32, h: u32) -> (GpuScene, Vec<u8>) {
+    stroke_scene_viewed(cases, w, h, (f64::from(w), f64::from(h)))
+}
+
+/// [`stroke_scene`] with the cases in USER space under a `0 0 vb.0 vb.1` view
+/// box (meet-letterboxed onto `w * h`, as the app does).
+pub fn stroke_scene_viewed(
+    cases: &[StrokeCase],
+    w: u32,
+    h: u32,
+    vb: (f64, f64),
+) -> (GpuScene, Vec<u8>) {
     let view = ViewMap::from_viewbox(
-        ViewBox { x: 0.0, y: 0.0, width: f64::from(w), height: f64::from(h) },
+        ViewBox { x: 0.0, y: 0.0, width: vb.0, height: vb.1 },
         w,
         h,
         None,
     )
     .unwrap();
+    let scale = (f64::from(w) / vb.0).min(f64::from(h) / vb.1);
+    let to_device = Affine {
+        a: scale,
+        b: 0.0,
+        c: 0.0,
+        d: scale,
+        e: (f64::from(w) - vb.0 * scale) / 2.0,
+        f: (f64::from(h) - vb.1 * scale) / 2.0,
+    };
     let stores: Vec<_> = cases.iter().map(StrokeCase::edges).collect();
     let dashed: Vec<DashedShape<'_>> = cases
         .iter()
@@ -239,17 +259,28 @@ pub fn stroke_scene(cases: &[StrokeCase], w: u32, h: u32) -> (GpuScene, Vec<u8>)
     let cpu = tile.rgba().to_vec();
 
     let mut scene = GpuScene::new(w, h);
+    scene.content_rect = [
+        to_device.e,
+        to_device.f,
+        to_device.e + vb.0 * scale,
+        to_device.f + vb.1 * scale,
+    ];
     for (c, d) in cases.iter().zip(&dashed) {
         let export = export_stroke(&d.shape, d.dashes, false).unwrap();
         let (edges, _, _) = c.edges();
         scene.nodes.push(GpuNode::Shape(GpuShape {
             edges: edges
                 .iter()
-                .map(|e| GpuSegment { x0: e.x0, y0: e.y0, x1: e.x1, y1: e.y1 })
+                .map(|e| GpuSegment {
+                    x0: to_device.a * e.x0 + to_device.e,
+                    y0: to_device.d * e.y0 + to_device.f,
+                    x1: to_device.a * e.x1 + to_device.e,
+                    y1: to_device.d * e.y1 + to_device.f,
+                })
                 .collect(),
             evenodd: c.evenodd,
             fill: c.fill.map(GpuPaint::Solid),
-            stroke: export.map(|e| gpu_stroke(&e, c.style.rgba, identity_affine())),
+            stroke: export.map(|e| gpu_stroke(&e, c.style.rgba, to_device)),
             clips: Vec::new(),
         }));
     }

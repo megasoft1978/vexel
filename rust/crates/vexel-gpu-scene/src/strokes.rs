@@ -34,14 +34,7 @@ pub(crate) fn invert(t: &Mat) -> Option<Mat> {
         return None;
     }
     let (a, b, c, d) = (t[3] / det, -t[1] / det, -t[2] / det, t[0] / det);
-    let inv = [
-        a,
-        b,
-        c,
-        d,
-        -(a * t[4] + c * t[5]),
-        -(b * t[4] + d * t[5]),
-    ];
+    let inv = [a, b, c, d, -(a * t[4] + c * t[5]), -(b * t[4] + d * t[5])];
     inv.iter().all(|v| v.is_finite()).then_some(inv)
 }
 
@@ -120,7 +113,12 @@ fn device_box(t: &Mat, b: [f64; 4]) -> [f64; 4] {
     let mut out = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
     for (x, y) in [(b[0], b[1]), (b[2], b[1]), (b[0], b[3]), (b[2], b[3])] {
         let p = apply(t, x, y);
-        out = [out[0].min(p[0]), out[1].min(p[1]), out[2].max(p[0]), out[3].max(p[1])];
+        out = [
+            out[0].min(p[0]),
+            out[1].min(p[1]),
+            out[2].max(p[0]),
+            out[3].max(p[1]),
+        ];
     }
     out
 }
@@ -256,9 +254,7 @@ impl StrokeBinner {
             let tile = self.pairs[at].0;
             let end = at + self.pairs[at..].iter().take_while(|q| q.0 == tile).count();
             let count = end - at;
-            if count > MAX_TILE_PRIMS as usize
-                || prims.len() + count > MAX_STROKE_PRIMS as usize
-            {
+            if count > MAX_TILE_PRIMS as usize || prims.len() + count > MAX_STROKE_PRIMS as usize {
                 return Err(Reason::TooManyStrokePrims);
             }
             let (tx, ty) = (tile % tiles_x, tile / tiles_x);
@@ -333,18 +329,7 @@ fn segment_prim(
     let low = if square(s.start_cap) { -r } else { 0.0 };
     let high = len + if square(s.end_cap) { r } else { 0.0 };
     let flags = u32::from(round_a) * SEG_ROUND_A + u32::from(round_b) * SEG_ROUND_B;
-    let w = f32_checked(&[
-        fx,
-        fy,
-        ux,
-        uy,
-        low - t,
-        high - t,
-        a[0],
-        a[1],
-        b[0],
-        b[1],
-    ])?;
+    let w = f32_checked(&[fx, fy, ux, uy, low - t, high - t, a[0], a[1], b[0], b[1]])?;
     Ok(GpuStrokePrim {
         kind: PRIM_SEG | flags,
         w,
@@ -361,7 +346,12 @@ fn join_prim(j: &GpuStrokeJoin, reach: f64, origin: [f64; 2]) -> Result<GpuStrok
     };
     let (v, p1, m, p2) = (rel(j.vertex), rel(j.p1), rel(j.miter), rel(j.p2));
     let hit = match j.tight {
-        Some(t) => [t[0] - origin[0], t[1] - origin[1], t[2] - origin[0], t[3] - origin[1]],
+        Some(t) => [
+            t[0] - origin[0],
+            t[1] - origin[1],
+            t[2] - origin[0],
+            t[3] - origin[1],
+        ],
         None => [v[0] - reach, v[1] - reach, v[0] + reach, v[1] + reach],
     };
     let w = f32_checked(&[

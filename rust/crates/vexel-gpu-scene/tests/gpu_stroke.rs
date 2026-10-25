@@ -48,15 +48,24 @@ impl ComputeBackend for Metal {
             .dispatch(&self.pipelines[&key], &refs, r.grid, r.threads_per_group)
             .map_err(map)?;
         output.read(0, out).map_err(map)?;
-        Ok(ComputeStats { gpu: t.gpu, wall: t.wall })
+        Ok(ComputeStats {
+            gpu: t.gpu,
+            wall: t.wall,
+        })
     }
 }
 
 fn gpu() -> Option<GpuRasterizer<Metal>> {
     match GpuDevice::new() {
-        Ok(device) => Some(GpuRasterizer::new(Metal { device, pipelines: HashMap::new() })),
+        Ok(device) => Some(GpuRasterizer::new(Metal {
+            device,
+            pipelines: HashMap::new(),
+        })),
         Err(e) => {
-            assert!(std::env::var_os("VEXEL_REQUIRE_GPU").is_none_or(|v| v != "1"), "{e}");
+            assert!(
+                std::env::var_os("VEXEL_REQUIRE_GPU").is_none_or(|v| v != "1"),
+                "{e}"
+            );
             eprintln!("skipping: {e}");
             None
         }
@@ -74,7 +83,9 @@ fn fractions(a: &[u8], b: &[u8]) -> (f64, f64, f64) {
         let worst = (0..4).map(|c| pa[c].abs_diff(pb[c])).max().unwrap();
         o2 += usize::from(worst > 2);
         o16 += usize::from(worst > 16);
-        sum += (0..4).map(|c| u64::from(pa[c].abs_diff(pb[c]))).sum::<u64>();
+        sum += (0..4)
+            .map(|c| u64::from(pa[c].abs_diff(pb[c])))
+            .sum::<u64>();
     }
     (
         o2 as f64 / pixels as f64,
@@ -87,8 +98,21 @@ fn fractions(a: &[u8], b: &[u8]) -> (f64, f64, f64) {
 fn gpu_strokes_match_reference_byte_exact() {
     let Some(mut g) = gpu() else { return };
     for (k, size) in [(0u64, 256u32), (1, 333), (2, 480), (3, 512), (4, 900)] {
-        let (min_w, max_w) = [(0.5, 3.0), (3.0, 14.0), (14.0, 40.0), (0.5, 40.0), (0.5, 40.0)][k as usize];
-        let cases = stroke_cases(0x700 + k, 50, f64::from(size), f64::from(size), min_w, max_w);
+        let (min_w, max_w) = [
+            (0.5, 3.0),
+            (3.0, 14.0),
+            (14.0, 40.0),
+            (0.5, 40.0),
+            (0.5, 40.0),
+        ][k as usize];
+        let cases = stroke_cases(
+            0x700 + k,
+            50,
+            f64::from(size),
+            f64::from(size),
+            min_w,
+            max_w,
+        );
         let (scene, _) = stroke_scene(&cases, size, size);
         let enc = encode(&scene).unwrap();
         for (out, expected) in [
@@ -97,8 +121,14 @@ fn gpu_strokes_match_reference_byte_exact() {
         ] {
             let got = unwrap_render(g.render(&scene, out));
             let diffs = got.iter().zip(&expected).filter(|(a, b)| a != b).count();
-            println!("stroke ref {out:?} seed {k} {size}px prims={}: differing bytes {diffs}", enc.prims.len());
-            assert_eq!(diffs, 0, "stroke kernel must equal the reference byte for byte");
+            println!(
+                "stroke ref {out:?} seed {k} {size}px prims={}: differing bytes {diffs}",
+                enc.prims.len()
+            );
+            assert_eq!(
+                diffs, 0,
+                "stroke kernel must equal the reference byte for byte"
+            );
         }
     }
 }
@@ -135,6 +165,68 @@ fn gpu_stroke_frame_time_report() {
             times.push((t.total.as_secs_f64() * 1e3, t.encode.as_secs_f64() * 1e3));
         }
         times.sort_by(|a, b| a.0.total_cmp(&b.0));
-        println!("stroke frame {n} shapes {size}px: p50 total {:.2} ms (encode {:.2} ms)", times[3].0, times[3].1);
+        println!(
+            "stroke frame {n} shapes {size}px: p50 total {:.2} ms (encode {:.2} ms)",
+            times[3].0, times[3].1
+        );
+    }
+}
+
+/// Dashed closed triangles with square caps and wide strokes under a
+/// letterboxed view (shapes the app pipeline once rendered differently).
+#[test]
+fn gpu_dashed_triangles_match_reference_and_cpu() {
+    let Some(mut g) = gpu() else { return };
+    for (points, width, join) in [
+        (
+            [(46.1, 54.6), (70.4, 69.3), (53.4, 62.4)],
+            2.76,
+            Linejoin::Bevel,
+        ),
+        (
+            [(74.5, 16.4), (83.9, 24.7), (85.2, 31.8)],
+            5.33,
+            Linejoin::Round,
+        ),
+    ] {
+        let dev: Vec<(f64, f64)> = points
+            .iter()
+            .map(|p| (130.0 + p.0 * 6.4, p.1 * 6.4))
+            .collect();
+        let case = StrokeCase {
+            subpaths: vec![(dev, true)],
+            style: StrokeStyle {
+                rgba: [34, 170, 102, 255],
+                width,
+                miter_limit: 4.0,
+                dash_offset: 0.0,
+                cap: Linecap::Square,
+                join,
+                crisp_edges: false,
+            },
+            transform: Affine {
+                a: 6.4,
+                b: 0.0,
+                c: 0.0,
+                d: 6.4,
+                e: 130.0,
+                f: 0.0,
+            },
+            dashes: vec![3.0, 2.0],
+            fill: None,
+            evenodd: false,
+        };
+        let (scene, cpu) = stroke_scene(&[case], 900, 640);
+        let got = unwrap_render(g.render(&scene, Output::Straight));
+        let enc = encode(&scene).unwrap();
+        let expected = reference::render_straight(&enc);
+        let (o2, o16, mae) = fractions(&got, &cpu);
+        let kdiff = got.iter().zip(&expected).filter(|(a, b)| a != b).count();
+        println!(
+            "triangle w={width} prims={}: kernel vs cpu >2={o2:.6} >16={o16:.6} mae={mae:.7}; kernel vs reference bytes {kdiff}",
+            enc.prims.len()
+        );
+        assert_eq!(kdiff, 0);
+        assert!(o16 <= PARITY_OVER_16_MAX_FRACTION);
     }
 }

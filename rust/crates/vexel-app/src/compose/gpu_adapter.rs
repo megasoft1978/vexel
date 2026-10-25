@@ -1,8 +1,9 @@
 //! Adapters for the GPU display route (ADR-0035): the prepared render shapes
 //! lowered to `vexel-gpu-scene` input structs, and the Metal compute backend.
 //!
-//! Only solid and gradient fills of unclipped, unstroked shapes lower (inside
-//! opacity groups too; filters, masks and blend modes do not); anything
+//! Solid and gradient fills and strokes (caps, joins, dashes, as the CPU
+//! exports them) of unclipped shapes lower (inside opacity groups too;
+//! filters, masks, patterns and blend modes do not); anything
 //! else returns `None` and the frame renders on the CPU. Pure value
 //! conversion, no GPU calls, so the lowering is testable without a device.
 
@@ -10,11 +11,13 @@ use super::layers::Geo;
 use super::shapes::{Entry, OwnedShape};
 use vexel_geometry::{Affine, affine_compose};
 use vexel_gpu_scene::input::{
-    GpuColorStop, GpuGradient, GpuGroup, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuSpread,
+    GpuCap, GpuColorStop, GpuGradient, GpuGroup, GpuJoinKind, GpuPaint, GpuScene, GpuSegment,
+    GpuShape, GpuSpread, GpuStroke, GpuStrokeJoin, GpuStrokeSegment,
 };
 use vexel_gpu_scene::{GpuNode, MAX_GRADIENT_STOPS};
+use vexel_render::export::{JoinKind, StrokeExport, export_stroke};
 use vexel_render::{FlatEdge, GradientRef};
-use vexel_scene::{OpacityGroup, PaintKind, PaintStop, Spread};
+use vexel_scene::{Linecap, OpacityGroup, PaintKind, PaintStop, Spread};
 
 fn affine(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Affine {
     Affine { a, b, c, d, e, f }
@@ -126,36 +129,160 @@ impl Lowering<'_, '_> {
                 return None;
             }
             let s = &p.shape;
-            if s.fill_pattern
-                || s.stroke_pattern
-                || s.stroke_gradient.is_some()
-                || s.stroke.is_some_and(|st| st.rgba[3] != 0 && st.width > 0.0)
+            if s.fill_pattern || s.stroke_pattern || s.stroke.is_some_and(|st| st.crisp_edges) {
+                return None;
+            }
+            // Open item: the app's CPU frame leaves out the square-cap corners
+            // of dashed strokes that the exported CPU semantics (and the direct
+            // `render_dashed_shapes` API) paint; until that is resolved such
+            // shapes stay on the CPU so the routes never disagree.
+            if !s.dashes.is_empty()
+                && s.stroke
+                    .is_some_and(|st| st.rgba[3] != 0 && st.cap == Linecap::Square)
             {
                 return None;
             }
-            if !s.filled || s.edges.is_empty() {
+            let mut edges = Vec::new();
+            let mut fill = None;
+            if s.filled && !s.edges.is_empty() {
+                fill = match &s.fill_gradient {
+                    Some(_) => Some(gradient(s.as_render().fill_gradient?, geo)?),
+                    None if s.fill_rgba[3] == 0 => None,
+                    None => Some(GpuPaint::Solid(s.fill_rgba)),
+                };
+                if fill.is_some() {
+                    edges = segments(s, geo);
+                    self.work += bbox_area(&edges, width, height)
+                        * match fill {
+                            Some(GpuPaint::Solid(_)) => 1.0,
+                            _ => GRADIENT_WEIGHT,
+                        };
+                }
+            }
+            let stroke = self.stroke(s)?;
+            if fill.is_none() && stroke.is_none() {
                 continue;
             }
-            let paint = match &s.fill_gradient {
-                Some(_) => gradient(s.as_render().fill_gradient?, geo)?,
-                None if s.fill_rgba[3] == 0 => continue,
-                None => GpuPaint::Solid(s.fill_rgba),
-            };
-            let edges = segments(s, geo);
-            self.work += bbox_area(&edges, width, height)
-                * match paint {
-                    GpuPaint::Solid(_) => 1.0,
-                    _ => GRADIENT_WEIGHT,
-                };
             nodes.push(GpuNode::Shape(GpuShape {
                 edges,
                 evenodd: s.evenodd,
-                fill: Some(paint),
-                stroke: None,
+                fill,
+                stroke,
                 clips: Vec::new(),
             }));
         }
         Some(())
+    }
+}
+
+impl Lowering<'_, '_> {
+    /// The stroke of `s` as the CPU builds it (`export_stroke`), lowered to
+    /// device space; `Ok(None)`-like `Some(None)` when the shape paints none,
+    /// `None` when the stroke cannot lower (the frame renders on the CPU).
+    fn stroke(&mut self, s: &OwnedShape) -> Option<Option<GpuStroke>> {
+        let geo = self.geo;
+        let gradient_paint = s.stroke_gradient.is_some();
+        let Ok(export) = export_stroke(&s.as_render(), &s.dashes, gradient_paint) else {
+            return None;
+        };
+        let Some(export) = export else {
+            return Some(None);
+        };
+        let style = s.stroke.as_ref()?;
+        let paint = match &s.stroke_gradient {
+            Some(_) => gradient(s.as_render().stroke_gradient?, geo)?,
+            None => GpuPaint::Solid(style.rgba),
+        };
+        let stroke = lower_stroke(&export, paint, geo);
+        let scale = geo.scale_x.abs().max(geo.scale_y.abs());
+        self.work += stroke_area(&export, scale, self.size)
+            * match stroke.paint {
+                GpuPaint::Solid(_) => STROKE_WEIGHT,
+                _ => STROKE_WEIGHT + GRADIENT_WEIGHT - 1.0,
+            };
+        Some(Some(stroke))
+    }
+}
+
+/// Weight of a stroked pixel against a solid fill one in the CPU work estimate.
+const STROKE_WEIGHT: f64 = 3.0;
+
+/// Pixels the stroke's bounding box covers (centre-line box grown by the
+/// radius, in device pixels).
+fn stroke_area(e: &StrokeExport, scale: f64, size: (u32, u32)) -> f64 {
+    let (mut l, mut t, mut r, mut b) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+    for s in &e.segments {
+        for p in [s.a, s.b] {
+            let (x, y) = (
+                e.transform.a * p[0] + e.transform.c * p[1] + e.transform.e,
+                e.transform.b * p[0] + e.transform.d * p[1] + e.transform.f,
+            );
+            l = l.min(x);
+            r = r.max(x);
+            t = t.min(y);
+            b = b.max(y);
+        }
+    }
+    let grow = e.radius * e.transform.a.abs().max(e.transform.d.abs()).max(1e-9) * scale;
+    let w = (r.min(f64::from(size.0)) - l.max(0.0) + grow).max(0.0);
+    let h = (b.min(f64::from(size.1)) - t.max(0.0) + grow).max(0.0);
+    w * h
+}
+
+fn cap(c: Linecap) -> GpuCap {
+    match c {
+        Linecap::Butt => GpuCap::Butt,
+        Linecap::Round => GpuCap::Round,
+        Linecap::Square => GpuCap::Square,
+    }
+}
+
+/// Exporter output to the GPU input: local stroke space and a local -> device
+/// transform (shape transform, then the document -> device mapping).
+fn lower_stroke(e: &StrokeExport, paint: GpuPaint, geo: &Geo) -> GpuStroke {
+    let (sx, sy) = (geo.scale_x, geo.scale_y);
+    let t = e.transform;
+    // device = (user - view.xy) * scale + offset, after the shape transform.
+    let transform = [
+        sx * t.a,
+        sy * t.b,
+        sx * t.c,
+        sy * t.d,
+        sx * t.e + geo.offset_x - geo.view.x * sx,
+        sy * t.f + geo.offset_y - geo.view.y * sy,
+    ];
+    GpuStroke {
+        paint,
+        radius: e.radius,
+        join_reach: e.join_reach,
+        transform,
+        segments: e
+            .segments
+            .iter()
+            .map(|s| GpuStrokeSegment {
+                a: s.a,
+                b: s.b,
+                start_cap: cap(s.start_cap),
+                end_cap: cap(s.end_cap),
+            })
+            .collect(),
+        joins: e
+            .joins
+            .iter()
+            .map(|j| GpuStrokeJoin {
+                vertex: j.vertex,
+                kind: match j.kind {
+                    JoinKind::Never => GpuJoinKind::Never,
+                    JoinKind::Round => GpuJoinKind::Round,
+                    JoinKind::Triangle => GpuJoinKind::Triangle,
+                    JoinKind::Miter => GpuJoinKind::Miter,
+                },
+                p1: j.p1,
+                miter: j.miter,
+                p2: j.p2,
+                tight: j.tight,
+            })
+            .collect(),
     }
 }
 

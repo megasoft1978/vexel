@@ -318,8 +318,7 @@ impl Binner {
         start: u32,
         count: u32,
     ) -> Result<(), UnsupportedReason> {
-        let found = self.pending[fill_entries.clone()]
-            .binary_search_by_key(&tile, |(t, _)| *t);
+        let found = self.pending[fill_entries.clone()].binary_search_by_key(&tile, |(t, _)| *t);
         match found {
             Ok(i) => {
                 let entry = &mut self.pending[fill_entries.start + i].1;
