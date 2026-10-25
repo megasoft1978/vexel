@@ -33,6 +33,7 @@ mod tests_playback;
 pub use grants::{GrantError, McpGrants};
 pub use hooks::{DocumentEditor, EditAction, EditOutcome, PlaybackHost, edit_shortcut};
 pub use mcp::{McpHost, McpOutcome};
+pub(crate) use mcp_extras::check_room;
 
 use crate::project_session::{EditGroup, ProjectSession, SessionError};
 use std::os::unix::ffi::OsStrExt;

@@ -343,6 +343,8 @@ pub(crate) const PREVIEW_TOOLS: &[&str] = &[
     "document_list",
     "document_info",
     "element_add",
+    "element_add_fragment",
+    "use_add",
     "undo",
     "redo",
     "animation_list",

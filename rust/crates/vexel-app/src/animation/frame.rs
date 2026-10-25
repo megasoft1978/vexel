@@ -17,7 +17,7 @@ use vexel_svg_engine::SvgEngineSession;
 
 /// Longest loop the app plays or exports, matching the MCP seek bound.
 pub const MAX_LOOP_SECONDS: f64 = 10.0;
-const SOURCE_LIMIT: usize = 1 << 20;
+const SOURCE_LIMIT: usize = 4 << 20;
 const DECODE_WORK_LIMIT: u64 = 1 << 32;
 const FRAME_WORK_LIMIT: u64 = 1 << 32;
 const FRAME_BYTE_BUDGET: usize = 64 * 1024 * 1024;

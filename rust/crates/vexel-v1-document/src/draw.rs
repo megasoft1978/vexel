@@ -11,6 +11,9 @@ use vexel_document_edit::{
 
 /// Distance, in document units, added around line and path geometry by
 /// [`V1Document::hit_test`] (path hits use the bounding box plus this margin).
+/// Deepest group/`<use>` nesting hit testing follows.
+pub(crate) const MAX_HIT_DEPTH: usize = 64;
+
 pub const HIT_TOLERANCE: f64 = 2.0;
 const MAX_STROKE_WIDTH: f64 = 256.0;
 const MAX_COORDINATE: f64 = 1_000_000.0;
@@ -27,6 +30,8 @@ pub enum ElementKind {
     Group,
     /// A `<text>` element.
     Text,
+    /// A `<use>` instance of another element.
+    Use,
     /// Present in the source but not movable or recolourable by the tools.
     Other,
 }
@@ -41,6 +46,7 @@ impl ElementKind {
             b"path" => Self::Path,
             b"g" => Self::Group,
             b"text" => Self::Text,
+            b"use" => Self::Use,
             _ => Self::Other,
         }
     }
@@ -55,7 +61,7 @@ fn check_color(value: &str) -> Result<(), V1DocumentError> {
     }
 }
 
-fn check_paint(value: &str) -> Result<(), V1DocumentError> {
+pub(crate) fn check_paint(value: &str) -> Result<(), V1DocumentError> {
     if value == "none" {
         Ok(())
     } else {
@@ -215,7 +221,7 @@ impl V1Document {
                 let scaled = path_data::scale(raw, local, target)?;
                 vec![(b"d".to_vec(), scaled)]
             }
-            ElementKind::Group | ElementKind::Text | ElementKind::Other => {
+            ElementKind::Group | ElementKind::Text | ElementKind::Use | ElementKind::Other => {
                 return Err(V1DocumentError::Unsupported);
             }
         };
@@ -396,7 +402,7 @@ impl V1Document {
     /// Sets `fill` on a rect, ellipse, circle, line or path.
     pub fn set_fill(&mut self, id: &str, colour: &str) -> Result<(), V1DocumentError> {
         check_color(colour)?;
-        let node = self.shape(id)?;
+        let node = self.paint_target(id)?;
         if self.kind_of(node) == ElementKind::Group {
             return Err(V1DocumentError::Unsupported);
         }
@@ -416,7 +422,7 @@ impl V1Document {
     ) -> Result<(), V1DocumentError> {
         check_color(colour)?;
         check_width(width)?;
-        let node = self.shape(id)?;
+        let node = self.paint_target(id)?;
         if self.kind_of(node) == ElementKind::Group {
             return Err(V1DocumentError::Unsupported);
         }
@@ -469,7 +475,7 @@ impl V1Document {
                 format!("translate({} {})", plain(nx), plain(ny)).into_bytes(),
             ));
         }
-        if kind == ElementKind::Group {
+        if matches!(kind, ElementKind::Group | ElementKind::Use) {
             let (nx, ny) = (tx + dx, ty + dy);
             check_coordinate(nx)?;
             check_coordinate(ny)?;
@@ -518,7 +524,22 @@ impl V1Document {
         hit
     }
 
-    fn hit_id(&self, node: DocumentHandle, x: f64, y: f64) -> Option<String> {
+    pub(crate) fn hit_id(&self, node: DocumentHandle, x: f64, y: f64) -> Option<String> {
+        self.hit_depth(node, x, y, 0)
+    }
+
+    /// `hit_id` with a nesting depth; groups, symbols and `<use>` stop at
+    /// [`MAX_HIT_DEPTH`] so a cyclic or very deep source cannot overflow the stack.
+    pub(crate) fn hit_depth(
+        &self,
+        node: DocumentHandle,
+        x: f64,
+        y: f64,
+        depth: usize,
+    ) -> Option<String> {
+        if depth > MAX_HIT_DEPTH {
+            return None;
+        }
         let id = self
             .raw_attr(node, b"id")
             .filter(|raw| !raw.contains(&b'&'))?;
@@ -585,13 +606,14 @@ impl V1Document {
                 let mut child = document_view_first_child(model, node);
                 let mut topmost = None;
                 while let Some(item) = child {
-                    if let Some(id) = self.hit_id(item, px, py) {
+                    if let Some(id) = self.hit_depth(item, px, py, depth + 1) {
                         topmost = Some(id);
                     }
                     child = document_view_next_sibling(model, item);
                 }
                 return topmost;
             }
+            ElementKind::Use => self.hit_use(node, px, py, depth + 1),
             ElementKind::Text | ElementKind::Other => false,
         };
         if !inside {
@@ -609,7 +631,10 @@ impl V1Document {
 
     pub(super) fn shape(&self, id: &str) -> Result<DocumentHandle, V1DocumentError> {
         let node = self.find_node(id)?;
-        if matches!(self.kind_of(node), ElementKind::Other | ElementKind::Text) {
+        if matches!(
+            self.kind_of(node),
+            ElementKind::Other | ElementKind::Text | ElementKind::Use
+        ) {
             return Err(V1DocumentError::Unsupported);
         }
         Ok(node)

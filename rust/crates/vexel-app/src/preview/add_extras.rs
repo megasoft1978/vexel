@@ -38,7 +38,7 @@ fn text(
         .ok_or_else(|| invalid(key, form))
 }
 
-fn number(doc: &JsonDocument<'_>, token: usize) -> Option<f64> {
+pub(super) fn number(doc: &JsonDocument<'_>, token: usize) -> Option<f64> {
     doc.token(token)
         .filter(|t| t.kind == JsonType::Number)
         .and_then(|_| doc.raw_token(token))
@@ -55,7 +55,10 @@ fn explicit_id(id: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(b))
 }
 
-fn transform(doc: &JsonDocument<'_>, token: usize) -> Result<TransformSpec, PreviewArgumentError> {
+pub(super) fn transform(
+    doc: &JsonDocument<'_>,
+    token: usize,
+) -> Result<TransformSpec, PreviewArgumentError> {
     let form = "an object with number members translateX, translateY, rotate, pivotX, pivotY, scaleX, scaleY, skewX";
     let object = doc
         .token(token)

@@ -1,6 +1,8 @@
 //! Routing of document-tool families (structure, paint/transform/text,
 //! query) onto the live `AppDocument`. Each family lives in its own module.
 
+mod ext_use;
+
 use super::{Operation, PreviewArgumentError, ext_attr, ext_paint, ext_query, ext_structure};
 use crate::session::{AppDocument, McpOutcome};
 use vexel_json::JsonDocument;
@@ -11,6 +13,7 @@ pub enum DocOp {
     Paint(ext_paint::Op),
     Attr(ext_attr::Op),
     Query(ext_query::Op),
+    Use(ext_use::Op),
 }
 
 /// `None` when no family handles `tool`.
@@ -28,6 +31,9 @@ pub(super) fn parse(
     if let Some(parsed) = ext_attr::parse(doc, args, tool) {
         return Some(parsed.map(|op| Operation::Doc(DocOp::Attr(op))));
     }
+    if let Some(parsed) = ext_use::parse(doc, args, tool) {
+        return Some(parsed.map(|op| Operation::Doc(DocOp::Use(op))));
+    }
     ext_query::parse(doc, args, tool)
         .map(|parsed| parsed.map(|op| Operation::Doc(DocOp::Query(op))))
 }
@@ -38,5 +44,6 @@ pub(crate) fn apply(app: &mut AppDocument, op: DocOp) -> Result<McpOutcome, &'st
         DocOp::Paint(op) => ext_paint::apply(app, op),
         DocOp::Attr(op) => ext_attr::apply(app, op),
         DocOp::Query(op) => ext_query::apply(app, op),
+        DocOp::Use(op) => ext_use::apply(app, op),
     }
 }

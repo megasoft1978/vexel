@@ -80,3 +80,16 @@ pub(super) fn apply(
     }
     Ok(())
 }
+
+/// Room for `adding` more id-bearing elements within the scene and source
+/// limits, for edits that bypass `element_add`.
+pub(crate) fn check_room(app: &AppDocument, adding: usize) -> Result<(), &'static str> {
+    let source = source(app)?;
+    if stable_ids(&source).len() + adding > SCENE_LIMIT {
+        return Err("preview scene limit reached");
+    }
+    if source.len() > SOURCE_LIMIT {
+        return Err("preview source limit reached");
+    }
+    Ok(())
+}

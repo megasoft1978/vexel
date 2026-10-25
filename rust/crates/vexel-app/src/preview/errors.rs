@@ -9,6 +9,7 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
         "nothing to undo" => message,
         "nothing to redo" => message,
         "preview scene limit reached" => message,
+        "preview source limit reached" => message,
         "unsupported preview shape" => message,
         "unknown preview document" => message,
         "invalid preview fill color" => message,
@@ -58,6 +59,8 @@ pub(super) fn tool_error(message: &str) -> ToolResponse {
 /// Error messages of the document-tool families start with the tool name.
 const DOC_TOOL_PREFIXES: &[&str] = &[
     "element_group",
+    "element_add_fragment",
+    "use_",
     "element_ungroup",
     "element_duplicate",
     "element_reorder",
