@@ -93,7 +93,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
     ToolSchema {
         name: "attribute_set",
-        description: "Set an existing XML attribute through the undoable edit engine.",
+        description: "Set an existing XML attribute through the undoable edit engine. name \"id\" renames any element (groups included): value is the new id (1-64 characters [A-Za-z0-9_.-], starting with a letter or underscore, unused), href=\"#id\" and url(#id) references and native timeline tracks that target it follow, in one undo step.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"elementId\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}",
         required: "documentId,elementId,name,value",
         fields: "documentId:string;elementId:string;name:string;value:string",

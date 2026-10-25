@@ -199,7 +199,7 @@ fn attribute_set_rejections() {
         ("fill", format!("#{long}"), GENERIC),
         // opacity is accepted now (widened attribute_set); out of range is not.
         ("opacity", "2".into(), "unsupported attribute"),
-        ("id", "other".into(), "unsupported attribute"),
+        ("id", "bad id".into(), "unsupported attribute"),
         ("stroke-width", "257".into(), GENERIC),
         ("stroke-width", "-1".into(), GENERIC),
         ("stroke-width", "NaN".into(), GENERIC),

@@ -112,7 +112,7 @@ fn attribute_set_widened_rejections() {
         ("opacity", "abc"),
         ("stroke-linecap", "wavy"),
         ("display", "block"),
-        ("id", "x"),
+        ("id", "1bad"),
         ("stroke", "red"),
     ] {
         assert!(set(&mut app, name, value).is_err(), "{name}={value}");

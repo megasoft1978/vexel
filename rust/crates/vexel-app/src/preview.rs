@@ -158,6 +158,8 @@ pub enum AttributeChange {
     StrokeWidth(f64),
     /// `transform="translate(dx dy)"`: a document-space move by this delta.
     Translate(f64, f64),
+    /// `id`: rename the element, its references and its native tracks.
+    Rename(String),
     /// Any other name accepted by `V1Document::set_attribute`.
     Generic {
         name: String,

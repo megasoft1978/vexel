@@ -125,7 +125,7 @@ pub(crate) fn parse(
 /// Longest timeline `native_timeline_set_duration` accepts, in seconds.
 const MAX_DURATION_SECONDS: u64 = 3600;
 
-fn settings() -> EmptyTimelineSettings {
+pub(crate) fn settings() -> EmptyTimelineSettings {
     EmptyTimelineSettings {
         ticks_per_second: 24,
         duration_ticks: 48,

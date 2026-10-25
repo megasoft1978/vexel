@@ -485,16 +485,6 @@ fn rasterize_with_opacity(shapes: &[Shape], opacity: &[f64]) -> Result<Vec<u8>, 
     pixels.resize(512 * 512 * 4, 255);
     for (shape_index, s) in shapes.iter().enumerate() {
         validate_shape(*s)?;
-        let (l, t, r, b) = match *s {
-            Shape::Rect {
-                x,
-                y,
-                width,
-                height,
-                ..
-            } => (x, y, x + width, y + height),
-            Shape::Ellipse { cx, cy, rx, ry, .. } => (cx - rx, cy - ry, cx + rx, cy + ry),
-        };
         let rgb = shape_rgb(*s);
         let color = [(rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8];
         let (l, t, r, b) = match *s {

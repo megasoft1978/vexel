@@ -115,6 +115,7 @@ pub(super) fn attribute_set(
         "fill" if is_hex(&value) => AttributeChange::Fill(value),
         "stroke" if is_hex(&value) => AttributeChange::Stroke(value),
         "stroke-width" => AttributeChange::StrokeWidth(width(&value)?),
+        "id" if super::add_extras::explicit_id(&value) => AttributeChange::Rename(value),
         "transform" => {
             let (dx, dy) = translate(&value).ok_or("unsupported attribute")?;
             AttributeChange::Translate(dx, dy)

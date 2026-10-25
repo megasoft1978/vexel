@@ -49,9 +49,11 @@ pub(super) fn number(doc: &JsonDocument<'_>, token: usize) -> Option<f64> {
         .filter(|n| n.is_finite())
 }
 
-fn explicit_id(id: &str) -> bool {
+pub(super) fn explicit_id(id: &str) -> bool {
     let bytes = id.as_bytes();
-    (bytes[0].is_ascii_alphabetic() || bytes[0] == b'_')
+    bytes
+        .first()
+        .is_some_and(|b| b.is_ascii_alphabetic() || *b == b'_')
         && bytes
             .iter()
             .all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(b))
