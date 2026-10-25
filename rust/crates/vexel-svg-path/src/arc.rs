@@ -24,7 +24,7 @@ impl ArcCursor {
         if rx == 0.0 || ry == 0.0 { return Ok(ArcPlan::Line); }
         if from == to { return Ok(ArcPlan::Empty); }
         let phi = rotation * 0.017453292519943295;
-        let (cp, sp) = (phi.cos(), phi.sin());
+        let (cp, sp) = (cos_unpaired(phi), sin_unpaired(phi));
         let (dx, dy) = ((from.x - to.x) * 0.5, (from.y - to.y) * 0.5);
         let (xp, yp) = (cp * dx + sp * dy, -sp * dx + cp * dy);
         let scale = xp * xp / (rx * rx) + yp * yp / (ry * ry);
@@ -71,9 +71,10 @@ impl ArcCursor {
             self.index = self.index.checked_add(1).ok_or(ControlledError::Overflow)?;
         } else {
             let angle = self.start + self.delta * self.index as f64 / self.steps as f64;
+            let (cos_angle, sin_angle) = (cos_unpaired(angle), sin_unpaired(angle));
             let mut point = Point {
-                x: self.cx + self.cp * self.rx * angle.cos() - self.sp * self.ry * angle.sin(),
-                y: self.cy + self.sp * self.rx * angle.cos() + self.cp * self.ry * angle.sin(),
+                x: self.cx + self.cp * self.rx * cos_angle - self.sp * self.ry * sin_angle,
+                y: self.cy + self.sp * self.rx * cos_angle + self.cp * self.ry * sin_angle,
             };
             if self.index == self.steps { point = self.to; }
             if !crate::flatten::bounded(point) { return Err(ControlledError::Original(failure(DiagnosticKind::Number, offset))); }
@@ -82,3 +83,13 @@ impl ArcCursor {
         Ok(false)
     }
 }
+
+/// One libm `sin` or `cos` per call. Pairing `sin` and `cos` on the same
+/// argument lets optimized Apple builds merge them into `__sincos_stret`,
+/// whose `sin` can differ by one ulp from `f64::sin` (debug builds never
+/// merge). `inline(never)` keeps each helper to a single call so the merge
+/// cannot form, and both profiles produce the same bits.
+#[inline(never)]
+fn sin_unpaired(angle: f64) -> f64 { angle.sin() }
+#[inline(never)]
+fn cos_unpaired(angle: f64) -> f64 { angle.cos() }
