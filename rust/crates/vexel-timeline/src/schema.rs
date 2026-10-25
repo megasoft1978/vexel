@@ -283,3 +283,33 @@ impl<'a> TimelineView<'a> {
     pub fn onion(&self)->(u32,u32,f64){(self.onion_before,self.onion_after,self.onion_opacity)}
     pub fn is_empty(&self)->bool{self.empty}
 }
+
+/// Validated structure of one decoded timeline without the borrow on its
+/// bytes: re-attaching it to the same bytes skips the JSON decode.
+#[derive(Debug, Clone)]
+pub struct DetachedTimeline {
+    source_len: usize, tracks: Vec<TrackMeta>, tracks_span: Span,
+    ticks_per_second: u32, duration_ticks: u32, fps_numerator: u32,
+    fps_denominator: u32, loop_mode: LoopMode, onion_before: u32,
+    onion_after: u32, onion_opacity: f64, empty: bool,
+}
+impl<'a> TimelineView<'a> {
+    /// Drops the borrow; see [`DetachedTimeline::attach`].
+    pub fn detach(&self)->DetachedTimeline{DetachedTimeline{source_len:self.source.len(),
+        tracks:self.tracks.clone(),tracks_span:self.tracks_span,ticks_per_second:self.ticks_per_second,
+        duration_ticks:self.duration_ticks,fps_numerator:self.fps_numerator,fps_denominator:self.fps_denominator,
+        loop_mode:self.loop_mode,onion_before:self.onion_before,onion_after:self.onion_after,
+        onion_opacity:self.onion_opacity,empty:self.empty}}
+}
+impl DetachedTimeline {
+    /// The view over `source`, which must be the bytes the view was decoded
+    /// from (checked by length only; other bytes yield wrong spans and
+    /// `None`/errors from accessors, never unsafety).
+    pub fn attach<'a>(&self,source:&'a[u8])->Option<TimelineView<'a>>{
+        if source.len()!=self.source_len{return None;}
+        Some(TimelineView{source,tracks:self.tracks.clone(),tracks_span:self.tracks_span,ticks_per_second:self.ticks_per_second,
+            duration_ticks:self.duration_ticks,fps_numerator:self.fps_numerator,fps_denominator:self.fps_denominator,
+            loop_mode:self.loop_mode,onion_before:self.onion_before,onion_after:self.onion_after,
+            onion_opacity:self.onion_opacity,empty:self.empty})
+    }
+}

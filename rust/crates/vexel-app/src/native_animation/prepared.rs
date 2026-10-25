@@ -6,7 +6,7 @@
 
 use std::sync::{Arc, Mutex, OnceLock};
 
-use vexel_timeline::LoopMode;
+use vexel_timeline::{DetachedTimeline, LoopMode};
 
 use crate::animation::native_drawing::{DrawingAsset, SvgGeometry};
 use crate::animation::native_frame::{NativeFrameError, render_native_frame_cached};
@@ -22,6 +22,8 @@ pub struct Prepared {
     pub loop_mode: LoopMode,
     source: Arc<Vec<u8>>,
     candidate: ProjectTimelineCandidate,
+    /// Decoded structure of the candidate's timeline, so ticks skip the JSON decode.
+    timeline: DetachedTimeline,
     /// Root viewport and id table: parsed on first render, so the worker pays
     /// for them and the UI thread never does.
     derived: OnceLock<Result<Derived, NativeFrameError>>,
@@ -38,12 +40,13 @@ impl Prepared {
     /// `None` when the source or timeline cannot be read.
     pub fn build(document: &AppDocument, candidate: &ProjectTimelineCandidate) -> Option<Self> {
         let _prep = crate::profile::phase("native.prep");
-        let (duration_ticks, ticks_per_second, loop_mode) = {
+        let (duration_ticks, ticks_per_second, loop_mode, timeline) = {
             let view = candidate.view().ok()?;
             (
                 view.duration_ticks(),
                 view.ticks_per_second(),
                 view.loop_mode(),
+                view.detach(),
             )
         };
         let source = Arc::new(document.source_bytes().ok()?);
@@ -54,6 +57,7 @@ impl Prepared {
             loop_mode,
             source,
             candidate: candidate.clone(),
+            timeline,
             derived: OnceLock::new(),
             diff: Mutex::default(),
         })
@@ -76,9 +80,9 @@ impl Prepared {
     pub fn render(&self, tick: u32, size: (u32, u32)) -> Result<Frame, NativeFrameError> {
         let derived = self.derived()?;
         let timeline = self
-            .candidate
-            .view()
-            .map_err(|_| NativeFrameError::InvalidTick)?;
+            .timeline
+            .attach(self.candidate.timeline_bytes())
+            .ok_or(NativeFrameError::InvalidTick)?;
         let assets: Vec<_> = self
             .candidate
             .assets()

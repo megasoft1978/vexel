@@ -212,6 +212,32 @@ impl KeyTable<'_> {
             .then(|| self.cells[cell])
     }
 
+    /// The one colour [`Self::lookup`] returns for every key in
+    /// `[low_key, high_key]`, when the table can vouch for all of them: the
+    /// range lies past one edge or inside a single uniform cell. The cell
+    /// index is monotone in the key, so keys between the two ends share it.
+    #[inline]
+    pub fn lookup_range(&self, low_key: f64, high_key: f64) -> Option<[u8; 4]> {
+        let last = self.cells.len();
+        let (low, high) = (self.edges[0], self.edges[last]);
+        if high_key <= low {
+            return Some(self.below);
+        }
+        if low_key >= high {
+            return Some(self.above);
+        }
+        if low_key <= low || high_key >= high {
+            return None;
+        }
+        let cell_of = |key: f64| (((key - low) * self.inverse_width) as usize).min(last - 1);
+        let cell = cell_of(low_key);
+        (cell == cell_of(high_key)
+            && self.edges[cell] <= low_key
+            && high_key <= self.edges[cell + 1]
+            && self.uniform[cell])
+            .then(|| self.cells[cell])
+    }
+
     /// The paint this table belongs to.
     pub fn paint(&self) -> &PreparedPaint<'_> {
         &self.paint

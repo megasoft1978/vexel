@@ -18,7 +18,7 @@ pub use edit::{EmptyTimelineSettings, initialize_empty_timeline};
 pub use json::string_copy;
 pub use sample::{PropertySample, PropertyValue, sample_properties};
 pub use schema::{
-    AssetRef, DecodeFailure, Error, ItemView, LoopMode, MAX_ITEMS, MAX_ITEMS_PER_TRACK,
+    AssetRef, DecodeFailure, DetachedTimeline, Error, ItemView, LoopMode, MAX_ITEMS, MAX_ITEMS_PER_TRACK,
     MAX_SOURCE_BYTES, MAX_STRING_BYTES, MAX_TRACKS, TimelineContext, TimelineIterator,
     TimelineView, TrackView, classify, classify_cancellable, decode, decode_cancellable,
 };
