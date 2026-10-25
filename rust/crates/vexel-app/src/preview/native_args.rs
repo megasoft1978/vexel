@@ -93,6 +93,13 @@ fn value(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Vec<u8>, Pre
         })
         .and_then(|token| doc.raw_token(token))
         .filter(|raw| raw.len() <= VALUE_LIMIT)
+        // A string is path data (`M...`) or points (a number first).
+        .filter(|raw| {
+            raw.first() != Some(&b'"')
+                || raw.get(1).is_some_and(|b| {
+                    matches!(b, b'M' | b'm' | b'0'..=b'9' | b'+' | b'-' | b'.' | b' ')
+                })
+        })
         .map(<[u8]>::to_vec)
         .ok_or_else(|| invalid(tool, "value", form, None))
 }

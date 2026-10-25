@@ -28,7 +28,8 @@ fn fnv(bytes: &[u8]) -> u64 {
 }
 
 fn doc(tracks: &[(&str, &str, &str, &str, &str, &[(u32, &str)])]) -> AppDocument {
-    let path = std::env::temp_dir().join(format!("vexel-morph-identity-{}.svg", std::process::id()));
+    let path =
+        std::env::temp_dir().join(format!("vexel-morph-identity-{}.svg", std::process::id()));
     std::fs::write(&path, SVG).unwrap();
     let mut doc = AppDocument::new(128, 128).unwrap();
     doc.open_path(&path).unwrap();
@@ -92,8 +93,25 @@ fn assert_identical(label: &str, doc: &AppDocument, size: u32) {
 #[test]
 fn path_and_points_morph_identical() {
     let doc = doc(&[
-        ("m", "p", "d", "path", r#""M10 100 L60 20 L110 100 Z""#, &[(12, r#""M30 90 L60 60 L100 110 Z""#), (30, r#""m 10 100 l 50 -80 l 50 80 z""#)]),
-        ("pt", "poly", "points", "path", r#""5,5 40,5 40,40""#, &[(20, r#""30,30 100,30 100,100""#)]),
+        (
+            "m",
+            "p",
+            "d",
+            "path",
+            r#""M10 100 L60 20 L110 100 Z""#,
+            &[
+                (12, r#""M30 90 L60 60 L100 110 Z""#),
+                (30, r#""m 10 100 l 50 -80 l 50 80 z""#),
+            ],
+        ),
+        (
+            "pt",
+            "poly",
+            "points",
+            "path",
+            r#""5,5 40,5 40,40""#,
+            &[(20, r#""30,30 100,30 100,100""#)],
+        ),
     ]);
     for size in [128, 100] {
         assert_identical("morph", &doc, size);
@@ -103,10 +121,24 @@ fn path_and_points_morph_identical() {
 #[test]
 fn filter_and_stop_animation_identical() {
     let doc = doc(&[
-        ("b", "blur", "stdDeviation", "scalar", "1", &[(10, "8"), (30, "2")]),
+        (
+            "b",
+            "blur",
+            "stdDeviation",
+            "scalar",
+            "1",
+            &[(10, "8"), (30, "2")],
+        ),
         ("o", "off", "dx", "scalar", "0", &[(20, "6")]),
         ("so", "s0", "offset", "scalar", "0", &[(24, "1.4")]),
-        ("sc", "s1", "stop-color", "rgba", "[0,0,1,1]", &[(24, "[1,1,0,0.5]")]),
+        (
+            "sc",
+            "s1",
+            "stop-color",
+            "rgba",
+            "[0,0,1,1]",
+            &[(24, "[1,1,0,0.5]")],
+        ),
     ]);
     assert_identical("filter+stops", &doc, 128);
 }

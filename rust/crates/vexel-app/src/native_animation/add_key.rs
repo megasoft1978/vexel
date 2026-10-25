@@ -126,7 +126,10 @@ impl NativeAnimationController {
             }
             ref other => value_json(other),
         };
-        Ok(Resolved::Key { track_id: id, value })
+        Ok(Resolved::Key {
+            track_id: id,
+            value,
+        })
     }
 }
 

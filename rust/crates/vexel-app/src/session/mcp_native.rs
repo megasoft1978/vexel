@@ -404,13 +404,27 @@ fn property_target_mismatch(
         return None;
     }
     Some(match property {
-        b"d" => "native_timeline_add_property_track property d morphs path data and needs a <path> target (polygon and polyline use points)",
-        b"points" => "native_timeline_add_property_track property points needs a <polygon> or <polyline> target (paths use d)",
-        b"stdDeviation" => "native_timeline_add_property_track property stdDeviation needs the id of a feGaussianBlur or feDropShadow filter primitive",
-        b"dx" | b"dy" => "native_timeline_add_property_track properties dx and dy need the id of a feOffset or feDropShadow filter primitive",
-        b"flood-opacity" => "native_timeline_add_property_track property flood-opacity needs the id of a feFlood or feDropShadow filter primitive",
-        b"values" => "native_timeline_add_property_track property values needs the id of a feColorMatrix filter primitive",
-        _ => "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry",
+        b"d" => {
+            "native_timeline_add_property_track property d morphs path data and needs a <path> target (polygon and polyline use points)"
+        }
+        b"points" => {
+            "native_timeline_add_property_track property points needs a <polygon> or <polyline> target (paths use d)"
+        }
+        b"stdDeviation" => {
+            "native_timeline_add_property_track property stdDeviation needs the id of a feGaussianBlur or feDropShadow filter primitive"
+        }
+        b"dx" | b"dy" => {
+            "native_timeline_add_property_track properties dx and dy need the id of a feOffset or feDropShadow filter primitive"
+        }
+        b"flood-opacity" => {
+            "native_timeline_add_property_track property flood-opacity needs the id of a feFlood or feDropShadow filter primitive"
+        }
+        b"values" => {
+            "native_timeline_add_property_track property values needs the id of a feColorMatrix filter primitive"
+        }
+        _ => {
+            "native_timeline_add_property_track property is a geometry attribute (x, y, width, height, cx, cy, r, rx, ry) that the target element type does not have; paths, lines, polygons and groups move with a transform track (valueType trs), circles use cx cy r, ellipses cx cy rx ry, rects x y width height rx ry"
+        }
     })
 }
 

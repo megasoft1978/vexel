@@ -114,7 +114,8 @@ fn apply_with_index(
         let target = decode_json_string(sample.target)?;
         let property = decode_json_string(sample.property)?;
         if let PropertyValue::Path(blend) = sample.value {
-            let kind = PathKind::of_property(&property).ok_or(NativePropertyError::UnsupportedProperty)?;
+            let kind =
+                PathKind::of_property(&property).ok_or(NativePropertyError::UnsupportedProperty)?;
             let text = resolve_path(timeline.source(), kind, blend)
                 .map_err(|_| NativePropertyError::InvalidValue)?;
             push_write(&mut writes, &target, &property, text)?;
@@ -283,10 +284,9 @@ fn append_writes(
             value.push(b')');
             (b"transform".as_slice(), value)
         }
-        (b"offset" | b"stop-opacity" | b"flood-opacity", b"scalar") => (
-            property,
-            number_text(values[0].clamp(0.0, 1.0)),
-        ),
+        (b"offset" | b"stop-opacity" | b"flood-opacity", b"scalar") => {
+            (property, number_text(values[0].clamp(0.0, 1.0)))
+        }
         (name, b"scalar") if scalar_property(name) => (name, number_text(values[0])),
         _ => return Err(NativePropertyError::UnsupportedProperty),
     };
