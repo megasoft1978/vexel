@@ -3,7 +3,7 @@
 use super::contour::{self, Loop};
 use super::fit::{self, P, Seg};
 use super::quant::{NONE, quantize};
-use super::{MAX_CONTOURS, MAX_OUTPUT_BYTES, Rgba, TraceError};
+use super::{MAX_BOUNDARY_STEPS, MAX_CONTOURS, MAX_OUTPUT_BYTES, Rgba, TraceError};
 
 /// Tracing knobs.
 #[derive(Clone, Copy, Debug)]
@@ -60,6 +60,8 @@ impl Layer {
 struct Budget {
     contours: usize,
     bytes: usize,
+    /// Boundary steps left across all layers (set on first use).
+    steps: Option<usize>,
 }
 
 fn num(v: f64, out: &mut String) {
@@ -178,7 +180,8 @@ fn trace_into(
     budget: &mut Budget,
 ) -> Result<(String, usize), TraceError> {
     let room = MAX_CONTOURS.saturating_sub(budget.contours);
-    let loops = contour::loops(mask, w, h, room.saturating_mul(4).max(16))
+    let steps = budget.steps.get_or_insert(MAX_BOUNDARY_STEPS);
+    let loops = contour::loops(mask, w, h, room.saturating_mul(4).max(16), steps)
         .ok_or(TraceError::TooManyContours)?;
     let hole_min = i64::from(opts.hole_area.min(opts.min_area / 2));
     let outer_min = i64::from(opts.min_area);

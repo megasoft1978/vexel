@@ -35,8 +35,15 @@ impl Grid<'_> {
 const STEP: [(i32, i32); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
 
 /// Follows every boundary of `mask` (`w` x `h`, row-major). Stops early with
-/// `None` once more than `max_loops` loops exist.
-pub fn loops(mask: &[bool], w: usize, h: usize, max_loops: usize) -> Option<Vec<Loop>> {
+/// `None` once more than `max_loops` loops exist or the boundary walk needs
+/// more than `steps_left` further steps (decremented as steps are taken).
+pub fn loops(
+    mask: &[bool],
+    w: usize,
+    h: usize,
+    max_loops: usize,
+    steps_left: &mut usize,
+) -> Option<Vec<Loop>> {
     let g = Grid {
         m: mask,
         w: w as i32,
@@ -64,18 +71,31 @@ pub fn loops(mask: &[bool], w: usize, h: usize, max_loops: usize) -> Option<Vec<
                 if out.len() >= max_loops {
                     return None;
                 }
-                out.push(follow(&g, &mut seen, vw, (vx as i32, vy as i32), d));
+                out.push(follow(&g, &mut seen, vw, (vx as i32, vy as i32), d, steps_left)?);
             }
         }
     }
     Some(out)
 }
 
-fn follow(g: &Grid<'_>, seen: &mut [u8], vw: usize, start: (i32, i32), d0: u8) -> Loop {
+fn follow(
+    g: &Grid<'_>,
+    seen: &mut [u8],
+    vw: usize,
+    start: (i32, i32),
+    d0: u8,
+    steps_left: &mut usize,
+) -> Option<Loop> {
     let mut pts = Vec::new();
     let (mut x, mut y, mut d) = (start.0, start.1, d0);
     loop {
-        seen[y as usize * vw + x as usize] |= 1 << d;
+        *steps_left = steps_left.checked_sub(1)?;
+        let cell = &mut seen[y as usize * vw + x as usize];
+        if *cell & (1 << d) != 0 {
+            // Only a corrupt walk revisits an edge; never loop forever.
+            break;
+        }
+        *cell |= 1 << d;
         pts.push((x, y));
         x += STEP[d as usize].0;
         y += STEP[d as usize].1;
@@ -94,7 +114,7 @@ fn follow(g: &Grid<'_>, seen: &mut [u8], vw: usize, start: (i32, i32), d0: u8) -
     }
     let points = compress(&pts);
     let area = shoelace(&points);
-    Loop { points, area }
+    Some(Loop { points, area })
 }
 
 /// Drops points whose neighbours are collinear with them (cyclic).
@@ -119,4 +139,27 @@ fn shoelace(p: &[(i32, i32)]) -> i64 {
         s += i64::from(a.0) * i64::from(b.1) - i64::from(b.0) * i64::from(a.1);
     }
     s / 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::loops;
+
+    #[test]
+    fn boundary_step_budget_is_enforced() {
+        // 1-pixel staircase band: every boundary edge is walked once.
+        let n = 600;
+        let mut m = vec![false; n * n];
+        for y in 0..n {
+            for x in 0..n {
+                m[y * n + x] = x == y || x + 1 == y;
+            }
+        }
+        let mut ample = 10_000_000;
+        let ok = loops(&m, n, n, 100, &mut ample).expect("fits");
+        let used = 10_000_000 - ample;
+        assert!(!ok.is_empty() && used > 1000);
+        let mut tight = used - 1;
+        assert!(loops(&m, n, n, 100, &mut tight).is_none());
+    }
 }

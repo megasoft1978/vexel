@@ -28,6 +28,8 @@ pub const MAX_COLOURS: usize = 64;
 /// Most traced contours across all layers.
 /// Most masked pixels one inpaint call rebuilds.
 pub const MAX_INPAINT_PIXELS: usize = 4_000_000;
+/// Most boundary steps followed across all layers of one trace.
+pub const MAX_BOUNDARY_STEPS: usize = 8_000_000;
 pub const MAX_CONTOURS: usize = 60_000;
 /// Most path-data bytes across all layers.
 pub const MAX_OUTPUT_BYTES: usize = 3 * 1024 * 1024;
