@@ -19,6 +19,8 @@ const RELEASE_STEP: f32 = 1.0 / (0.2 * OUT_RATE as f32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MixError {
     Audio(AudioError),
+    /// A track's source file is missing, unreadable or outside its directory.
+    Source,
     /// More output frames than [`MAX_OUT_FRAMES`], or zero ticks per second.
     Limit,
     Alloc,

@@ -15,6 +15,7 @@ mod grants;
 mod hooks;
 mod mcp;
 mod mcp_batch;
+pub(crate) mod mcp_audio;
 mod mcp_extras;
 mod mcp_frames;
 pub(crate) mod mcp_png;

@@ -8,6 +8,9 @@ use super::native_frame::render_native_frame;
 use crate::compose::svg_viewport;
 use std::path::PathBuf;
 use std::sync::Arc;
+use vexel_timeline::audio::AudioTrack;
+use vexel_timeline::audio_codec::{self, Pcm};
+use vexel_timeline::audio_mix::{MixError, frames_for_ticks, mixdown};
 use vexel_platform_apple::{MAX_VIDEO_DIMENSION, VideoCodec, VideoError, VideoSpec, VideoWriter};
 
 /// Most frames one video export may contain; longer loops keep every
@@ -69,6 +72,14 @@ pub(crate) fn quality_bit_rate(quality: f64, pixels: u64, fps: f64) -> u32 {
         .clamp(10_000.0, f64::from(u32::MAX)) as u32
 }
 
+/// Audio to mux into a video: the tracks, how to load a track's decoded
+/// samples, and a scratch WAV path (removed before returning).
+pub struct NativeAudio<'a> {
+    pub tracks: &'a [AudioTrack],
+    pub load: &'a mut dyn FnMut(&AudioTrack) -> Result<Pcm, MixError>,
+    pub scratch_wav: PathBuf,
+}
+
 /// A finished video and what it contains.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NativeVideo {
@@ -92,6 +103,8 @@ pub enum NativeVideoError {
     Video(VideoError),
     /// `loops` is zero.
     BadLoops,
+    /// The audio mixdown failed.
+    Audio(MixError),
 }
 
 impl From<NativeExportError> for NativeVideoError {
@@ -114,6 +127,17 @@ impl NativeExportSource {
     /// Renders the loop ticks and encodes them as H.264/HEVC. Frame `i` is
     /// shown at `i * stride` ticks, so durations are exact at any tick rate.
     pub fn export_video(&self, req: &NativeVideoRequest) -> Result<NativeVideo, NativeVideoError> {
+        self.export_video_with_audio(req, None)
+    }
+
+    /// [`NativeExportSource::export_video`] plus an AAC track mixed from
+    /// `audio` for the video's whole length; `None` leaves the output as
+    /// without audio support.
+    pub fn export_video_with_audio(
+        &self,
+        req: &NativeVideoRequest,
+        audio: Option<NativeAudio<'_>>,
+    ) -> Result<NativeVideo, NativeVideoError> {
         let view = self
             .timeline()
             .view()
@@ -150,7 +174,6 @@ impl NativeExportSource {
             });
         }
         let geometry = svg_geometry(&viewport, width, height);
-        let assets = self.drawing_assets();
         let quality = quality_level(req.quality.unwrap_or(DEFAULT_QUALITY));
         let fps = f64::from(tps) / stride as f64;
         let bit_rate = req.bit_rate.unwrap_or_else(|| {
@@ -160,7 +183,20 @@ impl NativeExportSource {
                 fps,
             )
         });
-        let mut writer = VideoWriter::create(VideoSpec {
+        let video_ticks = ticks.len() as u64 * stride;
+        let scratch = match audio {
+            Some(audio) if !audio.tracks.is_empty() => {
+                let frames = frames_for_ticks(video_ticks, tps);
+                let mixed = mixdown(audio.tracks, tps, frames, audio.load)
+                    .map_err(NativeVideoError::Audio)?;
+                let wav = audio_codec::encode_wav16(48_000, 2, &mixed);
+                std::fs::write(&audio.scratch_wav, wav)
+                    .map_err(|_| NativeVideoError::Audio(MixError::Alloc))?;
+                Some(audio.scratch_wav)
+            }
+            _ => None,
+        };
+        let created = VideoWriter::create_with_audio(VideoSpec {
             path: req.path.clone(),
             width,
             height,
@@ -170,7 +206,37 @@ impl NativeExportSource {
             alpha: req.alpha,
             bit_rate: Some(bit_rate),
             quality: Some(quality),
-        })?;
+        }, scratch.as_deref());
+        let result = created.map_err(NativeVideoError::from).and_then(|writer| {
+            self.append_frames(writer, &ticks, &view, width, height, geometry, stride)
+        });
+        if let Some(wav) = &scratch {
+            let _ = std::fs::remove_file(wav);
+        }
+        result.map(|(frames, ticks_per_frame)| NativeVideo {
+            path: req.path.clone(),
+            frames,
+            width,
+            height,
+            ticks_per_frame,
+            ticks_per_second: tps,
+        })
+    }
+}
+
+impl NativeExportSource {
+    #[allow(clippy::too_many_arguments)]
+    fn append_frames(
+        &self,
+        mut writer: VideoWriter,
+        ticks: &[u32],
+        view: &vexel_timeline::TimelineView<'_>,
+        width: u32,
+        height: u32,
+        geometry: super::native_drawing::SvgGeometry,
+        stride: u64,
+    ) -> Result<(usize, u32), NativeVideoError> {
+        let assets = self.drawing_assets();
         let ticks_per_frame = u32::try_from(stride).map_err(|_| NativeExportError::Timeline)?;
         render_ordered(
             ticks.len(),
@@ -178,7 +244,7 @@ impl NativeExportSource {
             |i| {
                 render_native_frame(
                     self.svg_source(),
-                    &view,
+                    view,
                     &assets,
                     ticks[i],
                     width,
@@ -193,13 +259,6 @@ impl NativeExportSource {
             OrderedError::Consume(e) => NativeVideoError::Video(e),
         })?;
         writer.finish_at(ticks.len() as i64 * i64::from(ticks_per_frame))?;
-        Ok(NativeVideo {
-            path: req.path.clone(),
-            frames: ticks.len(),
-            width,
-            height,
-            ticks_per_frame,
-            ticks_per_second: tps,
-        })
+        Ok((ticks.len(), ticks_per_frame))
     }
 }

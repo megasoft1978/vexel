@@ -27,7 +27,7 @@ pub(crate) use animation::{
 };
 #[cfg(test)]
 pub(crate) use animation::{rasterize, rasterize_at};
-pub(crate) use doc_ops::apply as apply_doc;
+pub(crate) use doc_ops::{DocOp, apply as apply_doc};
 use errors::tool_error;
 pub use frames_args::FramesExport;
 pub use video_args::VideoExport;

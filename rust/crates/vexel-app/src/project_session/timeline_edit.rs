@@ -344,6 +344,14 @@ impl ProjectTimelineCandidate {
         self.transact(|editor, context| editor.move_item(context, track_id, from_tick, to_tick))
     }
 
+    /// Replaces the audio tracks (see `vexel_timeline::audio`).
+    pub fn set_audio_tracks(
+        &self,
+        tracks: &[vexel_timeline::audio::AudioTrack],
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| editor.set_audio_tracks(context, tracks))
+    }
+
     pub fn set_loop(&self, mode: LoopMode) -> Result<Self, ProjectTimelineError> {
         self.transact(|editor, context| editor.set_loop(context, mode))
     }
