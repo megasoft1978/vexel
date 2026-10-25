@@ -110,3 +110,23 @@ measurements (`docs/gpu-interface-requests.md`); the header and
   a 49152 pixel frame, which already exceeds 0.002%), and per-edge or `i64`
   vertices (larger `GpuEdge`, more bandwidth) because 16 bits suffices. The
   `parity.json` exceptions are removed.
+
+## Addendum 2026-10-25: opacity groups, frozen layout v7
+
+- Groups composite per pixel, like the CPU (`vexel-render` `group.rs`, and the
+  app's `render_scene`): a layered group (opacity != 1) renders into an
+  isolated transparent layer; shape runs between layered groups are layers
+  composited at opacity 1; the layer pixel's alpha goes through the CPU's
+  `alpha_lut` (`round(min(a/255*opacity, 1)*255)`, evaluated in f64 by the
+  encoder into a 256-byte `GpuGroup` table, so the kernel needs no f64) and is
+  source-over'd onto the parent. Opacity-1 groups are transparent.
+- Layout v7: `GpuShape` carries its frame chain (`frame_count`, `frames[5]`:
+  layered group ids, then a run id with `FRAME_RUN`), `GpuGroup` is a new
+  buffer at index 7 (mode and output move to 8 and 9), header `reserved0`
+  became `group_count`. Tile lists still hold shapes only: the kernel keeps
+  one register pixel per open frame, closes the frames the next entry no
+  longer shares and opens the new ones, so a group needs no bbox and a tile
+  without any of its shapes costs nothing.
+- Depth: more than `MAX_GROUP_DEPTH` (4) nested layered groups is
+  `Unsupported(GroupTooDeep)`; group clips stay `Unsupported(Clips)`; filter,
+  mask and blend-mode groups stay CPU (the app route reports `Cpu("group")`).

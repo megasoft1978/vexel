@@ -666,3 +666,12 @@ view, one thread). End-to-end = encode + bin + upload + dispatch + readback
 `CPU fallback (Unsupported(TooManyEdges))`: the 20000 large radial polygons
 exceed the tile edge-pool budget, so the app would render them on the CPU.
 Single-run noise: the smallest rows include GPU clock ramp-up.
+
+### Opacity groups (L7b)
+
+- Reference vs `vexel-render::render_groups` (6 seeded scenes, 1-4 levels,
+  opacity 0.1-1.0, mixed fills): worst >2/255 0.00051%, >16/255 0%, mae 2e-7.
+- Kernel byte-equal to the reference on all group scenes (solid and mixed).
+- Demo scenes (release, 900 / 1800 px, forced GPU vs CPU tick p50): logo
+  48.8 -> 4.9 ms / 126.4 -> 13.5 ms (GPU). walk_home and loader now fail only
+  on `stroke` (strokes are a later lane).
