@@ -174,3 +174,17 @@ fn reorder_moves_spans_larger_than_64_kib() {
     }
     roundtrip(&mut d, |d| d.reorder_relative("b", "a", true).unwrap());
 }
+
+#[test]
+fn group_wraps_up_to_the_cap_and_refuses_more() {
+    let body: String = (0..=MAX_GROUP_IDS)
+        .map(|i| format!("<rect id='r{i}'/>"))
+        .collect();
+    let mut d = doc(&body);
+    let ids: Vec<String> = (0..=MAX_GROUP_IDS).map(|i| format!("r{i}")).collect();
+    let before = source(&d);
+    assert_eq!(d.group(&ids), Err(V1DocumentError::Unsupported));
+    assert_eq!(source(&d), before, "oversize group changes nothing");
+    let group = d.group(&ids[..MAX_GROUP_IDS]).unwrap();
+    assert!(source(&d).contains(&format!("<g id=\"{group}\"><rect id='r0'/>")));
+}

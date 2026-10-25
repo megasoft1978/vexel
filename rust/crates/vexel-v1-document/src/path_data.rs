@@ -5,9 +5,9 @@
 use crate::{V1DocumentError, numeric_text};
 
 /// Maximum accepted `d` length in bytes.
-pub const MAX_PATH_DATA_BYTES: usize = 8 * 1024;
+pub const MAX_PATH_DATA_BYTES: usize = 256 * 1024;
 /// Maximum number of segments, counting implicit repeats.
-pub const MAX_PATH_SEGMENTS: usize = 1024;
+pub const MAX_PATH_SEGMENTS: usize = 16 * 1024;
 /// Largest accepted coordinate magnitude (matches `vexel-svg-path`).
 const MAX_COORDINATE: f64 = 1_000_000.0;
 

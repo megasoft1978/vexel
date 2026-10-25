@@ -88,8 +88,10 @@ impl V1Document {
     }
 
     /// Inserts `<use id href="#target">` as the last child of `parent`. The
-    /// target must exist and must not contain `parent` (no cycles). One
-    /// history entry.
+    /// target must exist and must not contain `parent` (no cycles). `spec.x`
+    /// and `spec.y` move the instance in the parent's space; `spec.transform`
+    /// (scale, rotation) acts about the instance origin, which sits at x, y.
+    /// One history entry.
     pub fn add_use(
         &mut self,
         parent: &str,
@@ -118,14 +120,25 @@ impl V1Document {
             return Err(V1DocumentError::InvalidGeometry);
         }
         let mut tag = format!("<use id=\"{}\" href=\"#{}\"", attr(id)?, attr(target)?);
-        if let Some(m) = spec.transform {
+        // With a transform, x/y are an offset in the parent's space: they are
+        // folded into the matrix translation, so the transform (scale, rotate)
+        // acts about the instance origin at (x, y). Without one they stay the
+        // plain x/y attributes.
+        let mut offset = Some((spec.x, spec.y));
+        if let Some(mut m) = spec.transform {
             if m.iter().any(|v| !v.is_finite()) {
+                return Err(V1DocumentError::InvalidGeometry);
+            }
+            let (x, y) = offset.take().unwrap_or_default();
+            (m[4], m[5]) = (m[4] + x, m[5] + y);
+            if !m[4].is_finite() || !m[5].is_finite() {
                 return Err(V1DocumentError::InvalidGeometry);
             }
             let m = m.map(|v| v.to_string()).join(" ");
             tag.push_str(&format!(" transform=\"matrix({m})\""));
         }
-        for (name, value) in [("x", spec.x), ("y", spec.y)] {
+        let (x, y) = offset.unwrap_or_default();
+        for (name, value) in [("x", x), ("y", y)] {
             if value != 0.0 {
                 tag.push_str(&format!(" {name}=\"{value}\""));
             }

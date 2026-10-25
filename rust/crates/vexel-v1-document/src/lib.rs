@@ -15,6 +15,7 @@ mod fragment_check;
 mod paint_defs;
 mod path_data;
 mod query;
+mod rename;
 mod reparent;
 mod structure;
 mod structure_defs;
@@ -26,7 +27,7 @@ pub use fragment::{MAX_FRAGMENT_BYTES, UseSpec, fragment_ids};
 pub use paint_defs::{GradientStop, GradientUnits, Spread};
 pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
 pub use query::{ElementInfo, Query, TreeEntry, TreeNode};
-pub use structure::Reorder;
+pub use structure::{MAX_GROUP_IDS, Reorder};
 pub use text::{TextAnchor, TextSpec};
 pub use transform::TransformSpec;
 
