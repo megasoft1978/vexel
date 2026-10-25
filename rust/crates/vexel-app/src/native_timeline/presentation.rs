@@ -44,7 +44,7 @@ impl TimelinePresentation {
         snapshot: &NativeTimelineSnapshot,
     ) {
         let model = TimelineModel::from_snapshot(snapshot);
-        let layout = TimelineLayout::new(panel, &model, self.interaction.viewport(&model));
+        let layout = self.interaction.layout(panel, &model);
         if self.mode == TimelineMode::Native {
             super::paint::paint(canvas, panel, &model, &self.interaction);
         }

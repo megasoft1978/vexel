@@ -117,13 +117,21 @@ fn unsupported_targets_and_transforms_return_typed_errors_without_changes() {
     let mut c = selector();
     let before = doc.source().unwrap();
 
-    // Non-translate transform: selectable by geometry, move refused.
+    // Non-translate transform: the move composes onto the transform and undoes
+    // (on a second document so the untouched-history checks below stay exact).
+    let mut moved = with(OVERLAP);
+    let mut m = selector();
+    click(&mut m, &mut moved, (155.0, 15.0)).unwrap();
+    assert_eq!(m.selection(), Some("rot"));
+    assert_eq!(
+        drag(&mut m, &mut moved, (155.0, 15.0), (165.0, 25.0)),
+        Ok(Outcome::Committed)
+    );
+    assert_ne!(moved.source().unwrap(), before);
+    moved.undo().unwrap();
+    assert_eq!(moved.source().unwrap(), before);
     click(&mut c, &mut doc, (155.0, 15.0)).unwrap();
     assert_eq!(c.selection(), Some("rot"));
-    assert_eq!(
-        drag(&mut c, &mut doc, (155.0, 15.0), (165.0, 25.0)),
-        Err(ToolError::Document(V1DocumentError::UnsupportedTransform))
-    );
     assert_untouched(&doc, &before, 0);
 
     // An element kind the tools cannot move.

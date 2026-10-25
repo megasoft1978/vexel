@@ -562,12 +562,11 @@ fn run(
                 WindowEvent::Scroll(scroll) => {
                     if let Some(footer) = model.layout(logical.0, logical.1).and_then(|l| l.footer)
                     {
-                        if native.surface() == TimelineSurface::Smil
-                            && let Some(moved) =
-                                model.timeline.wheel(footer, scroll.logical, scroll.delta.y)
-                        {
-                            dirty |= moved;
-                        }
+                        dirty |= native.wheel(
+                            (&mut model.timeline, files.document()),
+                            doc.selected_target_id(),
+                            (footer, &scroll),
+                        );
                     }
                 }
                 WindowEvent::CloseRequested => {
