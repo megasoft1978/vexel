@@ -101,7 +101,19 @@ fn value(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Vec<u8>, Pre
                 })
         })
         .map(<[u8]>::to_vec)
-        .ok_or_else(|| invalid(tool, "value", form, None))
+        .ok_or_else(|| {
+            let text = doc
+                .object_get(args, b"value")
+                .and_then(|token| doc.token(token))
+                .is_some_and(|value| value.kind == JsonType::String);
+            if text {
+                PreviewArgumentError::Actionable(format!(
+                    "native_timeline_{tool} argument `value` is a string that is not path data; use {form}"
+                ))
+            } else {
+                invalid(tool, "value", form, None)
+            }
+        })
 }
 
 fn parse_one(
