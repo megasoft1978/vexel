@@ -73,9 +73,7 @@ fn smear_peak_is_clamped_below_the_last_tick() {
         set_duration(&mut rig, duration);
         let reply = rig.doc_tool(
             "effect_apply",
-            &format!(
-                r#""preset":"smear","target":"{hero}","start":{start},"attack":{attack}"#
-            ),
+            &format!(r#""preset":"smear","target":"{hero}","start":{start},"attack":{attack}"#),
         );
         assert!(
             !reply.is_error,

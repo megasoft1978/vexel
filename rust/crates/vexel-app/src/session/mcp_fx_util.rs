@@ -34,9 +34,18 @@ pub(crate) fn unit(seed: u32, a: u32, b: u32) -> f64 {
     f64::from(mix(seed, a, b)) / 4_294_967_296.0
 }
 
+/// Four-decimal number text; NaN and infinities become `0`.
 pub(crate) fn num(v: f64) -> String {
+    if !v.is_finite() {
+        return "0".to_owned();
+    }
     let r = (v * 10_000.0).round() / 10_000.0 + 0.0;
-    format!("{r}")
+    if r.is_finite() {
+        format!("{r}")
+    } else {
+        // Rounding overflowed near f64::MAX; print the finite input unrounded.
+        format!("{v}")
+    }
 }
 
 pub(crate) fn scalar(v: f64) -> Vec<u8> {
@@ -140,4 +149,25 @@ pub(crate) fn pulse(
 pub(crate) fn color_ok(c: &str) -> bool {
     let h = c.strip_prefix('#').unwrap_or("");
     matches!(h.len(), 3 | 6) && h.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::num;
+
+    #[test]
+    fn num_prints_zero_for_non_finite_input() {
+        assert_eq!(num(f64::NAN), "0");
+        assert_eq!(num(f64::INFINITY), "0");
+        assert_eq!(num(f64::NEG_INFINITY), "0");
+        assert_eq!(num(1.5), "1.5");
+        assert_eq!(num(-0.0), "0");
+    }
+
+    #[test]
+    fn num_never_prints_inf_for_finite_overflow() {
+        // Rounding to four decimals overflows near f64::MAX; the value is printed as is.
+        let s = num(f64::MAX);
+        assert!(s.parse::<f64>().is_ok_and(f64::is_finite), "{s}");
+    }
 }
