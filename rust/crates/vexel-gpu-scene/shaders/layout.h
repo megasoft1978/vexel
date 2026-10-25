@@ -6,11 +6,12 @@
 #define VEXEL_GPU_LAYOUT_H
 
 #define VX_LAYOUT_MAGIC 0x56584C31
-#define VX_LAYOUT_VERSION 1
+#define VX_LAYOUT_VERSION 5
 #define VX_TILE_SIZE 16
 #define VX_SAMPLES_PER_AXIS 4
 #define VX_SAMPLE_COUNT 16
-#define VX_EDGE_FIXED_SHIFT 8
+#define VX_EDGE_FIXED_SHIFT 12
+#define VX_MAX_COORDINATE 262144
 #define VX_MAX_SHAPES 262144
 #define VX_MAX_EDGES 4194304
 #define VX_MAX_TILE_LIST 8388608
@@ -48,6 +49,10 @@ struct GpuSceneHeader {
     uint background_rgba;
     uint reserved0;
     uint reserved1;
+    uint content_x0;
+    uint content_y0;
+    uint content_x1;
+    uint content_y1;
 };
 
 struct GpuShape {
@@ -78,6 +83,12 @@ struct GpuTile {
     uint list_count;
 };
 
+struct GpuTileEntry {
+    uint shape;
+    uint edge_start;
+    uint edge_count;
+};
+
 struct GpuGradient {
     float inverse[6];
     uint spread;
@@ -97,7 +108,7 @@ struct GpuClip {
     uint edge_start;
     uint edge_count;
     uint fill_rule;
-    uint reserved0;
+    uint union_size;
 };
 
 #endif

@@ -1,20 +1,33 @@
 //! Capability classification: can the GPU route draw this scene, and within
 //! the layout budgets? The supported set grows lane by lane; today it is solid,
-//! linear and radial fills on a full-canvas content rectangle, no strokes,
+//! linear and radial fills (any content rectangle, as letterboxed frames), no strokes,
 //! groups or clips.
 
 use crate::error::{Capability, UnsupportedReason as Reason};
 use crate::input::{GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape};
-use crate::layout::{MAX_EDGES, MAX_GRADIENTS, MAX_SHAPES, MAX_STOPS, MAX_TILE_LIST, TILE_SIZE};
+use crate::layout::{
+    MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_SHAPES, MAX_STOPS,
+    MAX_TILE_LIST, TILE_SIZE,
+};
 
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
 /// crossing products stay far inside range below it.
 pub const MAX_CANVAS_AXIS: u32 = 16_384;
-/// Largest accepted absolute coordinate, as `vexel_render::MAX_COORDINATE`.
-pub const MAX_COORDINATE: f64 = 1.0e6;
-/// Budget for the sum over shapes of `edges * covered tiles`: the number of
-/// edge visits a kernel makes per frame. Not part of the frozen layout.
-pub const MAX_EDGE_TILE_WORK: u64 = 1 << 29;
+/// Largest accepted absolute coordinate in pixels: the fixed-point limit of
+/// the layout (the CPU accepts 1e6). Larger coordinates classify as
+/// `Unsupported(InvalidScene)` and the scene renders on the CPU.
+pub const MAX_COORDINATE: f64 = crate::layout::MAX_COORDINATE as f64;
+/// Budget for the estimated per-tile edge pool: for every edge the tiles its
+/// own bounding box covers (the copies a tile entry keeps verbatim), plus one
+/// tile entry's worth for the collapsed right-hand carry. The encoder enforces
+/// the hard limit ([`MAX_EDGES`]) and reports `Encode(TooManyEdges)` if the
+/// real pool still overflows. Not part of the frozen layout.
+pub const MAX_EDGE_TILE_WORK: u64 = MAX_EDGES as u64;
+/// Budget for clip work: the sum over clipped shapes of (clip child edges in
+/// its chain) x (tiles the shape covers), the edge visits a kernel makes for
+/// clipping per frame (clip edges are not clipped per tile). Not part of the
+/// frozen layout.
+pub const MAX_CLIP_EDGE_WORK: u64 = 1 << 27;
 /// Longest gradient stop list the CPU sampler accepts.
 pub const MAX_GRADIENT_STOPS: usize = 256;
 
@@ -27,6 +40,8 @@ pub(crate) struct Stats {
     pub stops: u64,
     pub tile_entries: u64,
     pub edge_tile_work: u64,
+    pub clip_records: u64,
+    pub clip_edge_work: u64,
 }
 
 /// Classifies `scene`; `Supported` scenes are guaranteed to encode.
@@ -42,6 +57,7 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
     let tiles_x = u64::from(scene.width.div_ceil(TILE_SIZE));
     let tiles_y = u64::from(scene.height.div_ceil(TILE_SIZE));
     let mut stats = Stats::default();
+    let mut clipped = false;
     for node in &scene.nodes {
         let shape = match node {
             GpuNode::Group(_) => return Err(Reason::Groups),
@@ -50,8 +66,8 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
         if shape.stroke.is_some() {
             return Err(Reason::Strokes);
         }
-        if !shape.clips.is_empty() {
-            return Err(Reason::Clips);
+        if shape.clips.len() > MAX_CLIP_CHAIN as usize {
+            return Err(Reason::ClipChainTooLong);
         }
         let Some(paint) = &shape.fill else { continue };
         stats.shapes += 1;
@@ -77,13 +93,27 @@ pub(crate) fn analyze(scene: &GpuScene) -> Result<Stats, Reason> {
         };
         let tiles = tile_count(bounds, tiles_x, tiles_y);
         stats.tile_entries += tiles;
-        stats.edge_tile_work += tiles * shape.edges.len() as u64;
+        // Cheap bound first; per-edge precision only once it would not fit.
+        let bound = shape.edges.len() as u64 * tiles + tiles;
+        stats.edge_tile_work += if stats.edge_tile_work + bound <= MAX_EDGE_TILE_WORK {
+            bound
+        } else {
+            edge_tile_copies(shape, tiles_x, tiles_y) + tiles
+        };
         if stats.tile_entries > u64::from(MAX_TILE_LIST) {
             return Err(Reason::TooManyTileEntries);
         }
         if stats.edge_tile_work > MAX_EDGE_TILE_WORK {
             return Err(Reason::TooManyEdges);
         }
+        if !shape.clips.is_empty() {
+            clip_budget(&mut stats, shape, tiles)?;
+            clipped = true;
+        }
+    }
+    if clipped {
+        // Within every budget, but the clip lane has not landed: CPU renders it.
+        return Err(Reason::Clips);
     }
     Ok(stats)
 }
@@ -99,8 +129,42 @@ fn check_canvas(scene: &GpuScene) -> Result<(), Reason> {
     if r.iter().any(|v| !v.is_finite()) {
         return Err(Reason::InvalidScene);
     }
-    if r[0] > 0.0 || r[1] > 0.0 || r[2] < f64::from(scene.width) || r[3] < f64::from(scene.height) {
-        return Err(Reason::Letterbox);
+    Ok(())
+}
+
+/// Clip budget math of one shape covering `tiles` tiles: one child record per
+/// chain link until the input can express unions (`GpuClipPath` is a single
+/// filled child today), clip edges count toward [`MAX_EDGES`], and the clip
+/// work is `clip edges * tiles`.
+fn clip_budget(stats: &mut Stats, shape: &GpuShape, tiles: u64) -> Result<(), Reason> {
+    let mut chain_edges = 0u64;
+    for clip in &shape.clips {
+        check_points(&clip.edges)?;
+        chain_edges += clip.edges.len() as u64;
+    }
+    stats.clip_records += shape.clips.len() as u64;
+    if stats.clip_records > u64::from(MAX_CLIP_RECORDS) {
+        return Err(Reason::TooManyClips);
+    }
+    stats.edges += chain_edges;
+    if stats.edges > u64::from(MAX_EDGES) {
+        return Err(Reason::TooManyEdges);
+    }
+    stats.clip_edge_work += chain_edges * tiles;
+    if stats.clip_edge_work > MAX_CLIP_EDGE_WORK {
+        return Err(Reason::TooManyEdges);
+    }
+    Ok(())
+}
+
+/// Rejects non-finite or out-of-range coordinates.
+fn check_points(edges: &[GpuSegment]) -> Result<(), Reason> {
+    for GpuSegment { x0, y0, x1, y1 } in edges {
+        for v in [x0, y0, x1, y1] {
+            if !v.is_finite() || v.abs() > MAX_COORDINATE {
+                return Err(Reason::InvalidScene);
+            }
+        }
     }
     Ok(())
 }
@@ -131,12 +195,34 @@ fn shape_bounds(shape: &GpuShape) -> Result<Option<[f64; 4]>, Reason> {
     Ok(Some(bounds))
 }
 
+/// Sum over the edges of the tiles each edge's own box touches.
+fn edge_tile_copies(shape: &GpuShape, tiles_x: u64, tiles_y: u64) -> u64 {
+    shape
+        .edges
+        .iter()
+        .filter(|e| e.y0 != e.y1)
+        .map(|e| {
+            tile_count(
+                [
+                    e.x0.min(e.x1),
+                    e.y0.min(e.y1),
+                    e.x0.max(e.x1),
+                    e.y0.max(e.y1),
+                ],
+                tiles_x,
+                tiles_y,
+            )
+        })
+        .sum()
+}
+
 /// Tiles of the canvas grid touched by device-space `bounds`.
 fn tile_count(bounds: [f64; 4], tiles_x: u64, tiles_y: u64) -> u64 {
-    let tile = f64::from(TILE_SIZE);
+    // Multiplying by 1/16 is exact (power of two) and cheaper than dividing.
+    const INV_TILE: f64 = 1.0 / TILE_SIZE as f64;
     let span = |lo: f64, hi: f64, count: u64| -> u64 {
-        let first = (lo / tile).floor().max(0.0);
-        let last = (hi / tile).floor().min(count as f64 - 1.0);
+        let first = (lo * INV_TILE).floor().max(0.0);
+        let last = (hi * INV_TILE).floor().min(count as f64 - 1.0);
         if last < first {
             0
         } else {
@@ -244,6 +330,90 @@ mod tests {
         assert_eq!(classify(&grouped), Capability::Unsupported(Reason::Groups));
     }
 
+    fn clipped_scene(
+        canvas: u32,
+        chain: usize,
+        shapes: usize,
+        clip_edges: Vec<GpuSegment>,
+    ) -> GpuScene {
+        let mut scene = GpuScene::new(canvas, canvas);
+        for _ in 0..shapes {
+            let mut s = fill(square(0.0, 0.0, f64::from(canvas)));
+            for _ in 0..chain {
+                s.clips.push(GpuClipPath {
+                    edges: clip_edges.clone(),
+                    evenodd: false,
+                });
+            }
+            scene.nodes.push(GpuNode::Shape(s));
+        }
+        scene
+    }
+
+    #[test]
+    fn clip_budgets() {
+        let clip = square(2.0, 2.0, 30.0);
+        // Within budget: only the missing clip lane makes it unsupported.
+        for chain in 1..=MAX_CLIP_CHAIN as usize {
+            assert_eq!(
+                classify(&clipped_scene(64, chain, 1, clip.clone())),
+                Capability::Unsupported(Reason::Clips)
+            );
+        }
+        assert_eq!(
+            classify(&clipped_scene(64, 5, 1, clip.clone())),
+            Capability::Unsupported(Reason::ClipChainTooLong)
+        );
+        // 4 links x 16385 shapes = 65540 records > MAX_CLIP_RECORDS.
+        assert_eq!(
+            classify(&clipped_scene(64, 4, 16_385, clip.clone())),
+            Capability::Unsupported(Reason::TooManyClips)
+        );
+        // Clip edges count toward MAX_EDGES.
+        let many = (0..4_200_000)
+            .map(|i| GpuSegment {
+                x0: 1.0,
+                y0: f64::from(i % 50),
+                x1: 2.0,
+                y1: 3.0,
+            })
+            .collect();
+        assert_eq!(
+            classify(&clipped_scene(64, 1, 1, many)),
+            Capability::Unsupported(Reason::TooManyEdges)
+        );
+        // Clip work on a 1024 x 1024 canvas (4096 tiles per full-canvas
+        // shape): 30,000 clip edges = 123M visits fit, 40,000 = 164M do not.
+        let busy = |n: usize| -> Vec<GpuSegment> {
+            (0..n)
+                .map(|i| GpuSegment {
+                    x0: 1.0,
+                    y0: (i % 900) as f64,
+                    x1: 2.0,
+                    y1: 3.0,
+                })
+                .collect()
+        };
+        assert_eq!(
+            classify(&clipped_scene(1024, 1, 1, busy(30_000))),
+            Capability::Unsupported(Reason::Clips)
+        );
+        assert_eq!(
+            classify(&clipped_scene(1024, 1, 1, busy(40_000))),
+            Capability::Unsupported(Reason::TooManyEdges)
+        );
+        let bad = vec![GpuSegment {
+            x0: f64::NAN,
+            y0: 0.0,
+            x1: 1.0,
+            y1: 1.0,
+        }];
+        assert_eq!(
+            classify(&clipped_scene(64, 1, 1, bad)),
+            Capability::Unsupported(Reason::InvalidScene)
+        );
+    }
+
     #[test]
     fn canvas_and_coordinates_checked() {
         assert_eq!(
@@ -256,9 +426,11 @@ mod tests {
         );
         let mut letterbox = GpuScene::new(64, 64);
         letterbox.content_rect = [8.0, 0.0, 56.0, 64.0];
+        assert_eq!(classify(&letterbox), Capability::Supported);
+        letterbox.content_rect[0] = f64::NAN;
         assert_eq!(
             classify(&letterbox),
-            Capability::Unsupported(Reason::Letterbox)
+            Capability::Unsupported(Reason::InvalidScene)
         );
         let nan = fill(vec![GpuSegment {
             x0: f64::NAN,
@@ -268,6 +440,23 @@ mod tests {
         }]);
         assert_eq!(
             classify(&scene_with(nan)),
+            Capability::Unsupported(Reason::InvalidScene)
+        );
+        let at_limit = fill(vec![GpuSegment {
+            x0: MAX_COORDINATE,
+            y0: -MAX_COORDINATE,
+            x1: 1.0,
+            y1: 1.0,
+        }]);
+        assert_eq!(classify(&scene_with(at_limit)), Capability::Supported);
+        let past_limit = fill(vec![GpuSegment {
+            x0: MAX_COORDINATE + 1.0,
+            y0: 0.0,
+            x1: 1.0,
+            y1: 1.0,
+        }]);
+        assert_eq!(
+            classify(&scene_with(past_limit)),
             Capability::Unsupported(Reason::InvalidScene)
         );
         let far = fill(vec![GpuSegment {
@@ -290,10 +479,12 @@ mod tests {
         for _ in 0..9 {
             scene.push_fill(big.clone(), false, GpuPaint::Solid([0, 0, 0, 255]));
         }
-        // 1024 x 1024 tiles = 1,048,576 entries per shape; 9 > 8,388,608.
+        // 1024 x 1024 tiles = 1,048,576 entries per shape, each needing at
+        // least one edge: the 4,194,304 edge pool is exceeded by the 5th shape
+        // (a tile entry always holds an edge, so it binds before the list).
         assert_eq!(
             classify(&scene),
-            Capability::Unsupported(Reason::TooManyTileEntries)
+            Capability::Unsupported(Reason::TooManyEdges)
         );
         // Shape count.
         let mut many = GpuScene::new(16, 16);

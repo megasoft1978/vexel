@@ -24,12 +24,15 @@ pub enum UnsupportedReason {
     Strokes,
     /// Opacity group; supported by a later lane.
     Groups,
-    /// Clipped shape; supported by a later lane.
+    /// Clipped shape within the layout budgets; supported by the clip lane.
     Clips,
-    /// Content rectangle smaller than the canvas (meet letterboxing).
+    /// Unused since layout version 2 (the header carries the content
+    /// rectangle); kept for compatibility.
     Letterbox,
     /// Non-finite or out-of-range coordinates, matrices or canvas size.
     InvalidScene,
+    /// More clip child records than [`crate::layout::MAX_CLIP_RECORDS`].
+    TooManyClips,
 }
 
 /// Result of classifying a scene before any GPU work.

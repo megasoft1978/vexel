@@ -1,7 +1,8 @@
 //! Pure-Rust reference rasterizer of the ENCODED scene: the oracle for the
 //! Metal kernel and proof that the encoding is complete. It does what the
 //! kernel will do, per 16x16 tile and pixel: 4x4 samples at the layout's
-//! sample locations, exact integer crossing tests on the fixed-point edges,
+//! sample locations, exact integer crossing tests on the tile entry's
+//! tile-local fixed-point edges,
 //! gradient colours in `f32`, one source-over per shape per sample, then the
 //! CPU's integer resolve and pixel source-over (`vexel-render` `composite`).
 
@@ -25,7 +26,6 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
     }
     let tile_px = TILE_SIZE as usize;
     let mut spans: Vec<GpuEdge> = Vec::new();
-    let mut gathered: Vec<GpuEdge> = Vec::new();
     for ty in 0..e.header.tiles_y as usize {
         for tx in 0..e.header.tiles_x as usize {
             let t = e.tiles[ty * e.header.tiles_x as usize + tx];
@@ -33,18 +33,20 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
             let (x_px0, y_px0) = (tx * tile_px, ty * tile_px);
             let x_end = (x_px0 + tile_px).min(w);
             let y_end = (y_px0 + tile_px).min(h);
-            for &si in list {
-                let shape = &e.shapes[si as usize];
-                gather(e, shape, [x_px0, y_px0], &mut gathered);
-                if gathered.is_empty() {
-                    continue;
-                }
+            for entry in list {
+                let shape = &e.shapes[entry.shape as usize];
+                let edges = &e.edges[entry.edge_start as usize..][..entry.edge_count as usize];
                 let mut masks = [0u16; (TILE_SIZE * TILE_SIZE) as usize];
                 for sr in 0..tile_px * SAMPLES_PER_AXIS as usize {
-                    let py = ((y_px0 * 4 + sr) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
+                    // Tile-local sample row centre.
+                    let py = (sr as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
                     spans.clear();
-                    spans.extend(gathered.iter().copied().filter(|g| spans_row(g, py)));
+                    spans.extend(edges.iter().copied().filter(|g| spans_row(g, py)));
                     if spans.is_empty() {
+                        continue;
+                    }
+                    let sample_row = (y_px0 * 4 + sr) as u32;
+                    if sample_row < e.header.content_y0 || sample_row >= e.header.content_y1 {
                         continue;
                     }
                     let sy = sr % 4;
@@ -54,7 +56,13 @@ pub fn render_straight(e: &Encoded) -> Vec<u8> {
                     }
                     for col in x_px0..x_end {
                         for sx in 0..4 {
-                            let px = ((col * 4 + sx) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
+                            let sample_col = (col * 4 + sx) as u32;
+                            if sample_col < e.header.content_x0 || sample_col >= e.header.content_x1
+                            {
+                                continue;
+                            }
+                            let px =
+                                (((col - x_px0) * 4 + sx) as i32) * SAMPLE_UNIT + SAMPLE_UNIT / 2;
                             if covers(&spans, px, py, shape.fill_rule == FILL_EVENODD) {
                                 masks[(row_px - y_px0) * tile_px + (col - x_px0)] |=
                                     1 << (sy * 4 + sx);
@@ -89,24 +97,6 @@ pub fn render(e: &Encoded) -> Vec<u8> {
     px
 }
 
-/// Edges of `shape` that can affect a sample of the tile at `origin`: the
-/// y range overlaps the tile and the edge is not entirely left of it.
-fn gather(e: &Encoded, shape: &layout::GpuShape, origin: [usize; 2], out: &mut Vec<GpuEdge>) {
-    out.clear();
-    let tile = (TILE_SIZE as i32) << EDGE_FIXED_SHIFT;
-    let (x0, y0) = (
-        (origin[0] as i32) << EDGE_FIXED_SHIFT,
-        (origin[1] as i32) << EDGE_FIXED_SHIFT,
-    );
-    for edge in &e.edges[shape.edge_start as usize..][..shape.edge_count as usize] {
-        let (ylo, yhi) = (edge.y0.min(edge.y1), edge.y0.max(edge.y1));
-        if yhi <= y0 || ylo >= y0 + tile || edge.x0.max(edge.x1) < x0 {
-            continue;
-        }
-        out.push(*edge);
-    }
-}
-
 fn spans_row(g: &GpuEdge, py: i32) -> bool {
     (g.y0 <= py && g.y1 > py) || (g.y1 <= py && g.y0 > py)
 }
@@ -116,8 +106,10 @@ fn covers(edges: &[GpuEdge], px: i32, py: i32, evenodd: bool) -> bool {
     let (mut winding, mut parity) = (0i32, false);
     for g in edges {
         // crossing x > px  <=>  ((x0-px)*dy + (py-y0)*dx) / dy > 0
-        let dy = i64::from(g.y1 - g.y0);
-        let num = i64::from(g.x0 - px) * dy + i64::from(py - g.y0) * i64::from(g.x1 - g.x0);
+        // i64 throughout: differences of coordinates up to 2^30 exceed i32.
+        let dy = i64::from(g.y1) - i64::from(g.y0);
+        let num = (i64::from(g.x0) - i64::from(px)) * dy
+            + (i64::from(py) - i64::from(g.y0)) * (i64::from(g.x1) - i64::from(g.x0));
         if (dy > 0 && num > 0) || (dy < 0 && num < 0) {
             winding += if dy > 0 { 1 } else { -1 };
             parity = !parity;

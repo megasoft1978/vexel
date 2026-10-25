@@ -34,7 +34,7 @@ pub use bytes::{
 pub use classify::{
     MAX_CANVAS_AXIS, MAX_COORDINATE, MAX_EDGE_TILE_WORK, MAX_GRADIENT_STOPS, classify,
 };
-pub use encode::{Encoded, encode, pack_rgba};
+pub use encode::{Encoded, Encoder, encode, encode_unclipped, pack_rgba};
 pub use error::{Capability, GpuError, UnsupportedReason};
 pub use input::{
     GpuCap, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoin, GpuNode, GpuPaint, GpuScene,

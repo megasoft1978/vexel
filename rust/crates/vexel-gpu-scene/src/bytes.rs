@@ -2,7 +2,9 @@
 //! `bytemuck`), field order exactly as `layout.rs` / `shaders/layout.h`.
 
 use crate::encode::Encoded;
-use crate::layout::{GpuClip, GpuEdge, GpuGradient, GpuSceneHeader, GpuShape, GpuStop, GpuTile};
+use crate::layout::{
+    GpuClip, GpuEdge, GpuGradient, GpuSceneHeader, GpuShape, GpuStop, GpuTile, GpuTileEntry,
+};
 
 fn u(out: &mut Vec<u8>, v: u32) {
     out.extend_from_slice(&v.to_le_bytes());
@@ -15,7 +17,7 @@ fn f(out: &mut Vec<u8>, v: f32) {
 }
 
 pub fn header_bytes(h: &GpuSceneHeader) -> Vec<u8> {
-    let mut o = Vec::with_capacity(64);
+    let mut o = Vec::with_capacity(80);
     for v in [
         h.magic,
         h.version,
@@ -33,6 +35,10 @@ pub fn header_bytes(h: &GpuSceneHeader) -> Vec<u8> {
         h.background_rgba,
         h.reserved0,
         h.reserved1,
+        h.content_x0,
+        h.content_y0,
+        h.content_x1,
+        h.content_y1,
     ] {
         u(&mut o, v);
     }
@@ -82,9 +88,13 @@ pub fn tile_bytes(tiles: &[GpuTile]) -> Vec<u8> {
     o
 }
 
-pub fn list_bytes(list: &[u32]) -> Vec<u8> {
-    let mut o = Vec::with_capacity(list.len() * 4);
-    list.iter().for_each(|v| u(&mut o, *v));
+pub fn list_bytes(list: &[GpuTileEntry]) -> Vec<u8> {
+    let mut o = Vec::with_capacity(list.len() * 12);
+    for e in list {
+        for v in [e.shape, e.edge_start, e.edge_count] {
+            u(&mut o, v);
+        }
+    }
     o
 }
 
@@ -114,7 +124,7 @@ pub fn stop_bytes(stops: &[GpuStop]) -> Vec<u8> {
 pub fn clip_bytes(clips: &[GpuClip]) -> Vec<u8> {
     let mut o = Vec::with_capacity(clips.len() * 16);
     for c in clips {
-        for v in [c.edge_start, c.edge_count, c.fill_rule, c.reserved0] {
+        for v in [c.edge_start, c.edge_count, c.fill_rule, c.union_size] {
             u(&mut o, v);
         }
     }
@@ -163,11 +173,11 @@ mod tests {
         );
         let e = encode(&scene).unwrap();
         let b = e.buffers();
-        assert_eq!(b[0].len(), 64);
+        assert_eq!(b[0].len(), 80);
         assert_eq!(b[1].len(), 64);
         assert_eq!(b[2].len(), 16 * e.edges.len());
         assert_eq!(b[3].len(), 8 * e.tiles.len());
-        assert_eq!(b[4].len(), 4 * e.tile_list.len());
+        assert_eq!(b[4].len(), 12 * e.tile_list.len());
         assert_eq!(&b[0][..4], &0x5658_4C31u32.to_le_bytes());
         // z at offset 16, edge_start at 40 (layout key offsets).
         assert_eq!(&b[1][16..20], &0u32.to_le_bytes());

@@ -183,11 +183,15 @@ fn spec_edges(spec: &Spec) -> Vec<GpuSegment> {
     edges
 }
 
-/// Rounds every vertex to the layout's 1/256 pixel grid, so the encoder's
+/// Rounds every vertex to the layout's fixed-point grid, so the encoder's
 /// quantisation is lossless and only the sampling arithmetic is compared.
+fn grid(v: f64) -> f64 {
+    let unit = f64::from(1u32 << vexel_gpu_scene::layout::EDGE_FIXED_SHIFT);
+    (v * unit).round() / unit
+}
+
 fn snapped(mut specs: Vec<Spec>) -> Vec<Spec> {
-    let snap =
-        |p: &mut (f64, f64)| *p = ((p.0 * 256.0).round() / 256.0, (p.1 * 256.0).round() / 256.0);
+    let snap = |p: &mut (f64, f64)| *p = (grid(p.0), grid(p.1));
     for spec in &mut specs {
         spec.ring.iter_mut().for_each(snap);
         spec.extra_ring.iter_mut().flatten().for_each(snap);
@@ -263,8 +267,29 @@ fn identity() -> Affine {
     }
 }
 
-/// The CPU rasterizer through its public API.
+/// The CPU rasterizer through its public API, identity view.
 fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
+    let vb = ViewBox {
+        x: 0.0,
+        y: 0.0,
+        width: f64::from(w),
+        height: f64::from(h),
+    };
+    cpu_render_view(specs, w, h, vb, (0.0, 0.0), 1.0)
+}
+
+/// The CPU rasterizer with an explicit view box. `specs` are in device space;
+/// they are lowered to user space with the (known, power-of-two) `offset` and
+/// `scale` of `ViewMap::from_viewbox(vb, w, h, None)` so the CPU maps them back
+/// exactly.
+fn cpu_render_view(
+    specs: &[Spec],
+    w: u32,
+    h: u32,
+    vb: ViewBox,
+    offset: (f64, f64),
+    scale: f64,
+) -> Vec<u8> {
     let base = Paint {
         kind: PaintKind::Linear,
         spread: Spread::Pad,
@@ -285,10 +310,10 @@ fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
             spec_edges(spec)
                 .iter()
                 .map(|s| FlatEdge {
-                    x0: s.x0,
-                    y0: s.y0,
-                    x1: s.x1,
-                    y1: s.y1,
+                    x0: (s.x0 - offset.0) / scale,
+                    y0: (s.y0 - offset.1) / scale,
+                    x1: (s.x1 - offset.0) / scale,
+                    y1: (s.y1 - offset.1) / scale,
                 })
                 .collect(),
         );
@@ -344,12 +369,6 @@ fn cpu_render(specs: &[Spec], w: u32, h: u32) -> Vec<u8> {
             stroke_gradient: None,
         })
         .collect();
-    let vb = ViewBox {
-        x: 0.0,
-        y: 0.0,
-        width: f64::from(w),
-        height: f64::from(h),
-    };
     let view = ViewMap::from_viewbox(vb, w, h, None).unwrap();
     let mut tile = Tile::from_owned_rgba(w, h, vec![0; w as usize * h as usize * 4]).unwrap();
     render_shapes(&shapes, view, &mut tile, &|| false).unwrap();
@@ -395,20 +414,25 @@ const ADR: Bounds = (
     PARITY_MEAN_ABS_ERROR_MAX,
 );
 
-/// Measured envelope of the frozen layout's 1/256 pixel edge quantisation on
-/// unsnapped vertices (see docs/gpu-interface-requests.md, request 2). Each
-/// sample that flips changes a pixel by 16/255 or, at low alpha, by much more.
-/// Not an acceptance bound: the ADR bounds are asserted by the ignored test.
-const QUANTISED_8: Bounds = (0.003, 0.0002, 0.0002);
+/// Small frames (under 100k pixels): the ADR bounds, except over 16/255 which
+/// is granular at one pixel (0.002% of 50k pixels) and gets 0.01% headroom.
+const SMALL_FRAME: Bounds = (
+    PARITY_OVER_2_MAX_FRACTION,
+    0.0001,
+    PARITY_MEAN_ABS_ERROR_MAX,
+);
 
 fn check(name: &str, specs: &[Spec], w: u32, h: u32, bounds: Bounds) {
     let scene = scene_for(specs, w, h);
-    assert!(vexel_gpu_scene::classify(&scene).is_supported());
-    let encoded = encode(&scene).unwrap();
-    let m = compare(
-        &reference::render_straight(&encoded),
-        &cpu_render(specs, w, h),
-    );
+    let cpu = cpu_render(specs, w, h);
+    check_against(name, specs, &scene, &cpu, bounds);
+}
+
+fn check_against(name: &str, specs: &[Spec], scene: &GpuScene, cpu: &[u8], bounds: Bounds) {
+    let (w, h) = (scene.width, scene.height);
+    assert!(vexel_gpu_scene::classify(scene).is_supported());
+    let encoded = encode(scene).unwrap();
+    let m = compare(&reference::render_straight(&encoded), cpu);
     println!(
         "{name}: {w}x{h} shapes={} kept={} >2/255={:.5}% >16/255={:.5}% mae={:.6} max={}",
         specs.len(),
@@ -442,7 +466,7 @@ fn solid_fills_match_cpu() {
     for seed in 1..=4 {
         let mut s = specs(seed, 80, 200.0, 136.0);
         s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));
-        check(&format!("solid seed {seed}"), &s, 200, 136, QUANTISED_8);
+        check(&format!("solid seed {seed}"), &s, 200, 136, SMALL_FRAME);
     }
 }
 
@@ -451,7 +475,7 @@ fn gradient_fills_match_cpu() {
     for seed in 21..=23 {
         let mut s = specs(seed, 120, 256.0, 192.0);
         s.retain(|s| !matches!(s.paint, SpecPaint::Solid(_)));
-        check(&format!("gradient seed {seed}"), &s, 256, 192, QUANTISED_8);
+        check(&format!("gradient seed {seed}"), &s, 256, 192, SMALL_FRAME);
     }
 }
 
@@ -459,17 +483,67 @@ fn gradient_fills_match_cpu() {
 fn mixed_scenes_match_cpu() {
     for (seed, count, w, h) in [(11, 40, 200, 136), (12, 120, 333, 250), (13, 300, 512, 384)] {
         let s = specs(seed, count, f64::from(w), f64::from(h));
-        check(&format!("mixed seed {seed}"), &s, w, h, QUANTISED_8);
+        check(&format!("mixed seed {seed}"), &s, w, h, SMALL_FRAME);
     }
 }
 
-/// Fails at `EDGE_FIXED_SHIFT = 8` (request 2 in docs/gpu-interface-requests.md);
-/// run with `-- --ignored` after the layout change.
+/// Unsnapped (arbitrary f64) vertices at sizes 256 / 900 / 1024, 12 seeds:
+/// every scene meets the ADR-0035 bounds with the layout's edge precision.
 #[test]
-#[ignore]
 fn unsnapped_scenes_meet_adr_bounds() {
-    for (seed, count, w, h) in [(11, 40, 200, 136), (12, 120, 333, 250), (13, 300, 512, 384)] {
-        let s = specs(seed, count, f64::from(w), f64::from(h));
-        check(&format!("unsnapped seed {seed}"), &s, w, h, ADR);
+    for k in 0..12u64 {
+        let size = [256u32, 900, 1024][(k % 3) as usize];
+        let (w, h) = (size, size * 3 / 4);
+        let count = (w as usize * h as usize) / 700;
+        let s = specs(100 + k, count, f64::from(w), f64::from(h));
+        check(&format!("unsnapped seed {}", 100 + k), &s, w, h, ADR);
+    }
+}
+
+/// Meet letterboxing: the CPU excludes samples outside the `ViewMap` content
+/// rectangle; the header's content range must reproduce that exactly. Scale 2,
+/// so the content rectangle is half the canvas in one axis, centred.
+#[test]
+fn letterboxed_frames_match_cpu() {
+    for (seed, count, w, h, tall) in [
+        (41, 120, 256, 192, false),
+        (42, 160, 300, 200, true),
+        (43, 200, 512, 384, false),
+    ] {
+        let (fw, fh) = (f64::from(w), f64::from(h));
+        let (vb, offset) = if tall {
+            // Pillarbox: content width fw / 2, centred horizontally.
+            (
+                ViewBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: fw / 4.0,
+                    height: fh / 2.0,
+                },
+                (fw / 4.0, 0.0),
+            )
+        } else {
+            (
+                ViewBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: fw / 2.0,
+                    height: fh / 4.0,
+                },
+                (0.0, fh / 4.0),
+            )
+        };
+        // Solid only: gradient coordinates live in user space on the CPU.
+        let mut s = snapped(specs(seed, count, fw, fh));
+        s.retain(|s| matches!(s.paint, SpecPaint::Solid(_)));
+        let mut scene = scene_for(&s, w, h);
+        scene.content_rect = [
+            offset.0,
+            offset.1,
+            offset.0 + vb.width * 2.0,
+            offset.1 + vb.height * 2.0,
+        ];
+        let cpu = cpu_render_view(&s, w, h, vb, offset, 2.0);
+        check_against(&format!("letterbox seed {seed}"), &s, &scene, &cpu, ADR);
     }
 }
