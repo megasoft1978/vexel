@@ -126,7 +126,7 @@ pub(in crate::preview) fn camera(
         Some(t) if t.kind == JsonType::False => false,
         Some(_) => return Err(invalid(tool, "clear", "true or false", None)),
     };
-    let mut keys = Vec::new();
+    let mut keys: Vec<CameraKey> = Vec::new();
     if let Some(array) = doc.object_get(args, b"keys") {
         let token = doc
             .token(array)
@@ -155,6 +155,12 @@ pub(in crate::preview) fn camera(
             };
             if key.x.is_none() && key.y.is_none() && key.zoom.is_none() && key.rotate.is_none() {
                 return Err(wrap(invalid(tool, "keys", KEY_FORM, None)));
+            }
+            if keys.iter().any(|k| k.tick == key.tick) {
+                return Err(wrap(PreviewArgumentError::Actionable(format!(
+                    "duplicate tick {}; each camera key needs its own tick",
+                    key.tick
+                ))));
             }
             keys.push(key);
             item = doc.token(at).and_then(|t| t.next_sibling);
@@ -190,4 +196,35 @@ pub(in crate::preview) fn camera(
         ));
     }
     Ok(NativeOp::SetCamera(CameraSpec { keys, shake, clear }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(keys: &str) -> Result<NativeOp, PreviewArgumentError> {
+        let json = format!("{{\"keys\":[{keys}]}}");
+        let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
+        camera(&doc, doc.root(), "set_camera")
+    }
+
+    #[test]
+    fn duplicate_camera_ticks_are_rejected_by_name() {
+        match parse(r#"{"tick":0,"zoom":1},{"tick":24,"zoom":2},{"tick":24,"x":5}"#) {
+            Err(PreviewArgumentError::Actionable(m)) => {
+                assert!(
+                    m.contains("keys[2]") && m.contains("duplicate tick 24"),
+                    "{m}"
+                );
+            }
+            _ => panic!("duplicate tick must be rejected"),
+        }
+        match parse(r#"{"tick":0,"zoom":1},{"tick":0,"zoom":2}"#) {
+            Err(PreviewArgumentError::Actionable(m)) => {
+                assert!(m.contains("duplicate tick 0"), "{m}")
+            }
+            _ => panic!("tick-zero duplicate must be rejected"),
+        }
+        assert!(parse(r#"{"tick":0,"zoom":1},{"tick":1,"zoom":2}"#).is_ok());
+    }
 }

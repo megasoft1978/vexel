@@ -1,7 +1,8 @@
 //! `native_timeline_set_camera`: the camera as one set of reserved `@camera` tracks
 //! (`camera_x`, `camera_y`, `camera_zoom`, `camera_rotate`), replaced in a single
 //! undoable edit. The renderer applies it as a view transform (see
-//! `animation/native_properties/camera.rs`); no wrapper group is needed in the scene.
+//! `animation/native_properties/camera.rs`): one `<g transform>` around the root's content
+//! in each per-tick snapshot, so the document's scene itself is unchanged.
 
 use super::{NativeTrack, PropertyKey, done, error, settings};
 use crate::project_session::ProjectTimelineCandidate;

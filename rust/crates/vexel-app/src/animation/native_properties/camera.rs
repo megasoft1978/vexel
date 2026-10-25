@@ -80,16 +80,23 @@ fn numbers(text: &[u8]) -> Option<Vec<f64>> {
     Some(out)
 }
 
-/// View centre of the root element: from `viewBox`, else `width`/`height`.
-fn centre(source: &[u8], root: &super::Element) -> Option<(f64, f64)> {
+/// View centre of the root element: from `viewBox`, else `width`/`height`, else the origin
+/// (for example `width="100%"`).
+fn centre(source: &[u8], root: &super::Element) -> (f64, f64) {
     if let Some(v) = attribute(source, root, b"viewBox").and_then(numbers) {
         if let [x, y, w, h] = v[..] {
-            return Some((x + w / 2.0, y + h / 2.0));
+            return (x + w / 2.0, y + h / 2.0);
         }
     }
-    let w = numbers(attribute(source, root, b"width")?)?;
-    let h = numbers(attribute(source, root, b"height")?)?;
-    Some((w.first()? / 2.0, h.first()? / 2.0))
+    let size = |name: &[u8]| {
+        attribute(source, root, name)
+            .and_then(numbers)
+            .and_then(|n| n.first().copied())
+    };
+    match (size(b"width"), size(b"height")) {
+        (Some(w), Some(h)) => (w / 2.0, h / 2.0),
+        _ => (0.0, 0.0),
+    }
 }
 
 fn matrix_text(m: [f64; 6]) -> String {
@@ -107,10 +114,14 @@ pub(super) fn wrap(
         .elements
         .first()
         .ok_or(NativePropertyError::InvalidSvg)?;
+    if root.kind == vexel_xml::TokenKind::EmptyElement {
+        // `<svg/>` has no content to wrap.
+        return Ok(Vec::new());
+    }
     if root.kind != vexel_xml::TokenKind::StartElement {
         return Err(NativePropertyError::InvalidSvg);
     }
-    let (cx, cy) = centre(source, root).ok_or(NativePropertyError::InvalidSvg)?;
+    let (cx, cy) = centre(source, root);
     let open_end = root.opening.offset + root.opening.length;
     let close = source
         .windows(5)
@@ -128,4 +139,53 @@ pub(super) fn wrap(
             replacement: b"</g>".to_vec(),
         },
     ])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn zoomed() -> Camera {
+        Camera {
+            x: 0.0,
+            y: 0.0,
+            zoom: 2.0,
+            rotate: 0.0,
+        }
+    }
+
+    fn wrapped(source: &[u8]) -> Result<Vec<Patch>, NativePropertyError> {
+        let index = SourceIndex::build(source).unwrap();
+        wrap(source, &index, &zoomed())
+    }
+
+    #[test]
+    fn viewbox_centre_wraps_root_content() {
+        let source = br#"<svg viewBox="0 0 100 50"><rect/></svg>"#;
+        let patches = wrapped(source).unwrap();
+        assert_eq!(patches.len(), 2);
+        assert!(patches[0].replacement.ends_with(b"-50 -25)\">"));
+        assert_eq!(patches[1].replacement, b"</g>");
+    }
+
+    #[test]
+    fn percent_size_falls_back_to_origin_centre() {
+        let source = br#"<svg width="100%" height="100%"><rect/></svg>"#;
+        let patches = wrapped(source).unwrap();
+        assert_eq!(patches.len(), 2);
+        assert!(
+            patches[0]
+                .replacement
+                .starts_with(b"<g transform=\"matrix(2 0 ")
+        );
+    }
+
+    #[test]
+    fn self_closing_root_has_no_patches() {
+        assert!(
+            wrapped(br#"<svg width="10" height="10"/>"#)
+                .unwrap()
+                .is_empty()
+        );
+    }
 }
