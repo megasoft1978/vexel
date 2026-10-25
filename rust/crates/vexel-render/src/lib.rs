@@ -20,6 +20,7 @@ mod clip;
 mod clip_rows;
 mod composite;
 mod dash;
+pub mod export;
 mod fill;
 pub mod filter;
 mod group;
