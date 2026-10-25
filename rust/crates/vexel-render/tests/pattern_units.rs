@@ -7,7 +7,7 @@ use std::cell::Cell;
 use vexel_geometry::{Affine, affine_compose, affine_identity};
 use vexel_raster::Tile;
 use vexel_render::{
-    FlatEdge, Linecap, Linejoin, PATTERN_MAX_INSTANCES, PatternPaint, PatternPaintShape,
+    FlatEdge, Linecap, Linejoin, PATTERN_MAX_INSTANCES, PATTERN_MAX_TOTAL_BYTES, PatternPaint, PatternPaintShape,
     PatternTileSpec, PreserveAspect, RenderError, RenderShape, StrokeStyle, UnsupportedKind,
     ViewBox, ViewMap, from_scene_shape_with_gradients, from_scene_shape_with_pattern,
     pattern_pixel_size, render_pattern_shapes, render_pattern_tile, render_pattern_tiles,
@@ -286,12 +286,13 @@ fn pattern_pixel_size_rounds_up_and_enforces_limits() {
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(pattern_pixel_size(1024.0, 1.0, 4.0), Ok((4096, 4)));
-    // Area limit 1048576 with both axes under 4096: 2000 x 600 = 1_200_000.
+    // Area limit 8388608 with both axes within 4096: 4096 x 2052 = 8_404_992.
     assert_eq!(
-        pattern_pixel_size(500.0, 150.0, 4.0),
+        pattern_pixel_size(1024.0, 513.0, 4.0),
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(pattern_pixel_size(256.0, 256.0, 4.0), Ok((1024, 1024)));
+    assert_eq!(pattern_pixel_size(1024.0, 512.0, 4.0), Ok((4096, 2048)));
     assert_eq!(
         pattern_pixel_size(70000.0, 1.0, 0.001),
         Err(RenderError::LimitExceeded)
@@ -308,9 +309,9 @@ fn over_axis_and_over_pixel_tiles_are_limit_exceeded() {
         render_pattern_tile(spec(1, 4097, 4.0, 4.0), &[], NEVER).map(|_| ()),
         Err(RenderError::LimitExceeded)
     );
-    // 2000 x 600 is within both axes but over 1048576 pixels.
+    // 4096 x 2049 is within both axes but over 8388608 pixels.
     assert_eq!(
-        render_pattern_tile(spec(2000, 600, 4.0, 4.0), &[], NEVER).map(|_| ()),
+        render_pattern_tile(spec(4096, 2049, 4.0, 4.0), &[], NEVER).map(|_| ()),
         Err(RenderError::LimitExceeded)
     );
     assert_eq!(
@@ -364,6 +365,57 @@ fn more_than_1024_instances_are_limit_exceeded() {
         render_pattern_shapes(&shapes[..1024], unit_view(4), &mut out, NEVER),
         Ok(())
     );
+}
+
+#[test]
+fn aggregate_tile_bytes_are_capped_at_128_mib() {
+    assert_eq!(PATTERN_MAX_TOTAL_BYTES, 128 * 1024 * 1024);
+    // One tile at the per-tile area limit (32 MiB) is accepted.
+    let big = spec(4096, 2048, 4.0, 4.0);
+    assert_eq!(render_pattern_tiles(&[(big, &[][..])], NEVER).unwrap().len(), 1);
+    // Many small tiles exactly at the aggregate limit: 1024 x (128 x 256 x 4) = 128 MiB.
+    let small = spec(128, 256, 4.0, 4.0);
+    let many: Vec<_> = (0..PATTERN_MAX_INSTANCES).map(|_| (small, &[][..])).collect();
+    assert_eq!(render_pattern_tiles(&many, NEVER).unwrap().len(), 1024);
+    // Exactly the limit: three big tiles, one 4096 x 2047 and one 4096 x 1 tile.
+    let mix = [
+        (big, &[][..]),
+        (big, &[][..]),
+        (big, &[][..]),
+        (spec(4096, 2047, 4.0, 4.0), &[][..]),
+        (spec(4096, 1, 4.0, 4.0), &[][..]),
+    ];
+    assert_eq!(render_pattern_tiles(&mix, NEVER).unwrap().len(), 5);
+    // One pixel (4 bytes) over the limit is refused before any tile is allocated.
+    let over = [
+        (big, &[][..]),
+        (big, &[][..]),
+        (big, &[][..]),
+        (spec(4096, 2047, 4.0, 4.0), &[][..]),
+        (spec(4096, 1, 4.0, 4.0), &[][..]),
+        (spec(1, 1, 4.0, 4.0), &[][..]),
+    ];
+    assert_eq!(
+        render_pattern_tiles(&over, NEVER).map(|_| ()),
+        Err(RenderError::LimitExceeded)
+    );
+    // Five distinct 32 MiB tiles referenced by one render exceed the aggregate.
+    let tiles: Vec<Tile> = (0..5).map(|_| empty_tile(4096, 2048)).collect();
+    let edges = polygon(&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)]);
+    let shapes: Vec<_> = tiles
+        .iter()
+        .map(|t| PatternPaintShape {
+            shape: fill_shape(&edges, RED, false),
+            fill: Some(PatternPaint { tile: Some(t), inverse: affine_identity(), opacity: 1.0 }),
+            stroke: None,
+        })
+        .collect();
+    let mut out = empty_tile(4, 4);
+    assert_eq!(
+        render_pattern_shapes(&shapes, unit_view(4), &mut out, NEVER),
+        Err(RenderError::LimitExceeded)
+    );
+    assert!(render_pattern_shapes(&shapes[..4], unit_view(4), &mut out, NEVER).is_ok());
 }
 
 #[test]

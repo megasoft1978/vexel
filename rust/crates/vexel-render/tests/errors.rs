@@ -258,9 +258,10 @@ fn over_limit_input_returns_limit_exceeded() {
     );
     // Stroke work beyond the dash-cache step budget. WO-RUST-LIMITS-03 moved this pin
     // from 600,000 edges (1.2M steps, refused at the old 1,000,000 cap) to 2,000,001
-    // edges (4,000,002 steps, refused at the new 4,000,000 cap). The exact boundary is
+    // edges (4,000,002 steps, refused at the then-new 4,000,000 cap). The step cap is now 6M
+    // and the 192 MiB byte budget binds solid rings at 2,287,801 edges, so the pin is 2,287,802. The exact boundary is
     // pinned in validate.rs (limit03_tests).
-    let ring = vec![edge(1.0, 1.0, 2.0, 1.0); 2_000_001];
+    let ring = vec![edge(1.0, 1.0, 2.0, 1.0); 2_287_802];
     let st = style(RED, 1.0, Linecap::Butt, Linejoin::Miter, 4.0);
     assert_eq!(
         try_render(&[stroke_shape(&ring, true, st)], 4).map(|_| ()),

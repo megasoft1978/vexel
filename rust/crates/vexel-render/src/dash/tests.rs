@@ -235,11 +235,11 @@ fn step_and_byte_budgets_are_enforced() {
 // WO-RUST-LIMITS-03 boundary pins, written before the constants were raised.
 // The literals are the frozen targets; the constants must equal them.
 #[test]
-fn limit03_step_budget_admits_4m_and_refuses_the_next() {
-    assert_eq!(MAX_STROKE_STEPS, 4_000_000);
+fn limit03_step_budget_admits_6m_and_refuses_the_next() {
+    assert_eq!(MAX_STROKE_STEPS, 6_000_000);
     let mut budget = Budget { steps: 0, bytes: 0 };
-    assert_eq!(budget.step(4_000_000), Ok(()));
-    assert_eq!(budget.steps, 4_000_000);
+    assert_eq!(budget.step(6_000_000), Ok(()));
+    assert_eq!(budget.steps, 6_000_000);
     assert_eq!(budget.step(1), Err(RenderError::LimitExceeded));
 }
 

@@ -19,8 +19,12 @@ use vexel_scene::{Paint, PaintKind, Pattern, PatternId, Shape};
 
 /// Most pattern tiles rendered or referenced at once (C `SHAPE_PATTERN_MAX_INSTANCES`).
 pub const PATTERN_MAX_INSTANCES: usize = 1024;
-/// Largest tile area in pixels (C `SHAPE_PATTERN_MAX_PIXELS`).
-pub const PATTERN_MAX_PIXELS: usize = 1_048_576;
+/// Largest tile area in pixels (C `SHAPE_PATTERN_MAX_PIXELS` was 1,048,576; raised to
+/// 8,388,608 = 4096 x 2048, 32 MiB of RGBA, for 2550 x 2550 embedded images).
+pub const PATTERN_MAX_PIXELS: usize = 8_388_608;
+/// Largest total RGBA bytes of all live pattern tiles (aggregate; each tile is also bounded by
+/// [`PATTERN_MAX_PIXELS`]). Keeps 1024 large tiles from reaching 32 GiB.
+pub const PATTERN_MAX_TOTAL_BYTES: usize = 128 * 1024 * 1024;
 /// Largest tile width or height in pixels (C `SHAPE_PATTERN_MAX_AXIS`).
 pub const PATTERN_MAX_AXIS: u32 = 4096;
 /// Largest tile extent in user units (C check `tile_width > 65536.0`).
@@ -170,6 +174,17 @@ pub fn render_pattern_tiles(
     if requests.len() > PATTERN_MAX_INSTANCES {
         return Err(RenderError::LimitExceeded);
     }
+    let mut total = 0usize;
+    for (spec, _) in requests {
+        let positive = |v: f64| v.is_finite() && v > 0.0;
+        if positive(spec.tile_width) && positive(spec.tile_height) {
+            check_pixels(spec.width, spec.height)?;
+            total = total.saturating_add((spec.width as usize) * (spec.height as usize) * 4);
+            if total > PATTERN_MAX_TOTAL_BYTES {
+                return Err(RenderError::LimitExceeded);
+            }
+        }
+    }
     let mut tiles = Vec::new();
     tiles
         .try_reserve_exact(requests.len())
@@ -198,6 +213,7 @@ fn validate_paint(paint: &PatternPaint<'_>) -> Result<(), RenderError> {
 
 fn validate_patterns(shapes: &[PatternPaintShape<'_>]) -> Result<(), RenderError> {
     let mut distinct: Vec<*const Tile> = Vec::new();
+    let mut total = 0usize;
     for entry in shapes {
         for paint in [entry.fill.as_ref(), entry.stroke.as_ref()]
             .into_iter()
@@ -214,6 +230,11 @@ fn validate_patterns(shapes: &[PatternPaintShape<'_>]) -> Result<(), RenderError
                         return Err(RenderError::LimitExceeded);
                     }
                     distinct.push(address);
+                    total = total
+                        .saturating_add((tile.width() as usize) * (tile.height() as usize) * 4);
+                    if total > PATTERN_MAX_TOTAL_BYTES {
+                        return Err(RenderError::LimitExceeded);
+                    }
                 }
             }
         }

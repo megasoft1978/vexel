@@ -10,7 +10,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 - Export: GIF, APNG, PNG frame sequence, MP4/MOV (H.264 or HEVC), HEVC with alpha (mov).
 - SVG: Q/T/S path commands and internal DOCTYPE general entities (hard limits) landed.
   Arc commands unsupported. Corpus: deferred gaps include columbiarivermap,
-  corsica, ideogram clip cap, france-osm. Attribute-value entities, Illustrator switch/foreignObject fallbacks, wrapped base64 and empty-media-type data URIs now decode; columbiarivermap moves from unsupported to limit_render (image tile cap PATTERN_MAX_PIXELS in vexel-render). corsica (tspan placement) and france-osm (limit_render) remain. Corpus full count not re-run (21/39 last counted); SCENE_LIMIT/SOURCE_LIMIT unchanged (the corpus path uses a 32 MiB cap).
+  corsica, ideogram clip cap, france-osm. Attribute-value entities, Illustrator switch/foreignObject fallbacks, wrapped base64 and empty-media-type data URIs now decode; columbiarivermap and france-osm now render (corpus 23/39, measured 2026-10-25, was 21/39). Render caps raised with measurements: stroke step budget 4M to 6M (france-osm needs just over 4M; 1.6 s, peak RSS 1.50 GB), pattern tile area 1,048,576 to 8,388,608 px plus a new 128 MiB aggregate cap on live pattern tiles (columbiarivermap 0.9 s, 217 MB RSS). Still failing: corsica (duplicate element ids are rejected by vexel-svg-reference, then `svg:`-prefixed SVG elements are rejected; tspan placement itself is implemented), 4 unsupported, 10 limit_decode, 1 xml, 1 rss_exceeded (generated-inkscape_t2). SCENE_LIMIT/SOURCE_LIMIT unchanged (the corpus path uses a 32 MiB cap).
 - UI: rotate live preview, bezier easing editor, new app icon. Real-window e2e
   script [docs/e2e-ui.md](docs/e2e-ui.md) written, not yet run live.
 
@@ -44,7 +44,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 | F SVG import basics | vexel-svg-* | disclosed basic subset, gradients |
 
 ## Post-V1
-Async export (from wip branch) -> SVG corpus fidelity (21/39) and large-doc design -> recovery/compat, perf, a11y -> Python tooling to Rust -> final UI/E2E, packaging (owner-gated), Codex showcase video.
+Async export (from wip branch) -> SVG corpus fidelity (23/39) and large-doc design -> recovery/compat, perf, a11y -> Python tooling to Rust -> final UI/E2E, packaging (owner-gated), Codex showcase video.
 
 ## Open owner items
 Signing/identity/distribution decisions; showcase publication.

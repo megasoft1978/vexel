@@ -144,7 +144,9 @@ mod limit03_tests {
     #[test]
     fn limit03_solid_ring_steps_admit_4m_and_refuse_the_next() {
         // A closed ring of E edges costs E segments plus E joins: 2E steps.
-        assert_eq!(ring_steps(2_000_000), Ok(4_000_000));
-        assert_eq!(ring_steps(2_000_001), Err(RenderError::LimitExceeded));
+        // Since the step budget is 6M, the 192 MiB byte budget binds a solid ring first:
+        // 88 bytes per edge plus 96 per shape, so 2,287,801 edges (4,575,602 steps) is the largest accepted.
+        assert_eq!(ring_steps(2_287_801), Ok(4_575_602));
+        assert_eq!(ring_steps(2_287_802), Err(RenderError::LimitExceeded));
     }
 }
