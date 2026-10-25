@@ -11,6 +11,7 @@ use vexel_timeline::{CAMERA_TARGET, PropertyValue, TimelineView, resolve_path, s
 use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
 
 mod camera;
+mod visibility;
 
 const MAX_ID_BYTES: usize = 256;
 
@@ -35,6 +36,7 @@ pub(super) struct Element {
     pub(super) tag: XmlSpan,
     pub(super) id: Option<Vec<u8>>,
     pub(super) attributes: Vec<Attribute>,
+    pub(super) parent: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -179,6 +181,7 @@ fn apply_with_index(
     if resolved.iter().any(|(_, name, _)| *name == b"offset") {
         super::native_stop_offsets::keep_monotonic(source, index, &mut resolved)?;
     }
+    visibility::keep_hidden_parents(source, &index.elements, &mut resolved);
     let mut patches = Vec::new();
     for (at, name, value) in &resolved {
         patches.push(attribute_patch(source, &index.elements[*at], name, value)?);
@@ -491,10 +494,16 @@ fn parse_elements(source: &[u8]) -> Result<Vec<Element>, NativePropertyError> {
     if result.diagnostic.category != vexel_xml::XmlError::None {
         return Err(NativePropertyError::InvalidSvg);
     }
-    let mut elements = Vec::new();
+    let mut elements: Vec<Element> = Vec::new();
+    let mut open: Vec<usize> = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
         let token = tokens[index];
+        if token.kind == TokenKind::EndElement {
+            open.pop();
+            index += 1;
+            continue;
+        }
         if !matches!(
             token.kind,
             TokenKind::StartElement | TokenKind::EmptyElement
@@ -512,6 +521,7 @@ fn parse_elements(source: &[u8]) -> Result<Vec<Element>, NativePropertyError> {
             tag: token.name,
             id: None,
             attributes: Vec::new(),
+            parent: open.last().copied(),
         };
         index += 1;
         while let Some(attribute) = tokens
@@ -552,6 +562,9 @@ fn parse_elements(source: &[u8]) -> Result<Vec<Element>, NativePropertyError> {
                 quote,
             });
             index += 1;
+        }
+        if element.kind == TokenKind::StartElement {
+            open.push(elements.len());
         }
         elements.push(element);
     }

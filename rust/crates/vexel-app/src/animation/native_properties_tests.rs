@@ -172,3 +172,62 @@ fn per_key_bezier_easing_is_used_by_native_render_sampling() {
     );
     assert_eq!(eased_frame.unwrap().rgba, linear_frame.unwrap().rgba);
 }
+
+fn visibility_track(id: &str, target: &str, visible: bool) -> String {
+    format!(
+        r#"{{"id":"{id}","kind":"property","target":"{target}","visible":true,"property":"visibility","value_type":"boolean","interpolation":"step","keys":[{{"tick":0,"value":{visible}}}]}}"#
+    )
+}
+
+#[test]
+fn hidden_parent_wins_over_visible_child_track() {
+    let source =
+        br#"<svg><g id="p"><g id="mid"><rect id="c"/></g></g><g id="q"><rect id="d"/></g></svg>"#;
+    let tracks = [
+        visibility_track("a", "p", false),
+        visibility_track("b", "c", true),
+        visibility_track("e", "q", true),
+        visibility_track("f", "d", true),
+    ]
+    .join(",");
+    let timeline = timeline(&tracks, &[b"p", b"mid", b"c", b"q", b"d"]);
+    let snapshot =
+        String::from_utf8(apply_native_properties(source, &timeline, 0).unwrap()).unwrap();
+    assert!(
+        snapshot.contains(r#"<g id="p" visibility="hidden">"#),
+        "{snapshot}"
+    );
+    assert!(
+        snapshot.contains(r#"<rect id="c" visibility="inherit"/>"#),
+        "{snapshot}"
+    );
+    assert!(
+        snapshot.contains(r#"<rect id="d" visibility="visible"/>"#),
+        "{snapshot}"
+    );
+}
+
+#[test]
+fn statically_hidden_parent_wins_and_child_stays_visible_when_parent_shown() {
+    let source = br#"<svg><g id="p" visibility="hidden"><rect id="c"/></g></svg>"#;
+    let timeline = timeline(&visibility_track("b", "c", true), &[b"p", b"c"]);
+    let snapshot =
+        String::from_utf8(apply_native_properties(source, &timeline, 0).unwrap()).unwrap();
+    assert!(
+        snapshot.contains(r#"<rect id="c" visibility="inherit"/>"#),
+        "{snapshot}"
+    );
+    let shown = br#"<svg><g id="p" visibility="hidden"><rect id="c"/></g></svg>"#;
+    let both = format!(
+        "{},{}",
+        visibility_track("a", "p", true),
+        visibility_track("b", "c", true)
+    );
+    let timeline = self::timeline(&both, &[b"p", b"c"]);
+    let snapshot =
+        String::from_utf8(apply_native_properties(shown, &timeline, 0).unwrap()).unwrap();
+    assert!(
+        snapshot.contains(r#"<rect id="c" visibility="visible"/>"#),
+        "{snapshot}"
+    );
+}
