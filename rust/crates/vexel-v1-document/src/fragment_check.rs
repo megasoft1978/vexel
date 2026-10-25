@@ -11,14 +11,55 @@ use vexel_document_edit::{
 /// Elements `element_add_fragment` accepts. Scripts, `foreignObject`, `style`
 /// and SMIL (`animate*`, `set`) are not on the list.
 const ALLOWED: &[&str] = &[
-    "g", "defs", "symbol", "use", "mask", "clipPath", "filter", "linearGradient",
-    "radialGradient", "stop", "pattern", "marker", "text", "tspan", "image", "title", "desc",
-    "rect", "circle", "ellipse", "line", "polyline", "polygon", "path", "feBlend",
-    "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix",
-    "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feDropShadow", "feFlood",
-    "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge",
-    "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting",
-    "feSpotLight", "feTile", "feTurbulence",
+    "g",
+    "defs",
+    "symbol",
+    "use",
+    "mask",
+    "clipPath",
+    "filter",
+    "linearGradient",
+    "radialGradient",
+    "stop",
+    "pattern",
+    "marker",
+    "text",
+    "tspan",
+    "image",
+    "title",
+    "desc",
+    "rect",
+    "circle",
+    "ellipse",
+    "line",
+    "polyline",
+    "polygon",
+    "path",
+    "feBlend",
+    "feColorMatrix",
+    "feComponentTransfer",
+    "feComposite",
+    "feConvolveMatrix",
+    "feDiffuseLighting",
+    "feDisplacementMap",
+    "feDistantLight",
+    "feDropShadow",
+    "feFlood",
+    "feFuncA",
+    "feFuncB",
+    "feFuncG",
+    "feFuncR",
+    "feGaussianBlur",
+    "feImage",
+    "feMerge",
+    "feMergeNode",
+    "feMorphology",
+    "feOffset",
+    "fePointLight",
+    "feSpecularLighting",
+    "feSpotLight",
+    "feTile",
+    "feTurbulence",
 ];
 
 /// Most nested elements a fragment may hold.
@@ -60,7 +101,9 @@ pub(crate) fn validate_fragment(source: &[u8]) -> Result<(), V1DocumentError> {
         if depth >= MAX_FRAGMENT_DEPTH {
             return Err(V1DocumentError::Edit(EditError::Limit));
         }
-        let tag = editor.tag_name(node).and_then(|t| std::str::from_utf8(t).ok());
+        let tag = editor
+            .tag_name(node)
+            .and_then(|t| std::str::from_utf8(t).ok());
         let Some(tag) = tag else {
             return Err(V1DocumentError::DisallowedElement);
         };

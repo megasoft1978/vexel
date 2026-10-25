@@ -69,8 +69,9 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     // (document_open, attribute_set, element_delete, save, save_as, export_svg)
     // plus render_png added by WO-RUST-V1-PNG-01, plus the 11 native_timeline_*
     // tools routed by the V1 native MCP slice, plus native_timeline_set_duration,
-    // plus element_reparent and batch, in declaration order.
-    assert_eq!(doc.token(tools).unwrap().child_count, 53);
+    // plus element_reparent and batch, plus element_add_fragment and use_add,
+    // in declaration order.
+    assert_eq!(doc.token(tools).unwrap().child_count, 55);
     assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",

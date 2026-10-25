@@ -36,10 +36,9 @@ impl V1Document {
 
     fn fragment_parent(&self, parent: &str) -> Result<DocumentHandle, V1DocumentError> {
         if parent == "root" {
-            return self
-                .editor
-                .root()
-                .ok_or(V1DocumentError::Edit(vexel_document_edit::EditError::InvalidOperation));
+            return self.editor.root().ok_or(V1DocumentError::Edit(
+                vexel_document_edit::EditError::InvalidOperation,
+            ));
         }
         self.find_node(parent)
     }
@@ -118,11 +117,7 @@ impl V1Document {
         if !spec.x.is_finite() || !spec.y.is_finite() {
             return Err(V1DocumentError::InvalidGeometry);
         }
-        let mut tag = format!(
-            "<use id=\"{}\" href=\"#{}\"",
-            attr(id)?,
-            attr(target)?
-        );
+        let mut tag = format!("<use id=\"{}\" href=\"#{}\"", attr(id)?, attr(target)?);
         if let Some(m) = spec.transform {
             if m.iter().any(|v| !v.is_finite()) {
                 return Err(V1DocumentError::InvalidGeometry);

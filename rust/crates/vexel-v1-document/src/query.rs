@@ -295,7 +295,7 @@ fn kind_of(editor: &Editor, node: DocumentHandle) -> ElementKind {
         b"path" => ElementKind::Path,
         b"g" => ElementKind::Group,
         b"text" => ElementKind::Text,
-b"use" => ElementKind::Use,
+        b"use" => ElementKind::Use,
         _ => ElementKind::Other,
     }
 }
