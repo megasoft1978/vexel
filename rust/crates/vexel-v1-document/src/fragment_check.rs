@@ -65,21 +65,97 @@ const ALLOWED: &[&str] = &[
 /// Most nested elements a fragment may hold.
 const MAX_FRAGMENT_DEPTH: usize = 64;
 
-fn local_reference(value: &str) -> bool {
-    value.starts_with('#')
+const SVG_NS: &str = "http://www.w3.org/2000/svg";
+const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
+
+/// Decodes the five predefined XML entities and numeric references. `None` on
+/// any unknown or malformed reference.
+fn decode_entities(raw: &str) -> Option<String> {
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some(at) = rest.find('&') {
+        out.push_str(&rest[..at]);
+        let tail = &rest[at + 1..];
+        let end = tail.find(';')?;
+        let entity = &tail[..end];
+        let ch = match entity {
+            "amp" => '&',
+            "lt" => '<',
+            "gt" => '>',
+            "quot" => '"',
+            "apos" => '\'',
+            _ => {
+                let digits = entity.strip_prefix('#')?;
+                let code = match digits.strip_prefix(['x', 'X']) {
+                    Some(hex) => u32::from_str_radix(hex, 16).ok()?,
+                    None => digits.parse().ok()?,
+                };
+                char::from_u32(code)?
+            }
+        };
+        out.push(ch);
+        rest = &tail[end + 1..];
+    }
+    out.push_str(rest);
+    Some(out)
 }
 
-/// Every `url(` in `value` must open with `#`.
-fn urls_are_local(value: &str) -> bool {
+/// Lowercased form with CSS comments, whitespace and control characters removed.
+fn normalize(value: &str) -> String {
+    let mut stripped = String::with_capacity(value.len());
     let mut rest = value;
-    while let Some(at) = rest.to_ascii_lowercase().find("url(") {
-        let after = rest[at + 4..].trim_start_matches([' ', '\t', '"', '\'']);
+    while let Some(at) = rest.find("/*") {
+        stripped.push_str(&rest[..at]);
+        rest = match rest[at + 2..].find("*/") {
+            Some(end) => &rest[at + 2 + end + 2..],
+            None => "",
+        };
+    }
+    stripped.push_str(rest);
+    stripped
+        .chars()
+        .filter(|c| !c.is_whitespace() && !c.is_control())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// Every `url(` must open with `#` (optionally quoted); no `@import`,
+/// `javascript:` or `expression(`; no backslash escapes.
+fn value_is_safe(decoded: &str) -> bool {
+    if decoded.contains('\\') {
+        return false;
+    }
+    let text = normalize(decoded);
+    if ["@import", "javascript:", "expression("]
+        .iter()
+        .any(|bad| text.contains(bad))
+    {
+        return false;
+    }
+    let mut rest = text.as_str();
+    while let Some(at) = rest.find("url(") {
+        let after = rest[at + 4..].trim_start_matches(['"', '\'']);
         if !after.starts_with('#') {
             return false;
         }
         rest = &rest[at + 4..];
     }
     true
+}
+
+/// `:`-bearing names allowed, with the exact value required for declarations.
+/// `data:image/` payloads on `<image>` hrefs skip the CSS scan.
+fn data_image_ok(tag: &str, local: &str, value: &str) -> bool {
+    tag == "image" && local.eq_ignore_ascii_case("href") && value.starts_with("data:image/")
+}
+
+fn name_is_allowed(name: &str, value: &str) -> bool {
+    match name {
+        "xmlns" => value == SVG_NS,
+        "xmlns:xlink" => value == XLINK_NS,
+        "xlink:href" | "xml:space" | "xml:lang" => true,
+        _ => !name.contains(':'),
+    }
 }
 
 /// Rejects disallowed elements, `on*` attributes, non-local hrefs (except
@@ -118,20 +194,27 @@ pub(crate) fn validate_fragment(source: &[u8]) -> Result<(), V1DocumentError> {
                 .span_bytes(attribute.name)
                 .and_then(|n| std::str::from_utf8(n).ok())
                 .ok_or(V1DocumentError::DisallowedAttribute)?;
-            let value = editor
+            let raw = editor
                 .span_bytes(attribute.value)
                 .and_then(|v| std::str::from_utf8(v).ok())
                 .ok_or(V1DocumentError::DisallowedAttribute)?;
-            if name.to_ascii_lowercase().starts_with("on") {
+            let value = decode_entities(raw).ok_or(V1DocumentError::DisallowedAttribute)?;
+            let local = name.rsplit(':').next().unwrap_or(name);
+            if name.to_ascii_lowercase().starts_with("on")
+                || local.to_ascii_lowercase().starts_with("on")
+            {
                 return Err(V1DocumentError::DisallowedAttribute);
             }
-            if matches!(name, "href" | "xlink:href") {
+            if local.eq_ignore_ascii_case("href") {
                 let data_image = tag == "image" && value.starts_with("data:image/");
-                if !local_reference(value) && !data_image {
+                if !value.starts_with('#') && !data_image {
                     return Err(V1DocumentError::ExternalReference);
                 }
             }
-            if !urls_are_local(value) {
+            if !name_is_allowed(name, &value) {
+                return Err(V1DocumentError::DisallowedAttribute);
+            }
+            if !data_image_ok(tag, local, &value) && !value_is_safe(&value) {
                 return Err(V1DocumentError::ExternalReference);
             }
         }

@@ -9,6 +9,8 @@ pub use vexel_document_edit::EditSnapshot;
 mod attrs;
 mod draw;
 mod fragment;
+#[cfg(test)]
+mod fragment_bypass_tests;
 mod fragment_check;
 mod paint_defs;
 mod path_data;
