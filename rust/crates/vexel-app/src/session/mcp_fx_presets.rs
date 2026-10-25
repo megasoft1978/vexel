@@ -355,7 +355,11 @@ pub(crate) fn vhs_scanlines(c: &Ctx) -> Result<Plan, &'static str> {
     let mut t = c.s;
     while t <= c.e {
         keys.push((t, at(0.0, 0.0), None));
-        keys.push((t + cycle_len - 1, at(0.0, h + bar), None));
+        // The last cycle is clipped to the window; a zero-length clip keeps its start only.
+        let end = (t + cycle_len - 1).min(c.e);
+        if end > t {
+            keys.push((end, at(0.0, h + bar), None));
+        }
         t += cycle_len;
     }
     tracks.push(track(
