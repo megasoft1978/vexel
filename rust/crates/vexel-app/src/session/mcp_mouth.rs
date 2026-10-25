@@ -201,7 +201,7 @@ pub(crate) fn retarget(app: &mut AppDocument, old: &str, new: &str) -> Result<()
     write(
         app,
         &sets,
-        "could not update the mouth sets in the document",
+        "attribute_set id: could not update the mouth sets in the document",
     )
 }
 

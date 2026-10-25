@@ -482,6 +482,7 @@ fn blink_rejects_bad_input_without_changes() {
         format!(r#"{ok_lid},"at":[10,11],"duration":4"#),
         format!(r#"{ok_lid},"at":[48],"duration":4"#),
         format!(r#"{ok_lid},"at":[-1]"#),
+        format!(r#"{ok_lid},"at":[4294967295]"#),
         format!(r#"{ok_lid},"at":["x"]"#),
         format!(r#"{ok_lid},"at":[{}]"#, many.join(",")),
         format!(r#"{ok_lid},"at":[10],"duration":1"#),

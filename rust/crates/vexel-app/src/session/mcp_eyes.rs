@@ -188,6 +188,12 @@ pub(crate) fn blink(app: &mut AppDocument, spec: Blink) -> Result<McpOutcome, &'
     };
     ticks.sort_unstable();
     ticks.dedup();
+    if ticks
+        .iter()
+        .any(|t| t.checked_add(d).is_none_or(|e| e >= timeline.duration))
+    {
+        return Err(MESSAGES.ticks);
+    }
     if ticks.len() > MAX_BLINKS || ticks.windows(2).any(|w| w[1] - w[0] < d) {
         return Err("blink: at most 256 blinks, each at least duration ticks after the previous");
     }
