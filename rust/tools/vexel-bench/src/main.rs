@@ -11,6 +11,7 @@ mod gate;
 mod host;
 mod json;
 mod matrix;
+mod mem;
 mod ops;
 mod orch;
 mod report;
@@ -31,6 +32,7 @@ static COUNTING: alloc::Counting = alloc::Counting;
 const USAGE: &str = "Usage: vexel-bench run [--full|--hash-only] [--out DIR] [--only TEXT] \
 [--trials N] [--warmups N] [--budget SECONDS]\n       \
 vexel-bench check [--full|--hash-only] [--update-baseline] [--only TEXT] [--trials N] [--warmups N]\n       \
+vexel-bench mem [--check] [--update-baseline] [--only TEXT] [--out FILE]\n       \
 vexel-bench case OP PROFILE N --input FILE --tmp DIR [--trials N] [--warmups N] [--budget S] [--no-diag]";
 
 fn root() -> PathBuf {
@@ -227,6 +229,19 @@ fn case_command(mut flags: Flags) -> Result<ExitCode, String> {
     Ok(ExitCode::SUCCESS)
 }
 
+fn mem_command(mut flags: Flags) -> Result<ExitCode, String> {
+    let check = flags.take("--check");
+    let update = flags.take("--update-baseline");
+    let only = flags.value("--only")?;
+    let out = flags.value("--out")?.map(PathBuf::from);
+    let ok = mem::command(&root(), check, update, only.as_deref(), out)?;
+    Ok(if ok {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    })
+}
+
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     let command = args.next().unwrap_or_default();
@@ -237,6 +252,11 @@ fn main() -> ExitCode {
         "run" => run_command(flags),
         "check" => check_command(flags),
         "case" => case_command(flags),
+        "mem" => mem_command(flags),
+        "mem-case" => match flags.rest.first() {
+            Some(name) => mem::case_command(name).map(|()| ExitCode::SUCCESS),
+            None => Err("mem-case needs a scenario".into()),
+        },
         _ => Err("missing or unknown command".into()),
     };
     match result {
