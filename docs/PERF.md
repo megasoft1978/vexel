@@ -854,3 +854,50 @@ release, load 6-9, 3 runs: tick p50 41.0 / 41.7 / 45.5 before; 40.3 / 41.0 /
   (lc.use sum 782 -> 750 ms over 96 ticks).
 - Remaining gap (unchanged from l5): shot1 41 vs 25, s3 45.5 vs 30,
   s4 64 vs 35, s9 52.4 vs 30.
+
+## Playback decode-ahead pipeline (lane s1b-pipeline)
+
+Opus advisor decision: decode and render were serial per tick; future ticks
+are known during playback, so decode overlaps the render of the previous one.
+
+- `compose_owned` is split into `decode_owned` (bytes -> `SceneGraph`, size
+  independent) and `render_decoded`. Exports, `render_png` and MCP still call
+  `compose_owned` unchanged.
+- `native_animation/ahead.rs`: ring of decoded scenes keyed by
+  `(generation, tick)` inside `Prepared` (one per document revision). After
+  tick N is taken, ticks N+s..N+3s (s = observed stride, wraps for Repeat) not
+  yet in the ring are patched (`native_snapshot`) and decoded on short-lived
+  16 MiB-stack threads, at most 2 at once, at most 3 entries, ready graphs
+  capped at 192 MiB of `live_bytes`. A request for a tick still decoding waits
+  for it. Rendering stays one at a time against the existing `DiffCache`.
+- Generation bump (drops entries, cancels decodes through the decoder's
+  cancel closure): leaving preview (pause, scrub, export), `cancel_play`,
+  revision change. Entries outside the predicted window are dropped on every
+  tick. Paused/exact renders never use the ring.
+- Tests (`ahead_tests.rs`): frames for sequential, stride 2/3 and jumping
+  tick orders on a scene with an animated camera transform and a morphing
+  path are byte-identical to the serial path (ring hit count asserted); stale
+  graphs gone after a generation bump or seek; entry, thread and byte caps.
+- `color_matrix` splits rows into up to 8 thread bands (pixel-independent,
+  byte-identical, tested vs the per-pixel reference); s9 `r.filter` 8.2 -> 4.4.
+- Bench: `VEXEL_BENCH_AHEAD=0` is the serial A/B; the bench prints
+  frame interval (gap between consecutive frames, snapshot included, no
+  hashing unless HASH_OUT) and latency (tick request -> frame returned).
+
+Frame interval p50 / latency p50, 900 px, release, 96 ticks x 3 loops. Load
+average was 12-18 for most runs (above the 8 gate; the machine never went
+quieter), so read as noisy:
+
+| scene | serial interval | ring interval | ring latency | target |
+|---|---|---|---|---|
+| shot1 | 42.5 | 28.0-28.9 | 26.9-27.8 | 25 |
+| s3 | 46.4 | 21.2 | 19.1 | 30 |
+| s4 | 64.7 | 26.5 | 25.9 | 35 |
+| s9 | 61.6 | 32.0 (after color_matrix bands; 36.6 before) | 29.2 | 30 |
+
+shot1 and s9 are now render-bound (render 26 / 32 ms vs decode 12 / 17 hidden
+behind it). shot1 per tick: paint 11, layer reuse 8, composite 5, filter 2.
+Not done: local-space layer keys per character group (step 4); the cached
+layer plan already serves 361 of 406 shapes, the rest is paint of moving
+characters. Next lever is rendering tick N+1's static layers while N finishes,
+or fewer moving shapes per tick.
