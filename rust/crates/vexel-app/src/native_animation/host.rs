@@ -133,9 +133,12 @@ impl<C: LoopClock> NativeAnimationHost<C> {
                 .candidate
                 .as_ref()
                 .ok_or("unsupported native timeline")?;
-            let view = candidate
-                .view()
-                .map_err(|_| "unsupported native timeline")?;
+            let view = super::controller::cached_view(
+                candidate,
+                self.controller.candidate_revision,
+                &mut self.controller.detached,
+            )
+            .map_err(|_| "unsupported native timeline")?;
             (
                 view.duration_ticks(),
                 view.ticks_per_second(),
