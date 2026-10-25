@@ -132,7 +132,7 @@ cargo run -p vexel-dev -- bench
 
 - `vexel --mcp-preview` runs the GUI app and serves JSON-RPC over stdio.
 - The client launches that command; the window stays live while it is connected.
-- 56 tools: document, tree and element editing, grouping, undo/redo, `batch`,
+- 57 tools: document, tree and element editing, grouping, undo/redo, `batch`,
   native timeline, `animation_control`, `export_animation`, `render_png`.
 - `--grant-dir <dir>` (repeatable) is the only file access the tools get.
 - Per-session budget is 600 requests per minute. Details: [docs/mcp.md](docs/mcp.md).

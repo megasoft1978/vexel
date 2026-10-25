@@ -12,8 +12,8 @@ pub(crate) const MAX_TRACKS: usize = 256;
 pub(crate) const MAX_KEYS: usize = 16_384;
 
 const TOOL: &str = "tracks_set";
-const FORM: &str = "an array of 1-256 objects {trackId, targetId, property, valueType, interpolation, value, name?, keys?}, each the arguments of native_timeline_add_property_track without documentId";
-const MEMBERS: [&[u8]; 8] = [
+const FORM: &str = "an array of 1-256 objects {trackId, targetId, property, valueType, interpolation, value, name?, noise?, keys?}, each the arguments of native_timeline_add_property_track without documentId";
+const MEMBERS: [&[u8]; 9] = [
     b"trackId",
     b"targetId",
     b"property",
@@ -22,6 +22,7 @@ const MEMBERS: [&[u8]; 8] = [
     b"value",
     b"name",
     b"keys",
+    b"noise",
 ];
 
 pub(super) fn parse(
@@ -75,6 +76,7 @@ pub(super) fn parse(
             interpolation,
             value,
             name,
+            noise,
             keys: track_keys,
         } = parse_one(doc, at, "add_property_track").map_err(wrap)?
         else {
@@ -94,6 +96,7 @@ pub(super) fn parse(
             interpolation,
             value,
             name,
+            noise,
             keys: track_keys,
         });
         item = doc.token(at).and_then(|t| t.next_sibling);

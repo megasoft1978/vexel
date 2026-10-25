@@ -85,15 +85,10 @@ impl NativeAnimationController {
                         selected: self.selected_track.as_deref() == Some(id.as_str())
                             && self.selected_item_tick == Some(item.tick),
                         ease: item.ease.map(|ease| match ease {
-                            vexel_timeline::sample::Ease::Step => "step".to_owned(),
-                            vexel_timeline::sample::Ease::Linear => "linear".to_owned(),
-                            vexel_timeline::sample::Ease::EaseIn => "ease_in".to_owned(),
-                            vexel_timeline::sample::Ease::EaseOut => "ease_out".to_owned(),
-                            vexel_timeline::sample::Ease::EaseInOut => "ease_in_out".to_owned(),
                             vexel_timeline::sample::Ease::Bezier(p) => {
                                 crate::native_timeline::bezier::encode(p)
                             }
-                            other => format!("{other:?}"),
+                            other => other.name().unwrap_or("linear").to_owned(),
                         }),
                     });
                 }

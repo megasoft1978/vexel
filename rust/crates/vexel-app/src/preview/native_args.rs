@@ -3,6 +3,7 @@
 use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, native_timeline::NativeOp};
 use vexel_timeline::LoopMode;
 
+mod noise;
 mod tracks;
 
 const VALUE_LIMIT: usize = 4096;
@@ -263,8 +264,10 @@ fn parse_one(
             } else {
                 Vec::new()
             },
+            noise: noise::noise_arg(doc, args, tool)?,
             keys: super::native_keys::parse(doc, args, tool)?,
         },
+        "set_camera" => noise::camera(doc, args, tool)?,
         "set_property_key" => NativeOp::SetPropertyKey {
             track_id: id("trackId")?,
             tick: tick(doc, args, tool, "tick")?,
@@ -357,6 +360,7 @@ pub(super) fn parse(
     matches!(
         tool,
         "add_track"
+            | "set_camera"
             | "add_drawing_asset"
             | "set_cel"
             | "remove_cel"
@@ -384,6 +388,36 @@ fn optional_ease(
     ease_at(doc, args, tool, "ease")
 }
 
+const EASE_HELP: &str = "step, linear, ease_in/out/in_out (quad), ease_*_cubic, ease_*_back, ease_*_elastic, ease_*_bounce (or back, elastic, bounce), bezier:x1,y1,x2,y2 or [x1,y1,x2,y2]";
+
+/// A `[x1,y1,x2,y2]` array ease, stored as `{"bezier":[...]}`.
+fn array_ease(
+    doc: &JsonDocument<'_>,
+    token: usize,
+    tool: &str,
+    key: &'static str,
+) -> Result<Option<Vec<u8>>, PreviewArgumentError> {
+    let bad = || invalid(tool, key, EASE_HELP, None);
+    if doc.raw_token(token).and_then(|r| r.first()) != Some(&b'[')
+        || doc.array_get(token, 4).is_some()
+    {
+        return Err(bad());
+    }
+    let mut p = [0.0f64; 4];
+    for (i, slot) in p.iter_mut().enumerate() {
+        let at = doc.array_get(token, i).ok_or_else(bad)?;
+        let text = doc.raw_token(at).ok_or_else(bad)?;
+        *slot = std::str::from_utf8(text)
+            .ok()
+            .and_then(|t| t.parse::<f64>().ok())
+            .filter(|v| v.is_finite())
+            .ok_or_else(bad)?;
+    }
+    Ok(Some(
+        format!("{{\"bezier\":[{},{},{},{}]}}", p[0], p[1], p[2], p[3]).into_bytes(),
+    ))
+}
+
 /// The easing named by member `key` (same forms as `ease`), if present.
 pub(super) fn ease_at(
     doc: &JsonDocument<'_>,
@@ -395,28 +429,11 @@ pub(super) fn ease_at(
         return Ok(None);
     };
     let Some(raw) = doc.decoded_string(token) else {
-        return Err(invalid(
-            tool,
-            key,
-            "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
-            None,
-        ));
+        return array_ease(doc, token, tool, key);
     };
-    let names: &[&[u8]] = &[
-        b"step",
-        b"linear",
-        b"ease_in",
-        b"ease_out",
-        b"ease_in_out",
-        b"ease_in_back",
-        b"ease_out_back",
-    ];
-    if names.contains(&raw.as_slice()) {
-        let mut out = Vec::with_capacity(raw.len() + 2);
-        out.push(b'"');
-        out.extend_from_slice(&raw);
-        out.push(b'"');
-        return Ok(Some(out));
+    if let Some(ease) = vexel_timeline::sample::Ease::parse_name(&raw) {
+        let name = ease.name().unwrap_or("linear");
+        return Ok(Some(format!("\"{name}\"").into_bytes()));
     }
     if let Some(points) = raw.strip_prefix(b"bezier:") {
         let parts: Vec<_> = points.split(|b| *b == b',').collect();
@@ -445,12 +462,7 @@ pub(super) fn ease_at(
             ));
         }
     }
-    Err(invalid(
-        tool,
-        key,
-        "step, linear, ease_in, ease_out, ease_in_out, ease_in_back, ease_out_back or bezier:x1,y1,x2,y2",
-        Some(&raw),
-    ))
+    Err(invalid(tool, key, EASE_HELP, Some(&raw)))
 }
 
 pub(super) fn timeline_value(

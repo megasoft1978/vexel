@@ -7,8 +7,10 @@
 use std::collections::HashMap;
 use std::ops::Range;
 use vexel_timeline::pathmorph::PathKind;
-use vexel_timeline::{PropertyValue, TimelineView, resolve_path, sample_properties};
+use vexel_timeline::{CAMERA_TARGET, PropertyValue, TimelineView, resolve_path, sample_properties};
 use vexel_xml::{TokenKind, XmlSpan, decode_attribute_value, tokenize_large};
+
+mod camera;
 
 const MAX_ID_BYTES: usize = 256;
 
@@ -110,7 +112,15 @@ fn apply_with_index(
     let samples =
         sample_properties(timeline, tick).map_err(|_| NativePropertyError::InvalidValue)?;
     let mut writes = Vec::new();
+    let mut view = None;
     for sample in samples {
+        if sample.target == CAMERA_TARGET {
+            let camera = view.get_or_insert_with(camera::Camera::identity);
+            if !camera.set(sample.property, sample.value) {
+                return Err(NativePropertyError::UnsupportedProperty);
+            }
+            continue;
+        }
         let target = decode_json_string(sample.target)?;
         let property = decode_json_string(sample.property)?;
         if let PropertyValue::Path(blend) = sample.value {
@@ -172,6 +182,9 @@ fn apply_with_index(
     let mut patches = Vec::new();
     for (at, name, value) in &resolved {
         patches.push(attribute_patch(source, &index.elements[*at], name, value)?);
+    }
+    if let Some(camera) = &view {
+        patches.extend(camera::wrap(source, index, camera)?);
     }
     apply_patches(source, patches)
 }

@@ -13,11 +13,24 @@ pub enum Ease {
     EaseInOut,
     EaseInBack,
     EaseOutBack,
+    EaseInOutBack,
+    EaseInCubic,
+    EaseOutCubic,
+    EaseInOutCubic,
+    EaseInElastic,
+    EaseOutElastic,
+    EaseInOutElastic,
+    EaseInBounce,
+    EaseOutBounce,
+    EaseInOutBounce,
     /// CSS style cubic bezier with control points `[x1, y1, x2, y2]`.
     Bezier([f64; 4]),
 }
 
 const BACK: f64 = 1.70158;
+const BACK_IN_OUT: f64 = BACK * 1.525;
+const ELASTIC: f64 = std::f64::consts::TAU / 3.0;
+const ELASTIC_IN_OUT: f64 = std::f64::consts::TAU / 4.5;
 const BEZIER_Y_LIMIT: f64 = 4.0;
 
 impl Ease {
@@ -29,8 +42,42 @@ impl Ease {
             b"ease_out" => Ease::EaseOut,
             b"ease_in_out" => Ease::EaseInOut,
             b"ease_in_back" => Ease::EaseInBack,
-            b"ease_out_back" => Ease::EaseOutBack,
+            b"ease_out_back" | b"back" => Ease::EaseOutBack,
+            b"ease_in_out_back" => Ease::EaseInOutBack,
+            b"ease_in_cubic" => Ease::EaseInCubic,
+            b"ease_out_cubic" => Ease::EaseOutCubic,
+            b"ease_in_out_cubic" => Ease::EaseInOutCubic,
+            b"ease_in_elastic" => Ease::EaseInElastic,
+            b"ease_out_elastic" | b"elastic" => Ease::EaseOutElastic,
+            b"ease_in_out_elastic" => Ease::EaseInOutElastic,
+            b"ease_in_bounce" => Ease::EaseInBounce,
+            b"ease_out_bounce" | b"bounce" => Ease::EaseOutBounce,
+            b"ease_in_out_bounce" => Ease::EaseInOutBounce,
             _ => return None,
+        })
+    }
+
+    /// Canonical preset name, or `None` for a bezier curve.
+    pub fn name(&self) -> Option<&'static str> {
+        Some(match self {
+            Ease::Step => "step",
+            Ease::Linear => "linear",
+            Ease::EaseIn => "ease_in",
+            Ease::EaseOut => "ease_out",
+            Ease::EaseInOut => "ease_in_out",
+            Ease::EaseInBack => "ease_in_back",
+            Ease::EaseOutBack => "ease_out_back",
+            Ease::EaseInOutBack => "ease_in_out_back",
+            Ease::EaseInCubic => "ease_in_cubic",
+            Ease::EaseOutCubic => "ease_out_cubic",
+            Ease::EaseInOutCubic => "ease_in_out_cubic",
+            Ease::EaseInElastic => "ease_in_elastic",
+            Ease::EaseOutElastic => "ease_out_elastic",
+            Ease::EaseInOutElastic => "ease_in_out_elastic",
+            Ease::EaseInBounce => "ease_in_bounce",
+            Ease::EaseOutBounce => "ease_out_bounce",
+            Ease::EaseInOutBounce => "ease_in_out_bounce",
+            Ease::Bezier(_) => return None,
         })
     }
 
@@ -66,8 +113,66 @@ impl Ease {
                 let u = t - 1.0;
                 1.0 + (BACK + 1.0) * u * u * u + BACK * u * u
             }
+            Ease::EaseInOutBack => {
+                if t < 0.5 {
+                    let u = 2.0 * t;
+                    0.5 * (u * u * ((BACK_IN_OUT + 1.0) * u - BACK_IN_OUT))
+                } else {
+                    let u = 2.0 * t - 2.0;
+                    0.5 * (u * u * ((BACK_IN_OUT + 1.0) * u + BACK_IN_OUT) + 2.0)
+                }
+            }
+            Ease::EaseInCubic => t * t * t,
+            Ease::EaseOutCubic => 1.0 - (1.0 - t).powi(3),
+            Ease::EaseInOutCubic => {
+                if t < 0.5 {
+                    4.0 * t * t * t
+                } else {
+                    1.0 - (-2.0 * t + 2.0).powi(3) / 2.0
+                }
+            }
+            Ease::EaseInElastic => elastic_in(t),
+            Ease::EaseOutElastic => 1.0 - elastic_in(1.0 - t),
+            Ease::EaseInOutElastic => {
+                let s = (20.0 * t - 11.125) * ELASTIC_IN_OUT;
+                if t < 0.5 {
+                    -(2f64.powf(20.0 * t - 10.0) * s.sin()) / 2.0
+                } else {
+                    2f64.powf(-20.0 * t + 10.0) * s.sin() / 2.0 + 1.0
+                }
+            }
+            Ease::EaseOutBounce => bounce_out(t),
+            Ease::EaseInBounce => 1.0 - bounce_out(1.0 - t),
+            Ease::EaseInOutBounce => {
+                if t < 0.5 {
+                    (1.0 - bounce_out(1.0 - 2.0 * t)) / 2.0
+                } else {
+                    (1.0 + bounce_out(2.0 * t - 1.0)) / 2.0
+                }
+            }
             Ease::Bezier(p) => bezier(p, t),
         }
+    }
+}
+
+fn elastic_in(t: f64) -> f64 {
+    -(2f64.powf(10.0 * t - 10.0)) * ((t * 10.0 - 10.75) * ELASTIC).sin()
+}
+
+fn bounce_out(t: f64) -> f64 {
+    const N: f64 = 7.5625;
+    const D: f64 = 2.75;
+    if t < 1.0 / D {
+        N * t * t
+    } else if t < 2.0 / D {
+        let u = t - 1.5 / D;
+        N * u * u + 0.75
+    } else if t < 2.5 / D {
+        let u = t - 2.25 / D;
+        N * u * u + 0.9375
+    } else {
+        let u = t - 2.625 / D;
+        N * u * u + 0.984375
     }
 }
 
@@ -151,11 +256,15 @@ pub(crate) fn parse(source: &[u8], span: Span) -> Result<Ease, DecodeFailure> {
         let name = crate::schema::string(source, span).map_err(|_| bad(span.start))?;
         return Ease::parse_name(&name).ok_or_else(|| bad(span.start));
     }
-    let fields = object_fields(source, span, None).map_err(|_| bad(span.start))?;
-    if fields.len() != 1 || fields[0].key != b"bezier" {
-        return Err(bad(span.start));
-    }
-    let value = fields[0].value;
+    let value = if raw.first() == Some(&b'[') {
+        span
+    } else {
+        let fields = object_fields(source, span, None).map_err(|_| bad(span.start))?;
+        if fields.len() != 1 || fields[0].key != b"bezier" {
+            return Err(bad(span.start));
+        }
+        fields[0].value
+    };
     let spans = array_spans(source, value, 4, None).map_err(|_| bad(value.start))?;
     if spans.len() != 4 {
         return Err(bad(value.start));

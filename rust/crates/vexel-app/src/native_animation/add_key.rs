@@ -4,7 +4,7 @@ use super::NativeAnimationController;
 use crate::native_animation::{NativeActionOutcome, NativeAnimationError};
 use crate::native_timeline::NativeTimelineAction;
 use crate::session::AppDocument;
-use vexel_timeline::{PropertyValue, sample_properties};
+use vexel_timeline::{PropertyValue, sample_properties_keyed};
 
 enum Resolved {
     /// A key with this JSON value is written to the track.
@@ -108,8 +108,8 @@ impl NativeAnimationController {
         {
             return Ok(Resolved::Existing { track_id: id });
         }
-        let samples =
-            sample_properties(&view, tick).map_err(|_| NativeAnimationError::InvalidAction)?;
+        let samples = sample_properties_keyed(&view, tick)
+            .map_err(|_| NativeAnimationError::InvalidAction)?;
         let sample = samples
             .iter()
             .find(|sample| sample.track_index == index)
