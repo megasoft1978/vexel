@@ -370,3 +370,153 @@ fn clip_apply_validates_and_is_deterministic() {
         .ok();
     }
 }
+
+#[test]
+fn renaming_a_bone_group_keeps_the_rig_driving_it() {
+    let (mut rig, stick) = setup();
+    rig.doc_tool("rig_create", &rig_args(&stick)).ok();
+    let arm = stick.arm_l.clone();
+    rig.doc_tool(
+        "rig_pose",
+        &format!(r#""poses":[{{"tick":0,"bones":{{"{arm}":{{"rotate":10}}}}}}]"#),
+    )
+    .ok();
+    rig.doc_tool(
+        "attribute_set",
+        &format!(r#""elementId":"{arm}","name":"id","value":"arm_new""#),
+    )
+    .ok();
+    let src = source(&rig);
+    assert!(
+        src.contains("\"arm_new\"") && !src.contains(&format!("\"{arm}\""))
+            || src.contains("arm_new")
+    );
+    assert_eq!(src.matches("vexel-rig").count(), 1);
+    // The old id is no longer a bone; the new one is.
+    rig.doc_tool(
+        "rig_pose",
+        &format!(r#""poses":[{{"tick":0,"bones":{{"{arm}":{{"rotate":1}}}}}}]"#),
+    )
+    .error();
+    rig.doc_tool(
+        "rig_pose",
+        r#""poses":[{"tick":12,"bones":{"arm_new":{"rotate":30}}}]"#,
+    )
+    .ok();
+    let tl = timeline(&mut rig);
+    assert_eq!(tl.matches("\"kind\":\"property\"").count(), 1, "{tl}");
+    assert!(tl.contains("arm_new"), "{tl}");
+    assert!(!tl.contains(&format!("\"target\":\"{arm}\"")), "{tl}");
+    rig.doc_tool("clip_apply", r#""clip":"walk","duration":24"#)
+        .ok();
+    // Renaming to a freed id does not hand the old bone's track to another group.
+    rig.doc_tool(
+        "attribute_set",
+        &format!(
+            r#""elementId":"{}","name":"id","value":"{arm}""#,
+            stick.arm_r
+        ),
+    )
+    .ok();
+    // A bone id the rig cannot hold is refused.
+    let state = rig.state();
+    rig.doc_tool(
+        "attribute_set",
+        r#""elementId":"arm_new","name":"id","value":"bad.id""#,
+    )
+    .error();
+    assert_eq!(rig.state(), state);
+}
+
+#[test]
+fn the_rig_element_cannot_be_renamed() {
+    let (mut rig, stick) = setup();
+    rig.doc_tool("rig_create", &rig_args(&stick)).ok();
+    let state = rig.state();
+    rig.doc_tool(
+        "attribute_set",
+        r#""elementId":"vexel-rig","name":"id","value":"other""#,
+    )
+    .error();
+    rig.doc_tool(
+        "attribute_set",
+        &format!(
+            r#""elementId":"{}","name":"id","value":"vexel-rig""#,
+            stick.head
+        ),
+    )
+    .error();
+    assert_eq!(rig.state(), state);
+}
+
+fn fragment(rig: &mut Rig, xml: &str) {
+    let xml = xml.replace('\\', "\\\\").replace('"', "\\\"");
+    rig.doc_tool(
+        "element_add_fragment",
+        &format!(r#""parentId":"root","xml":"{xml}""#),
+    )
+    .ok();
+}
+
+#[test]
+fn forged_text_cannot_inject_or_block_a_rig() {
+    let (mut rig, stick) = setup();
+    fragment(
+        &mut rig,
+        r#"<text id="t" x="1" y="9">id="vexel-rig">{"v":1,"bones":[]}</text>"#,
+    );
+    rig.doc_tool("rig_pose", r#""poses":[{"tick":0,"bones":{}}]"#)
+        .error();
+    rig.doc_tool("clip_apply", r#""clip":"idle","duration":8"#)
+        .error();
+    // The forged text neither becomes the rig nor makes rig_create fail.
+    rig.doc_tool("rig_create", &rig_args(&stick)).ok();
+    rig.doc_tool("clip_apply", r#""clip":"idle","duration":8"#)
+        .ok();
+}
+
+#[test]
+fn rig_create_refuses_a_non_desc_element_with_the_rig_id() {
+    let (mut rig, stick) = setup();
+    fragment(&mut rig, r#"<rect id="vexel-rig" width="5" height="5"/>"#);
+    let state = rig.state();
+    let message = rig
+        .doc_tool("rig_create", &rig_args(&stick))
+        .error()
+        .to_owned();
+    assert!(message.contains("vexel-rig"), "{message}");
+    assert_eq!(rig.state(), state);
+    assert!(source(&rig).contains("<rect id=\"vexel-rig\""));
+}
+
+#[test]
+fn center_pivot_refuses_transformed_groups() {
+    let (mut rig, stick) = setup();
+    rig.doc_tool(
+        "attribute_set",
+        &format!(
+            r#""elementId":"{}","name":"transform","value":"translate(50 20)""#,
+            stick.head
+        ),
+    )
+    .ok();
+    let state = rig.state();
+    let message = rig
+        .doc_tool(
+            "rig_create",
+            &format!(r#""bones":[{{"id":"{}"}}]"#, stick.head),
+        )
+        .error()
+        .to_owned();
+    assert!(
+        message.contains("rig_create") && message.contains("pivot"),
+        "{message}"
+    );
+    assert_eq!(rig.state(), state);
+    // An explicit pivot still works.
+    rig.doc_tool(
+        "rig_create",
+        &format!(r#""bones":[{{"id":"{}","pivot":[1,2]}}]"#, stick.head),
+    )
+    .ok();
+}

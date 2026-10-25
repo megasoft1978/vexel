@@ -15,7 +15,7 @@ use vexel_timeline::rig::{Bone, LocalPose, MAX_BONES, Rig, RigError, Role};
 use vexel_timeline::{BulkKey, BulkTrack, EditLimits};
 
 /// Element id of the stored rig.
-const RIG_ID: &str = "vexel-rig";
+pub(crate) const RIG_ID: &str = "vexel-rig";
 const NO_RIG: &str = "no rig in this document; call rig_create first";
 const BAD_RIG: &str = "the rig stored in the document is invalid; call rig_create again";
 
@@ -23,9 +23,13 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack.windows(needle.len()).position(|w| w == needle)
 }
 
-/// The text of the stored rig element.
+/// The text of the stored rig element: the one `<desc id="vexel-rig"`.
 fn stored_text(source: &[u8]) -> Option<&[u8]> {
-    let at = find(source, b"id=\"vexel-rig\"")?;
+    const TAG: &[u8] = b"<desc id=\"vexel-rig\"";
+    let at = find(source, TAG)?;
+    if find(&source[at + TAG.len()..], TAG).is_some() {
+        return None;
+    }
     let open = at + source[at..].iter().position(|b| *b == b'>')? + 1;
     let close = open + find(&source[open..], b"</desc>")?;
     Some(&source[open..close])
@@ -154,8 +158,31 @@ fn inside(app: &AppDocument, id: &str, ancestor: &str) -> bool {
     false
 }
 
+/// Whether the group or an ancestor has a `transform`, so its bounds are not in its own space.
+fn transformed(app: &AppDocument, id: &str) -> bool {
+    let mut current = id.to_owned();
+    for _ in 0..4096 {
+        let Ok(info) = app.document().element_get(&current) else {
+            return true;
+        };
+        if info.attributes.iter().any(|(n, _)| n == "transform") {
+            return true;
+        }
+        match info.parent {
+            Some(parent) => current = parent,
+            None => return false,
+        }
+    }
+    true
+}
+
 fn create(app: &mut AppDocument, spec: Create) -> Result<McpOutcome, &'static str> {
     check_room(app, 1)?;
+    if let Ok(info) = app.document().element_get(RIG_ID)
+        && info.tag != "desc"
+    {
+        return Err("rig_create: an element other than the rig already uses the id vexel-rig");
+    }
     let mut bones = Vec::new();
     for bone in &spec.bones {
         let info = app
@@ -168,6 +195,11 @@ fn create(app: &mut AppDocument, spec: Create) -> Result<McpOutcome, &'static st
         let pivot = match bone.pivot {
             Pivot::At(p) => p,
             Pivot::Center => {
+                if transformed(app, &bone.id) {
+                    return Err(
+                        "rig_create: cannot take the centre of a group inside a transform; give pivot [x,y]",
+                    );
+                }
                 let (x0, y0, x1, y1) = info.bounds.ok_or(
                     "rig_create: cannot take the centre of a group with unsupported transforms; give pivot [x,y]",
                 )?;
@@ -227,6 +259,36 @@ fn create(app: &mut AppDocument, spec: Create) -> Result<McpOutcome, &'static st
         rig.bones.len(),
         rig.roles.len()
     )))
+}
+
+/// Whether renaming `old` to `new` would leave the stored rig invalid.
+pub(crate) fn check_rename(app: &AppDocument, old: &str, new: &str) -> Result<(), &'static str> {
+    let is_bone = load(app).is_ok_and(|rig| rig.index(old).is_some());
+    if is_bone && !vexel_timeline::rig::valid_bone_id(new) {
+        return Err("attribute_set id: a rig bone id uses letters, digits, _ and -");
+    }
+    Ok(())
+}
+
+/// Renames bone `old` to `new` in the stored rig (after the group itself was
+/// renamed). No-op when the document has no valid rig or `old` is not a bone.
+pub(crate) fn retarget(app: &mut AppDocument, old: &str, new: &str) -> Result<(), &'static str> {
+    let Ok(mut rig) = load(app) else {
+        return Ok(());
+    };
+    let Some(at) = rig.index(old) else {
+        return Ok(());
+    };
+    rig.bones[at].id = new.to_owned();
+    let xml = format!("<desc id=\"{RIG_ID}\">{}</desc>", to_json(&rig));
+    app.edit(|doc| {
+        doc.delete(RIG_ID)?;
+        doc.add_fragment("root", xml.as_bytes()).map(|_| ())
+    })
+    .map_err(|e| match e {
+        SessionEditError::Operation(_) => "could not update the rig in the document",
+        SessionEditError::History(_) => "project history unavailable",
+    })
 }
 
 /// The two writers share one path; this picks their error texts.
@@ -298,9 +360,9 @@ fn write(
         let view = candidate
             .view()
             .map_err(|_| "unsupported native timeline")?;
-        let ids: Vec<Vec<u8>> = (0..view.track_count())
+        let ids: Vec<(Vec<u8>, Vec<u8>)> = (0..view.track_count())
             .filter_map(|i| view.track_at(i))
-            .map(|t| t.id.to_vec())
+            .map(|t| (t.id.to_vec(), t.target.to_vec()))
             .collect();
         (ids, view.duration_ticks())
     };
@@ -324,9 +386,16 @@ fn write(
     let mut extend: Vec<(Vec<u8>, u32, Vec<u8>, Option<Vec<u8>>)> = Vec::new();
     for (bone, keys) in &merged {
         let pivot = rig.bones[*bone].pivot;
-        let id = rig.track_id(*bone).into_bytes();
+        let mut id = rig.track_id(*bone).into_bytes();
         let json = |pose: &LocalPose| pose.trs_json(pivot).into_bytes();
-        if existing.contains(&id) {
+        // A renamed bone keeps its old `rig_` track, retargeted at the new id.
+        let owned = existing.iter().find(|(track, target)| {
+            track.starts_with(b"rig_") && target.as_slice() == rig.bones[*bone].id.as_bytes()
+        });
+        if let Some((track, _)) = owned {
+            id = track.clone();
+        }
+        if owned.is_some() {
             if noise.is_some() {
                 return Err(tool.pick(
                     "rig_pose: noise only applies to bones whose track is created by this call",
@@ -508,6 +577,10 @@ mod tests {
         assert_eq!(from_json(text.as_bytes()), Some(rig));
         let xml = format!("<svg><desc id=\"vexel-rig\">{text}</desc></svg>");
         assert_eq!(stored_text(xml.as_bytes()), Some(text.as_bytes()));
+        let forged = format!("<svg><text>x id=\"vexel-rig\">{text}</desc></text></svg>");
+        assert_eq!(stored_text(forged.as_bytes()), None);
+        let twice = format!("<svg>{xml}{xml}</svg>");
+        assert_eq!(stored_text(twice.as_bytes()), None);
     }
 
     #[test]
