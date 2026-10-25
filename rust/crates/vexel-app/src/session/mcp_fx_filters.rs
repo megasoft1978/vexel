@@ -165,7 +165,8 @@ pub(crate) fn smear(c: &Ctx) -> Result<Plan, &'static str> {
         stretch.powf(1.0 - 2.0 * along),
     );
     let skew = 20.0 * 2.0 * ca * sa * (1.0 - 1.0 / stretch);
-    let peak = (c.s + attack).min(c.e);
+    // The peak stays below the last tick so the return key lands on `e` itself.
+    let peak = (c.s + attack).min(c.e.saturating_sub(1));
     let pose = |on: bool| {
         if on {
             trs([0.0, 0.0], 0.0, [sx, sy], c.pivot, skew)

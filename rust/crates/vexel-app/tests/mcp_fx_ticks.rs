@@ -63,3 +63,35 @@ fn vhs_roll_keys_stay_inside_odd_durations() {
         );
     }
 }
+
+#[test]
+fn smear_peak_is_clamped_below_the_last_tick() {
+    // An attack longer than the window used to put the peak key on the final
+    // tick and its follow-up key one past the duration.
+    for (duration, start, attack) in [(37, 2, 48), (37, 30, 10), (37, 35, 48)] {
+        let (mut rig, hero) = scene();
+        set_duration(&mut rig, duration);
+        let reply = rig.doc_tool(
+            "effect_apply",
+            &format!(
+                r#""preset":"smear","target":"{hero}","start":{start},"attack":{attack}"#
+            ),
+        );
+        assert!(
+            !reply.is_error,
+            "duration {duration}, start {start}, attack {attack}: {}",
+            reply.body
+        );
+        let trailed = rig.doc_tool(
+            "effect_apply",
+            &format!(
+                r#""preset":"smear","target":"{hero}","start":{start},"attack":{attack},"trail":2"#
+            ),
+        );
+        assert!(
+            !trailed.is_error,
+            "trail, duration {duration}, start {start}, attack {attack}: {}",
+            trailed.body
+        );
+    }
+}
