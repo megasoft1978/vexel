@@ -162,21 +162,14 @@ fn video_export_accepts_quality_in_place_of_a_bit_rate() {
 }
 
 #[test]
-fn quality_bit_rate_scales_with_quality_size_and_fps_and_clamps() {
-    use crate::animation::native_export_video::{DEFAULT_QUALITY, quality_bit_rate};
-    let (lo, mid, hi) = (
-        quality_bit_rate(0.0, 1920, 1080, 30.0),
-        quality_bit_rate(0.5, 1920, 1080, 30.0),
-        quality_bit_rate(1.0, 1920, 1080, 30.0),
-    );
-    assert!(lo < mid && mid < hi);
-    let default = quality_bit_rate(DEFAULT_QUALITY, 1920, 1080, 30.0);
-    assert!((12_000_000..=16_000_000).contains(&default), "{default}");
-    assert!(quality_bit_rate(0.5, 1920, 1080, 60.0) > mid);
-    assert!(quality_bit_rate(0.5, 960, 540, 30.0) < mid);
-    assert_eq!(quality_bit_rate(0.0, 2, 2, 1.0), 250_000);
-    assert_eq!(quality_bit_rate(1.0, 4096, 4096, 120.0), 200_000_000);
-    assert_eq!(quality_bit_rate(9.0, 1920, 1080, 30.0), hi);
+fn quality_level_is_monotonic_and_clamped() {
+    use crate::animation::native_export_video::{DEFAULT_QUALITY, quality_level};
+    assert_eq!(quality_level(0.0), 0.6);
+    assert_eq!(quality_level(1.0), 1.0);
+    assert_eq!(quality_level(-3.0), quality_level(0.0));
+    assert_eq!(quality_level(9.0), quality_level(1.0));
+    let steps = [0.0, 0.25, DEFAULT_QUALITY, 0.75, 1.0].map(quality_level);
+    assert!(steps.windows(2).all(|w| w[0] < w[1]), "{steps:?}");
 }
 
 #[test]
@@ -196,8 +189,8 @@ fn video_export_file_size_orders_with_quality() {
     let mut req = request("size-order.mp4", Some((480, 480)));
     req.bit_rate = None;
     let mut sizes = Vec::new();
-    for quality in [0.0, 0.5, 1.0] {
-        req.quality = Some(quality);
+    for quality in [Some(0.0), None, Some(1.0)] {
+        req.quality = quality;
         src.export_video(&req).unwrap();
         sizes.push(std::fs::metadata(&req.path).unwrap().len());
         let _ = std::fs::remove_file(&req.path);

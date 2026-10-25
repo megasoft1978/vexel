@@ -67,8 +67,9 @@ fn run(workers: usize) -> (u64, Vec<(usize, u64)>, Vec<u64>) {
         size: Some((96, 96)),
         background: [255, 255, 255],
         alpha: false,
-        bit_rate: Some(4_000_000),
-        quality: None,
+        bit_rate: None,
+        // 1.0 is the encoder's deterministic mode; lower levels vary run to run.
+        quality: Some(1.0),
         fps: None,
         loops: 1,
     })
