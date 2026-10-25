@@ -182,6 +182,13 @@ fn add(app: &mut AppDocument, spec: &FxSpec, prefix: &str, dur: u32) -> Result<S
     let mut target = spec.target.clone();
     let mut wrap: Option<Vec<String>> = None;
     if let Some(id) = &target {
+        // The id lands inside generated `href="#..."` markup.
+        if !id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'-' | b'.'))
+        {
+            return Err("effect_apply: target id has characters that cannot be referenced safely");
+        }
         let info = app
             .document()
             .element_get(id)

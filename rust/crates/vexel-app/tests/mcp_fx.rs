@@ -390,3 +390,45 @@ fn full_frame_filter_effects_succeed_or_fail_cleanly_at_1080p() {
         }
     }
 }
+
+#[test]
+fn hostile_target_ids_never_reach_generated_markup() {
+    let hostile = [
+        "a&quot; onload=&quot;x",
+        "a&lt;b",
+        "a&apos;b&quot;c",
+        "a&amp;b",
+    ];
+    for id in hostile {
+        let svg = format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><g id="{id}"><rect x="8" y="8" width="20" height="20" fill="#f00"/></g></svg>"##
+        );
+        // A loader that refuses such ids already closes the hole.
+        let Ok(doc) = vexel_v1_document::V1Document::from_source(svg.as_bytes()) else {
+            continue;
+        };
+        let Ok(app) = AppDocument::from_document(doc) else {
+            continue;
+        };
+        let mut rig = Rig::with_document(app, no_grants());
+        let state = rig.state();
+        let tree = rig.doc_tool("tree_get", "").ok().to_owned();
+        let Some(rest) = tree.split(r#""id":""#).nth(1) else {
+            continue;
+        };
+        let raw = rest[..rest.find("\",").unwrap_or(rest.len())].replace("\\\"", "\"");
+        for preset in ["smear", "glow", "chromatic_split", "motion_blur_dir"] {
+            let args = format!(
+                r#""preset":"{preset}","target":"{}""#,
+                raw.replace('\\', "\\\\").replace('"', "\\\"")
+            );
+            let reply = rig.doc_tool("effect_apply", &args);
+            if !reply.is_error {
+                let src = source(&rig);
+                assert!(!src.contains("onload"), "{preset}: {src}");
+            } else {
+                assert_eq!(rig.state(), state, "{preset} changed state");
+            }
+        }
+    }
+}
