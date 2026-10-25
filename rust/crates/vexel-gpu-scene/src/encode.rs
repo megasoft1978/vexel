@@ -22,8 +22,9 @@
 
 use crate::bin::{Binned, Binner, spans_sample_row};
 use crate::classify::{MAX_GRADIENT_STOPS, analyze, has_layer, is_layered};
+use crate::clips::ClipBuilder;
 use crate::error::{GpuError, UnsupportedReason};
-use crate::input::{GpuClipPath, GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
+use crate::input::{GpuGradient, GpuNode, GpuPaint, GpuScene, GpuShape, GpuSpread};
 use crate::layout::{
     self, FILL_EVENODD, FILL_NONZERO, FRAME_RUN, GpuClip, GpuEdge, GpuSceneHeader, GpuStop,
     GpuTile, GpuTileEntry, LAYOUT_MAGIC, LAYOUT_VERSION, MAX_FRAMES, PAINT_LINEAR, PAINT_RADIAL,
@@ -32,7 +33,6 @@ use crate::layout::{
 };
 use crate::strokes::StrokeBinner;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const FIXED_ONE: f32 = (1u32 << layout::EDGE_FIXED_SHIFT) as f32;
@@ -200,85 +200,6 @@ impl Encoder {
         out.header.edge_count = out.edges.len() as u32;
         out.header.clip_count = out.clips.len() as u32;
         Ok(())
-    }
-}
-
-/// Clip links and chains of one frame, deduplicated by `Arc` identity.
-struct ClipBuilder<'a> {
-    /// Child edges (absolute canvas fixed point), appended after the tile pools.
-    edges: &'a mut Vec<GpuEdge>,
-    /// Child records of each clip link (edge starts relative to `edges`).
-    links: HashMap<*const GpuClipPath, Vec<GpuClip>>,
-    /// `(clip_start, clip_count)` of each distinct chain.
-    chains: HashMap<Vec<*const GpuClipPath>, (u32, u32)>,
-    /// Clips of the groups enclosing the current node, outermost first.
-    groups: Vec<Arc<GpuClipPath>>,
-}
-
-impl ClipBuilder<'_> {
-    /// Child records of the chain `group_clips + shape_clips`: `(start,
-    /// count)` in links, `(0, 0)` when unclipped.
-    fn chain(&mut self, out: &mut Vec<GpuClip>, shape_clips: &[Arc<GpuClipPath>]) -> Result<(u32, u32), GpuError> {
-        let links: Vec<Arc<GpuClipPath>> = self.groups.iter().chain(shape_clips).cloned().collect();
-        if links.is_empty() {
-            return Ok((0, 0));
-        }
-        let key: Vec<*const GpuClipPath> = links.iter().map(|c| Arc::as_ptr(c)).collect();
-        if let Some(&hit) = self.chains.get(&key) {
-            return Ok(hit);
-        }
-        let start = out.len() as u32;
-        for link in &links {
-            let ptr = Arc::as_ptr(link);
-            if !self.links.contains_key(&ptr) {
-                let records = self.build_link(link)?;
-                self.links.insert(ptr, records);
-            }
-            out.extend_from_slice(&self.links[&ptr]);
-        }
-        if out.len() > layout::MAX_CLIP_RECORDS as usize {
-            return Err(GpuError::Encode(UnsupportedReason::TooManyClips));
-        }
-        let hit = (start, links.len() as u32);
-        self.chains.insert(key, hit);
-        Ok(hit)
-    }
-
-    /// One link: the union of its children that can ever cover a sample; an
-    /// empty union is one record without edges.
-    fn build_link(&mut self, link: &GpuClipPath) -> Result<Vec<GpuClip>, GpuError> {
-        let mut records = Vec::new();
-        for child in &link.children {
-            let start = self.edges.len() as u32;
-            for seg in &child.edges {
-                let fixed = [seg.x0, seg.y0, seg.x1, seg.y1].map(to_fixed);
-                let [Some(x0), Some(y0), Some(x1), Some(y1)] = fixed else {
-                    return Err(GpuError::Encode(UnsupportedReason::InvalidScene));
-                };
-                let edge = GpuEdge { x0, y0, x1, y1 };
-                if spans_sample_row(&edge) {
-                    self.edges.push(edge);
-                }
-            }
-            let edge_count = self.edges.len() as u32 - start;
-            if edge_count > 0 {
-                records.push(GpuClip {
-                    edge_start: start,
-                    edge_count,
-                    fill_rule: if child.evenodd {
-                        FILL_EVENODD
-                    } else {
-                        FILL_NONZERO
-                    },
-                    union_size: 0,
-                });
-            }
-        }
-        if records.is_empty() {
-            records.push(GpuClip::default());
-        }
-        records[0].union_size = records.len() as u32;
-        Ok(records)
     }
 }
 

@@ -675,3 +675,27 @@ Single-run noise: the smallest rows include GPU clock ramp-up.
 - Demo scenes (release, 900 / 1800 px, forced GPU vs CPU tick p50): logo
   48.8 -> 4.9 ms / 126.4 -> 13.5 ms (GPU). walk_home and loader now fail only
   on `stroke` (strokes are a later lane).
+
+### Clips (L7c)
+
+- Reference vs `vexel-render::render_groups` on 7 seeded clip configs
+  (`clip_parity`): worst >2/255 0.0006%, >16/255 0%, mae under 1e-6; kernel
+  byte-equal to the reference (`gpu_clip`, `VEXEL_REQUIRE_GPU=1`).
+- Release, 900 px, N clipped polygons (`cargo test --release -p vexel-gpu-scene
+  --test gpu_clip gpu_clip_frame_time_report -- --nocapture`), rect / path /
+  union clips, CPU p50 vs GPU end-to-end p50 (kernel):
+  500: 8.0 vs 4.7 ms (3.0); 2000: 26.3 vs 9.9 (7.3); 5000: 68.8 vs 20.0 (14.3).
+  With rotated / bounding-box clips and 2-deep chains (CPU takes its slow
+  per-sample path): 18.6 vs 3.0; 79.1 vs 9.6; 198.3 vs 22.6 ms.
+  Kernel cost of clipping is about 9-12 ns per clip edge visit of a tile
+  thread group (`CLIP_VISIT_ENTRIES` in `gpu_adapter.rs`).
+- Whole app pipeline (`gpu_vs_cpu_clip_crossover`, includes parse and prepare,
+  `vexel-bench` clip profile shape, shared circle / triangle clip paths):
+  CPU is as fast or faster when shapes are tiny: n=500 scale 1: 13.5 vs 14.7 ms,
+  n=2000 scale 0.3: 44 vs 79 ms (CPU faster, cause of the GPU excess not
+  isolated); larger shapes favour the GPU: n=500 scale 3: 38.8 vs 22.3, n=2000
+  scale 3: 148 vs 85 ms. The route policy decides from its cost model; the
+  clip term and the 0.5 CPU clip weight are in `gpu_adapter.rs`.
+- Demo scenes (release, forced GPU vs CPU tick p50): walk_home 900 px 28.1 ->
+  12.7 ms, 1800 px 74.4 -> 24.9 ms (was `TooManyEdges`, pool now 8 Mi edges);
+  logo 50.8 -> 6.8 / 136 -> 16.1; loader 19.0 -> 8.6 / 71.7 -> 19.4.

@@ -367,7 +367,14 @@ fn judge(
         scene,
         work,
         extra_entries,
-    }) = lower(entries, groups, clips, geometry, tile.width(), tile.height())
+    }) = lower(
+        entries,
+        groups,
+        clips,
+        geometry,
+        tile.width(),
+        tile.height(),
+    )
     else {
         return (Verdict::Cpu("lowering"), None);
     };

@@ -409,6 +409,11 @@ fn cpu_nodes_of(
 
 /// The CPU rasterizer (`render_groups`, identity view), straight RGBA8.
 pub fn clip_cpu_render(scene: &ClipScene, w: u32, h: u32) -> Vec<u8> {
+    clip_cpu_render_timed(scene, w, h).0
+}
+
+/// [`clip_cpu_render`] plus the milliseconds spent in `render_groups` alone.
+pub fn clip_cpu_render_timed(scene: &ClipScene, w: u32, h: u32) -> (Vec<u8>, f64) {
     let clips = cpu_clips(&scene.specs);
     let tree = cpu_nodes_of(&scene.specs, &clips, &scene.nodes);
     let view = ViewMap::from_viewbox(
@@ -419,8 +424,10 @@ pub fn clip_cpu_render(scene: &ClipScene, w: u32, h: u32) -> Vec<u8> {
     )
     .unwrap();
     let mut tile = Tile::from_owned_rgba(w, h, vec![0; (w * h * 4) as usize]).unwrap();
+    let started = std::time::Instant::now();
     render_groups(&tree, view, &mut tile, &|| false).unwrap();
-    tile.rgba().to_vec()
+    let ms = started.elapsed().as_secs_f64() * 1e3;
+    (tile.rgba().to_vec(), ms)
 }
 
 pub const CLIP_CONFIGS: [(&str, u64, usize, Features); 7] = [

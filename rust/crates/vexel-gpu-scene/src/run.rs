@@ -9,8 +9,8 @@
 use std::time::{Duration, Instant};
 
 use crate::bytes::{
-    clip_bytes, edge_bytes, gradient_bytes, group_bytes, header_bytes, list_bytes, prim_bytes, shape_bytes,
-    stop_bytes, tile_bytes,
+    clip_bytes, edge_bytes, gradient_bytes, group_bytes, header_bytes, list_bytes, prim_bytes,
+    shape_bytes, stop_bytes, tile_bytes,
 };
 use crate::classify::classify;
 use crate::encode::{Encoded, Encoder};

@@ -164,3 +164,38 @@ Release timings, 900 px, 100 stroke-heavy shapes class (`gpu_stroke` test):
 tick, `gpu_route_report`): walk_home 900 px 8.1 ms (CPU 26), logo 4.8 (CPU 48),
 loader 6.2 (CPU 18); at 1800 px logo 14.5 vs 128 ms and loader 18.1 vs 64.8 ms;
 walk_home at 1800 px is `Unsupported(TooManyEdges)` (fill edge-tile budget).
+
+## Addendum: clips (L7c)
+
+Clips render on the GPU, exactly as the CPU evaluates them: per sample, a
+clip chain contains the sample when it is inside EVERY link, a link being the
+UNION of its filled children, each tested with its own fill rule (`GpuClip`
+child records, layout v8 unchanged for them). The chain of a shape is the clip
+arcs of its enclosing groups (CPU `group.rs`: a group clip joins every child's
+chain, layered or not; the group layer itself is not clipped) followed by the
+shape's own chain (`RenderClip` parent chain). Fill and stroke samples of the
+shape are both gated; the clip test runs in the same fixed-point integer
+arithmetic as the fill crossing test, on absolute canvas coordinates (the
+kernel adds the tile origin; products in `i64`). The adapter maps clip edges
+from the clip's local space to device space (inverse of `user_inverse`,
+bounding-box normalisation first for object-bounding-box units, then the view
+map); clips are shared by `Arc` so a clip used by many shapes stores its edges
+once and identical chains share their records. Clip edges are not binned per
+tile: the kernel visits all edges of every child of the chain once per tile
+entry. Budgets: `MAX_CLIP_CHAIN` 4 (groups + shape), `MAX_CLIP_RECORDS`, clip
+edges count toward `MAX_EDGES`, and `MAX_CLIP_EDGE_WORK` bounds chain edges x
+tiles; over budget classifies `ClipChainTooLong` / `TooManyClips` /
+`TooManyEdges` and renders on the CPU. Kernel buffer order gained the clip
+array at index 9 (mode 10, output 11).
+
+Parity (seeded scenes: rect and path clips, even-odd, unions with an unfilled
+child, empty clips, nested chains, clipPath transforms with negative
+determinant, bounding-box units, clips on layered and opacity-1 groups, clips
+on strokes): reference vs `vexel-render` worst 0.0006% over 2/255, 0 over
+16/255, mae under 1e-6; kernel vs reference 0 differing bytes; thresholds in
+`tests/parity.json` ("clips").
+
+Edge pool: `MAX_EDGES` raised 4 Mi -> 8 Mi (128 MiB pool, layout v9) so walk_home
+at 1800 px classifies; the kernel cost is linear in pool edges (about 7 ns per
+edge entry measured), so even a full pool is far under the Metal command
+buffer timeout and no dispatch chunking is needed.

@@ -180,11 +180,8 @@ fn clip_contains(e: &Encoded, shape: &layout::GpuShape, px: i32, py: i32) -> boo
         let size = e.clips[at].union_size as usize;
         let inside = e.clips[at..at + size].iter().any(|c| {
             let edges = &e.edges[c.edge_start as usize..][..c.edge_count as usize];
-            let spanning: Vec<GpuEdge> = edges
-                .iter()
-                .copied()
-                .filter(|g| spans_row(g, py))
-                .collect();
+            let spanning: Vec<GpuEdge> =
+                edges.iter().copied().filter(|g| spans_row(g, py)).collect();
             covers(&spanning, px, py, c.fill_rule == FILL_EVENODD)
         });
         if !inside {

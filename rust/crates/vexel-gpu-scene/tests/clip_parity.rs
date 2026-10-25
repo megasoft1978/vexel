@@ -22,7 +22,9 @@ fn compare(a: &[u8], b: &[u8]) -> (f64, f64, f64, u8) {
         over_2 += usize::from(worst > 2);
         over_16 += usize::from(worst > 16);
         max_diff = max_diff.max(worst);
-        sum += (0..4).map(|c| u64::from(pa[c].abs_diff(pb[c]))).sum::<u64>();
+        sum += (0..4)
+            .map(|c| u64::from(pa[c].abs_diff(pb[c])))
+            .sum::<u64>();
     }
     (
         over_2 as f64 / pixels as f64,
@@ -36,9 +38,18 @@ fn compare(a: &[u8], b: &[u8]) -> (f64, f64, f64, u8) {
 fn clip_scenes_match_cpu_within_adr() {
     for (name, seed, count, features) in CLIP_CONFIGS {
         for (k, (w, h)) in [(480u32, 360u32), (700, 500)].into_iter().enumerate() {
-            let scene = clip_scene(seed + 16 * k as u64, count, f64::from(w), f64::from(h), features);
+            let scene = clip_scene(
+                seed + 16 * k as u64,
+                count,
+                f64::from(w),
+                f64::from(h),
+                features,
+            );
             let gpu_scene = clip_gpu_scene(&scene, w, h);
-            assert!(vexel_gpu_scene::classify(&gpu_scene).is_supported(), "{name}");
+            assert!(
+                vexel_gpu_scene::classify(&gpu_scene).is_supported(),
+                "{name}"
+            );
             let encoded = encode(&gpu_scene).unwrap();
             let got = reference::render_straight(&encoded);
             let cpu = clip_cpu_render(&scene, w, h);

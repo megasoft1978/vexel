@@ -17,6 +17,7 @@
 pub mod bin;
 mod bytes;
 mod classify;
+mod clips;
 mod encode;
 mod error;
 pub mod input;

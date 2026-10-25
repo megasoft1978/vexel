@@ -43,7 +43,7 @@
 /// Header `magic`.
 pub const LAYOUT_MAGIC: u32 = 0x5658_4C31;
 /// Bump on any change to a struct or constant here.
-pub const LAYOUT_VERSION: u32 = 8;
+pub const LAYOUT_VERSION: u32 = 9;
 
 pub const TILE_SIZE: u32 = 16;
 /// Samples per pixel axis; equals `vexel_render::SAMPLES_PER_AXIS`.
@@ -59,7 +59,7 @@ pub const EDGE_FIXED_SHIFT: u32 = 16;
 pub const MAX_COORDINATE: u32 = 16_384;
 
 pub const MAX_SHAPES: u32 = 262_144;
-pub const MAX_EDGES: u32 = 4_194_304;
+pub const MAX_EDGES: u32 = 8_388_608;
 /// Maximum number of [`GpuTileEntry`] records.
 pub const MAX_TILE_LIST: u32 = 6_291_456;
 pub const MAX_GRADIENTS: u32 = 65_536;

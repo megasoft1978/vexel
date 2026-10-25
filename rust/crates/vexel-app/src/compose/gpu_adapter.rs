@@ -8,13 +8,13 @@
 //! conversion, no GPU calls, so the lowering is testable without a device.
 
 use super::layers::Geo;
+use super::shapes::{Entry, OwnedShape};
 use std::collections::HashMap;
 use std::sync::Arc;
-use super::shapes::{Entry, OwnedShape};
 use vexel_geometry::{Affine, affine_compose, affine_valid};
 use vexel_gpu_scene::input::{
-    GpuCap, GpuClipChild, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoinKind, GpuPaint, GpuScene, GpuSegment,
-    GpuShape, GpuSpread, GpuStroke, GpuStrokeJoin, GpuStrokeSegment,
+    GpuCap, GpuClipChild, GpuClipPath, GpuColorStop, GpuGradient, GpuGroup, GpuJoinKind, GpuPaint,
+    GpuScene, GpuSegment, GpuShape, GpuSpread, GpuStroke, GpuStrokeJoin, GpuStrokeSegment,
 };
 use vexel_gpu_scene::{GpuNode, MAX_GRADIENT_STOPS};
 use vexel_render::export::{JoinKind, StrokeExport, export_stroke};
@@ -84,9 +84,9 @@ struct Lowering<'a, 'e> {
 
 /// GPU cost of one clip edge visit by one tile thread group, in tile-entry
 /// equivalents of the route policy model (calibrated in PERF.md, GPU clips).
-pub(super) const CLIP_VISIT_ENTRIES: f64 = 0.0;
-/// CPU work weight of a clipped pixel per clip link (CPU clip rows are cheap).
-const CLIP_WEIGHT: f64 = 0.25;
+pub(super) const CLIP_VISIT_ENTRIES: f64 = 0.008;
+/// CPU work weight of a clipped pixel per clip link (axis-aligned clips are cheap on the CPU, rotated ones are not).
+const CLIP_WEIGHT: f64 = 0.5;
 
 impl Lowering<'_, '_> {
     /// The shapes `range` whose parent group is `parent`, in paint order
@@ -271,7 +271,12 @@ impl Lowering<'_, '_> {
 
     /// Route cost of a clipped shape: CPU work for the clip tests and the GPU
     /// clip visits (chain edges x tiles the shape's box covers).
-    fn clip_cost(&mut self, clips: &[Arc<GpuClipPath>], fill: &[GpuSegment], stroke: Option<&GpuStroke>) {
+    fn clip_cost(
+        &mut self,
+        clips: &[Arc<GpuClipPath>],
+        fill: &[GpuSegment],
+        stroke: Option<&GpuStroke>,
+    ) {
         let (width, height) = self.size;
         let area = if fill.is_empty() {
             // Stroke-only: the whole canvas is the safe over-estimate.

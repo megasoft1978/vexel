@@ -8,13 +8,13 @@
 
 use crate::error::{Capability, UnsupportedReason as Reason};
 use crate::input::{GpuClipPath, GpuNode, GpuPaint, GpuScene, GpuSegment, GpuShape, GpuStroke};
-use std::collections::HashSet;
-use std::sync::Arc;
 use crate::layout::{
     MAX_CLIP_CHAIN, MAX_CLIP_RECORDS, MAX_EDGES, MAX_GRADIENTS, MAX_GROUP_DEPTH, MAX_SHAPES,
     MAX_STOPS, MAX_STROKE_PRIMS, MAX_TILE_LIST, TILE_SIZE,
 };
 use crate::strokes;
+use std::collections::HashSet;
+use std::sync::Arc;
 
 /// Largest canvas axis in pixels. Fixed-point edge coordinates and the i64
 /// crossing products stay far inside range below it.
@@ -501,10 +501,10 @@ mod tests {
             Capability::Unsupported(Reason::TooManyClips)
         );
         // Clip edges count toward MAX_EDGES.
-        let many = (0..4_200_000)
+        let many = (0..MAX_EDGES as usize + 1_000)
             .map(|i| GpuSegment {
                 x0: 1.0,
-                y0: f64::from(i % 50),
+                y0: (i % 50) as f64,
                 x1: 2.0,
                 y1: 3.0,
             })

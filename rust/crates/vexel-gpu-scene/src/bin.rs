@@ -637,7 +637,10 @@ mod tests {
 
     #[test]
     fn overflow_is_reported() {
-        let full = rect(0, 0, 16384, 16384);
+        // Two nested full-canvas rectangles: the edge pool (8 Mi) fills before
+        // the tile list (6 Mi entries) does.
+        let mut full = rect(0, 0, 16384, 16384);
+        full.extend(rect(0, 0, 16000, 16000));
         let mut b = Binner::new(1024, 1024, true);
         let mut result = Ok(());
         for z in 0..9 {
