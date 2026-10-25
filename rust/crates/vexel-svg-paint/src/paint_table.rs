@@ -26,6 +26,8 @@ pub struct KeyTable<'a> {
     edges: Vec<f64>,
     cells: Vec<[u8; 4]>,
     uniform: Vec<bool>,
+    /// Last cell of the run of uniform cells of one colour that starts at each cell.
+    run_end: Vec<u32>,
     inverse_width: f64,
 }
 
@@ -117,6 +119,14 @@ impl<'a> PreparedPaint<'a> {
                 uniform[i] = true;
             }
         }
+        let mut run_end = vec![0u32; CELLS];
+        for i in (0..CELLS).rev() {
+            run_end[i] = if uniform[i] && i + 1 < CELLS && uniform[i + 1] && cells[i + 1] == cells[i] {
+                run_end[i + 1]
+            } else {
+                i as u32
+            };
+        }
         Some(KeyTable {
             paint: *self,
             linear,
@@ -126,6 +136,7 @@ impl<'a> PreparedPaint<'a> {
             edges,
             cells,
             uniform,
+            run_end,
         })
     }
 
@@ -212,10 +223,11 @@ impl KeyTable<'_> {
             .then(|| self.cells[cell])
     }
 
-    /// The one colour [`Self::lookup`] returns for every key in
-    /// `[low_key, high_key]`, when the table can vouch for all of them: the
-    /// range lies past one edge or inside a single uniform cell. The cell
-    /// index is monotone in the key, so keys between the two ends share it.
+    /// The one colour the sampler gives for every key in `[low_key, high_key]`,
+    /// when the table can vouch for all of them: the range lies past one edge
+    /// or inside a run of uniform cells of a single colour. Every key of the
+    /// range lies in the closed span of those cells, and the table's promise
+    /// for each cell holds on its closed interval.
     #[inline]
     pub fn lookup_range(&self, low_key: f64, high_key: f64) -> Option<[u8; 4]> {
         let last = self.cells.len();
@@ -230,12 +242,13 @@ impl KeyTable<'_> {
             return None;
         }
         let cell_of = |key: f64| (((key - low) * self.inverse_width) as usize).min(last - 1);
-        let cell = cell_of(low_key);
-        (cell == cell_of(high_key)
-            && self.edges[cell] <= low_key
-            && high_key <= self.edges[cell + 1]
-            && self.uniform[cell])
-            .then(|| self.cells[cell])
+        let (first, final_cell) = (cell_of(low_key), cell_of(high_key));
+        (first <= final_cell
+            && self.edges[first] <= low_key
+            && high_key <= self.edges[final_cell + 1]
+            && self.uniform[first]
+            && self.run_end[first] as usize >= final_cell)
+            .then(|| self.cells[first])
     }
 
     /// The paint this table belongs to.
