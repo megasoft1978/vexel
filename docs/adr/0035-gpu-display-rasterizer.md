@@ -130,3 +130,37 @@ measurements (`docs/gpu-interface-requests.md`); the header and
 - Depth: more than `MAX_GROUP_DEPTH` (4) nested layered groups is
   `Unsupported(GroupTooDeep)`; group clips stay `Unsupported(Clips)`; filter,
   mask and blend-mode groups stay CPU (the app route reports `Cpu("group")`).
+
+## Addendum: strokes (layout version 8)
+
+Strokes render as the CPU evaluates them, not as expanded polygons: per sample,
+a hit test against the exported segments (caps) and precomputed joins
+(`vexel-render` `export.rs` semantics), fill first and stroke over it per
+sample, one resolve per pixel. Primitives are binned per 16x16 tile by their
+CPU candidate boxes and stored in `f32` relative to the stroke-local position
+of the tile origin (computed in `f64`); a segment carries the foot of the tile
+centre, its unit direction and the along range, so the kernel needs no divide,
+hypot or large coordinate. Layout v8: `GpuStrokePrim` (64 B), `GpuTileEntry`
+20 B, `GpuShape` 120 B (stroke paint, radius, device-to-local matrix),
+`MAX_TILE_LIST` 6,291,456. Budgets: `MAX_STROKE_PRIMS` = 2^21 (also the cap of
+the classify work estimate, one record per tile visit of a primitive's device
+box) and `MAX_TILE_PRIMS` = 4096 per tile entry; larger scenes classify
+`TooManyStrokePrims`/encode `Encode(..)` and render on the CPU.
+
+Measured against `vexel-render` (seeded scenes, widths 0.5-40, all joins and
+caps, dashes, transforms, fill under stroke, letterboxed view): reference and
+Metal kernel have 0 differing bytes between each other, and at most 0.0004%
+of pixels over 2/255, 0 over 16/255, mean abs error under 1e-6 against the
+CPU (bounds: 0.02%, 0.002%, 0.001).
+
+Open: through the whole app pipeline the CPU frame omits the corner regions
+that square caps add to DASHED strokes (the direct `render_dashed_shapes`
+API and the exported semantics paint them; reproduced only in the app's CPU
+frame). Until resolved the lowering keeps dashed square-cap strokes on the CPU.
+
+Release timings, 900 px, 100 stroke-heavy shapes class (`gpu_stroke` test):
+50 shapes GPU 6.7 ms vs CPU 32 ms, 500 shapes 17.8 vs 262 ms, 2000 shapes
+66.7 vs 965 ms (CPU figures include export). Demo scenes (policy route p50
+tick, `gpu_route_report`): walk_home 900 px 8.1 ms (CPU 26), logo 4.8 (CPU 48),
+loader 6.2 (CPU 18); at 1800 px logo 14.5 vs 128 ms and loader 18.1 vs 64.8 ms;
+walk_home at 1800 px is `Unsupported(TooManyEdges)` (fill edge-tile budget).

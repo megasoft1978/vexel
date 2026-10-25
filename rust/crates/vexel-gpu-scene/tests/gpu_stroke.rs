@@ -155,10 +155,17 @@ fn gpu_strokes_match_cpu_within_adr_bounds() {
 fn gpu_stroke_frame_time_report() {
     let Some(mut g) = gpu() else { return };
     let size = 900u32;
-    for n in [50usize, 500] {
+    for n in [50usize, 500, 2000] {
         let cases = stroke_cases(0x900, n, f64::from(size), f64::from(size), 0.5, 20.0);
+        let started = std::time::Instant::now();
         let (scene, _) = stroke_scene(&cases, size, size);
-        let _ = unwrap_render(g.render(&scene, Output::Premultiplied));
+        let cpu_ms = started.elapsed().as_secs_f64() * 1e3;
+        if let Err(e) = g.render(&scene, Output::Premultiplied) {
+            println!(
+                "stroke frame {n} shapes {size}px: GPU route declines ({e:?}); cpu render+export {cpu_ms:.1} ms"
+            );
+            continue;
+        }
         let mut times = Vec::new();
         for _ in 0..7 {
             let (_, t) = g.render_timed(&scene, Output::Premultiplied).unwrap();
@@ -166,7 +173,7 @@ fn gpu_stroke_frame_time_report() {
         }
         times.sort_by(|a, b| a.0.total_cmp(&b.0));
         println!(
-            "stroke frame {n} shapes {size}px: p50 total {:.2} ms (encode {:.2} ms)",
+            "stroke frame {n} shapes {size}px: gpu p50 total {:.2} ms (encode {:.2} ms); cpu render+export {cpu_ms:.1} ms",
             times[3].0, times[3].1
         );
     }
