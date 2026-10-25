@@ -1,7 +1,7 @@
 //! `Info.plist` rendering (pure).
 
-/// Placeholder bundle identifier; the owner decides the final value.
-pub const BUNDLE_ID: &str = "app.vexel.Vexel";
+/// Owner-approved bundle identifier (overridable via `--bundle-id` / `VEXEL_BUNDLE_ID`).
+pub const BUNDLE_ID: &str = "io.github.megasoft1978.Vexel";
 pub const MIN_MACOS: &str = "13.0";
 pub const EXECUTABLE: &str = "vexel";
 /// Icon base name: `CFBundleIconFile` and `Contents/Resources/<name>.icns`.
@@ -98,7 +98,7 @@ mod tests {
         for expected in [
             "<key>CFBundleExecutable</key>\n\t<string>vexel</string>",
             "<key>CFBundleIconFile</key>\n\t<string>AppIcon</string>",
-            "<key>CFBundleIdentifier</key>\n\t<string>app.vexel.Vexel</string>",
+            "<key>CFBundleIdentifier</key>\n\t<string>io.github.megasoft1978.Vexel</string>",
             "<key>CFBundleShortVersionString</key>\n\t<string>0.1.0</string>",
             "<key>LSMinimumSystemVersion</key>\n\t<string>13.0</string>",
             "<key>NSHighResolutionCapable</key>\n\t<true/>",

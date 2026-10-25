@@ -40,8 +40,9 @@ toolchain to report Rust 1.99.0.
 commands are `info`, `build`, `check`, `check-ci WORKFLOW.yml`, `bundle`,
 `dmg`, `sbom`, and `install-smoke`. `info`, `build`, `check`, and `check-ci`
 take no flags; `check-ci` requires exactly one workflow path. `bundle` accepts
-`--out DIR` and `--icon FILE.icns`; the other three packaging commands accept
-only `--out DIR`. Relative `--out` paths are relative to the current working
+`--out DIR`, `--icon FILE.icns`, `--bundle-id`, `--display-name` and
+`--sign-identity`; `release` accepts the same flags; `package`, `dmg`, `sbom`
+and `install-smoke` accept only `--out DIR`. Relative `--out` paths are relative to the current working
 directory. The default output directory is `build/release`.
 
 The bundle step requires `resources/AppIcon.icns` (or a supplied `.icns` file),
@@ -55,10 +56,11 @@ The result is `build/release/Vexel.app`. The executable is at
 `Contents/MacOS/vexel`; the bundle includes `Info.plist`, the English
 localization strings, and `Contents/Resources/AppIcon.icns`. The plist uses
 the workspace package version and the placeholder identifier
-`app.vexel.Vexel`, with macOS 13 as its minimum version. The supplied icon is
+`io.github.megasoft1978.Vexel`, with macOS 13 as its minimum version. The supplied icon is
 packaged as `AppIcon`; the app icon artwork and final bundle identity remain
-owner decisions. The command ad-hoc signs the bundle and verifies that
-signature.
+owner decisions. Without a signing identity the command ad-hoc signs the
+bundle and verifies that signature; with `--sign-identity` (or
+`VEXEL_SIGN_IDENTITY`) it signs with Developer ID, see below.
 
 After a bundle exists, create and verify the compressed disk image, then create
 the CycloneDX SBOM for the bundled executable:
@@ -88,43 +90,70 @@ not evidence of a clean-install GUI launch or product release readiness.
 
 ## Signing, notarization, and release evidence
 
-### Owner-gated release checklist
+### Developer ID signing and the `release` command
 
-`bundle` accepts `--bundle-id` and `--display-name`, with `VEXEL_BUNDLE_ID`
-and `VEXEL_DISPLAY_NAME` environment defaults. Without either override it
-retains the placeholder identifier `app.vexel.Vexel` and display name `Vexel`.
-`vexel-dev notarize --path build/release/Vexel.app` validates the path and
-prints the signing, notary submission, and stapling commands. It is a dry run
-unless `--execute` is supplied; execution additionally requires
-`VEXEL_SIGN_IDENTITY` and `VEXEL_NOTARY_PROFILE`. The tool does not inspect or
-print credential contents.
+`bundle --sign-identity <name|sha1>` (or `VEXEL_SIGN_IDENTITY`) signs the
+executable, then the bundle, with `codesign --force --options runtime
+--timestamp` (inner first, no `--deep` when signing), then runs
+`codesign --verify --strict --deep --verbose=2` and `spctl --assess --type
+execute -vv`. The `spctl` result is informational and is expected to read
+`rejected` / `Unnotarized Developer ID` until notarization. No entitlements are
+used: the app is a native hardened-runtime binary with no JIT, unsigned-memory
+or network-server needs. Add an entitlements file only if that changes.
 
-Before distribution, the owner must supply or approve:
+`release` runs bundle, sign, DMG (signed with the same identity), then, only if
+`VEXEL_NOTARY_PROFILE` names a keychain profile that `xcrun notarytool history`
+accepts, `notarytool submit --wait`, `stapler staple` on the DMG and the app,
+and `spctl`. It always writes `build/release/Vexel-<version>.dmg`, `.zip`
+(`ditto -c -k --keepParent`) and `.sha256` (version from the workspace
+`Cargo.toml`), and prints `signed, NOT notarized` when it stopped before
+notarization. `package` re-creates those three files from an existing bundle
+and DMG. `notarize --path X.app|X.dmg [--execute]` is the standalone step: an
+`.app` is zipped first because notarytool does not accept bare bundles; dry run
+prints the commands without running them.
 
-- A Developer ID Application certificate and its signing identity.
-- A configured notarytool keychain profile.
-- The final bundle identifier and production display name.
-- Final app icon artwork.
-- VoiceOver and IME review on the release build.
-- Hosted golden regeneration and review.
+Identity in use: `Developer ID Application: Antonietta Rizzo (JT3BY4G6KR)`,
+SHA-1 `8EAF62F6CF51815385DC954E1E4380DB1730DB1B`. The tool never reads or
+prints credentials.
 
-Vexel code supports local bundle creation, configurable plist identity and
-name, and explicit signing/notarization command execution. It cannot supply
-the certificate, credentials/profile, product identity decisions, icon
-artwork, accessibility/input-method approval, or hosted golden results.
+### Notarization: one-time owner setup and finishing command
 
-The current Rust packaging command always signs with the ad-hoc identity `-`
-and verifies that signature. It has no CLI or environment-variable option for
-Developer ID signing or notarization. Those actions remain owner-gated; do not
-use the ad-hoc bundle as evidence of Developer ID distribution or notarization.
-The placeholder bundle identifier and final artwork also need owner decisions.
+Notarization needs the owner's Apple ID app-specific password, which tooling
+must never request. The owner runs once:
+
+```sh
+xcrun notarytool store-credentials vexel-notary --apple-id <apple id> \
+  --team-id JT3BY4G6KR --password <app-specific-password>
+```
+
+Then the single finishing command (bundle, sign, DMG, notarize, staple, zip,
+checksums):
+
+```sh
+VEXEL_SIGN_IDENTITY="Developer ID Application: Antonietta Rizzo (JT3BY4G6KR)" \
+VEXEL_NOTARY_PROFILE=vexel-notary cargo run -p vexel-dev -- release
+```
+
+The first time, the keychain may ask to let `codesign` use the private key;
+choose Always Allow.
+
+### Current status
+
+- Done and verified locally: Developer ID signed `Vexel.app` (Authority
+  Developer ID Application, TeamIdentifier JT3BY4G6KR, hardened runtime flag
+  `runtime`), signed DMG, zip and SHA-256 file. Gatekeeper reports
+  `Unnotarized Developer ID` for them.
+- Pending: notarization and stapling (owner must create the `vexel-notary`
+  profile). Nothing has been uploaded anywhere.
+- Still owner decisions or reviews: final app icon artwork, VoiceOver and IME
+  review on the release build, hosted golden regeneration and review. A live
+  GUI launch of the signed build has not been performed.
 
 The current CI workflow is `.github/workflows/ci.yml`; it does not publish a
 release or attach a distribution artifact. A manual CI packaging smoke is
 configured but its execution on GitHub is not established by the workflow
-definition. The release work-order evidence records a local packaging run, but
-explicitly says Developer ID signing, notarization, and live GUI launch were
-not performed. No release readiness, full migration, or GUI verification claim
+definition. The earlier release work-order evidence recorded an ad-hoc packaging run; the
+Developer ID signing above was added afterwards, notarization is still pending. No release readiness, full migration, or GUI verification claim
 follows from those checks.
 
 To check the repository's macOS-only CI policy for the active workflow:

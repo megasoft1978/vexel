@@ -15,6 +15,19 @@ pub enum Command {
         icon: Option<PathBuf>,
         bundle_id: Option<String>,
         display_name: Option<String>,
+        sign_identity: Option<String>,
+    },
+    /// Bundle + Developer ID sign + DMG + zip + checksums (+ notarize when the profile exists).
+    Release {
+        out: Option<PathBuf>,
+        icon: Option<PathBuf>,
+        bundle_id: Option<String>,
+        display_name: Option<String>,
+        sign_identity: Option<String>,
+    },
+    /// Versioned DMG/zip/SHA-256 from an existing bundle and DMG.
+    Package {
+        out: Option<PathBuf>,
     },
     Dmg {
         out: Option<PathBuf>,
@@ -68,7 +81,8 @@ impl fmt::Display for UsageError {
 
 pub const USAGE: &str = "Usage: vexel-dev info|build|check\n       \
 vexel-dev check-ci WORKFLOW.yml\n       \
-vexel-dev bundle [--out DIR] [--icon FILE.icns]\n       \
+vexel-dev bundle|release [--out DIR] [--icon FILE.icns] [--bundle-id ID] [--display-name NAME] [--sign-identity NAME|SHA1]\n       \
+vexel-dev package [--out DIR]\n       \
 vexel-dev dmg|sbom|install-smoke [--out DIR]\n       \
 vexel-dev bench [--check] [--update-baseline] [--hash-only|--full] [--only TEXT] [--out DIR]";
 
@@ -104,15 +118,29 @@ pub fn parse(args: &[String]) -> Result<Command, UsageError> {
                 workflow: PathBuf::from(workflow),
             })
         }
-        "bundle" => {
-            let (out, icon, bundle_id, display_name) = bundle_flags(rest)?;
-            Ok(Command::Bundle {
-                out,
-                icon,
-                bundle_id,
-                display_name,
+        "bundle" | "release" => {
+            let (out, icon, bundle_id, display_name, sign_identity) = bundle_flags(name, rest)?;
+            Ok(if name == "bundle" {
+                Command::Bundle {
+                    out,
+                    icon,
+                    bundle_id,
+                    display_name,
+                    sign_identity,
+                }
+            } else {
+                Command::Release {
+                    out,
+                    icon,
+                    bundle_id,
+                    display_name,
+                    sign_identity,
+                }
             })
         }
+        "package" => Ok(Command::Package {
+            out: flags(name, rest, false)?.0,
+        }),
         "dmg" => Ok(Command::Dmg {
             out: flags(name, rest, false)?.0,
         }),
@@ -166,57 +194,45 @@ fn parse_notarize(name: &str, rest: &[String]) -> Result<Command, UsageError> {
     })
 }
 
-fn bundle_flags(
-    rest: &[String],
-) -> Result<
-    (
-        Option<PathBuf>,
-        Option<PathBuf>,
-        Option<String>,
-        Option<String>,
-    ),
-    UsageError,
-> {
+type BundleFlags = (
+    Option<PathBuf>,
+    Option<PathBuf>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
+fn bundle_flags(command: &str, rest: &[String]) -> Result<BundleFlags, UsageError> {
     let mut out = None;
     let mut icon = None;
     let mut bundle_id = None;
     let mut display_name = None;
+    let mut sign_identity = None;
     let mut iter = rest.iter();
     while let Some(flag) = iter.next() {
         if !flag.starts_with("--") {
             return Err(UsageError::UnexpectedArgument {
-                command: "bundle".into(),
+                command: command.into(),
                 argument: flag.clone(),
             });
         }
-        if !["--out", "--icon", "--bundle-id", "--display-name"].contains(&flag.as_str()) {
-            return Err(UsageError::UnknownFlag {
-                command: "bundle".into(),
-                flag: flag.clone(),
-            });
-        }
-        let value = iter
-            .next()
-            .filter(|v| !v.starts_with("--"))
-            .ok_or_else(|| UsageError::MissingValue { flag: flag.clone() })?;
         let slot = match flag.as_str() {
             "--out" => &mut out,
             "--icon" => &mut icon,
             "--bundle-id" => &mut bundle_id,
             "--display-name" => &mut display_name,
-            f if f.starts_with("--") => {
+            "--sign-identity" => &mut sign_identity,
+            _ => {
                 return Err(UsageError::UnknownFlag {
-                    command: "bundle".into(),
+                    command: command.into(),
                     flag: flag.clone(),
                 });
             }
-            _ => {
-                return Err(UsageError::UnexpectedArgument {
-                    command: "bundle".into(),
-                    argument: flag.clone(),
-                });
-            }
         };
+        let value = iter
+            .next()
+            .filter(|v| !v.starts_with("--"))
+            .ok_or_else(|| UsageError::MissingValue { flag: flag.clone() })?;
         if slot.replace(value.clone()).is_some() {
             return Err(UsageError::DuplicateFlag { flag: flag.clone() });
         }
@@ -226,6 +242,7 @@ fn bundle_flags(
         icon.map(PathBuf::from),
         bundle_id,
         display_name,
+        sign_identity,
     ))
 }
 
@@ -308,6 +325,7 @@ mod tests {
             icon: Some("i.icns".into()),
             bundle_id: None,
             display_name: None,
+            sign_identity: None,
         };
         assert_eq!(
             parse_strs(&["bundle", "--out", "o", "--icon", "i.icns"]),
@@ -323,7 +341,8 @@ mod tests {
                 out: None,
                 icon: None,
                 bundle_id: None,
-                display_name: None
+                display_name: None,
+                sign_identity: None
             })
         );
         assert_eq!(
@@ -338,7 +357,24 @@ mod tests {
                 out: None,
                 icon: None,
                 bundle_id: Some("io.vexel.test".into()),
-                display_name: Some("Vexel Test".into())
+                display_name: Some("Vexel Test".into()),
+                sign_identity: None
+            })
+        );
+        assert_eq!(
+            parse_strs(&["release", "--sign-identity", "8EAF"]),
+            Ok(Command::Release {
+                out: None,
+                icon: None,
+                bundle_id: None,
+                display_name: None,
+                sign_identity: Some("8EAF".into())
+            })
+        );
+        assert_eq!(
+            parse_strs(&["package", "--out", "o"]),
+            Ok(Command::Package {
+                out: Some("o".into())
             })
         );
         assert_eq!(
