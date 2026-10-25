@@ -345,6 +345,13 @@ name = "vexel-gif"
 version = "0.1.0"
 
 [[package]]
+name = "vexel-gpu-scene"
+version = "0.1.0"
+dependencies = [
+ "vexel-render",
+]
+
+[[package]]
 name = "vexel-json"
 version = "0.1.0"
 dependencies = [

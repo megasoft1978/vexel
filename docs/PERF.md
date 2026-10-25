@@ -587,3 +587,13 @@ Unsupported or limited: `blur` renders at 512 px, but the app's filter work
 limit (`LimitRender`) rejects larger sizes, so those cases are reported as
 skipped. Deterministic work counters (edge visits, samples, decodes per tick)
 are not collected because they would need counters in the raster crates.
+
+## GPU display rasterizer (ADR-0035)
+
+Stub. The Metal compute rasterizer (`vexel-gpu-scene` layout, kernels in
+`vexel-platform-apple`) is not wired in yet; no GPU numbers are recorded.
+Spike numbers (tile-binned vs per-shape, M5 Max) are in
+`spikes/metal-raster/README.md`. Planned measurements: end-to-end display frame
+ms on the committed bench scenes against the CPU path, encode/upload/kernel
+split, and the parity suite result against the ADR-0035 tolerances (pixels over
+2/255 <= 0.02%, over 16/255 <= 0.002%, mean abs error <= 0.001).

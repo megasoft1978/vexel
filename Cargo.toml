@@ -42,6 +42,7 @@ members = [
   "rust/crates/vexel-svg-scalar-sample",
   "rust/crates/vexel-svg-animation-frame",
   "rust/crates/vexel-render",
+  "rust/crates/vexel-gpu-scene",
   "rust/crates/vexel-gif",
   "rust/crates/vexel-png",
   "rust/tools/vexel-dev",

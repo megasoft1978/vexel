@@ -29,7 +29,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
   informational on hosted runners.
 
 ## Baseline
-- `main` @ a072511d: 43 Rust crates, ~218k lines. `cargo check --workspace --locked` passes.
+- `main` @ a072511d: 44 Rust crates, ~218k lines. `cargo check --workspace --locked` passes.
 - In-flight dirty work (async export, svg-decode lease/lifetime, timeline, recovery) snapshotted on `wip/async-export` (bce34c83; does not compile: `vexel-svg-decode/src/definition_finish.rs` E0500). Not merged.
 - Legacy C is at tag `legacy-c-final`; no C tree in the working copy.
 
@@ -42,6 +42,7 @@ Updated 2026-10-21. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice
 | D Export (sync) | vexel-gif, vexel-render | preset GIF export |
 | E MCP live | vexel-mcp-*, vexel-protocol, session/mcp.rs | edit open project + activity indicator, real Codex client |
 | F SVG import basics | vexel-svg-* | disclosed basic subset, gradients |
+| G GPU display (ADR-0035) | vexel-gpu-scene, vexel-platform-apple (Metal) | Metal compute display rasterizer with CPU fallback; layout frozen |
 
 ## Post-V1
 Async export (from wip branch) -> SVG corpus fidelity (23/39) and large-doc design -> recovery/compat, perf, a11y -> Python tooling to Rust -> final UI/E2E, packaging (owner-gated), Codex showcase video.

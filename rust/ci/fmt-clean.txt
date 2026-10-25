@@ -18,3 +18,4 @@ vexel-tile-cache
 vexel-v1-document
 vexel-corpus
 vexel-png
+vexel-gpu-scene
