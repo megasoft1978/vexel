@@ -49,7 +49,7 @@
 </svg>
 <h1 id="h1">Vector animation for macOS your agent can edit live.</h1>
 <p class="sub">Native Rust, a real timeline, 53 MCP tools. Open a document, point Codex or Claude Code at it, and watch the canvas change.</p>
-<div class="btns"><a class="btn p" href="#get-started">Build from source</a><a class="btn" href="#demo">Watch 60s demo</a></div>
+<div class="btns"><a class="btn p" href="#get-started">Build from source</a><a class="btn" href="#demo">Watch the demo</a></div>
 <p class="fine">macOS 13+ &middot; Apple Silicon &middot; MPL-2.0 &middot; alpha</p>
 </div>
 <figure class="win"><div>
@@ -130,12 +130,14 @@
 
 <section id="demo" aria-labelledby="d-h">
 <div class="wrap demo">
-<div class="head"><h2 id="d-h">A real Codex session, 60 seconds.</h2></div>
-<video controls preload="none" poster="media/demo-poster.webp" width="1280" height="720">
-<source src="media/demo.mp4" type="video/mp4">
-<track kind="captions" src="media/demo.vtt" srclang="en" label="English" default>
-Your browser cannot play this video.
+<div class="head"><h2 id="d-h">Vexel in 34 seconds.</h2><p class="kicker">An agent drives the open document over MCP, the native timeline plays, and exports come out the other end.</p></div>
+<figure>
+<video controls muted playsinline preload="metadata" poster="media/poster.jpg" width="1280" height="720" aria-describedby="demo-note">
+<source src="media/web_demo.webm" type="video/webm"><source src="media/web_demo.mp4" type="video/mp4">
+Your browser cannot play this video. <a href="media/web_demo.mp4">Download the MP4</a>.
 </video>
+<figcaption id="demo-note" class="note">Silent, with burned-in captions. It does not autoplay. Speed numbers are measured on a real machine; reproduce them with <code>cargo run -p vexel-dev -- bench</code>.</figcaption>
+</figure>
 </div>
 </section>
 
@@ -186,7 +188,7 @@ tool_timeout_sec = 60</code></pre><button class="copy" type="button">Copy</butto
 <div class="wrap">
 <div class="head"><h2 id="s-h">Alpha, and honest about it.</h2><p class="kicker">Pre-release software. Things work, and some things are missing.</p></div>
 <div class="cols">
-<div><h3>Working</h3><ul><li>Live-preview MCP, 53 tools including <b>batch</b></li><li>Native timeline, loop playback, bezier easing editor</li><li>GIF, APNG, PNG frames, MP4/MOV, HEVC alpha export</li><li>Q/T/S path commands in SVG import</li></ul></div>
+<div><h3>Working</h3><ul><li>Live-preview MCP, 53 tools including <b>batch</b></li><li>Native timeline, loop playback, bezier easing editor</li><li>GIF, APNG, PNG frames, MP4/MOV, HEVC alpha export</li><li>Q/T/S path commands in SVG import</li><li>Linear and radial gradients, inspector fill control</li><li>Add key at the playhead, per-key easing</li></ul></div>
 <div class="p"><h3>Partial</h3><ul><li><b>SVG import:</b> 21 of 39 corpus files open; the count predates recent fixes</li><li><b>Native timeline MCP:</b> six property-track tools routed; some stay unrouted</li><li><b>Export:</b> GIF is synchronous and long loops are stride-sampled</li></ul></div>
 <div class="n"><h3>Not yet</h3><ul><li>SVG arc commands</li><li>Signed, notarized builds</li><li>A downloadable release</li><li>Export progress and cancellation over MCP</li></ul></div>
 </div>

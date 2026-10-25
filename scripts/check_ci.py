@@ -23,8 +23,11 @@ def check_policy(text: str) -> None:
     if trigger_block is None:
         raise PolicyError("workflow triggers are missing")
     trigger_names = set(re.findall(r"^\s{2}(push|pull_request|workflow_dispatch):", trigger_block["body"], re.MULTILINE))
-    if trigger_names != {"push", "pull_request", "workflow_dispatch"}:
-        raise PolicyError("workflow must define push, pull_request, and workflow_dispatch")
+    # The Pages deploy workflow is the single exception: push (main, website paths) and manual dispatch.
+    pages = re.search(r"^\s+pages:\s*write\s*$", text, flags=re.MULTILINE) is not None
+    expected = {"push", "workflow_dispatch"} if pages else {"push", "pull_request", "workflow_dispatch"}
+    if trigger_names != expected:
+        raise PolicyError("workflow must define " + ", ".join(sorted(expected)))
 
     if not re.search(r"^permissions:\s*\n\s+contents:\s*read\s*$", text, flags=re.MULTILINE):
         raise PolicyError("workflow must grant contents: read explicitly")

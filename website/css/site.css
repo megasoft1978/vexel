@@ -115,3 +115,4 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center}
 footer .r{margin-left:auto}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;animation-delay:0s!important;transition:none!important}
 .log div{opacity:1;transform:none}.logo .v,.logo .h{stroke-dashoffset:0}.logo circle{opacity:1}}
+.demo figure{margin:0;max-width:960px}
