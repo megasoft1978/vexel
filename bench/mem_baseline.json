@@ -65,10 +65,10 @@
   },
   "zoom/1600": {
     "hash": "4df8f16b83d5f8051f5661467842ffeeec669665761ebcb41fa6fe41eb8a1f7f",
-    "peak_heap_bytes": 140938915
+    "peak_heap_bytes": 75540799
   },
   "zoom/400": {
     "hash": "4df8f16b83d5f8051f5661467842ffeeec669665761ebcb41fa6fe41eb8a1f7f",
-    "peak_heap_bytes": 140938915
+    "peak_heap_bytes": 75540819
   }
 }

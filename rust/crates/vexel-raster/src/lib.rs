@@ -121,4 +121,7 @@ impl Tile {
 
     /// Borrow all pixels as a mutable row-major RGBA byte slice.
     pub fn rgba_mut(&mut self) -> &mut [u8] { &mut self.rgba }
+
+    /// Consume the tile and return its pixel buffer without copying.
+    pub fn into_rgba(self) -> Vec<u8> { self.rgba }
 }

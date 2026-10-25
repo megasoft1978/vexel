@@ -588,6 +588,29 @@ limit (`LimitRender`) rejects larger sizes, so those cases are reported as
 skipped. Deterministic work counters (edge visits, samples, decodes per tick)
 are not collected because they would need counters in the raster crates.
 
+## Memory (`vexel-bench mem`)
+
+Peak RSS is the child's `/usr/bin/time -l` max resident set; heap is the
+counting allocator's live peak. Hashes are unchanged by both fixes.
+
+| scenario | RSS before | RSS after | heap before | heap after |
+|---|---|---|---|---|
+| zoom/400 | 149.2 MB | 85.1 MB | 134.4 MB | 72.0 MB |
+| zoom/1600 | 149.1 MB | 85.0 MB | 134.4 MB | 72.0 MB |
+| journal/200 | 431.2 MB | 49.8 MB | 15.7 MB | 16.2 MB |
+
+- Zoom: `compose_owned` moved the tile buffer into the frame
+  (`Tile::into_rgba`) instead of `to_vec()`, dropping one full-frame copy.
+- Journal: RSS was allocator retention, not live heap. Every edit, undo and
+  piece-table validation re-parsed the whole document, and the token `Vec`
+  doubled through 0.8/1.5/3/6/12 MB blocks each time; libmalloc keeps freed
+  large blocks resident ("Malloc Large (empty)", ~390 MB after 40 edits).
+  `XmlTokenStream::reserve_token_hint` now sizes the token store once
+  (`Cache::build` and `parse_core`), removing the chain. Heap baselines
+  for journal/200 are not lowered (peak heap is +0.5 MB).
+- Rejected: pooling token buffers (kept 6 MB live, no RSS gain) and
+  `shrink_to_fit` after parse (re-created the retained blocks, RSS 446 MB).
+
 ## GPU display rasterizer (ADR-0035)
 
 Stub. The Metal compute rasterizer (`vexel-gpu-scene` layout, kernels in

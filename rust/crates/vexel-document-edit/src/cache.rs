@@ -44,6 +44,9 @@ pub(crate) fn parse_tokens(source: &[u8]) -> Result<Vec<XmlToken>, ParseFailure>
     alloc::checkpoint().map_err(|e| (e, XmlDiagnostic::default()))?;
     let mut stream = XmlTokenStream::new(source, TOKEN_BYTES)
         .map_err(|_| (EditError::OutOfMemory, XmlDiagnostic::default()))?;
+    // One sized allocation instead of doubling through several large blocks;
+    // the allocator keeps those freed blocks resident across repeated parses.
+    stream.reserve_token_hint(source.len() / 13 + 16);
     let status = loop {
         let s = stream.step(64 * 1024, false);
         if s != StreamStatus::Ok {
