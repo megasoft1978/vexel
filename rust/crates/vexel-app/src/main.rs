@@ -580,7 +580,7 @@ fn run(
             }
         }
         if !batch.pending {
-            mcp_pump.idle_wait(Duration::from_millis(16));
+            closing |= mcp_pump.idle_wait(Duration::from_millis(16));
         }
     }
     app.destroy_window(window.id())

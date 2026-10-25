@@ -2,7 +2,7 @@
 //! `session::McpHost`) and only `start_server` feeds it requests.
 use crate::preview::{LiveBackend, UiRequest};
 use std::{
-    io::{BufReader, BufWriter},
+    io::{BufReader, BufWriter, Write},
     sync::mpsc::SyncSender,
     thread,
 };
@@ -20,6 +20,10 @@ pub fn start_server(requests: SyncSender<UiRequest>) -> Result<(), &'static str>
             {
                 eprintln!("Vexel MCP preview stopped: {error}");
             }
+            // Flush before the request channel closes: its disconnect is what
+            // tells the shell to exit after stdin EOF.
+            let _ = output.flush();
+            drop(backend);
         })
         .map(|_| ())
         .map_err(|_| "could not start the MCP stdio worker")

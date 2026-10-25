@@ -19,6 +19,7 @@ mod media_scope;
 pub use media_scope::DecoderProductionOperations;
 mod numbers;
 mod operations;
+pub mod path_cache;
 mod plan_validation;
 mod publication;
 mod requests;

@@ -2,7 +2,7 @@
 //! while a GIF export is running. An arriving request wakes the idle loop. Also keeps the MCP link state and last outcome.
 
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver, RecvTimeoutError};
 use std::time::{Duration, Instant};
 
 use vexel_app::animation::{driver::Driver, job::ExportJob, playback::MonotonicClock};
@@ -27,6 +27,8 @@ pub struct McpPump {
     host: McpHost,
     export: Option<ExportJob>,
     granted: bool,
+    /// The stdio worker ended (stdin EOF) and its queue is drained.
+    eof: bool,
     /// Startup file, opened by the first `poll` through `document_open`.
     startup: Option<PathBuf>,
 }
@@ -44,6 +46,7 @@ impl McpPump {
             host: McpHost::with_policy(grants.policy()),
             export: None,
             granted,
+            eof: false,
             startup,
         }
     }
@@ -75,17 +78,23 @@ impl McpPump {
     }
 
     /// Sleeps up to `timeout`, returning early when an MCP request arrives
-    /// (it is served by the next `poll`).
-    pub fn idle_wait(&mut self, timeout: Duration) {
+    /// (it is served by the next `poll`). Returns true when the stdio worker
+    /// has ended (stdin EOF, queue drained) and nothing is left to serve, so
+    /// the shell should close instead of spinning on a dead channel.
+    pub fn idle_wait(&mut self, timeout: Duration) -> bool {
         match (&self.rx, &self.woken) {
-            (Some(rx), None) => {
-                if let Ok(request) = rx.recv_timeout(timeout) {
-                    self.woken = Some(request);
+            (Some(rx), None) => match rx.recv_timeout(timeout) {
+                Ok(request) => self.woken = Some(request),
+                Err(RecvTimeoutError::Disconnected) => {
+                    self.rx = None;
+                    self.eof = true;
                 }
-            }
+                Err(RecvTimeoutError::Timeout) => {}
+            },
             (_, Some(_)) => {}
             (None, None) => std::thread::sleep(timeout),
         }
+        self.eof && self.export.is_none() && self.woken.is_none()
     }
 
     /// Finishes a running export and serves a bounded batch of queued
@@ -226,5 +235,38 @@ impl McpPump {
             model.mcp_last,
         );
         (view || before != after, view || self.export.is_some())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::mpsc;
+
+    #[test]
+    fn stdin_eof_ends_the_idle_wait_without_spinning() {
+        let (tx, rx) = mpsc::sync_channel::<UiRequest>(1);
+        let mut pump = McpPump::new(Some(rx), McpGrants::default(), None);
+        assert!(
+            !pump.idle_wait(Duration::from_millis(1)),
+            "open channel idles"
+        );
+        drop(tx);
+        assert!(
+            pump.idle_wait(Duration::from_millis(1)),
+            "EOF closes the shell"
+        );
+        let start = Instant::now();
+        assert!(pump.idle_wait(Duration::from_millis(50)));
+        assert!(
+            start.elapsed() >= Duration::from_millis(40),
+            "no busy spin after EOF"
+        );
+    }
+
+    #[test]
+    fn no_channel_never_reports_eof() {
+        let mut pump = McpPump::new(None, McpGrants::default(), None);
+        assert!(!pump.idle_wait(Duration::from_millis(1)));
     }
 }

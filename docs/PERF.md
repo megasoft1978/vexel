@@ -699,3 +699,17 @@ Single-run noise: the smallest rows include GPU clock ramp-up.
 - Demo scenes (release, forced GPU vs CPU tick p50): walk_home 900 px 28.1 ->
   12.7 ms, 1800 px 74.4 -> 24.9 ms (was `TooManyEdges`, pool now 8 Mi edges);
   logo 50.8 -> 6.8 / 136 -> 16.1; loader 19.0 -> 8.6 / 71.7 -> 19.4.
+
+## Parsed-path cache (lane t-pcache)
+
+`vexel-svg-decode::path_cache` keeps parsed and flattened `d` data across
+decodes (animation ticks, edits). Key: exact `d` bytes (hash, then byte
+verify), affine transform bits, parse options; a hit rebases the source
+provenance offsets, so results are identical to a fresh parse. Only `d` of at
+least 512 bytes is cached (short paths are cheap and dense scenes would only
+duplicate memory; `vexel-bench mem --check` baselines stay unchanged). Budget
+24 MiB of owned bytes with LRU eviction down to 16 MiB; entries above 2 MiB
+bypass. Limit: an animated ancestor transform changes the key of every
+descendant path (the transform is baked into the flattening), so those
+re-parse each tick. Benches: `VEXEL_BENCH_SCENE=<file>` with
+`native_play_bench env_scene_animate_playback` and `scene_edit_bench`.

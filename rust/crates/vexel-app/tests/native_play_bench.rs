@@ -157,6 +157,20 @@ fn walk_home_animate_playback() {
     profile_run("walk_home", &doc);
 }
 
+/// Plays any scene file: `VEXEL_BENCH_SCENE=/path/scene.vexel` (SIZE, TICKS,
+/// HASH_OUT as above). Scenes without a native timeline report the error.
+#[test]
+#[ignore]
+fn env_scene_animate_playback() {
+    let Some(path) = std::env::var_os("VEXEL_BENCH_SCENE") else {
+        eprintln!("skip: VEXEL_BENCH_SCENE not set");
+        return;
+    };
+    let mut doc = AppDocument::new(512, 512).unwrap();
+    doc.open_path(Path::new(&path)).unwrap();
+    profile_run("env scene", &doc);
+}
+
 #[test]
 #[ignore]
 fn synthetic_animate_playback() {

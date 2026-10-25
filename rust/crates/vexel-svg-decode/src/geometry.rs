@@ -148,17 +148,18 @@ pub fn element_geometry_controlled(
         let end = d
             .end()
             .ok_or_else(|| error(ErrorKind::InvalidArgument, d.offset))?;
-        b.path = vexel_svg_path::parse_path_controlled(
-            source,
-            Span {
-                start: d.offset,
-                end,
-            },
-            transform,
-            path_options(),
-            control,
-        )
-        .map_err(|e| controlled_path_error(e, d.offset))?;
+        let span = Span {
+            start: d.offset,
+            end,
+        };
+        let options = path_options();
+        if let Some(path) = crate::path_cache::get(source, span, transform, options) {
+            b.path = path;
+            return Ok(b.finish(true, true, 0));
+        }
+        b.path = vexel_svg_path::parse_path_controlled(source, span, transform, options, control)
+            .map_err(|e| controlled_path_error(e, d.offset))?;
+        crate::path_cache::put(source, span, transform, options, &b.path);
         return Ok(b.finish(true, true, 0));
     }
     if name == b"rect" {
