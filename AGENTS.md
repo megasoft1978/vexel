@@ -25,5 +25,5 @@ Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first (esp. #6 lean process); it
 
 ## Orchestration
 
-- Roles: Claude plans, implements and reviews (`~/.claude-work/CLAUDE.md`); Codex only drives browser/computer-use jobs when a prompt asks (`~/.codex/AGENTS.md`).
+- Routing: global (~/.claude-work/routing/ROUTING.md).
 - Push: commit and push when review is CLEAN and tests pass.
